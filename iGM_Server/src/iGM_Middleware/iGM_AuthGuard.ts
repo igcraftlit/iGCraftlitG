@@ -9,7 +9,12 @@
  */
 
 // 导入依赖 //
-import { iGM_AuthError } from "../iGM_Services/iGM_AuthService";
+import { iGM_Config } from "../iGM_Config/iGM_Config";
+import {
+  iGM_AuthError,
+  iGM_ResolveSession,
+} from "../iGM_Services/iGM_AuthService";
+import { iGM_ReadCookie } from "../iGM_Services/iGM_SecurityService";
 import type {
   iGM_UserRole,
   iGM_UserRow,
@@ -49,6 +54,15 @@ export function iGM_RequireRole(
     throw new iGM_AuthError("auth.errors.forbidden", 403);
   }
   return current;
+}
+
+/**
+ * 从请求 Cookie 会话解析当前登录用户：未登录或会话失效返回 null。
+ * 模块三 G_Community / G_Post 路由统一使用该助手获取登录态
+ */
+export function iGM_ResolveRequestUser(request: Request): iGM_UserRow | null {
+  const rawSessionId = iGM_ReadCookie(request, iGM_Config.auth.cookieName);
+  return iGM_ResolveSession(rawSessionId);
 }
 
 /**

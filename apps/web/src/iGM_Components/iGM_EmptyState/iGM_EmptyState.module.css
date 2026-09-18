@@ -1,0 +1,40 @@
+/*
+ * 文件路径：apps/web/src/iGM_Components/iGM_EmptyState/iGM_EmptyState.module.css
+ * 所属层：前端 / 通用组件样式
+ * 路由：G_Community、G_Post、G_User 等
+ * 模块：iGM_EmptyState
+ * 作用：列表无数据、未选择帖子等空场景的占位样式
+ */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 56px 24px;
+  text-align: center;
+  background: var(--igm-surface);
+  border: 1px dashed var(--igm-border-strong);
+  border-radius: var(--igm-radius-lg);
+}
+
+.icon {
+  display: inline-flex;
+  color: var(--igm-text-subtle);
+}
+
+.title {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.description {
+  font-size: 13px;
+  color: var(--igm-text-muted);
+  max-width: 320px;
+}
+
+.action {
+  margin-top: 6px;
+}

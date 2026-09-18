@@ -3,8 +3,8 @@
  * 所属层：前端 / 应用骨架样式
  * 路由：全局
  * 模块：iGM_Sidebar
- * 作用：侧边导航栏样式与响应式行为
- * 内容：移动端抽屉、平板图标栏、桌面常驻三档布局及导航高亮态
+ * 作用：树状侧边导航栏样式与响应式行为
+ * 内容：移动端抽屉、平板图标栏、桌面常驻三档布局、树节点展开折叠与高亮态
  */
 
 /* 侧边栏容器：移动端默认隐藏（抽屉） */
@@ -125,5 +125,94 @@
   }
   .navLabel {
     display: none;
+  }
+}
+
+/* ===== 树状导航 ===== */
+/* 节点行：链接占满剩余空间，展开按钮固定在右侧 */
+.itemRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.itemRow .navLink {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* 展开/折叠按钮 */
+.navToggle {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  margin-right: 6px;
+  border: none;
+  border-radius: var(--igm-radius);
+  background: transparent;
+  color: var(--igm-text-subtle);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.navToggle:hover {
+  background: var(--igm-surface-subtle);
+  color: var(--igm-accent);
+}
+
+/* 箭头：折叠朝右，展开旋转 90 度朝下 */
+.chevron,
+.chevronOpen {
+  transition: transform 0.15s ease;
+}
+
+.chevronOpen {
+  transform: rotate(90deg);
+}
+
+/* 子树：左竖线连接的缩进列表，嵌套时层级自然递增 */
+.subList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 2px 0 2px 19px;
+  padding: 0 0 0 10px;
+  border-left: 1px solid var(--igm-border);
+}
+
+/* 子级链接：小一号、弱一级，命中时仍走统一样高亮 */
+.navLinkChild {
+  padding: 7px 10px;
+  font-size: 13px;
+  color: var(--igm-text-subtle);
+}
+
+.navLinkChild:hover {
+  color: var(--igm-text);
+}
+
+.navLinkChild.navLinkActive,
+.navLinkChild.navLinkActive:hover {
+  color: var(--igm-accent);
+}
+
+/* 平板图标栏：不显示展开按钮与子树，父节点退化为直达图标入口 */
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  .navToggle,
+  .subList {
+    display: none;
+  }
+
+  .itemRow {
+    justify-content: center;
+  }
+
+  .itemRow .navLink {
+    flex: 0 0 auto;
   }
 }

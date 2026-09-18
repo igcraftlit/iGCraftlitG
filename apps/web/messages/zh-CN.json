@@ -15,6 +15,10 @@
     "activities": "活动",
     "resources": "资源库",
     "profile": "个人主页",
+    "createPost": "发帖",
+    "myPosts": "我的帖子",
+    "myComments": "我的评论",
+    "userSettings": "资料设置",
     "settings": "账户设置",
     "admin": "管理后台"
   },
@@ -45,6 +49,98 @@
     "cardProfileDesc": "查看个人资料与账号设置",
     "cardAdminTitle": "管理后台",
     "cardAdminDesc": "进入站点管理与维护功能"
+  },
+  "landing": {
+    "brand": "iGCraftLit",
+    "nav": {
+      "home": "首页",
+      "community": "社区",
+      "join": "加入我们",
+      "console": "进入控制台"
+    },
+    "hero": {
+      "slogan": "「以方块之名，向世界敞开。」",
+      "description": "iGCraftLit 是一个面向 Minecraft 创作者的玩家社区。我们因方块相聚，汇聚热爱建造与探索的人们，共同构筑开放、自由的游戏生态。",
+      "primary": "进入社区",
+      "secondary": "了解更多",
+      "scrollHint": "向下滚动"
+    },
+    "why": {
+      "label": "WHY",
+      "p1": "iGCraftLit，以方块之名。方块象征着创造、好奇与坚持——这正是我们对待游戏与生活的态度。",
+      "p2": "我们相信社区应当开放、自由且为玩家所有。不为盈利，不为名声，只为那份对创造最纯粹的热情。",
+      "t1": "开放协作",
+      "t2": "自由",
+      "t3": "创造力",
+      "t4": "玩家驱动"
+    },
+    "focus": {
+      "label": "FOCUS",
+      "lead": "这些是我们热爱并持续耕耘的领域。",
+      "i1": {
+        "title": "生存探索",
+        "desc": "在原版与模组生存中沉淀攻略，记录每一次冒险与发现。"
+      },
+      "i2": {
+        "title": "建筑创作",
+        "desc": "分享建筑作品与灵感，从精巧小屋到宏大工程。"
+      },
+      "i3": {
+        "title": "红石工程",
+        "desc": "钻研红石电路与机械装置，让创意自动运转。"
+      },
+      "i4": {
+        "title": "模组与资源",
+        "desc": "探索模组、整合包与材质包，拓展方块世界的边界。"
+      }
+    },
+    "what": {
+      "label": "WHAT",
+      "lead": "为了让社区持续蓬勃，我们做这些事。",
+      "i1": {
+        "title": "社区讨论",
+        "desc": "高质量的帖子与讨论，涵盖游戏内外的多个领域。"
+      },
+      "i2": {
+        "title": "资源共享",
+        "desc": "攻略、整合包与素材沉淀为可检索的社区知识库。"
+      },
+      "i3": {
+        "title": "活动聚会",
+        "desc": "线上联机与建造活动，让独乐乐变成众乐乐。"
+      },
+      "i4": {
+        "title": "问答互助",
+        "desc": "新手提问、老玩家答疑，协作解决每一个难题。"
+      }
+    },
+    "values": {
+      "label": "VALUES",
+      "lead": "以方块之名，我们遵循这些精神。",
+      "i1": {
+        "title": "创造",
+        "desc": "如方块般自由组合，我们相信每个人都能建造属于自己的世界。"
+      },
+      "i2": {
+        "title": "好奇",
+        "desc": "对未知保持好奇，永远在探索新的种子、模组与玩法。"
+      },
+      "i3": {
+        "title": "热忱",
+        "desc": "Lit 是点亮也是热爱，我们用热情点燃每一次相聚。"
+      }
+    },
+    "cta": {
+      "label": "CTA",
+      "title": "加入我们",
+      "description": "一块方块，一份热爱，一起建造。以方块之名，向世界敞开。",
+      "primary": "加入社区",
+      "secondary": "登录"
+    },
+    "footer": {
+      "rights": "© {year} iGCraftLit Community. All rights reserved.",
+      "console": "控制台"
+    }
   },
   "pages": {
     "notification": {
@@ -230,6 +326,189 @@
       "joinedAt": "注册时间",
       "changePassword": "修改密码",
       "refreshSession": "刷新登录状态"
+    }
+  },
+  "community": {
+    "categories": {
+      "general": "综合讨论",
+      "guide": "教程攻略",
+      "showcase": "作品展示",
+      "qa": "问答求助",
+      "news": "资讯公告"
+    },
+    "status": {
+      "published": "已发布",
+      "hidden": "已隐藏"
+    },
+    "roles": {
+      "user": "普通用户",
+      "moderator": "协管员",
+      "admin": "管理员"
+    },
+    "pagination": {
+      "label": "分页导航",
+      "prev": "上一页",
+      "next": "下一页",
+      "pageInfo": "第 {page} / {totalPages} 页"
+    },
+    "actions": {
+      "like": "赞",
+      "liked": "已赞",
+      "favorite": "收藏",
+      "favorited": "已收藏",
+      "comment": "评论",
+      "edit": "编辑",
+      "delete": "删除",
+      "reply": "回复",
+      "save": "保存",
+      "cancel": "取消"
+    },
+    "state": {
+      "loading": "加载中…",
+      "retry": "重试",
+      "noPostsTitle": "还没有帖子",
+      "noPostsDesc": "成为第一个发帖的人吧"
+    },
+    "filters": {
+      "allCategories": "全部分类",
+      "activeFilters": "当前筛选：",
+      "clearTag": "清除标签",
+      "clearSearch": "清除搜索"
+    },
+    "communityPage": {
+      "title": "社区广场",
+      "description": "浏览、搜索全站帖子，参与讨论与分享",
+      "searchPlaceholder": "搜索帖子标题或内容…",
+      "newPost": "发表新帖"
+    },
+    "post": {
+      "backToCommunity": "返回社区广场",
+      "noSelectionTitle": "未指定帖子",
+      "noSelectionDesc": "请从社区广场选择要查看的帖子",
+      "notFoundTitle": "帖子不存在",
+      "notFoundDesc": "帖子可能已被删除，或你无权查看",
+      "deleteConfirm": "确定删除这篇帖子吗？该操作不可恢复，其评论与互动将一并删除。",
+      "edit": "编辑",
+      "hide": "隐藏",
+      "restore": "恢复",
+      "delete": "删除"
+    },
+    "comments": {
+      "title": "评论（{count}）",
+      "placeholder": "写下你的评论…",
+      "submit": "发表评论",
+      "loginRequired": "登录后即可参与评论",
+      "goLogin": "去登录",
+      "empty": "还没有评论，来抢沙发吧。",
+      "reply": "回复",
+      "replyPlaceholder": "写下你的回复…",
+      "submitReply": "发表回复",
+      "edit": "编辑",
+      "save": "保存",
+      "cancel": "取消",
+      "delete": "删除",
+      "deleteConfirm": "确定删除这条评论吗？",
+      "hide": "隐藏",
+      "restore": "恢复"
+    },
+    "editor": {
+      "invalid": "请检查标题与正文长度是否符合要求",
+      "createTitle": "发表新帖",
+      "editTitle": "编辑帖子",
+      "createDescription": "分享你的想法、作品或问题",
+      "editDescription": "修改帖子内容，保存后立即生效",
+      "back": "返回",
+      "titleLabel": "标题",
+      "titlePlaceholder": "请输入帖子标题（1-100 字）",
+      "categoryLabel": "分类",
+      "categoryNone": "不选择分类",
+      "tagsLabel": "标签",
+      "tagsPlaceholder": "例如：建筑, 红石, 生存",
+      "tagsHint": "最多 5 个标签，用逗号、顿号或空格分隔，每个不超过 20 字",
+      "contentLabel": "正文",
+      "contentPlaceholder": "请输入正文内容…",
+      "save": "保存修改",
+      "publish": "发布帖子",
+      "cancel": "取消"
+    },
+    "profile": {
+      "noSelectionTitle": "未指定用户",
+      "noSelectionDesc": "登录后可查看你的个人主页",
+      "goLogin": "去登录",
+      "notFoundTitle": "用户不存在",
+      "notFoundDesc": "该用户不存在或已被停用",
+      "joinedAt": "注册于 {date}",
+      "postCount": "{count} 篇帖子",
+      "commentCount": "{count} 条评论",
+      "myPosts": "我的帖子",
+      "myComments": "我的评论",
+      "editProfile": "编辑资料",
+      "tabPosts": "帖子",
+      "tabComments": "评论",
+      "emptyPostsTitle": "还没有帖子",
+      "emptyPostsDesc": "TA 还没有公开发布的帖子",
+      "emptyCommentsTitle": "还没有评论",
+      "emptyCommentsDesc": "TA 还没有公开发表的评论"
+    },
+    "myPosts": {
+      "title": "我的帖子",
+      "description": "管理你发布的全部帖子，包括已隐藏的帖子",
+      "emptyTitle": "还没有帖子",
+      "emptyDesc": "你还没有发布过帖子"
+    },
+    "myComments": {
+      "title": "我的评论",
+      "description": "查看你发表过的全部评论，包括被隐藏的评论",
+      "emptyTitle": "还没有评论",
+      "emptyDesc": "你还没有发表过评论",
+      "goCommunity": "去社区看看"
+    },
+    "settings": {
+      "title": "资料设置",
+      "description": "编辑你的昵称、头像、简介与个人网站",
+      "accountLink": "账户与密码设置",
+      "profileLink": "查看我的主页",
+      "saved": "资料已保存",
+      "avatarLabel": "头像",
+      "avatarHint": "暂不支持上传图片，请填写图片 URL",
+      "avatarPlaceholder": "https://example.com/avatar.png",
+      "displayNameLabel": "昵称",
+      "displayNamePlaceholder": "展示在帖子与评论中的名称",
+      "displayNameHint": "不超过 {max} 个字，留空则显示用户名",
+      "bioLabel": "简介",
+      "bioPlaceholder": "简单介绍一下自己吧",
+      "websiteLabel": "个人网站",
+      "websitePlaceholder": "https://example.com",
+      "websiteHint": "须以 http:// 或 https:// 开头",
+      "save": "保存资料"
+    },
+    "errors": {
+      "generic": "操作失败，请稍后再试",
+      "badRequest": "请求内容有误",
+      "titleInvalid": "标题长度应为 1-100 个字",
+      "contentInvalid": "正文长度应为 1-10000 个字",
+      "commentInvalid": "评论内容长度应为 1-2000 个字",
+      "tagTooLong": "标签数量或长度不符合要求",
+      "categoryNotFound": "所选分类不存在",
+      "postNotFound": "帖子不存在或无权查看",
+      "commentNotFound": "评论不存在或无权查看",
+      "parentInvalid": "回复的评论不存在或不属于该帖子",
+      "userNotFound": "用户不存在或已被停用",
+      "displayNameInvalid": "昵称长度不符合要求",
+      "bioInvalid": "简介长度不符合要求",
+      "websiteInvalid": "网站地址格式不正确",
+      "avatarInvalid": "头像地址格式不正确",
+      "unauthorized": "请先登录",
+      "forbidden": "你没有权限执行该操作"
+    },
+    "messages": {
+      "postCreated": "帖子发布成功",
+      "postUpdated": "帖子已更新",
+      "postDeleted": "帖子已删除",
+      "commentCreated": "评论已发表",
+      "commentUpdated": "评论已更新",
+      "commentDeleted": "评论已删除",
+      "profileUpdated": "资料已更新"
     }
   },
   "notfound": {

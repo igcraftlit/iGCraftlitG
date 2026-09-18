@@ -15,6 +15,10 @@
     "activities": "イベント",
     "resources": "リソース",
     "profile": "プロフィール",
+    "createPost": "投稿する",
+    "myPosts": "マイ投稿",
+    "myComments": "マイコメント",
+    "userSettings": "プロフィール設定",
     "settings": "アカウント設定",
     "admin": "管理画面"
   },
@@ -45,6 +49,98 @@
     "cardProfileDesc": "プロフィールとアカウント設定を確認",
     "cardAdminTitle": "管理画面",
     "cardAdminDesc": "サイト管理とメンテナンス機能へ"
+  },
+  "landing": {
+    "brand": "iGCraftLit",
+    "nav": {
+      "home": "ホーム",
+      "community": "コミュニティ",
+      "join": "参加する",
+      "console": "コンソール"
+    },
+    "hero": {
+      "slogan": "「ブロックの名のもとに、世界へ開こう。」",
+      "description": "iGCraftLit は Minecraft クリエイターのためのコミュニティです。ブロックに集い、建築と探索を愛する人々が集い、開かれた自由なゲームエコシステムを共に築きます。",
+      "primary": "コミュニティへ",
+      "secondary": "詳しく見る",
+      "scrollHint": "スクロール"
+    },
+    "why": {
+      "label": "WHY",
+      "p1": "iGCraftLit、ブロックの名のもとに。ブロックは創造、好奇心、継続を象徴しています。それは私たちがゲームと人生に向き合う姿勢そのものです。",
+      "p2": "コミュニティは開かれ、自由で、プレイヤー自身のものであるべきだと私たちは信じています。利益や名声のためではなく、創造への純粋な情熱のために。",
+      "t1": "オープンな協働",
+      "t2": "自由",
+      "t3": "創造力",
+      "t4": "プレイヤー主導"
+    },
+    "focus": {
+      "label": "FOCUS",
+      "lead": "私たちが愛し、耕し続けるフィールドです。",
+      "i1": {
+        "title": "サバイバル探索",
+        "desc": "バニラと MOD のサバイバルで培った攻略を、すべての冒険と発見と共に記録します。"
+      },
+      "i2": {
+        "title": "建築創作",
+        "desc": "作品とインスピレーションを共有。小さな小屋から壮大なプロジェクトまで。"
+      },
+      "i3": {
+        "title": "レッドストーン工学",
+        "desc": "回路や装置を研究し、アイデアを自動で動かす仕組みを作ります。"
+      },
+      "i4": {
+        "title": "MOD とリソース",
+        "desc": "MOD、ModPack、リソースパックでブロック世界の限界を広げます。"
+      }
+    },
+    "what": {
+      "label": "WHAT",
+      "lead": "コミュニティを活気づけるための私たちの活動です。",
+      "i1": {
+        "title": "コミュニティ討論",
+        "desc": "ゲームの内外を問わず、質の高い投稿と議論が集まります。"
+      },
+      "i2": {
+        "title": "リソース共有",
+        "desc": "攻略や素材を検索可能なコミュニティのナレッジベースとして蓄積します。"
+      },
+      "i3": {
+        "title": "イベント交流会",
+        "desc": "オンライン協力プレイや建築イベントで、一人の楽しさを共有する喜びに。"
+      },
+      "i4": {
+        "title": "Q&A 相互支援",
+        "desc": "初心者の質問にベテランが答え、難問を共に解決します。"
+      }
+    },
+    "values": {
+      "label": "VALUES",
+      "lead": "ブロックの名のもとに、私たちはこの精神を大切にします。",
+      "i1": {
+        "title": "創造",
+        "desc": "ブロックが自由に組み合わさるように、誰もが自分だけの世界を建てられます。"
+      },
+      "i2": {
+        "title": "好奇心",
+        "desc": "未知への好奇心を忘れず、新しいシードや MOD、遊び方を探索し続けます。"
+      },
+      "i3": {
+        "title": "情熱",
+        "desc": "「Lit」は灯すこと、すなわち情熱。本物の熱量で集いの場を照らします。"
+      }
+    },
+    "cta": {
+      "label": "CTA",
+      "title": "私たちに参加しよう",
+      "description": "ひとつのブロック、ひとつの情熱、ともに建てよう。ブロックの名のもとに、世界へ。",
+      "primary": "コミュニティに参加",
+      "secondary": "ログイン"
+    },
+    "footer": {
+      "rights": "© {year} iGCraftLit Community. All rights reserved.",
+      "console": "コンソール"
+    }
   },
   "pages": {
     "notification": {
@@ -230,6 +326,189 @@
       "joinedAt": "登録日",
       "changePassword": "パスワード変更",
       "refreshSession": "ログイン状態を更新"
+    }
+  },
+  "community": {
+    "categories": {
+      "general": "雑談",
+      "guide": "攻略ガイド",
+      "showcase": "作品紹介",
+      "qa": "質問・相談",
+      "news": "お知らせ"
+    },
+    "status": {
+      "published": "公開中",
+      "hidden": "非表示"
+    },
+    "roles": {
+      "user": "ユーザー",
+      "moderator": "モデレーター",
+      "admin": "管理者"
+    },
+    "pagination": {
+      "label": "ページ送り",
+      "prev": "前のページ",
+      "next": "次のページ",
+      "pageInfo": "{page} / {totalPages} ページ"
+    },
+    "actions": {
+      "like": "いいね",
+      "liked": "いいね済み",
+      "favorite": "ブックマーク",
+      "favorited": "ブックマーク済み",
+      "comment": "コメント",
+      "edit": "編集",
+      "delete": "削除",
+      "reply": "返信",
+      "save": "保存",
+      "cancel": "キャンセル"
+    },
+    "state": {
+      "loading": "読み込み中…",
+      "retry": "再試行",
+      "noPostsTitle": "投稿はまだありません",
+      "noPostsDesc": "最初の投稿をしてみましょう"
+    },
+    "filters": {
+      "allCategories": "すべてのカテゴリ",
+      "activeFilters": "現在の絞り込み：",
+      "clearTag": "タグを解除",
+      "clearSearch": "検索を解除"
+    },
+    "communityPage": {
+      "title": "コミュニティ広場",
+      "description": "投稿を検索し、ディスカッションに参加して作品を共有しましょう",
+      "searchPlaceholder": "タイトルや本文を検索…",
+      "newPost": "新規投稿"
+    },
+    "post": {
+      "backToCommunity": "コミュニティ広場へ戻る",
+      "noSelectionTitle": "投稿が指定されていません",
+      "noSelectionDesc": "コミュニティ広場から投稿を選択してください",
+      "notFoundTitle": "投稿が見つかりません",
+      "notFoundDesc": "投稿が削除されたか、閲覧権限がありません",
+      "deleteConfirm": "この投稿を削除しますか？元に戻せません。コメントといいねも一緒に削除されます。",
+      "edit": "編集",
+      "hide": "非表示",
+      "restore": "再表示",
+      "delete": "削除"
+    },
+    "comments": {
+      "title": "コメント（{count}）",
+      "placeholder": "コメントを書く…",
+      "submit": "コメントする",
+      "loginRequired": "コメントするにはログインしてください",
+      "goLogin": "ログイン",
+      "empty": "コメントはまだありません。最初の返信をどうぞ。",
+      "reply": "返信",
+      "replyPlaceholder": "返信を書く…",
+      "submitReply": "返信する",
+      "edit": "編集",
+      "save": "保存",
+      "cancel": "キャンセル",
+      "delete": "削除",
+      "deleteConfirm": "このコメントを削除しますか？",
+      "hide": "非表示",
+      "restore": "再表示"
+    },
+    "editor": {
+      "invalid": "タイトルと本文の長さをご確認ください",
+      "createTitle": "新規投稿",
+      "editTitle": "投稿を編集",
+      "createDescription": "アイデアや作品、質問を共有しましょう",
+      "editDescription": "投稿内容を更新します。保存後すぐに反映されます",
+      "back": "戻る",
+      "titleLabel": "タイトル",
+      "titlePlaceholder": "タイトルを入力（1〜100文字）",
+      "categoryLabel": "カテゴリ",
+      "categoryNone": "カテゴリなし",
+      "tagsLabel": "タグ",
+      "tagsPlaceholder": "例：建築, レッドストーン, サバイバル",
+      "tagsHint": "タグは最大5個、カンマかスペースで区切り、各20文字以内",
+      "contentLabel": "本文",
+      "contentPlaceholder": "本文を入力してください…",
+      "save": "変更を保存",
+      "publish": "投稿する",
+      "cancel": "キャンセル"
+    },
+    "profile": {
+      "noSelectionTitle": "ユーザーが指定されていません",
+      "noSelectionDesc": "ログインするとプロフィールを表示できます",
+      "goLogin": "ログイン",
+      "notFoundTitle": "ユーザーが見つかりません",
+      "notFoundDesc": "このユーザーは存在しないか、停止されています",
+      "joinedAt": "登録日：{date}",
+      "postCount": "投稿 {count} 件",
+      "commentCount": "コメント {count} 件",
+      "myPosts": "マイ投稿",
+      "myComments": "マイコメント",
+      "editProfile": "プロフィール編集",
+      "tabPosts": "投稿",
+      "tabComments": "コメント",
+      "emptyPostsTitle": "投稿はまだありません",
+      "emptyPostsDesc": "公開投稿はまだありません",
+      "emptyCommentsTitle": "コメントはまだありません",
+      "emptyCommentsDesc": "公開コメントはまだありません"
+    },
+    "myPosts": {
+      "title": "マイ投稿",
+      "description": "非表示の投稿も含め、あなたの全投稿を管理します",
+      "emptyTitle": "投稿はまだありません",
+      "emptyDesc": "まだ投稿していません"
+    },
+    "myComments": {
+      "title": "マイコメント",
+      "description": "非表示のコメントも含め、あなたの全コメントを表示します",
+      "emptyTitle": "コメントはまだありません",
+      "emptyDesc": "まだコメントしていません",
+      "goCommunity": "コミュニティへ"
+    },
+    "settings": {
+      "title": "プロフィール設定",
+      "description": "ニックネーム、アバター、自己紹介、ウェブサイトを編集",
+      "accountLink": "アカウントとパスワードの設定",
+      "profileLink": "プロフィールを見る",
+      "saved": "プロフィールを保存しました",
+      "avatarLabel": "アバター",
+      "avatarHint": "画像アップロードには未対応です。画像 URL を入力してください",
+      "avatarPlaceholder": "https://example.com/avatar.png",
+      "displayNameLabel": "ニックネーム",
+      "displayNamePlaceholder": "投稿やコメントに表示される名前",
+      "displayNameHint": "{max}文字以内。空欄ならユーザー名が表示されます",
+      "bioLabel": "自己紹介",
+      "bioPlaceholder": "簡単に自己紹介してみましょう",
+      "websiteLabel": "ウェブサイト",
+      "websitePlaceholder": "https://example.com",
+      "websiteHint": "http:// または https:// で始めてください",
+      "save": "保存する"
+    },
+    "errors": {
+      "generic": "操作に失敗しました。後でもう一度お試しください",
+      "badRequest": "リクエスト内容が正しくありません",
+      "titleInvalid": "タイトルは1〜100文字にしてください",
+      "contentInvalid": "本文は1〜10000文字にしてください",
+      "commentInvalid": "コメントは1〜2000文字にしてください",
+      "tagTooLong": "タグの数または長さが制限を超えています",
+      "categoryNotFound": "選択したカテゴリは存在しません",
+      "postNotFound": "投稿が見つからないか、閲覧できません",
+      "commentNotFound": "コメントが見つからないか、閲覧できません",
+      "parentInvalid": "返信先のコメントが存在しないか、別の投稿に属しています",
+      "userNotFound": "ユーザーが存在しないか、停止されています",
+      "displayNameInvalid": "ニックネームの長さが正しくありません",
+      "bioInvalid": "自己紹介の長さが正しくありません",
+      "websiteInvalid": "ウェブサイト URL の形式が正しくありません",
+      "avatarInvalid": "アバター URL の形式が正しくありません",
+      "unauthorized": "先にログインしてください",
+      "forbidden": "この操作を行う権限がありません"
+    },
+    "messages": {
+      "postCreated": "投稿を公開しました",
+      "postUpdated": "投稿を更新しました",
+      "postDeleted": "投稿を削除しました",
+      "commentCreated": "コメントしました",
+      "commentUpdated": "コメントを更新しました",
+      "commentDeleted": "コメントを削除しました",
+      "profileUpdated": "プロフィールを更新しました"
     }
   },
   "notfound": {

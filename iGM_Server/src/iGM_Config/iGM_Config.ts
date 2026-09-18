@@ -85,7 +85,7 @@ export const iGM_Config: iGM_AppConfig = {
     "https://www.igcraftlit.com",
     "http://localhost:3000",
   ],
-  version: "0.2.0",
+  version: "0.3.0",
   auth: {
     cookieName: "iGM_SID",
     sessionTtlMs: 7 * 24 * 60 * 60 * 1000,
@@ -108,6 +108,14 @@ export const iGM_Config: iGM_AppConfig = {
     forgotPassword: { windowMs: 15 * 60 * 1000, max: 3 },
     // 重置密码/验证邮箱：15 分钟内最多 10 次提交
     verify: { windowMs: 15 * 60 * 1000, max: 10 },
+    // 模块三：发帖——10 分钟内最多 10 篇
+    createPost: { windowMs: 10 * 60 * 1000, max: 10 },
+    // 模块三：评论/回复——1 分钟内最多 10 条
+    createComment: { windowMs: 60 * 1000, max: 10 },
+    // 模块三：点赞/收藏——1 分钟内最多 60 次
+    interact: { windowMs: 60 * 1000, max: 60 },
+    // 模块三：资料编辑——10 分钟内最多 10 次
+    profileUpdate: { windowMs: 10 * 60 * 1000, max: 10 },
   },
   mail: {
     // 163 邮箱 SMTP：465 端口隐式 SSL；密码使用客户端授权码（非登录密码），

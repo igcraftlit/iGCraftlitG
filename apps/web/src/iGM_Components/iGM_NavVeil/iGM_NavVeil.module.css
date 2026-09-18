@@ -1,0 +1,46 @@
+/*
+ * 文件路径：apps/web/src/iGM_Components/iGM_NavVeil/iGM_NavVeil.module.css
+ * 所属层：前端 / 通用组件样式
+ * 路由：全局（根布局挂载）
+ * 模块：iGM_NavVeil
+ * 作用：路由切换幕布擦除转场样式
+ * 内容：待命（视口上方）、覆盖（绘制前到位无过渡）、扫出（自上而下）
+ *       三态与前沿强调线，降低动态偏好时由组件直接不渲染
+ */
+
+/* 待命态：位于视口上方，不拦截交互 */
+.veil {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--igm-bg);
+  transform: translate3d(0, -100%, 0);
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* 覆盖态：无过渡瞬间铺满，遮蔽新旧页面交换 */
+.cover {
+  transform: translate3d(0, 0, 0);
+  transition: none;
+  pointer-events: auto;
+}
+
+/* 扫出态：继续向下离开视口，前沿带强调线与投影 */
+.retreat {
+  transform: translate3d(0, 100%, 0);
+  transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: auto;
+  box-shadow: 0 18px 48px -18px
+    color-mix(in srgb, var(--igm-accent) 38%, transparent);
+}
+
+/* 前沿细线：随幕布扫出方向移动 */
+.edge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--igm-accent);
+}

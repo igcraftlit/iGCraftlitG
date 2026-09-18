@@ -1,0 +1,44 @@
+/*
+ * 文件路径：apps/web/src/iGM_Components/iGM_Pagination/iGM_Pagination.module.css
+ * 所属层：前端 / 通用组件样式
+ * 路由：G_Community、G_User、G_UserPosts、G_UserComments
+ * 模块：iGM_Pagination
+ * 作用：帖子与评论列表的极简分页样式
+ */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+.navButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid var(--igm-border-strong);
+  border-radius: var(--igm-radius);
+  background: var(--igm-surface);
+  color: var(--igm-text-muted);
+  font-size: 13px;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.navButton:hover:not(:disabled) {
+  border-color: var(--igm-accent);
+  color: var(--igm-accent);
+}
+
+.navButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pageInfo {
+  font-size: 13px;
+  color: var(--igm-text-muted);
+  font-variant-numeric: tabular-nums;
+}

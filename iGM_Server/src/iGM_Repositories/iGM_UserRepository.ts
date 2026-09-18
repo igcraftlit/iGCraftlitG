@@ -125,6 +125,44 @@ export function iGM_CountUsers(): number {
   return row.iGM_Count;
 }
 
+/** 按主键批量查询用户（帖子/评论列表组装作者信息，避免 N+1 查询） */
+export function iGM_FindUsersByIds(ids: string[]): iGM_UserRow[] {
+  const unique = Array.from(new Set(ids)).filter(Boolean);
+  if (unique.length === 0) return [];
+  const placeholders = unique.map(() => "?").join(", ");
+  return iGM_Db
+    .query(`SELECT * FROM iGM_Users WHERE iGM_Id IN (${placeholders})`)
+    .all(...unique) as iGM_UserRow[];
+}
+
+/** 更新本人公开资料（昵称、头像 URL、简介、网站），并刷新 updatedAt */
+export function iGM_UpdateProfile(
+  userId: string,
+  fields: {
+    displayName: string | null;
+    avatar: string | null;
+    bio: string | null;
+    website: string | null;
+    now: string;
+  },
+): boolean {
+  const result = iGM_Db.run(
+    `UPDATE iGM_Users
+       SET iGM_DisplayName = ?, iGM_Avatar = ?, iGM_Bio = ?,
+           iGM_Website = ?, iGM_UpdatedAt = ?
+     WHERE iGM_Id = ?`,
+    [
+      fields.displayName,
+      fields.avatar,
+      fields.bio,
+      fields.website,
+      fields.now,
+      userId,
+    ],
+  );
+  return result.changes > 0;
+}
+
 /** （可选）管理员更新角色与状态 */
 export function iGM_UpdateUserAdmin(
   userId: string,
@@ -154,8 +192,10 @@ export default {
   iGM_FindUserById,
   iGM_FindUserByEmail,
   iGM_FindUserByUsername,
+  iGM_FindUsersByIds,
   iGM_MarkEmailVerified,
   iGM_UpdatePassword,
+  iGM_UpdateProfile,
   iGM_ListUsers,
   iGM_CountUsers,
   iGM_UpdateUserAdmin,

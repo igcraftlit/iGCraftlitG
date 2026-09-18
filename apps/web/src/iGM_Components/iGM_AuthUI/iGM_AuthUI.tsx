@@ -181,15 +181,16 @@ export function iGM_ResolveErrorText(
   }
 
   const key =
-    error instanceof Error ? error.message : "auth.errors.generic";
-  if (key.startsWith("auth.")) {
+    error instanceof Error ? error.message : "community.errors.generic";
+  // 后端业务错误 message 即 i18n 文案键（auth.* / community.*）
+  if (key.includes(".")) {
     try {
       return t(key);
     } catch {
-      return t("auth.errors.generic");
+      return t("community.errors.generic");
     }
   }
-  return t("auth.errors.generic");
+  return t("community.errors.generic");
 }
 
 // 导出 //

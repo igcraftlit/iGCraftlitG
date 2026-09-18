@@ -1,0 +1,32 @@
+/*
+ * 文件路径：apps/web/src/iGM_Components/iGM_PageTransition/iGM_PageTransition.module.css
+ * 所属层：前端 / 通用组件样式
+ * 路由：全局（由 app/template.tsx 挂载）
+ * 模块：iGM_PageTransition
+ * 作用：页面切换后的内容入场动画（淡入 + 轻微上移归位）
+ * 内容：单次 keyframes、缓动曲线、降低动态偏好的无障碍降级
+ */
+
+.pageEnter {
+  animation: iGMPageEnter 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: opacity, transform;
+}
+
+@keyframes iGMPageEnter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* 无障碍：系统偏好减少动态时直接呈现 */
+@media (prefers-reduced-motion: reduce) {
+  .pageEnter {
+    animation: none;
+  }
+}

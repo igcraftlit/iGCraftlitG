@@ -15,6 +15,10 @@
     "activities": "Activities",
     "resources": "Resources",
     "profile": "Profile",
+    "createPost": "New Post",
+    "myPosts": "My Posts",
+    "myComments": "My Comments",
+    "userSettings": "Profile Settings",
     "settings": "Account Settings",
     "admin": "Admin Panel"
   },
@@ -45,6 +49,98 @@
     "cardProfileDesc": "View your profile and account settings",
     "cardAdminTitle": "Admin panel",
     "cardAdminDesc": "Access site administration and maintenance"
+  },
+  "landing": {
+    "brand": "iGCraftLit",
+    "nav": {
+      "home": "Home",
+      "community": "Community",
+      "join": "Join Us",
+      "console": "Console"
+    },
+    "hero": {
+      "slogan": "\"In the name of blocks, open to the world.\"",
+      "description": "iGCraftLit is a community for Minecraft creators. Gathered by blocks, we bring together players who love building and exploring to shape an open, free gaming ecosystem.",
+      "primary": "Enter Community",
+      "secondary": "Learn More",
+      "scrollHint": "Scroll down"
+    },
+    "why": {
+      "label": "WHY",
+      "p1": "iGCraftLit — in the name of blocks. Blocks stand for creation, curiosity and perseverance — exactly how we approach games and life.",
+      "p2": "We believe a community should be open, free, and player-owned. Not for profit, not for fame, but for the purest passion for creation.",
+      "t1": "Open Collaboration",
+      "t2": "Freedom",
+      "t3": "Creativity",
+      "t4": "Player-Driven"
+    },
+    "focus": {
+      "label": "FOCUS",
+      "lead": "The fields we love and keep cultivating.",
+      "i1": {
+        "title": "Survival Exploration",
+        "desc": "Guides forged in vanilla and modded survival, recording every adventure and discovery."
+      },
+      "i2": {
+        "title": "Building & Design",
+        "desc": "Share builds and inspiration, from cozy huts to grand engineering projects."
+      },
+      "i3": {
+        "title": "Redstone Engineering",
+        "desc": "Study redstone circuits and contraptions that set your ideas in motion."
+      },
+      "i4": {
+        "title": "Mods & Resources",
+        "desc": "Explore mods, modpacks and resource packs that push the blocky world's boundaries."
+      }
+    },
+    "what": {
+      "label": "WHAT",
+      "lead": "What we do to keep the community thriving.",
+      "i1": {
+        "title": "Community Discussion",
+        "desc": "High-quality posts and conversations covering every corner of the game and beyond."
+      },
+      "i2": {
+        "title": "Resource Sharing",
+        "desc": "Guides, modpacks and assets curated into a searchable community knowledge base."
+      },
+      "i3": {
+        "title": "Events & Meetups",
+        "desc": "Online co-op and build events that turn solo play into shared joy."
+      },
+      "i4": {
+        "title": "Q&A Support",
+        "desc": "Beginners ask, veterans answer — together we crack every hard problem."
+      }
+    },
+    "values": {
+      "label": "VALUES",
+      "lead": "In the name of blocks, we live by these spirits.",
+      "i1": {
+        "title": "Creation",
+        "desc": "Blocks combine freely, and so do we: everyone can build a world of their own."
+      },
+      "i2": {
+        "title": "Curiosity",
+        "desc": "Stay curious about the unknown — new seeds, mods and playstyles await."
+      },
+      "i3": {
+        "title": "Passion",
+        "desc": "\"Lit\" means ignited: we light up every gathering with genuine enthusiasm."
+      }
+    },
+    "cta": {
+      "label": "CTA",
+      "title": "Join Us",
+      "description": "One block, one passion, built together. In the name of blocks, open to the world.",
+      "primary": "Join the Community",
+      "secondary": "Sign In"
+    },
+    "footer": {
+      "rights": "© {year} iGCraftLit Community. All rights reserved.",
+      "console": "Console"
+    }
   },
   "pages": {
     "notification": {
@@ -230,6 +326,189 @@
       "joinedAt": "Joined",
       "changePassword": "Change password",
       "refreshSession": "Refresh session"
+    }
+  },
+  "community": {
+    "categories": {
+      "general": "General",
+      "guide": "Guides",
+      "showcase": "Showcase",
+      "qa": "Q&A",
+      "news": "News"
+    },
+    "status": {
+      "published": "Published",
+      "hidden": "Hidden"
+    },
+    "roles": {
+      "user": "User",
+      "moderator": "Moderator",
+      "admin": "Admin"
+    },
+    "pagination": {
+      "label": "Pagination",
+      "prev": "Previous",
+      "next": "Next",
+      "pageInfo": "Page {page} of {totalPages}"
+    },
+    "actions": {
+      "like": "Like",
+      "liked": "Liked",
+      "favorite": "Favorite",
+      "favorited": "Favorited",
+      "comment": "Comment",
+      "edit": "Edit",
+      "delete": "Delete",
+      "reply": "Reply",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "state": {
+      "loading": "Loading…",
+      "retry": "Retry",
+      "noPostsTitle": "No posts yet",
+      "noPostsDesc": "Be the first to create a post"
+    },
+    "filters": {
+      "allCategories": "All categories",
+      "activeFilters": "Active filters:",
+      "clearTag": "Clear tag",
+      "clearSearch": "Clear search"
+    },
+    "communityPage": {
+      "title": "Community Square",
+      "description": "Browse and search posts, join discussions and share your work",
+      "searchPlaceholder": "Search post titles or content…",
+      "newPost": "New post"
+    },
+    "post": {
+      "backToCommunity": "Back to community",
+      "noSelectionTitle": "No post selected",
+      "noSelectionDesc": "Choose a post from the community square",
+      "notFoundTitle": "Post not found",
+      "notFoundDesc": "This post may have been deleted, or you do not have access to it",
+      "deleteConfirm": "Delete this post? This cannot be undone; its comments and interactions will be removed as well.",
+      "edit": "Edit",
+      "hide": "Hide",
+      "restore": "Restore",
+      "delete": "Delete"
+    },
+    "comments": {
+      "title": "Comments ({count})",
+      "placeholder": "Write a comment…",
+      "submit": "Post comment",
+      "loginRequired": "Sign in to join the discussion",
+      "goLogin": "Sign in",
+      "empty": "No comments yet. Be the first to reply.",
+      "reply": "Reply",
+      "replyPlaceholder": "Write your reply…",
+      "submitReply": "Post reply",
+      "edit": "Edit",
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "deleteConfirm": "Delete this comment?",
+      "hide": "Hide",
+      "restore": "Restore"
+    },
+    "editor": {
+      "invalid": "Please check the title and content length",
+      "createTitle": "Create a post",
+      "editTitle": "Edit post",
+      "createDescription": "Share your ideas, creations or questions",
+      "editDescription": "Update the post. Changes take effect immediately",
+      "back": "Back",
+      "titleLabel": "Title",
+      "titlePlaceholder": "Enter a title (1-100 characters)",
+      "categoryLabel": "Category",
+      "categoryNone": "No category",
+      "tagsLabel": "Tags",
+      "tagsPlaceholder": "e.g. building, redstone, survival",
+      "tagsHint": "Up to 5 tags, separated by commas or spaces; max 20 characters each",
+      "contentLabel": "Content",
+      "contentPlaceholder": "Write your post content…",
+      "save": "Save changes",
+      "publish": "Publish",
+      "cancel": "Cancel"
+    },
+    "profile": {
+      "noSelectionTitle": "No user selected",
+      "noSelectionDesc": "Sign in to view your profile",
+      "goLogin": "Sign in",
+      "notFoundTitle": "User not found",
+      "notFoundDesc": "This user does not exist or has been suspended",
+      "joinedAt": "Joined {date}",
+      "postCount": "{count} posts",
+      "commentCount": "{count} comments",
+      "myPosts": "My posts",
+      "myComments": "My comments",
+      "editProfile": "Edit profile",
+      "tabPosts": "Posts",
+      "tabComments": "Comments",
+      "emptyPostsTitle": "No posts yet",
+      "emptyPostsDesc": "They have not published any posts yet",
+      "emptyCommentsTitle": "No comments yet",
+      "emptyCommentsDesc": "They have not posted any comments yet"
+    },
+    "myPosts": {
+      "title": "My posts",
+      "description": "Manage all the posts you have created, including hidden ones",
+      "emptyTitle": "No posts yet",
+      "emptyDesc": "You have not created any posts yet"
+    },
+    "myComments": {
+      "title": "My comments",
+      "description": "All comments you have posted, including hidden ones",
+      "emptyTitle": "No comments yet",
+      "emptyDesc": "You have not posted any comments yet",
+      "goCommunity": "Visit the community"
+    },
+    "settings": {
+      "title": "Profile settings",
+      "description": "Edit your display name, avatar, bio and personal website",
+      "accountLink": "Account and password settings",
+      "profileLink": "View my profile",
+      "saved": "Profile saved",
+      "avatarLabel": "Avatar",
+      "avatarHint": "Image upload is not available yet. Please enter an image URL",
+      "avatarPlaceholder": "https://example.com/avatar.png",
+      "displayNameLabel": "Display name",
+      "displayNamePlaceholder": "The name shown on your posts and comments",
+      "displayNameHint": "Up to {max} characters. Leave empty to use your username",
+      "bioLabel": "Bio",
+      "bioPlaceholder": "Tell us a little about yourself",
+      "websiteLabel": "Website",
+      "websitePlaceholder": "https://example.com",
+      "websiteHint": "Must start with http:// or https://",
+      "save": "Save profile"
+    },
+    "errors": {
+      "generic": "Something went wrong, please try again later",
+      "badRequest": "Invalid request",
+      "titleInvalid": "Title must be 1-100 characters",
+      "contentInvalid": "Content must be 1-10000 characters",
+      "commentInvalid": "Comment must be 1-2000 characters",
+      "tagTooLong": "The number or length of tags is invalid",
+      "categoryNotFound": "The selected category does not exist",
+      "postNotFound": "Post not found or not accessible",
+      "commentNotFound": "Comment not found or not accessible",
+      "parentInvalid": "The parent comment does not exist or belongs to another post",
+      "userNotFound": "User does not exist or has been suspended",
+      "displayNameInvalid": "Display name length is invalid",
+      "bioInvalid": "Bio length is invalid",
+      "websiteInvalid": "Website URL format is invalid",
+      "avatarInvalid": "Avatar URL format is invalid",
+      "unauthorized": "Please sign in first",
+      "forbidden": "You do not have permission to perform this action"
+    },
+    "messages": {
+      "postCreated": "Post published",
+      "postUpdated": "Post updated",
+      "postDeleted": "Post deleted",
+      "commentCreated": "Comment posted",
+      "commentUpdated": "Comment updated",
+      "commentDeleted": "Comment deleted",
+      "profileUpdated": "Profile updated"
     }
   },
   "notfound": {

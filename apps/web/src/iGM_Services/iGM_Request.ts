@@ -121,6 +121,19 @@ export function iGM_Post<T>(
   return iGM_Request<T>(path, { method: "POST", body, timeoutMs });
 }
 
+/** PUT 快捷方法 */
+export function iGM_Put<T>(
+  path: string,
+  body?: unknown,
+): Promise<iGM_ApiResponse<T>> {
+  return iGM_Request<T>(path, { method: "PUT", body });
+}
+
+/** DELETE 快捷方法 */
+export function iGM_Delete<T>(path: string): Promise<iGM_ApiResponse<T>> {
+  return iGM_Request<T>(path, { method: "DELETE" });
+}
+
 /** 后端健康检查数据结构 */
 export interface iGM_HealthResult {
   status: "ok";

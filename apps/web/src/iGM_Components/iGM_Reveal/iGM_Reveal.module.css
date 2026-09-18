@@ -1,0 +1,57 @@
+/*
+ * 文件路径：apps/web/src/iGM_Components/iGM_Reveal/iGM_Reveal.module.css
+ * 所属层：前端 / 通用组件样式
+ * 路由：全局（落地页滚动入场动效）
+ * 模块：iGM_Reveal
+ * 作用：滚动进入视口的拉出 + 淡入过渡，prefers-reduced-motion 时直接呈现
+ * 内容：五方向初始位移、可见态归零、降低动态偏好的无障碍降级
+ */
+
+.reveal {
+  opacity: 0;
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+/* 初始拉出方向 */
+.up {
+  transform: translate3d(0, 32px, 0);
+}
+
+.down {
+  transform: translate3d(0, -28px, 0);
+}
+
+.left {
+  transform: translate3d(-40px, 0, 0);
+}
+
+.right {
+  transform: translate3d(40px, 0, 0);
+}
+
+.none {
+  transform: none;
+}
+
+/* 进入视口：归位淡入 */
+.visible,
+.visible.up,
+.visible.down,
+.visible.left,
+.visible.right,
+.visible.none {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+/* 无障碍：系统偏好减少动态时禁用位移与过渡 */
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}

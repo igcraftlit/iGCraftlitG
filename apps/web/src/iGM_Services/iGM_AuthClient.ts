@@ -25,6 +25,11 @@ export interface iGM_User {
   role: iGM_UserRole;
   status: "active" | "suspended";
   emailVerified: boolean;
+  // 模块三扩展的公开资料字段
+  displayName: string | null;
+  avatar: string | null;
+  bio: string | null;
+  website: string | null;
   createdAt: string;
   updatedAt: string;
 }

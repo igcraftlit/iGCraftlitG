@@ -29,11 +29,16 @@ export interface iGM_UserRow {
   iGM_Role: iGM_UserRole;
   iGM_Status: iGM_UserStatus;
   iGM_EmailVerified: number;
+  // 模块三扩展的公开资料字段
+  iGM_DisplayName: string | null;
+  iGM_Avatar: string | null;
+  iGM_Bio: string | null;
+  iGM_Website: string | null;
   iGM_CreatedAt: string;
   iGM_UpdatedAt: string;
 }
 
-/** 对外用户信息 DTO：绝不包含密码哈希 */
+/** 对外用户信息 DTO：绝不包含密码哈希；资料字段仅本人接口返回 */
 export interface iGM_UserDto {
   id: string;
   username: string;
@@ -41,6 +46,10 @@ export interface iGM_UserDto {
   role: iGM_UserRole;
   status: iGM_UserStatus;
   emailVerified: boolean;
+  displayName: string | null;
+  avatar: string | null;
+  bio: string | null;
+  website: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -90,6 +99,10 @@ export function iGM_ToUserDto(row: iGM_UserRow): iGM_UserDto {
     role: row.iGM_Role,
     status: row.iGM_Status,
     emailVerified: row.iGM_EmailVerified === 1,
+    displayName: row.iGM_DisplayName,
+    avatar: row.iGM_Avatar,
+    bio: row.iGM_Bio,
+    website: row.iGM_Website,
     createdAt: row.iGM_CreatedAt,
     updatedAt: row.iGM_UpdatedAt,
   };

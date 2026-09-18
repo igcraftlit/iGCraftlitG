@@ -29,7 +29,10 @@ function iGM_OpenDatabase(): Database {
   if (!existsSync(dirname(dbPath))) {
     mkdirSync(dirname(dbPath), { recursive: true });
   }
-  return new Database(dbPath, { create: true });
+  const database = new Database(dbPath, { create: true });
+  // 开启外键约束：模块三帖子/评论/收藏等表依赖 ON DELETE CASCADE / SET NULL
+  database.run("PRAGMA foreign_keys = ON");
+  return database;
 }
 
 /** 共享数据库单例 */

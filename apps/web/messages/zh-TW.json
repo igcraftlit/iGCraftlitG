@@ -15,6 +15,10 @@
     "activities": "活動",
     "resources": "資源庫",
     "profile": "個人主頁",
+    "createPost": "發帖",
+    "myPosts": "我的貼文",
+    "myComments": "我的留言",
+    "userSettings": "資料設定",
     "settings": "帳戶設定",
     "admin": "管理後台"
   },
@@ -45,6 +49,98 @@
     "cardProfileDesc": "檢視個人資料與帳號設定",
     "cardAdminTitle": "管理後台",
     "cardAdminDesc": "進入網站管理與維護功能"
+  },
+  "landing": {
+    "brand": "iGCraftLit",
+    "nav": {
+      "home": "首頁",
+      "community": "社群",
+      "join": "加入我們",
+      "console": "進入控制台"
+    },
+    "hero": {
+      "slogan": "「以方塊之名，向世界敞開。」",
+      "description": "iGCraftLit 是一個面向 Minecraft 創作者的玩家社群。我們因方塊相聚，匯聚熱愛建築與探索的人們，共同構築開放、自由的遊戲生態。",
+      "primary": "進入社群",
+      "secondary": "了解更多",
+      "scrollHint": "向下捲動"
+    },
+    "why": {
+      "label": "WHY",
+      "p1": "iGCraftLit，以方塊之名。方塊象徵著創造、好奇與堅持——這正是我們對待遊戲與生活的態度。",
+      "p2": "我們相信社群應當開放、自由且為玩家所有。不為盈利，不為名聲，只為那份對創造最純粹的熱情。",
+      "t1": "開放協作",
+      "t2": "自由",
+      "t3": "創造力",
+      "t4": "玩家驅動"
+    },
+    "focus": {
+      "label": "FOCUS",
+      "lead": "這些是我們熱愛並持續耕耘的領域。",
+      "i1": {
+        "title": "生存探索",
+        "desc": "在原版與模組生存中沉澱攻略，記錄每一次冒險與發現。"
+      },
+      "i2": {
+        "title": "建築創作",
+        "desc": "分享建築作品與靈感，從精巧小屋到宏大工程。"
+      },
+      "i3": {
+        "title": "紅石工程",
+        "desc": "鑽研紅石電路與機械裝置，讓創意自動運轉。"
+      },
+      "i4": {
+        "title": "模組與資源",
+        "desc": "探索模組、整合包與材質包，拓展方塊世界的邊界。"
+      }
+    },
+    "what": {
+      "label": "WHAT",
+      "lead": "為了讓社群持續蓬勃，我們做這些事。",
+      "i1": {
+        "title": "社群討論",
+        "desc": "高品質的貼文與討論，涵蓋遊戲內外的多個領域。"
+      },
+      "i2": {
+        "title": "資源共享",
+        "desc": "攻略、整合包與素材沉澱為可檢索的社群知識庫。"
+      },
+      "i3": {
+        "title": "活動聚會",
+        "desc": "線上連線與建築活動，讓獨樂樂變成眾樂樂。"
+      },
+      "i4": {
+        "title": "問答互助",
+        "desc": "新手提問、老手答疑，協作解決每一個難題。"
+      }
+    },
+    "values": {
+      "label": "VALUES",
+      "lead": "以方塊之名，我們堅持這些精神。",
+      "i1": {
+        "title": "創造",
+        "desc": "如方塊般自由組合，我們相信每個人都能建造屬於自己的世界。"
+      },
+      "i2": {
+        "title": "好奇",
+        "desc": "對未知保持好奇，永遠在探索新的種子、模組與玩法。"
+      },
+      "i3": {
+        "title": "熱忱",
+        "desc": "Lit 是點亮也是熱愛，我們用熱情點燃每一次相聚。"
+      }
+    },
+    "cta": {
+      "label": "CTA",
+      "title": "加入我們",
+      "description": "一塊方塊，一份熱愛，一起建造。以方塊之名，向世界敞開。",
+      "primary": "加入社群",
+      "secondary": "登入"
+    },
+    "footer": {
+      "rights": "© {year} iGCraftLit Community. All rights reserved.",
+      "console": "控制台"
+    }
   },
   "pages": {
     "notification": {
@@ -230,6 +326,189 @@
       "joinedAt": "註冊時間",
       "changePassword": "修改密碼",
       "refreshSession": "重新整理登入狀態"
+    }
+  },
+  "community": {
+    "categories": {
+      "general": "綜合討論",
+      "guide": "教學攻略",
+      "showcase": "作品展示",
+      "qa": "問答求助",
+      "news": "資訊公告"
+    },
+    "status": {
+      "published": "已發布",
+      "hidden": "已隱藏"
+    },
+    "roles": {
+      "user": "普通使用者",
+      "moderator": "協管員",
+      "admin": "管理員"
+    },
+    "pagination": {
+      "label": "分頁導覽",
+      "prev": "上一頁",
+      "next": "下一頁",
+      "pageInfo": "第 {page} / {totalPages} 頁"
+    },
+    "actions": {
+      "like": "讚",
+      "liked": "已讚",
+      "favorite": "收藏",
+      "favorited": "已收藏",
+      "comment": "留言",
+      "edit": "編輯",
+      "delete": "刪除",
+      "reply": "回覆",
+      "save": "儲存",
+      "cancel": "取消"
+    },
+    "state": {
+      "loading": "載入中…",
+      "retry": "重試",
+      "noPostsTitle": "還沒有貼文",
+      "noPostsDesc": "成為第一個發帖的人吧"
+    },
+    "filters": {
+      "allCategories": "全部分類",
+      "activeFilters": "目前篩選：",
+      "clearTag": "清除標籤",
+      "clearSearch": "清除搜尋"
+    },
+    "communityPage": {
+      "title": "社群廣場",
+      "description": "瀏覽、搜尋全站貼文，參與討論與分享",
+      "searchPlaceholder": "搜尋貼文標題或內容…",
+      "newPost": "發表新帖"
+    },
+    "post": {
+      "backToCommunity": "返回社群廣場",
+      "noSelectionTitle": "未指定貼文",
+      "noSelectionDesc": "請從社群廣場選擇要檢視的貼文",
+      "notFoundTitle": "貼文不存在",
+      "notFoundDesc": "貼文可能已被刪除，或你無權檢視",
+      "deleteConfirm": "確定刪除這篇貼文嗎？此操作無法復原，其留言與互動將一併刪除。",
+      "edit": "編輯",
+      "hide": "隱藏",
+      "restore": "恢復",
+      "delete": "刪除"
+    },
+    "comments": {
+      "title": "留言（{count}）",
+      "placeholder": "寫下你的留言…",
+      "submit": "發表留言",
+      "loginRequired": "登入後即可參與留言",
+      "goLogin": "去登入",
+      "empty": "還沒有留言，來搶頭香吧。",
+      "reply": "回覆",
+      "replyPlaceholder": "寫下你的回覆…",
+      "submitReply": "發表回覆",
+      "edit": "編輯",
+      "save": "儲存",
+      "cancel": "取消",
+      "delete": "刪除",
+      "deleteConfirm": "確定刪除這則留言嗎？",
+      "hide": "隱藏",
+      "restore": "恢復"
+    },
+    "editor": {
+      "invalid": "請檢查標題與內文長度是否符合要求",
+      "createTitle": "發表新帖",
+      "editTitle": "編輯貼文",
+      "createDescription": "分享你的想法、作品或問題",
+      "editDescription": "修改貼文內容，儲存後立即生效",
+      "back": "返回",
+      "titleLabel": "標題",
+      "titlePlaceholder": "請輸入貼文標題（1-100 字）",
+      "categoryLabel": "分類",
+      "categoryNone": "不選擇分類",
+      "tagsLabel": "標籤",
+      "tagsPlaceholder": "例如：建築, 紅石, 生存",
+      "tagsHint": "最多 5 個標籤，用逗號、頓號或空格分隔，每個不超過 20 字",
+      "contentLabel": "內文",
+      "contentPlaceholder": "請輸入內文內容…",
+      "save": "儲存修改",
+      "publish": "發布貼文",
+      "cancel": "取消"
+    },
+    "profile": {
+      "noSelectionTitle": "未指定使用者",
+      "noSelectionDesc": "登入後可檢視你的個人主頁",
+      "goLogin": "去登入",
+      "notFoundTitle": "使用者不存在",
+      "notFoundDesc": "該使用者不存在或已被停用",
+      "joinedAt": "註冊於 {date}",
+      "postCount": "{count} 篇貼文",
+      "commentCount": "{count} 則留言",
+      "myPosts": "我的貼文",
+      "myComments": "我的留言",
+      "editProfile": "編輯資料",
+      "tabPosts": "貼文",
+      "tabComments": "留言",
+      "emptyPostsTitle": "還沒有貼文",
+      "emptyPostsDesc": "TA 還沒有公開發布的貼文",
+      "emptyCommentsTitle": "還沒有留言",
+      "emptyCommentsDesc": "TA 還沒有公開發表的留言"
+    },
+    "myPosts": {
+      "title": "我的貼文",
+      "description": "管理你發布的全部貼文，包括已隱藏的貼文",
+      "emptyTitle": "還沒有貼文",
+      "emptyDesc": "你還沒有發布過貼文"
+    },
+    "myComments": {
+      "title": "我的留言",
+      "description": "檢視你發表過的全部留言，包括被隱藏的留言",
+      "emptyTitle": "還沒有留言",
+      "emptyDesc": "你還沒有發表過留言",
+      "goCommunity": "去社群看看"
+    },
+    "settings": {
+      "title": "資料設定",
+      "description": "編輯你的暱稱、頭像、簡介與個人網站",
+      "accountLink": "帳戶與密碼設定",
+      "profileLink": "檢視我的主頁",
+      "saved": "資料已儲存",
+      "avatarLabel": "頭像",
+      "avatarHint": "暫不支援上傳圖片，請填寫圖片 URL",
+      "avatarPlaceholder": "https://example.com/avatar.png",
+      "displayNameLabel": "暱稱",
+      "displayNamePlaceholder": "顯示在貼文與留言中的名稱",
+      "displayNameHint": "不超過 {max} 個字，留空則顯示使用者名稱",
+      "bioLabel": "簡介",
+      "bioPlaceholder": "簡單介紹一下自己吧",
+      "websiteLabel": "個人網站",
+      "websitePlaceholder": "https://example.com",
+      "websiteHint": "須以 http:// 或 https:// 開頭",
+      "save": "儲存資料"
+    },
+    "errors": {
+      "generic": "操作失敗，請稍後再試",
+      "badRequest": "請求內容有誤",
+      "titleInvalid": "標題長度應為 1-100 個字",
+      "contentInvalid": "內文長度應為 1-10000 個字",
+      "commentInvalid": "留言內容長度應為 1-2000 個字",
+      "tagTooLong": "標籤數量或長度不符合要求",
+      "categoryNotFound": "所選分類不存在",
+      "postNotFound": "貼文不存在或無權檢視",
+      "commentNotFound": "留言不存在或無權檢視",
+      "parentInvalid": "回覆的留言不存在或不屬於該貼文",
+      "userNotFound": "使用者不存在或已被停用",
+      "displayNameInvalid": "暱稱長度不符合要求",
+      "bioInvalid": "簡介長度不符合要求",
+      "websiteInvalid": "網站位址格式不正確",
+      "avatarInvalid": "頭像位址格式不正確",
+      "unauthorized": "請先登入",
+      "forbidden": "你沒有權限執行此操作"
+    },
+    "messages": {
+      "postCreated": "貼文發布成功",
+      "postUpdated": "貼文已更新",
+      "postDeleted": "貼文已刪除",
+      "commentCreated": "留言已發表",
+      "commentUpdated": "留言已更新",
+      "commentDeleted": "留言已刪除",
+      "profileUpdated": "資料已更新"
     }
   },
   "notfound": {

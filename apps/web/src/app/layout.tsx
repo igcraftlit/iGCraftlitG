@@ -3,7 +3,7 @@
  * 所属层：前端 / 根布局（Next.js App Router 框架必需文件）
  * 路由：全局
  * 模块：iGM_RootLayout
- * 作用：HTML 根节点、Cinzel 艺术字体注入、全局样式、Provider 与 AppShell 挂载
+ * 作用：HTML 根节点、Cinzel 艺术字体注入、全局样式、Provider、AppShell 与转场幕布挂载
  * 内容：html[data-theme] 由 next-themes 写入，lang 由 iGM_LocaleProvider 同步
  * 说明：本文件为 Next.js 强制命名的框架入口，实际组件逻辑均在 iGM_ 前缀模块中
  */
@@ -14,6 +14,7 @@ import type { ReactNode } from "react";
 import { Cinzel } from "next/font/google";
 import { iGM_Providers as IGM_Providers } from "../iGM_Providers/iGM_Providers";
 import { iGM_AppShell as IGM_AppShell } from "../iGM_AppShell/iGM_AppShell";
+import { iGM_NavVeil as IGM_NavVeil } from "../iGM_Components/iGM_NavVeil/iGM_NavVeil";
 import "./iGM_Globals.css";
 
 // 类型定义 //
@@ -47,6 +48,7 @@ export default function iGM_RootLayout({ children }: iGM_RootLayoutProps) {
       <body className={iGM_Cinzel.variable}>
         <IGM_Providers>
           <IGM_AppShell>{children}</IGM_AppShell>
+          <IGM_NavVeil />
         </IGM_Providers>
       </body>
     </html>

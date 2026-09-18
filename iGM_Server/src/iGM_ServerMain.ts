@@ -15,8 +15,11 @@ import { iGM_Config } from "./iGM_Config/iGM_Config";
 import { iGM_RunMigrations } from "./iGM_Database/iGM_Database";
 import { iGM_Fail } from "./iGM_Types/iGM_Response";
 import { iGM_AuthError } from "./iGM_Services/iGM_AuthService";
+import { iGM_ContentError } from "./iGM_Services/iGM_ContentService";
 import { G_Health } from "./iGM_Routes/G_Health";
 import { G_Auth } from "./iGM_Routes/G_Auth";
+import { G_Community } from "./iGM_Routes/G_Community";
+import { G_Post } from "./iGM_Routes/G_Post";
 
 // 类型定义 //
 // （本入口无额外类型，统一响应类型见 iGM_Types/iGM_Response.ts）
@@ -36,14 +39,19 @@ const iGM_Server = new Elysia()
   .onRequest(({ request }) => {
     console.log(`[iGM_Server] ${request.method} ${new URL(request.url).pathname}`);
   })
-  // 统一错误处理：认证业务错误按自带状态码返回，其余异常返回 500
+  // 统一错误处理：业务错误按自带状态码返回，其余异常返回 500
   .onError(({ code, error, set }) => {
     // 认证业务错误：message 为前端 i18n 文案键，禁止泄露堆栈
     if (error instanceof iGM_AuthError) {
       set.status = error.status;
       return iGM_Fail(error.status, error.message);
     }
-    // 请求体解析失败等客户端错误
+    // 模块三社区业务错误：同样以 i18n 文案键作为 message
+    if (error instanceof iGM_ContentError) {
+      set.status = error.status;
+      return iGM_Fail(error.status, error.message);
+    }
+    // 请求体解析失败等客户端错误（沿用模块二通用文案键）
     if (code === "PARSE" || code === "VALIDATION") {
       set.status = 400;
       return iGM_Fail(400, "auth.errors.badRequest");
@@ -56,6 +64,9 @@ const iGM_Server = new Elysia()
   .use(G_Health)
   // 模块二：用户认证与账户体系
   .use(G_Auth)
+  // 模块三：社区帖子评论系统与用户个人中心
+  .use(G_Community)
+  .use(G_Post)
   // 根路径占位
   .get("/", () => ({
     success: true,

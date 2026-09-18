@@ -1,0 +1,143 @@
+/*
+ * 文件路径：apps/web/src/iGM_Components/iGM_PostCard/iGM_PostCard.module.css
+ * 所属层：前端 / 通用组件样式
+ * 路由：G_Community、G_User、G_UserPosts
+ * 模块：iGM_PostCard
+ * 作用：帖子列表卡片样式——作者行、标题摘要、标签、互动计数
+ */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 20px;
+  background: var(--igm-surface);
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  box-shadow: var(--igm-shadow);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card:hover {
+  border-color: var(--igm-border-strong);
+  box-shadow: var(--igm-shadow-hover);
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--igm-text-muted);
+  flex-wrap: wrap;
+}
+
+.authorLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--igm-text);
+  font-weight: 500;
+}
+
+.authorLink:hover {
+  color: var(--igm-accent);
+}
+
+.dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--igm-text-subtle);
+  flex-shrink: 0;
+}
+
+.categoryBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border-strong);
+  font-size: 12px;
+  color: var(--igm-text-muted);
+}
+
+.hiddenBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--igm-danger-soft);
+  color: var(--igm-danger);
+  font-size: 12px;
+}
+
+.title {
+  font-size: 16.5px;
+  font-weight: 600;
+  color: var(--igm-text);
+  line-height: 1.4;
+}
+
+.title:hover {
+  color: var(--igm-accent);
+}
+
+.excerpt {
+  font-size: 13.5px;
+  color: var(--igm-text-muted);
+  line-height: 1.7;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: pre-wrap;
+}
+
+.tagRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--igm-surface-subtle);
+  border: 1px solid var(--igm-border);
+  font-size: 12px;
+  color: var(--igm-text-muted);
+}
+
+.tag:hover {
+  color: var(--igm-accent);
+  border-color: var(--igm-accent);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 12.5px;
+  color: var(--igm-text-muted);
+}
+
+.stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.statActive {
+  color: var(--igm-accent);
+}
+
+.statActiveBookmark {
+  color: var(--igm-accent);
+}
+
+.spacer {
+  flex: 1;
+}
