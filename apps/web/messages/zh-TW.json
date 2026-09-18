@@ -1,0 +1,66 @@
+{
+  "iGM_Brand": {
+    "name": "iGCraftLit Community",
+    "tagline": "為創作者打造的極簡社群平台"
+  },
+  "iGM_Nav": {
+    "navLabel": "主導覽",
+    "sectionMain": "主頁",
+    "sectionCommunity": "社群",
+    "sectionPersonal": "個人",
+    "sectionAdmin": "管理",
+    "G_Home": "首頁",
+    "G_Notification": "通知",
+    "G_Community": "社群廣場",
+    "G_Post": "帖子",
+    "G_Activity": "活動",
+    "G_Resource": "資源庫",
+    "G_User": "個人主頁",
+    "G_Settings": "設定",
+    "G_Admin": "管理後台"
+  },
+  "iGM_TopBar": {
+    "openNav": "開啟導覽",
+    "closeNav": "關閉導覽"
+  },
+  "iGM_Theme": {
+    "label": "切換主題",
+    "light": "亮色模式",
+    "dark": "暗色模式",
+    "system": "跟隨系統",
+    "currentHint": "當前：{mode}"
+  },
+  "iGM_Language": {
+    "label": "切換語言",
+    "zh-CN": "简体中文",
+    "zh-TW": "繁體中文",
+    "en": "English",
+    "ja": "日本語",
+    "ru": "Русский"
+  },
+  "iGM_Home": {
+    "entryCommunityTitle": "社群",
+    "entryCommunityDesc": "瀏覽社群廣場、帖子、活動與資源庫",
+    "entryProfileTitle": "個人主頁",
+    "entryProfileDesc": "檢視與管理個人資料及帳戶設定",
+    "entryAdminTitle": "管理後台",
+    "entryAdminDesc": "進入使用者、內容與網站管理入口"
+  },
+  "iGM_Placeholder": {
+    "title": "功能建置中",
+    "description": "此模組將於後續版本提供。"
+  },
+  "iGM_NotFound": {
+    "title": "找不到頁面",
+    "description": "您造訪的頁面不存在或已被移動。",
+    "backHome": "返回首頁"
+  },
+  "iGM_Health": {
+    "title": "健康檢查",
+    "version": "前端版本",
+    "buildTime": "建置時間"
+  },
+  "iGM_Footer": {
+    "copyright": "© {year} iGCraftLit Community"
+  }
+}

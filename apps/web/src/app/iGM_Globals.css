@@ -1,0 +1,164 @@
+/* ============================================================
+ * 文件：apps/web/src/app/iGM_Globals.css
+ * 所属层：前端（全局样式）
+ * 模块：iGM_Globals
+ * 作用：定义明暗双主题 CSS 变量、基础重置、排版与响应式工具类
+ * 内容：
+ *   1. 亮色主题变量（默认，中性灰阶 + 单一靛蓝强调色）
+ *   2. 暗色主题变量（html[data-theme='dark']）
+ *   3. 基础重置与语义元素样式
+ *   4. Cinzel 艺术字体工具类、响应式可见性工具类、无障碍工具类
+ * ============================================================ */
+
+/* ==================== 区块：亮色主题变量 ==================== */
+:root,
+html[data-theme='light'] {
+  --iGM-bg: #ffffff;
+  --iGM-bg-subtle: #f7f7f8;
+  --iGM-surface: #ffffff;
+  --iGM-surface-hover: #f4f4f5;
+  --iGM-border: #e4e4e7;
+  --iGM-border-strong: #d4d4d8;
+  --iGM-text: #18181b;
+  --iGM-text-secondary: #52525b;
+  --iGM-text-faint: #a1a1aa;
+  /* 全站唯一强调色（靛蓝色相），仅用于激活态、链接与主按钮 */
+  --iGM-accent: #4f46e5;
+  --iGM-accent-hover: #4338ca;
+  --iGM-accent-contrast: #ffffff;
+  --iGM-accent-surface: rgba(79, 70, 229, 0.08);
+  --iGM-overlay: rgba(24, 24, 27, 0.45);
+  --iGM-shadow: 0 1px 2px rgba(24, 24, 27, 0.06), 0 8px 24px rgba(24, 24, 27, 0.08);
+
+  --iGM-radius: 8px;
+  --iGM-sidebar-width: 256px;
+  --iGM-sidebar-rail: 72px;
+  --iGM-topbar-height: 60px;
+
+  color-scheme: light;
+}
+
+/* ==================== 区块：暗色主题变量 ==================== */
+html[data-theme='dark'] {
+  --iGM-bg: #0f0f10;
+  --iGM-bg-subtle: #151517;
+  --iGM-surface: #18181b;
+  --iGM-surface-hover: #202024;
+  --iGM-border: #27272a;
+  --iGM-border-strong: #3f3f46;
+  --iGM-text: #f4f4f5;
+  --iGM-text-secondary: #a1a1aa;
+  --iGM-text-faint: #71717a;
+  /* 同一靛蓝色相的暗色态，保持单一主色调 */
+  --iGM-accent: #818cf8;
+  --iGM-accent-hover: #a5b4fc;
+  --iGM-accent-contrast: #0f0f10;
+  --iGM-accent-surface: rgba(129, 140, 248, 0.14);
+  --iGM-overlay: rgba(0, 0, 0, 0.6);
+  --iGM-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.45);
+
+  color-scheme: dark;
+}
+
+/* ==================== 区块：基础重置 ==================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100vh;
+  background-color: var(--iGM-bg);
+  color: var(--iGM-text);
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', 'Noto Sans JP',
+    system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4 {
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+select,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+img, svg {
+  display: block;
+}
+
+/* 统一焦点可见样式，键盘可达性 */
+:focus-visible {
+  outline: 2px solid var(--iGM-accent);
+  outline-offset: 2px;
+}
+
+/* ==================== 区块：Cinzel 艺术字体工具类 ==================== */
+.iGM-cinzel {
+  font-family: var(--font-iGM-cinzel), Georgia, 'Times New Roman', serif;
+  letter-spacing: 0.02em;
+}
+
+/* ==================== 区块：响应式可见性工具类 ====================
+ * 断点约定：
+ *   移动端 < 768px；平板端 768px - 1199px；桌面端 >= 1200px
+ * ============================================================ */
+@media (max-width: 767.98px) {
+  .iGM-u-tablet,
+  .iGM-u-desktop {
+    display: none !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199.98px) {
+  .iGM-u-mobile,
+  .iGM-u-desktop {
+    display: none !important;
+  }
+}
+
+@media (min-width: 1200px) {
+  .iGM-u-mobile,
+  .iGM-u-tablet {
+    display: none !important;
+  }
+}
+
+/* ==================== 区块：无障碍工具类 ==================== */
+.iGM-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

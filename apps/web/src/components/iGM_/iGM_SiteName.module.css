@@ -1,0 +1,47 @@
+/* 文件：iGM_SiteName.module.css 所属层：前端 模块：iGM_SiteName
+ * 作用：Cinzel 网站名称在顶部栏、首页、页脚三处的尺寸变体 */
+
+/* ==================== 顶部栏变体 ==================== */
+.topbar {
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--iGM-text);
+}
+
+.topbar:hover {
+  color: var(--iGM-accent);
+}
+
+/* ==================== 首页主视觉变体 ==================== */
+.hero {
+  display: inline-block;
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--iGM-text);
+}
+
+.hero:hover {
+  color: var(--iGM-accent);
+}
+
+/* ==================== 页脚变体 ==================== */
+.footer {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--iGM-text-secondary);
+}
+
+.footer:hover {
+  color: var(--iGM-accent);
+}
+
+/* 窄屏防止站点名溢出 */
+@media (max-width: 479.98px) {
+  .topbar {
+    font-size: 14px;
+  }
+}

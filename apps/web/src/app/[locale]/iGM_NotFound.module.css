@@ -1,0 +1,47 @@
+/* 文件：iGM_NotFound.module.css 所属层：前端 模块：iGM_LocaleNotFound
+ * 作用：404 页面样式，居中、极简、充足留白 */
+
+.notFound {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 80px 16px;
+  text-align: center;
+}
+
+.code {
+  font-family: var(--font-iGM-cinzel), Georgia, serif;
+  font-size: clamp(3rem, 10vw, 5rem);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--iGM-text-faint);
+}
+
+.title {
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  color: var(--iGM-text);
+}
+
+.description {
+  font-size: 14px;
+  color: var(--iGM-text-secondary);
+}
+
+.link {
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  height: 38px;
+  padding: 0 18px;
+  border: 1px solid var(--iGM-border);
+  border-radius: var(--iGM-radius);
+  background-color: var(--iGM-surface);
+  color: var(--iGM-text);
+  font-size: 14px;
+}
+
+.link:hover {
+  border-color: var(--iGM-accent);
+  color: var(--iGM-accent);
+}

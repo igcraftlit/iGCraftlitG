@@ -1,0 +1,66 @@
+{
+  "iGM_Brand": {
+    "name": "iGCraftLit Community",
+    "tagline": "为创作者打造的极简社区平台"
+  },
+  "iGM_Nav": {
+    "navLabel": "主导航",
+    "sectionMain": "主页",
+    "sectionCommunity": "社区",
+    "sectionPersonal": "个人",
+    "sectionAdmin": "管理",
+    "G_Home": "首页",
+    "G_Notification": "通知",
+    "G_Community": "社区广场",
+    "G_Post": "帖子",
+    "G_Activity": "活动",
+    "G_Resource": "资源库",
+    "G_User": "个人主页",
+    "G_Settings": "设置",
+    "G_Admin": "管理后台"
+  },
+  "iGM_TopBar": {
+    "openNav": "打开导航",
+    "closeNav": "关闭导航"
+  },
+  "iGM_Theme": {
+    "label": "切换主题",
+    "light": "亮色模式",
+    "dark": "暗色模式",
+    "system": "跟随系统",
+    "currentHint": "当前：{mode}"
+  },
+  "iGM_Language": {
+    "label": "切换语言",
+    "zh-CN": "简体中文",
+    "zh-TW": "繁體中文",
+    "en": "English",
+    "ja": "日本語",
+    "ru": "Русский"
+  },
+  "iGM_Home": {
+    "entryCommunityTitle": "社区",
+    "entryCommunityDesc": "浏览社区广场、帖子、活动与资源库",
+    "entryProfileTitle": "个人主页",
+    "entryProfileDesc": "查看与管理个人资料及账户设置",
+    "entryAdminTitle": "管理后台",
+    "entryAdminDesc": "进入用户、内容与站点管理入口"
+  },
+  "iGM_Placeholder": {
+    "title": "功能建设中",
+    "description": "该模块将在后续版本中提供。"
+  },
+  "iGM_NotFound": {
+    "title": "页面未找到",
+    "description": "您访问的页面不存在或已被移动。",
+    "backHome": "返回首页"
+  },
+  "iGM_Health": {
+    "title": "健康检查",
+    "version": "前端版本",
+    "buildTime": "构建时间"
+  },
+  "iGM_Footer": {
+    "copyright": "© {year} iGCraftLit Community"
+  }
+}

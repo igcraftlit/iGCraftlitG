@@ -1,0 +1,66 @@
+{
+  "iGM_Brand": {
+    "name": "iGCraftLit Community",
+    "tagline": "Минималистичная платформа сообщества для создателей."
+  },
+  "iGM_Nav": {
+    "navLabel": "Основная навигация",
+    "sectionMain": "Главное",
+    "sectionCommunity": "Сообщество",
+    "sectionPersonal": "Личное",
+    "sectionAdmin": "Администрирование",
+    "G_Home": "Главная",
+    "G_Notification": "Уведомления",
+    "G_Community": "Площадка сообщества",
+    "G_Post": "Записи",
+    "G_Activity": "События",
+    "G_Resource": "Ресурсы",
+    "G_User": "Профиль",
+    "G_Settings": "Настройки",
+    "G_Admin": "Панель управления"
+  },
+  "iGM_TopBar": {
+    "openNav": "Открыть навигацию",
+    "closeNav": "Закрыть навигацию"
+  },
+  "iGM_Theme": {
+    "label": "Сменить тему",
+    "light": "Светлая тема",
+    "dark": "Тёмная тема",
+    "system": "Системная",
+    "currentHint": "Сейчас: {mode}"
+  },
+  "iGM_Language": {
+    "label": "Сменить язык",
+    "zh-CN": "简体中文",
+    "zh-TW": "繁體中文",
+    "en": "English",
+    "ja": "日本語",
+    "ru": "Русский"
+  },
+  "iGM_Home": {
+    "entryCommunityTitle": "Сообщество",
+    "entryCommunityDesc": "Площадка, записи, события и ресурсы сообщества",
+    "entryProfileTitle": "Профиль",
+    "entryProfileDesc": "Просмотр профиля и настроек аккаунта",
+    "entryAdminTitle": "Панель управления",
+    "entryAdminDesc": "Управление пользователями, контентом и сайтом"
+  },
+  "iGM_Placeholder": {
+    "title": "Модуль в разработке",
+    "description": "Этот модуль появится в следующих версиях."
+  },
+  "iGM_NotFound": {
+    "title": "Страница не найдена",
+    "description": "Запрашиваемая страница не существует или была перемещена.",
+    "backHome": "На главную"
+  },
+  "iGM_Health": {
+    "title": "Проверка состояния",
+    "version": "Версия интерфейса",
+    "buildTime": "Время сборки"
+  },
+  "iGM_Footer": {
+    "copyright": "© {year} iGCraftLit Community"
+  }
+}

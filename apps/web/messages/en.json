@@ -1,0 +1,66 @@
+{
+  "iGM_Brand": {
+    "name": "iGCraftLit Community",
+    "tagline": "A minimal community platform for creators."
+  },
+  "iGM_Nav": {
+    "navLabel": "Primary navigation",
+    "sectionMain": "Main",
+    "sectionCommunity": "Community",
+    "sectionPersonal": "Personal",
+    "sectionAdmin": "Administration",
+    "G_Home": "Home",
+    "G_Notification": "Notifications",
+    "G_Community": "Community Square",
+    "G_Post": "Posts",
+    "G_Activity": "Events",
+    "G_Resource": "Resources",
+    "G_User": "Profile",
+    "G_Settings": "Settings",
+    "G_Admin": "Admin Panel"
+  },
+  "iGM_TopBar": {
+    "openNav": "Open navigation",
+    "closeNav": "Close navigation"
+  },
+  "iGM_Theme": {
+    "label": "Switch theme",
+    "light": "Light mode",
+    "dark": "Dark mode",
+    "system": "System default",
+    "currentHint": "Current: {mode}"
+  },
+  "iGM_Language": {
+    "label": "Switch language",
+    "zh-CN": "简体中文",
+    "zh-TW": "繁體中文",
+    "en": "English",
+    "ja": "日本語",
+    "ru": "Русский"
+  },
+  "iGM_Home": {
+    "entryCommunityTitle": "Community",
+    "entryCommunityDesc": "Browse the community square, posts, events and resources",
+    "entryProfileTitle": "Profile",
+    "entryProfileDesc": "View and manage your profile and account settings",
+    "entryAdminTitle": "Admin Panel",
+    "entryAdminDesc": "Access user, content and site management"
+  },
+  "iGM_Placeholder": {
+    "title": "Module in progress",
+    "description": "This module will be available in a later release."
+  },
+  "iGM_NotFound": {
+    "title": "Page not found",
+    "description": "The page you are looking for does not exist or has been moved.",
+    "backHome": "Back to home"
+  },
+  "iGM_Health": {
+    "title": "Health Check",
+    "version": "Frontend version",
+    "buildTime": "Build time"
+  },
+  "iGM_Footer": {
+    "copyright": "© {year} iGCraftLit Community"
+  }
+}

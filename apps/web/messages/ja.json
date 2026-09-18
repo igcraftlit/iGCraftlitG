@@ -1,0 +1,66 @@
+{
+  "iGM_Brand": {
+    "name": "iGCraftLit Community",
+    "tagline": "クリエイターのためのミニマルなコミュニティプラットフォーム"
+  },
+  "iGM_Nav": {
+    "navLabel": "メインナビゲーション",
+    "sectionMain": "メイン",
+    "sectionCommunity": "コミュニティ",
+    "sectionPersonal": "個人",
+    "sectionAdmin": "管理",
+    "G_Home": "ホーム",
+    "G_Notification": "通知",
+    "G_Community": "コミュニティ広場",
+    "G_Post": "投稿",
+    "G_Activity": "イベント",
+    "G_Resource": "リソース",
+    "G_User": "プロフィール",
+    "G_Settings": "設定",
+    "G_Admin": "管理パネル"
+  },
+  "iGM_TopBar": {
+    "openNav": "ナビゲーションを開く",
+    "closeNav": "ナビゲーションを閉じる"
+  },
+  "iGM_Theme": {
+    "label": "テーマを切り替え",
+    "light": "ライトモード",
+    "dark": "ダークモード",
+    "system": "システム設定に従う",
+    "currentHint": "現在：{mode}"
+  },
+  "iGM_Language": {
+    "label": "言語を切り替え",
+    "zh-CN": "简体中文",
+    "zh-TW": "繁體中文",
+    "en": "English",
+    "ja": "日本語",
+    "ru": "Русский"
+  },
+  "iGM_Home": {
+    "entryCommunityTitle": "コミュニティ",
+    "entryCommunityDesc": "コミュニティ広場、投稿、イベント、リソースを閲覧",
+    "entryProfileTitle": "プロフィール",
+    "entryProfileDesc": "プロフィールとアカウント設定を確認・管理",
+    "entryAdminTitle": "管理パネル",
+    "entryAdminDesc": "ユーザー、コンテンツ、サイト管理へアクセス"
+  },
+  "iGM_Placeholder": {
+    "title": "機能の準備中",
+    "description": "このモジュールは今後のバージョンで提供されます。"
+  },
+  "iGM_NotFound": {
+    "title": "ページが見つかりません",
+    "description": "お探しのページは存在しないか、移動された可能性があります。",
+    "backHome": "ホームに戻る"
+  },
+  "iGM_Health": {
+    "title": "ヘルスチェック",
+    "version": "フロントエンドバージョン",
+    "buildTime": "ビルド時刻"
+  },
+  "iGM_Footer": {
+    "copyright": "© {year} iGCraftLit Community"
+  }
+}

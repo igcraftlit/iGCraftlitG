@@ -1,0 +1,178 @@
+/* ============================================================
+ * 文件：iGM_Sidebar.module.css 所属层：前端 模块：iGM_Sidebar
+ * 作用：侧边导航三级响应式样式
+ *   移动端：抽屉（translateX 隐藏）+ 遮罩
+ *   平板端：72px 图标轨道，展开后浮层 256px
+ *   桌面端：256px 永久展开
+ * ============================================================ */
+
+/* ==================== 区块：遮罩层 ==================== */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  background-color: var(--iGM-overlay);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease,
+    visibility 0.2s ease;
+}
+
+/* 移动端抽屉打开：遮罩可见并可点击关闭（平板/桌面端由媒体查询 display:none 覆盖） */
+.overlay[data-open='true'] {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* ==================== 区块：侧边栏容器（默认：移动端抽屉） ==================== */
+.sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 60;
+  width: 280px;
+  max-width: 84vw;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--iGM-surface);
+  border-right: 1px solid var(--iGM-border);
+  transform: translateX(-100%);
+  transition: transform 0.2s ease;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.sidebar[data-open='true'] {
+  transform: translateX(0);
+}
+
+/* ==================== 区块：导航内容 ==================== */
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px 12px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* 分区标题：小号次要文本，与菜单项形成视觉区分 */
+.sectionTitle {
+  padding: 0 10px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--iGM-text-faint);
+}
+
+.itemList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 40px;
+  padding: 0 10px;
+  border-radius: var(--iGM-radius);
+  color: var(--iGM-text-secondary);
+  white-space: nowrap;
+}
+
+.item:hover {
+  background-color: var(--iGM-surface-hover);
+  color: var(--iGM-text);
+}
+
+/* 当前激活路由高亮：单一强调色文字 + 强调色浅底 */
+.item[data-active='true'] {
+  background-color: var(--iGM-accent-surface);
+  color: var(--iGM-accent);
+  font-weight: 600;
+}
+
+.icon {
+  flex: none;
+}
+
+/* ==================== 区块：平板端（768px - 1199px） ==================== */
+@media (min-width: 768px) and (max-width: 1199.98px) {
+  .overlay {
+    display: none;
+  }
+
+  /* 默认收起为图标轨道 */
+  .sidebar {
+    width: var(--iGM-sidebar-rail);
+    max-width: none;
+    transform: none;
+    padding: 0;
+  }
+
+  .nav {
+    padding: 16px 8px;
+    gap: 16px;
+  }
+
+  .sectionTitle,
+  .label {
+    display: none;
+  }
+
+  .item {
+    justify-content: center;
+    padding: 0;
+  }
+
+  /* 展开态：浮层形式覆盖在内容之上 */
+  .sidebar[data-open='true'] {
+    width: var(--iGM-sidebar-width);
+    padding: 0;
+    box-shadow: var(--iGM-shadow);
+  }
+
+  .sidebar[data-open='true'] .nav {
+    padding: 20px 12px;
+    gap: 20px;
+  }
+
+  .sidebar[data-open='true'] .sectionTitle,
+  .sidebar[data-open='true'] .label {
+    display: block;
+  }
+
+  .sidebar[data-open='true'] .item {
+    justify-content: flex-start;
+    padding: 0 10px;
+  }
+}
+
+/* ==================== 区块：桌面端（>=1200px） ==================== */
+@media (min-width: 1200px) {
+  .overlay {
+    display: none;
+  }
+
+  .sidebar {
+    width: var(--iGM-sidebar-width);
+    max-width: none;
+    transform: none;
+    padding: 0;
+  }
+
+  .nav {
+    padding: 20px 12px;
+  }
+}
