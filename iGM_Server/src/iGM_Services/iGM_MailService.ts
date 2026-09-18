@@ -43,6 +43,8 @@ export interface iGM_ResetMailParams {
   /** 令牌有效分钟数 */
   ttlMinutes: number;
   locale: string;
+  /** 本次请求对应的前端站点地址（不传则使用配置默认值） */
+  webBaseUrl?: string;
 }
 
 // 核心逻辑 //
@@ -209,7 +211,8 @@ export async function iGM_SendResetPasswordMail(
 ): Promise<void> {
   const mailLocale = iGM_ResolveMailLocale(params.locale);
   const ttl = params.ttlMinutes;
-  const resetUrl = `${iGM_Config.auth.webBaseUrl}/G_Auth/reset-password?token=${encodeURIComponent(params.token)}`;
+  const webBaseUrl = params.webBaseUrl ?? iGM_Config.auth.webBaseUrl;
+  const resetUrl = `${webBaseUrl}/G_Auth/reset-password?token=${encodeURIComponent(params.token)}`;
 
   const subject =
     mailLocale === "zh"

@@ -318,6 +318,7 @@ export async function iGM_VerifyEmail(
 export async function iGM_ForgotPassword(
   email: string,
   locale: string,
+  webBaseUrl?: string,
 ): Promise<void> {
   if (!iGM_EmailPattern.test(email.trim())) {
     throw new iGM_AuthError("auth.errors.emailInvalid", 422);
@@ -343,6 +344,7 @@ export async function iGM_ForgotPassword(
     token: rawToken,
     ttlMinutes: Math.round(iGM_Config.auth.resetTokenTtlMs / 60000),
     locale,
+    webBaseUrl,
   });
 }
 

@@ -81,6 +81,16 @@ function iGM_BuildContext(ctx: iGM_RouteContext): iGM_RequestContext {
   };
 }
 
+/**
+ * 解析前端站点地址：请求来自 CORS 白名单内的页面时（如线上经隧道调用），
+ * 以 Origin 为准，保证邮件链接指向用户实际使用的站点；否则用配置默认值
+ */
+function iGM_ResolveWebBaseUrl(request: Request): string {
+  const origin = request.headers.get("origin");
+  if (origin && iGM_Config.corsOrigins.includes(origin)) return origin;
+  return iGM_Config.auth.webBaseUrl;
+}
+
 /** 限流守卫：超限直接抛出 429 业务错误 */
 function iGM_EnforceRateLimit(
   ctx: iGM_RouteContext,
@@ -186,6 +196,7 @@ async function iGM_HandleForgotPassword(ctx: iGM_RouteContext) {
   await iGM_ForgotPassword(
     email,
     ctx.request.headers.get("x-igm-locale") ?? "zh-CN",
+    iGM_ResolveWebBaseUrl(ctx.request),
   );
   // 无论邮箱是否存在统一回复，避免账号枚举
   return iGM_Ok({ delivered: true }, "auth.messages.resetMailSent");

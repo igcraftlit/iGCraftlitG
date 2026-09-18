@@ -93,7 +93,7 @@ export const iGM_Config: iGM_AppConfig = {
     resetTokenTtlMs: 30 * 60 * 1000,
     maxVerifyAttempts: 5,
     webBaseUrl: process.env.IGM_WEB_BASE_URL ?? "http://localhost:3000",
-    // 默认使用真实 Brevo SMTP 发信；本地调试时可设 IGM_MAIL_CONSOLE_ONLY=true
+    // 默认真实发信；本地调试时可设 IGM_MAIL_CONSOLE_ONLY=true
     // 退回到控制台输出（不实际发信）
     mailConsoleOnly: (process.env.IGM_MAIL_CONSOLE_ONLY ?? "false") === "true",
   },
