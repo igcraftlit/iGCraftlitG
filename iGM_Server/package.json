@@ -1,0 +1,23 @@
+{
+  "name": "igcraftlit-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --watch src/iGM_ServerMain.ts",
+    "start": "bun run src/iGM_ServerMain.ts",
+    "db:init": "bun run src/iGM_Database/iGM_DbCli.ts init",
+    "db:migrate": "bun run src/iGM_Database/iGM_DbCli.ts migrate",
+    "db:seed": "bun run src/iGM_Database/iGM_DbCli.ts seed"
+  },
+  "dependencies": {
+    "@elysiajs/cors": "1.4.2",
+    "elysia": "1.4.30",
+    "nodemailer": "^10.0.10"
+  },
+  "devDependencies": {
+    "@types/bun": "1.3.11",
+    "@types/nodemailer": "^8.0.2",
+    "typescript": "5.9.2"
+  }
+}

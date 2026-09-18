@@ -1,0 +1,22 @@
+/*
+ * 文件路径：apps/web/src/iGM_Components/iGM_Footer/iGM_Footer.module.css
+ * 所属层：前端 / 通用组件样式
+ * 路由：全局
+ * 模块：iGM_Footer
+ * 作用：极简页脚样式
+ * 内容：顶部分隔线、居中小号次要文本
+ */
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 16px 28px;
+  border-top: 1px solid var(--igm-border);
+}
+
+.text {
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+  text-align: center;
+}

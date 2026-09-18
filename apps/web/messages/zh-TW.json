@@ -1,66 +1,243 @@
 {
-  "iGM_Brand": {
+  "site": {
     "name": "iGCraftLit Community",
-    "tagline": "為創作者打造的極簡社群平台"
+    "tagline": "面向創作者的極簡社群空間"
   },
-  "iGM_Nav": {
-    "navLabel": "主導覽",
-    "sectionMain": "主頁",
-    "sectionCommunity": "社群",
-    "sectionPersonal": "個人",
-    "sectionAdmin": "管理",
-    "G_Home": "首頁",
-    "G_Notification": "通知",
-    "G_Community": "社群廣場",
-    "G_Post": "帖子",
-    "G_Activity": "活動",
-    "G_Resource": "資源庫",
-    "G_User": "個人主頁",
-    "G_Settings": "設定",
-    "G_Admin": "管理後台"
+  "nav": {
+    "groupMain": "主頁",
+    "groupCommunity": "社群",
+    "groupPersonal": "個人",
+    "groupAdmin": "管理",
+    "home": "首頁",
+    "notifications": "通知",
+    "community": "社群廣場",
+    "posts": "貼文",
+    "activities": "活動",
+    "resources": "資源庫",
+    "profile": "個人主頁",
+    "settings": "帳戶設定",
+    "admin": "管理後台"
   },
-  "iGM_TopBar": {
-    "openNav": "開啟導覽",
-    "closeNav": "關閉導覽"
+  "topbar": {
+    "menu": "選單",
+    "theme": "主題",
+    "language": "語言"
   },
-  "iGM_Theme": {
-    "label": "切換主題",
-    "light": "亮色模式",
-    "dark": "暗色模式",
-    "system": "跟隨系統",
-    "currentHint": "當前：{mode}"
+  "theme": {
+    "light": "淺色",
+    "dark": "深色",
+    "system": "跟隨系統"
   },
-  "iGM_Language": {
-    "label": "切換語言",
+  "language": {
+    "label": "語言",
     "zh-CN": "简体中文",
     "zh-TW": "繁體中文",
     "en": "English",
     "ja": "日本語",
     "ru": "Русский"
   },
-  "iGM_Home": {
-    "entryCommunityTitle": "社群",
-    "entryCommunityDesc": "瀏覽社群廣場、帖子、活動與資源庫",
-    "entryProfileTitle": "個人主頁",
-    "entryProfileDesc": "檢視與管理個人資料及帳戶設定",
-    "entryAdminTitle": "管理後台",
-    "entryAdminDesc": "進入使用者、內容與網站管理入口"
+  "home": {
+    "heading": "iGCraftLit Community",
+    "tagline": "面向創作者的極簡社群空間",
+    "cardCommunityTitle": "進入社群",
+    "cardCommunityDesc": "瀏覽社群廣場、貼文、活動與共享資源",
+    "cardProfileTitle": "個人主頁",
+    "cardProfileDesc": "檢視個人資料與帳號設定",
+    "cardAdminTitle": "管理後台",
+    "cardAdminDesc": "進入網站管理與維護功能"
   },
-  "iGM_Placeholder": {
-    "title": "功能建置中",
-    "description": "此模組將於後續版本提供。"
+  "pages": {
+    "notification": {
+      "title": "通知",
+      "description": "站內訊息與提醒將在此處呈現"
+    },
+    "community": {
+      "title": "社群廣場",
+      "description": "社群動態與討論彙整入口"
+    },
+    "post": {
+      "title": "貼文",
+      "description": "貼文瀏覽與發布功能將於後續模組提供"
+    },
+    "activity": {
+      "title": "活動",
+      "description": "社群活動與日程將在此處呈現"
+    },
+    "resources": {
+      "title": "資源庫",
+      "description": "共享資源與素材將在此處呈現"
+    },
+    "profile": {
+      "title": "個人主頁",
+      "description": "個人資料頁將於後續模組提供"
+    },
+    "settings": {
+      "title": "帳戶設定",
+      "description": "管理帳戶資訊與登入密碼"
+    },
+    "admin": {
+      "title": "管理後台",
+      "description": "網站管理功能將於後續模組提供"
+    }
   },
-  "iGM_NotFound": {
+  "placeholder": {
+    "badge": "模組一",
+    "comingSoon": "該模組將於後續版本提供"
+  },
+  "health": {
+    "title": "健康檢查",
+    "frontendVersion": "前端版本",
+    "buildTime": "建置時間",
+    "backendStatus": "後端狀態",
+    "backendVersion": "後端版本",
+    "apiAddress": "介面位址",
+    "checking": "檢測中",
+    "online": "線上",
+    "offline": "未連線",
+    "retry": "重新檢測"
+  },
+  "auth": {
+    "actions": {
+      "login": "登入",
+      "register": "註冊",
+      "logout": "登出",
+      "verify": "驗證信箱",
+      "resend": "重新發送驗證碼",
+      "resendCountdown": "{seconds} 秒後可重新發送",
+      "sendResetMail": "發送重設郵件",
+      "resetPassword": "重設密碼",
+      "changePassword": "儲存新密碼"
+    },
+    "fields": {
+      "account": "帳號",
+      "accountPlaceholder": "郵箱或使用者名稱",
+      "username": "使用者名稱",
+      "usernamePlaceholder": "3-20 位中英文、數字或底線",
+      "email": "郵箱",
+      "emailPlaceholder": "you@example.com",
+      "password": "密碼",
+      "passwordPlaceholder": "請輸入密碼",
+      "confirmPassword": "確認密碼",
+      "confirmPasswordPlaceholder": "請再次輸入密碼",
+      "code": "驗證碼",
+      "oldPassword": "目前密碼",
+      "newPassword": "新密碼",
+      "newPasswordPlaceholder": "請輸入新密碼",
+      "confirmNewPassword": "確認新密碼",
+      "confirmNewPasswordPlaceholder": "請再次輸入新密碼"
+    },
+    "hints": {
+      "username": "支援中英文、數字與底線，3-20 個字元",
+      "password": "至少 8 個字元，區分大小寫"
+    },
+    "links": {
+      "forgotPassword": "忘記密碼？",
+      "register": "立即註冊",
+      "login": "立即登入",
+      "backToLogin": "返回登入",
+      "requestNewReset": "重新申請重設郵件",
+      "accountSettings": "前往帳戶設定",
+      "verifyNow": "立即驗證"
+    },
+    "roles": {
+      "user": "普通使用者",
+      "moderator": "協管員",
+      "admin": "管理員"
+    },
+    "status": {
+      "active": "正常",
+      "suspended": "已停用"
+    },
+    "errors": {
+      "usernameInvalid": "使用者名稱格式不正確",
+      "emailInvalid": "郵箱格式不正確",
+      "passwordInvalid": "密碼長度需為 8-128 碼",
+      "passwordMismatch": "兩次輸入的密碼不一致",
+      "emailTaken": "該郵箱已被註冊",
+      "usernameTaken": "該使用者名稱已被佔用",
+      "credentialsRequired": "請填寫完整的帳號與密碼",
+      "loginFailed": "帳號或密碼不正確",
+      "accountSuspended": "該帳號已被停用",
+      "unauthorized": "請先登入",
+      "forbidden": "你沒有權限存取此頁面",
+      "tooManyRequests": "操作過於頻繁，請稍後再試",
+      "badRequest": "請求內容有誤",
+      "alreadyVerified": "信箱已經驗證過了",
+      "codeInvalid": "驗證碼應為 6 位數字",
+      "codeExpired": "驗證碼已過期，請重新取得",
+      "codeLocked": "驗證失敗次數過多，請重新取得驗證碼",
+      "codeMismatch": "驗證碼不正確",
+      "oldPasswordMismatch": "目前密碼不正確",
+      "passwordSame": "新密碼不能與目前密碼相同",
+      "resetTokenInvalid": "重設連結無效或已過期",
+      "generic": "操作失敗，請稍後再試",
+      "network": "無法連線本地後端服務",
+      "requestTimeout": "請求逾時，請稍後再試"
+    },
+    "messages": {
+      "registered": "註冊成功",
+      "loggedIn": "登入成功",
+      "loggedOut": "已登出",
+      "verificationSent": "驗證碼已重新發送",
+      "emailVerified": "信箱驗證成功",
+      "resetMailSent": "重設郵件已發送",
+      "passwordReset": "密碼已重設，請使用新密碼登入",
+      "passwordChanged": "密碼修改成功"
+    },
+    "state": {
+      "checking": "正在確認登入狀態…",
+      "redirecting": "正在前往登入頁…",
+      "forbiddenTitle": "無存取權限",
+      "forbiddenDescription": "你的帳號角色無權存取此頁面",
+      "backHome": "返回首頁",
+      "checkingToken": "正在校驗重設連結…"
+    },
+    "login": {
+      "title": "登入",
+      "description": "使用你的 iGCraftLit Community 帳號登入",
+      "noAccount": "還沒有帳號？"
+    },
+    "register": {
+      "title": "註冊",
+      "description": "建立你的 iGCraftLit Community 帳號",
+      "hasAccount": "已經有帳號了？"
+    },
+    "forgot": {
+      "title": "忘記密碼",
+      "description": "輸入註冊郵箱，我們將向你發送密碼重設連結",
+      "sentHint": "如果該郵箱已註冊，你很快會收到一封重設密碼郵件，請在 30 分鐘內完成重設"
+    },
+    "reset": {
+      "title": "重設密碼",
+      "description": "為你的帳號設定一個新密碼"
+    },
+    "verify": {
+      "title": "信箱驗證",
+      "description": "完成驗證後才能使用完整功能",
+      "alreadyVerified": "你的信箱已成功驗證",
+      "sentTo": "驗證碼已發送至 {email}，請注意查收（10 分鐘內有效）"
+    },
+    "settings": {
+      "title": "帳戶設定",
+      "description": "管理你的帳戶資訊與登入密碼",
+      "accountInfo": "帳戶資訊",
+      "role": "角色",
+      "status": "狀態",
+      "emailVerified": "信箱驗證",
+      "verified": "已驗證",
+      "unverified": "未驗證",
+      "unverifiedHint": "你的信箱尚未驗證，部分功能可能受限。",
+      "joinedAt": "註冊時間",
+      "changePassword": "修改密碼",
+      "refreshSession": "重新整理登入狀態"
+    }
+  },
+  "notfound": {
     "title": "找不到頁面",
-    "description": "您造訪的頁面不存在或已被移動。",
+    "description": "您存取的頁面不存在或已被移動",
     "backHome": "返回首頁"
   },
-  "iGM_Health": {
-    "title": "健康檢查",
-    "version": "前端版本",
-    "buildTime": "建置時間"
-  },
-  "iGM_Footer": {
+  "footer": {
     "copyright": "© {year} iGCraftLit Community"
   }
 }

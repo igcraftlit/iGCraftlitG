@@ -1,66 +1,243 @@
 {
-  "iGM_Brand": {
+  "site": {
     "name": "iGCraftLit Community",
-    "tagline": "A minimal community platform for creators."
+    "tagline": "A minimal community space for creators"
   },
-  "iGM_Nav": {
-    "navLabel": "Primary navigation",
-    "sectionMain": "Main",
-    "sectionCommunity": "Community",
-    "sectionPersonal": "Personal",
-    "sectionAdmin": "Administration",
-    "G_Home": "Home",
-    "G_Notification": "Notifications",
-    "G_Community": "Community Square",
-    "G_Post": "Posts",
-    "G_Activity": "Events",
-    "G_Resource": "Resources",
-    "G_User": "Profile",
-    "G_Settings": "Settings",
-    "G_Admin": "Admin Panel"
+  "nav": {
+    "groupMain": "Main",
+    "groupCommunity": "Community",
+    "groupPersonal": "Personal",
+    "groupAdmin": "Admin",
+    "home": "Home",
+    "notifications": "Notifications",
+    "community": "Community Square",
+    "posts": "Posts",
+    "activities": "Activities",
+    "resources": "Resources",
+    "profile": "Profile",
+    "settings": "Account Settings",
+    "admin": "Admin Panel"
   },
-  "iGM_TopBar": {
-    "openNav": "Open navigation",
-    "closeNav": "Close navigation"
+  "topbar": {
+    "menu": "Menu",
+    "theme": "Theme",
+    "language": "Language"
   },
-  "iGM_Theme": {
-    "label": "Switch theme",
-    "light": "Light mode",
-    "dark": "Dark mode",
-    "system": "System default",
-    "currentHint": "Current: {mode}"
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
   },
-  "iGM_Language": {
-    "label": "Switch language",
+  "language": {
+    "label": "Language",
     "zh-CN": "简体中文",
     "zh-TW": "繁體中文",
     "en": "English",
     "ja": "日本語",
     "ru": "Русский"
   },
-  "iGM_Home": {
-    "entryCommunityTitle": "Community",
-    "entryCommunityDesc": "Browse the community square, posts, events and resources",
-    "entryProfileTitle": "Profile",
-    "entryProfileDesc": "View and manage your profile and account settings",
-    "entryAdminTitle": "Admin Panel",
-    "entryAdminDesc": "Access user, content and site management"
+  "home": {
+    "heading": "iGCraftLit Community",
+    "tagline": "A minimal community space for creators",
+    "cardCommunityTitle": "Enter the community",
+    "cardCommunityDesc": "Browse the community square, posts, activities and shared resources",
+    "cardProfileTitle": "Profile",
+    "cardProfileDesc": "View your profile and account settings",
+    "cardAdminTitle": "Admin panel",
+    "cardAdminDesc": "Access site administration and maintenance"
   },
-  "iGM_Placeholder": {
-    "title": "Module in progress",
-    "description": "This module will be available in a later release."
+  "pages": {
+    "notification": {
+      "title": "Notifications",
+      "description": "Site messages and reminders will appear here"
+    },
+    "community": {
+      "title": "Community Square",
+      "description": "Aggregated community updates and discussions"
+    },
+    "post": {
+      "title": "Posts",
+      "description": "Post browsing and publishing will arrive in a later module"
+    },
+    "activity": {
+      "title": "Activities",
+      "description": "Community activities and schedules will appear here"
+    },
+    "resources": {
+      "title": "Resources",
+      "description": "Shared resources and materials will appear here"
+    },
+    "profile": {
+      "title": "Profile",
+      "description": "The profile page will arrive in a later module"
+    },
+    "settings": {
+      "title": "Account Settings",
+      "description": "Manage your account information and sign-in password"
+    },
+    "admin": {
+      "title": "Admin Panel",
+      "description": "Site administration features will arrive in a later module"
+    }
   },
-  "iGM_NotFound": {
+  "placeholder": {
+    "badge": "Module 1",
+    "comingSoon": "This module will be available in a later release"
+  },
+  "health": {
+    "title": "Health Check",
+    "frontendVersion": "Frontend version",
+    "buildTime": "Build time",
+    "backendStatus": "Backend status",
+    "backendVersion": "Backend version",
+    "apiAddress": "API endpoint",
+    "checking": "Checking",
+    "online": "Online",
+    "offline": "Offline",
+    "retry": "Check again"
+  },
+  "auth": {
+    "actions": {
+      "login": "Sign in",
+      "register": "Sign up",
+      "logout": "Sign out",
+      "verify": "Verify email",
+      "resend": "Resend code",
+      "resendCountdown": "Resend available in {seconds}s",
+      "sendResetMail": "Send reset email",
+      "resetPassword": "Reset password",
+      "changePassword": "Save new password"
+    },
+    "fields": {
+      "account": "Account",
+      "accountPlaceholder": "Email or username",
+      "username": "Username",
+      "usernamePlaceholder": "3-20 characters",
+      "email": "Email",
+      "emailPlaceholder": "you@example.com",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "confirmPassword": "Confirm password",
+      "confirmPasswordPlaceholder": "Enter the password again",
+      "code": "Verification code",
+      "oldPassword": "Current password",
+      "newPassword": "New password",
+      "newPasswordPlaceholder": "Enter a new password",
+      "confirmNewPassword": "Confirm new password",
+      "confirmNewPasswordPlaceholder": "Enter the new password again"
+    },
+    "hints": {
+      "username": "3-20 characters: letters, numbers, underscores or Chinese characters",
+      "password": "At least 8 characters, case-sensitive"
+    },
+    "links": {
+      "forgotPassword": "Forgot password?",
+      "register": "Create an account",
+      "login": "Sign in instead",
+      "backToLogin": "Back to sign in",
+      "requestNewReset": "Request a new reset email",
+      "accountSettings": "Go to account settings",
+      "verifyNow": "Verify now"
+    },
+    "roles": {
+      "user": "User",
+      "moderator": "Moderator",
+      "admin": "Admin"
+    },
+    "status": {
+      "active": "Active",
+      "suspended": "Suspended"
+    },
+    "errors": {
+      "usernameInvalid": "Username format is invalid",
+      "emailInvalid": "Email format is invalid",
+      "passwordInvalid": "Password must be 8-128 characters",
+      "passwordMismatch": "Passwords do not match",
+      "emailTaken": "This email is already registered",
+      "usernameTaken": "This username is already taken",
+      "credentialsRequired": "Please enter both account and password",
+      "loginFailed": "Incorrect account or password",
+      "accountSuspended": "This account has been suspended",
+      "unauthorized": "Please sign in first",
+      "forbidden": "You do not have permission to view this page",
+      "tooManyRequests": "Too many attempts, please try again later",
+      "badRequest": "Invalid request",
+      "alreadyVerified": "Email is already verified",
+      "codeInvalid": "The code must be 6 digits",
+      "codeExpired": "The code has expired, please request a new one",
+      "codeLocked": "Too many failed attempts, please request a new code",
+      "codeMismatch": "Incorrect verification code",
+      "oldPasswordMismatch": "Current password is incorrect",
+      "passwordSame": "New password must differ from the current one",
+      "resetTokenInvalid": "Reset link is invalid or has expired",
+      "generic": "Something went wrong, please try again later",
+      "network": "Cannot reach the local backend service",
+      "requestTimeout": "Request timed out, please try again"
+    },
+    "messages": {
+      "registered": "Registration successful",
+      "loggedIn": "Signed in successfully",
+      "loggedOut": "Signed out",
+      "verificationSent": "Verification code resent",
+      "emailVerified": "Email verified successfully",
+      "resetMailSent": "Reset email sent",
+      "passwordReset": "Password reset. Please sign in with the new password",
+      "passwordChanged": "Password changed successfully"
+    },
+    "state": {
+      "checking": "Checking your session…",
+      "redirecting": "Redirecting to sign in…",
+      "forbiddenTitle": "Access denied",
+      "forbiddenDescription": "Your account role cannot access this page",
+      "backHome": "Back to home",
+      "checkingToken": "Verifying reset link…"
+    },
+    "login": {
+      "title": "Sign in",
+      "description": "Sign in to your iGCraftLit Community account",
+      "noAccount": "Don't have an account?"
+    },
+    "register": {
+      "title": "Sign up",
+      "description": "Create your iGCraftLit Community account",
+      "hasAccount": "Already have an account?"
+    },
+    "forgot": {
+      "title": "Forgot password",
+      "description": "Enter your email and we will send you a reset link",
+      "sentHint": "If that email is registered, a reset email will arrive shortly. Complete the reset within 30 minutes."
+    },
+    "reset": {
+      "title": "Reset password",
+      "description": "Set a new password for your account"
+    },
+    "verify": {
+      "title": "Verify your email",
+      "description": "Full features become available after verification",
+      "alreadyVerified": "Your email has been verified",
+      "sentTo": "A verification code has been sent to {email} (valid for 10 minutes)"
+    },
+    "settings": {
+      "title": "Account settings",
+      "description": "Manage your account information and password",
+      "accountInfo": "Account information",
+      "role": "Role",
+      "status": "Status",
+      "emailVerified": "Email verification",
+      "verified": "Verified",
+      "unverified": "Unverified",
+      "unverifiedHint": "Your email is not verified yet. Some features may be limited.",
+      "joinedAt": "Joined",
+      "changePassword": "Change password",
+      "refreshSession": "Refresh session"
+    }
+  },
+  "notfound": {
     "title": "Page not found",
-    "description": "The page you are looking for does not exist or has been moved.",
+    "description": "The page you requested does not exist or has been moved",
     "backHome": "Back to home"
   },
-  "iGM_Health": {
-    "title": "Health Check",
-    "version": "Frontend version",
-    "buildTime": "Build time"
-  },
-  "iGM_Footer": {
+  "footer": {
     "copyright": "© {year} iGCraftLit Community"
   }
 }

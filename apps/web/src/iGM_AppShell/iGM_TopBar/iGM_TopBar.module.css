@@ -1,0 +1,147 @@
+/*
+ * 文件路径：apps/web/src/iGM_AppShell/iGM_TopBar/iGM_TopBar.module.css
+ * 所属层：前端 / 应用骨架样式
+ * 路由：全局
+ * 模块：iGM_TopBar
+ * 作用：顶部栏样式与响应式行为
+ * 内容：吸顶栏、菜单按钮（仅移动端）、Cinzel 品牌名、右侧操作区
+ */
+
+/* 吸顶顶栏 */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--igm-topbar-height);
+  padding: 0 16px;
+  background: var(--igm-surface);
+  border-bottom: 1px solid var(--igm-border);
+}
+
+@media (min-width: 768px) {
+  .topbar {
+    padding: 0 24px;
+  }
+}
+
+/* 左侧区域 */
+.left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* 移动端菜单按钮：平板及桌面隐藏 */
+.menuButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--igm-radius);
+  color: var(--igm-text-muted);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.menuButton:hover {
+  background: var(--igm-surface-subtle);
+  color: var(--igm-text);
+}
+
+@media (min-width: 768px) {
+  .menuButton {
+    display: none;
+  }
+}
+
+/* 网站名称：Cinzel 艺术字体 */
+.brand {
+  font-size: 15px;
+  color: var(--igm-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 右侧操作区 */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* 未登录时的登录入口 */
+.loginLink {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 14px;
+  margin-right: 4px;
+  border-radius: var(--igm-radius);
+  background: var(--igm-accent);
+  color: var(--igm-accent-contrast);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background-color 0.15s ease;
+}
+
+.loginLink:hover {
+  background: var(--igm-accent-hover);
+}
+
+/* 已登录用户徽标：点击进入账户设置 */
+.userChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  margin-right: 4px;
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-border-strong);
+  color: var(--igm-text-muted);
+  font-size: 13px;
+  white-space: nowrap;
+  transition: color 0.15s ease, border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.userChip:hover {
+  color: var(--igm-text);
+  border-color: var(--igm-accent);
+  background: var(--igm-accent-soft);
+}
+
+.userName {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 未验证邮箱提示圆点 */
+.unverifiedDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--igm-danger);
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .userName,
+  .loginLink {
+    display: none;
+  }
+
+  .userChip {
+    width: 32px;
+    padding: 0;
+    justify-content: center;
+  }
+}

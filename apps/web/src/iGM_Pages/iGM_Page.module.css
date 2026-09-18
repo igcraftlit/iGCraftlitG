@@ -1,0 +1,257 @@
+/*
+ * 文件路径：apps/web/src/iGM_Pages/iGM_Page.module.css
+ * 所属层：前端 / 页面样式
+ * 路由：G_Home 及各骨架页
+ * 模块：iGM_Page
+ * 作用：首页与通用骨架页的共享样式
+ * 内容：首页标题区、卡片栅格、页头、占位面板、健康检查面板
+ */
+
+/* ===== 首页 ===== */
+
+.homeWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+/* 标题区：克制留白 */
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 16px;
+}
+
+.heroTitle {
+  font-size: 30px;
+  line-height: 1.2;
+  color: var(--igm-text);
+}
+
+@media (min-width: 768px) {
+  .heroTitle {
+    font-size: 38px;
+  }
+}
+
+.heroTagline {
+  font-size: 15px;
+  color: var(--igm-text-muted);
+}
+
+/* 卡片栅格：移动端单列，桌面端三列 */
+.cardGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 1024px) {
+  .cardGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ===== 通用骨架页 ===== */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.pageHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pageTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.pageTitleIcon {
+  display: inline-flex;
+  color: var(--igm-accent);
+}
+
+.pageDescription {
+  font-size: 14px;
+  color: var(--igm-text-muted);
+}
+
+/* 占位面板 */
+.placeholderPanel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 64px 24px;
+  background: var(--igm-surface);
+  border: 1px dashed var(--igm-border-strong);
+  border-radius: var(--igm-radius-lg);
+  text-align: center;
+}
+
+.placeholderBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border-strong);
+  font-size: 12px;
+  color: var(--igm-text-muted);
+}
+
+.placeholderText {
+  font-size: 13px;
+  color: var(--igm-text-subtle);
+}
+
+/* ===== 404 ===== */
+
+.notFound {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 96px 24px;
+  text-align: center;
+}
+
+.notFoundCode {
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--igm-text-subtle);
+}
+
+.notFoundTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.notFoundDescription {
+  font-size: 14px;
+  color: var(--igm-text-muted);
+  max-width: 360px;
+}
+
+.primaryLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 9px 18px;
+  border-radius: var(--igm-radius);
+  background: var(--igm-accent);
+  color: var(--igm-accent-contrast);
+  font-size: 13.5px;
+  font-weight: 500;
+  transition: background-color 0.15s ease;
+}
+
+.primaryLink:hover {
+  background: var(--igm-accent-hover);
+}
+
+/* ===== 健康检查 ===== */
+
+.healthPanel {
+  display: flex;
+  flex-direction: column;
+  background: var(--igm-surface);
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  box-shadow: var(--igm-shadow);
+  overflow: hidden;
+}
+
+.healthRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+}
+
+.healthRow + .healthRow {
+  border-top: 1px solid var(--igm-border);
+}
+
+.healthLabel {
+  font-size: 13px;
+  color: var(--igm-text-muted);
+  flex-shrink: 0;
+}
+
+.healthValue {
+  font-size: 13px;
+  color: var(--igm-text);
+  text-align: right;
+  word-break: break-all;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 后端状态徽标 */
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.statusOnline {
+  color: var(--igm-accent);
+}
+
+.statusOnline .statusDot {
+  background: var(--igm-accent);
+}
+
+.statusOffline {
+  color: var(--igm-text-muted);
+}
+
+.statusOffline .statusDot {
+  background: var(--igm-text-subtle);
+}
+
+.statusChecking {
+  color: var(--igm-text-muted);
+}
+
+.statusChecking .statusDot {
+  background: var(--igm-text-subtle);
+}
+
+.healthActions {
+  display: flex;
+}
+
+.retryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 14px 18px;
+  font-size: 13px;
+  color: var(--igm-accent);
+  transition: background-color 0.15s ease;
+}
+
+.retryButton:hover {
+  background: var(--igm-surface-subtle);
+}

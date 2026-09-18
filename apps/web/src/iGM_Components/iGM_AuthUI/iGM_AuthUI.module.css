@@ -1,0 +1,337 @@
+/*
+ * 文件路径：apps/web/src/iGM_Components/iGM_AuthUI/iGM_AuthUI.module.css
+ * 所属层：前端 / 通用组件样式
+ * 路由：G_Auth/*、G_Settings
+ * 模块：iGM_AuthUI
+ * 作用：认证页与账户设置页共享的极简表单样式
+ * 内容：居中外层、认证卡片、标题区、输入框、按钮、提示条、底部链接
+ */
+
+/* 居中外层：限制最大宽度 400px */
+.authWrap {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0 48px;
+}
+
+.authCard {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 28px 24px;
+  background: var(--igm-surface);
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  box-shadow: var(--igm-shadow);
+}
+
+/* 宽表单（账户设置）放宽到 560px */
+.authCardWide {
+  max-width: 560px;
+}
+
+.authHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.authTitle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.authTitleIcon {
+  display: inline-flex;
+  color: var(--igm-accent);
+}
+
+.authDescription {
+  font-size: 13.5px;
+  color: var(--igm-text-muted);
+}
+
+/* 表单：纵向堆叠 */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.fieldLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--igm-text);
+}
+
+.fieldInput {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--igm-text);
+  background: var(--igm-bg);
+  border: 1px solid var(--igm-border-strong);
+  border-radius: var(--igm-radius);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.fieldInput::placeholder {
+  color: var(--igm-text-subtle);
+}
+
+.fieldInput:focus {
+  outline: none;
+  border-color: var(--igm-accent);
+  box-shadow: 0 0 0 3px var(--igm-accent-soft);
+}
+
+.fieldInput:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.fieldHint {
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+.fieldError {
+  font-size: 12px;
+  color: var(--igm-danger);
+}
+
+/* 提交按钮：主色填充 */
+.submitButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  margin-top: 2px;
+  border-radius: var(--igm-radius);
+  background: var(--igm-accent);
+  color: var(--igm-accent-contrast);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.15s ease;
+}
+
+.submitButton:hover:not(:disabled) {
+  background: var(--igm-accent-hover);
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 38px;
+  border-radius: var(--igm-radius);
+  background: transparent;
+  color: var(--igm-text);
+  border: 1px solid var(--igm-border-strong);
+  font-size: 13.5px;
+  transition: background-color 0.15s ease;
+}
+
+.secondaryButton:hover:not(:disabled) {
+  background: var(--igm-surface-subtle);
+}
+
+.secondaryButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 加载小圈：纯 CSS 旋转无图片依赖 */
+.spinner {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: igmSpin 0.7s linear infinite;
+}
+
+@keyframes igmSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 结果提示条 */
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 10px 12px;
+  border-radius: var(--igm-radius);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.alertError {
+  color: var(--igm-danger);
+  background: var(--igm-danger-soft);
+  border: 1px solid var(--igm-danger-soft);
+}
+
+.alertSuccess {
+  color: var(--igm-success);
+  background: var(--igm-success-soft);
+  border: 1px solid var(--igm-success-soft);
+}
+
+.alertIcon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* 卡片底部链接区 */
+.authFooter {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  font-size: 13px;
+  color: var(--igm-text-muted);
+}
+
+.authLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--igm-accent);
+  font-size: 13px;
+  transition: color 0.15s ease;
+}
+
+.authLink:hover {
+  color: var(--igm-accent-hover);
+}
+
+.authFooterRow {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* 验证码输入：数字居中、大字距 */
+.codeInput {
+  text-align: center;
+  letter-spacing: 12px;
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+  padding-left: 12px;
+}
+
+/* 账户设置页分区 */
+.settingsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settingsSectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.settingsSectionIcon {
+  display: inline-flex;
+  color: var(--igm-accent);
+}
+
+/* 信息描述行 */
+.infoList {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  overflow: hidden;
+}
+
+.infoRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
+  background: var(--igm-surface);
+}
+
+.infoRow + .infoRow {
+  border-top: 1px solid var(--igm-border);
+}
+
+.infoLabel {
+  font-size: 13px;
+  color: var(--igm-text-muted);
+  flex-shrink: 0;
+}
+
+.infoValue {
+  font-size: 13px;
+  color: var(--igm-text);
+  text-align: right;
+  word-break: break-all;
+}
+
+/* 角色/状态徽标 */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid var(--igm-border-strong);
+  color: var(--igm-text-muted);
+}
+
+.badgeAccent {
+  color: var(--igm-accent);
+  border-color: var(--igm-accent);
+  background: var(--igm-accent-soft);
+}
+
+.badgeSuccess {
+  color: var(--igm-success);
+  border-color: var(--igm-success);
+  background: var(--igm-success-soft);
+}
+
+.badgeDanger {
+  color: var(--igm-danger);
+  border-color: var(--igm-danger);
+  background: var(--igm-danger-soft);
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--igm-border);
+}

@@ -4,12 +4,19 @@
   "private": true,
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "iGM_Server"
   ],
   "scripts": {
-    "dev": "bun run --cwd apps/web dev",
+    "dev": "concurrently -n web,server -c blue,magenta \"bun run dev:web\" \"bun run dev:server\"",
+    "dev:web": "bun run --cwd apps/web dev",
+    "dev:server": "bun run --cwd iGM_Server dev",
     "build": "bun run --cwd apps/web build",
-    "start": "bun run --cwd apps/web start",
-    "lint": "bun run --cwd apps/web lint"
+    "db:init": "bun run --cwd iGM_Server db:init",
+    "db:migrate": "bun run --cwd iGM_Server db:migrate",
+    "db:seed": "bun run --cwd iGM_Server db:seed"
+  },
+  "devDependencies": {
+    "concurrently": "9.1.2",
+    "typescript": "5.9.2"
   }
 }

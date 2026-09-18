@@ -1,66 +1,243 @@
 {
-  "iGM_Brand": {
+  "site": {
     "name": "iGCraftLit Community",
-    "tagline": "クリエイターのためのミニマルなコミュニティプラットフォーム"
+    "tagline": "クリエイターのためのミニマルなコミュニティ"
   },
-  "iGM_Nav": {
-    "navLabel": "メインナビゲーション",
-    "sectionMain": "メイン",
-    "sectionCommunity": "コミュニティ",
-    "sectionPersonal": "個人",
-    "sectionAdmin": "管理",
-    "G_Home": "ホーム",
-    "G_Notification": "通知",
-    "G_Community": "コミュニティ広場",
-    "G_Post": "投稿",
-    "G_Activity": "イベント",
-    "G_Resource": "リソース",
-    "G_User": "プロフィール",
-    "G_Settings": "設定",
-    "G_Admin": "管理パネル"
+  "nav": {
+    "groupMain": "メイン",
+    "groupCommunity": "コミュニティ",
+    "groupPersonal": "個人",
+    "groupAdmin": "管理",
+    "home": "ホーム",
+    "notifications": "通知",
+    "community": "コミュニティ広場",
+    "posts": "投稿",
+    "activities": "イベント",
+    "resources": "リソース",
+    "profile": "プロフィール",
+    "settings": "アカウント設定",
+    "admin": "管理画面"
   },
-  "iGM_TopBar": {
-    "openNav": "ナビゲーションを開く",
-    "closeNav": "ナビゲーションを閉じる"
+  "topbar": {
+    "menu": "メニュー",
+    "theme": "テーマ",
+    "language": "言語"
   },
-  "iGM_Theme": {
-    "label": "テーマを切り替え",
-    "light": "ライトモード",
-    "dark": "ダークモード",
-    "system": "システム設定に従う",
-    "currentHint": "現在：{mode}"
+  "theme": {
+    "light": "ライト",
+    "dark": "ダーク",
+    "system": "システムに従う"
   },
-  "iGM_Language": {
-    "label": "言語を切り替え",
+  "language": {
+    "label": "言語",
     "zh-CN": "简体中文",
     "zh-TW": "繁體中文",
     "en": "English",
     "ja": "日本語",
     "ru": "Русский"
   },
-  "iGM_Home": {
-    "entryCommunityTitle": "コミュニティ",
-    "entryCommunityDesc": "コミュニティ広場、投稿、イベント、リソースを閲覧",
-    "entryProfileTitle": "プロフィール",
-    "entryProfileDesc": "プロフィールとアカウント設定を確認・管理",
-    "entryAdminTitle": "管理パネル",
-    "entryAdminDesc": "ユーザー、コンテンツ、サイト管理へアクセス"
+  "home": {
+    "heading": "iGCraftLit Community",
+    "tagline": "クリエイターのためのミニマルなコミュニティ",
+    "cardCommunityTitle": "コミュニティへ",
+    "cardCommunityDesc": "コミュニティ広場、投稿、イベント、共有リソースを閲覧",
+    "cardProfileTitle": "プロフィール",
+    "cardProfileDesc": "プロフィールとアカウント設定を確認",
+    "cardAdminTitle": "管理画面",
+    "cardAdminDesc": "サイト管理とメンテナンス機能へ"
   },
-  "iGM_Placeholder": {
-    "title": "機能の準備中",
-    "description": "このモジュールは今後のバージョンで提供されます。"
+  "pages": {
+    "notification": {
+      "title": "通知",
+      "description": "サイト内のメッセージとお知らせがここに表示されます"
+    },
+    "community": {
+      "title": "コミュニティ広場",
+      "description": "コミュニティの更新とディスカッションの集約入口"
+    },
+    "post": {
+      "title": "投稿",
+      "description": "投稿の閲覧と公開機能は後続モジュールで提供されます"
+    },
+    "activity": {
+      "title": "イベント",
+      "description": "コミュニティイベントとスケジュールがここに表示されます"
+    },
+    "resources": {
+      "title": "リソース",
+      "description": "共有リソースと素材がここに表示されます"
+    },
+    "profile": {
+      "title": "プロフィール",
+      "description": "プロフィールページは後続モジュールで提供されます"
+    },
+    "settings": {
+      "title": "アカウント設定",
+      "description": "アカウント情報とログインパスワードを管理"
+    },
+    "admin": {
+      "title": "管理画面",
+      "description": "サイト管理機能は後続モジュールで提供されます"
+    }
   },
-  "iGM_NotFound": {
+  "placeholder": {
+    "badge": "モジュール 1",
+    "comingSoon": "このモジュールは今後のバージョンで提供されます"
+  },
+  "health": {
+    "title": "ヘルスチェック",
+    "frontendVersion": "フロントエンドバージョン",
+    "buildTime": "ビルド時刻",
+    "backendStatus": "バックエンド状態",
+    "backendVersion": "バックエンドバージョン",
+    "apiAddress": "API エンドポイント",
+    "checking": "確認中",
+    "online": "オンライン",
+    "offline": "未接続",
+    "retry": "再確認"
+  },
+  "auth": {
+    "actions": {
+      "login": "ログイン",
+      "register": "新規登録",
+      "logout": "ログアウト",
+      "verify": "メールを認証",
+      "resend": "認証コードを再送",
+      "resendCountdown": "{seconds}秒後に再送できます",
+      "sendResetMail": "リセットメールを送信",
+      "resetPassword": "パスワードをリセット",
+      "changePassword": "新しいパスワードを保存"
+    },
+    "fields": {
+      "account": "アカウント",
+      "accountPlaceholder": "メールアドレスまたはユーザー名",
+      "username": "ユーザー名",
+      "usernamePlaceholder": "3〜20文字",
+      "email": "メールアドレス",
+      "emailPlaceholder": "you@example.com",
+      "password": "パスワード",
+      "passwordPlaceholder": "パスワードを入力",
+      "confirmPassword": "パスワード確認",
+      "confirmPasswordPlaceholder": "パスワードを再入力",
+      "code": "認証コード",
+      "oldPassword": "現在のパスワード",
+      "newPassword": "新しいパスワード",
+      "newPasswordPlaceholder": "新しいパスワードを入力",
+      "confirmNewPassword": "新しいパスワードの確認",
+      "confirmNewPasswordPlaceholder": "新しいパスワードを再入力"
+    },
+    "hints": {
+      "username": "英数字・アンダースコア・漢字、3〜20文字",
+      "password": "8文字以上、大文字小文字を区別"
+    },
+    "links": {
+      "forgotPassword": "パスワードをお忘れですか？",
+      "register": "アカウント作成",
+      "login": "ログインはこちら",
+      "backToLogin": "ログインに戻る",
+      "requestNewReset": "リセットメールを再申請",
+      "accountSettings": "アカウント設定へ",
+      "verifyNow": "今すぐ認証"
+    },
+    "roles": {
+      "user": "一般ユーザー",
+      "moderator": "モデレーター",
+      "admin": "管理者"
+    },
+    "status": {
+      "active": "有効",
+      "suspended": "停止中"
+    },
+    "errors": {
+      "usernameInvalid": "ユーザー名の形式が正しくありません",
+      "emailInvalid": "メールアドレスの形式が正しくありません",
+      "passwordInvalid": "パスワードは8〜128文字で入力してください",
+      "passwordMismatch": "パスワードが一致しません",
+      "emailTaken": "このメールアドレスは既に登録されています",
+      "usernameTaken": "このユーザー名は既に使用されています",
+      "credentialsRequired": "アカウントとパスワードを入力してください",
+      "loginFailed": "アカウントまたはパスワードが正しくありません",
+      "accountSuspended": "このアカウントは停止されています",
+      "unauthorized": "先にログインしてください",
+      "forbidden": "このページにアクセスする権限がありません",
+      "tooManyRequests": "操作が多すぎます。しばらくしてから再試行してください",
+      "badRequest": "リクエスト内容が正しくありません",
+      "alreadyVerified": "メールアドレスは既に認証済みです",
+      "codeInvalid": "認証コードは6桁の数字で入力してください",
+      "codeExpired": "認証コードの有効期限が切れています。再取得してください",
+      "codeLocked": "失敗回数が多すぎます。新しいコードを取得してください",
+      "codeMismatch": "認証コードが正しくありません",
+      "oldPasswordMismatch": "現在のパスワードが正しくありません",
+      "passwordSame": "新しいパスワードは現在のパスワードと同じにできません",
+      "resetTokenInvalid": "リセットリンクが無効または期限切れです",
+      "generic": "操作に失敗しました。後でもう一度お試しください",
+      "network": "ローカルのバックエンドに接続できません",
+      "requestTimeout": "リクエストがタイムアウトしました。後でもう一度お試しください"
+    },
+    "messages": {
+      "registered": "登録が完了しました",
+      "loggedIn": "ログインしました",
+      "loggedOut": "ログアウトしました",
+      "verificationSent": "認証コードを再送信しました",
+      "emailVerified": "メール認証が完了しました",
+      "resetMailSent": "リセットメールを送信しました",
+      "passwordReset": "パスワードがリセットされました。新しいパスワードでログインしてください",
+      "passwordChanged": "パスワードを変更しました"
+    },
+    "state": {
+      "checking": "ログイン状態を確認中…",
+      "redirecting": "ログインページへ移動中…",
+      "forbiddenTitle": "アクセス拒否",
+      "forbiddenDescription": "お使いのアカウント権限ではこのページにアクセスできません",
+      "backHome": "ホームに戻る",
+      "checkingToken": "リセットリンクを確認中…"
+    },
+    "login": {
+      "title": "ログイン",
+      "description": "iGCraftLit Community アカウントでログイン",
+      "noAccount": "アカウントをお持ちでないですか？"
+    },
+    "register": {
+      "title": "新規登録",
+      "description": "iGCraftLit Community アカウントを作成",
+      "hasAccount": "既にアカウントをお持ちですか？"
+    },
+    "forgot": {
+      "title": "パスワードをお忘れの方",
+      "description": "登録メールアドレスを入力すると、リセットリンクをお送りします",
+      "sentHint": "そのメールアドレスが登録済みの場合、まもなくリセットメールが届きます。30分以内に手続きしてください。"
+    },
+    "reset": {
+      "title": "パスワードのリセット",
+      "description": "アカウントの新しいパスワードを設定します"
+    },
+    "verify": {
+      "title": "メール認証",
+      "description": "認証が完了すると全機能をご利用いただけます",
+      "alreadyVerified": "メールアドレスの認証が完了しました",
+      "sentTo": "{email} 宛てに認証コードを送信しました（10分間有効）"
+    },
+    "settings": {
+      "title": "アカウント設定",
+      "description": "アカウント情報とパスワードを管理します",
+      "accountInfo": "アカウント情報",
+      "role": "権限",
+      "status": "ステータス",
+      "emailVerified": "メール認証",
+      "verified": "認証済み",
+      "unverified": "未認証",
+      "unverifiedHint": "メールアドレスが未認証です。一部機能が制限される場合があります。",
+      "joinedAt": "登録日",
+      "changePassword": "パスワード変更",
+      "refreshSession": "ログイン状態を更新"
+    }
+  },
+  "notfound": {
     "title": "ページが見つかりません",
-    "description": "お探しのページは存在しないか、移動された可能性があります。",
+    "description": "アクセスしたページは存在しないか、移動されました",
     "backHome": "ホームに戻る"
   },
-  "iGM_Health": {
-    "title": "ヘルスチェック",
-    "version": "フロントエンドバージョン",
-    "buildTime": "ビルド時刻"
-  },
-  "iGM_Footer": {
+  "footer": {
     "copyright": "© {year} iGCraftLit Community"
   }
 }

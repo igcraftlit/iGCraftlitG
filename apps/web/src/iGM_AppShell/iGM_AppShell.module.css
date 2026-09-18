@@ -1,0 +1,63 @@
+/*
+ * 文件路径：apps/web/src/iGM_AppShell/iGM_AppShell.module.css
+ * 所属层：前端 / 应用骨架样式
+ * 路由：全局
+ * 模块：iGM_AppShell
+ * 作用：骨架整体布局与移动端遮罩样式
+ * 内容：主内容列偏移（避让图标栏/常驻侧边栏）、内容容器、遮罩
+ */
+
+/* 骨架根容器 */
+.shell {
+  min-height: 100vh;
+}
+
+/* 右侧主列：顶栏 + 内容 + 页脚 */
+.column {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* 平板端：为图标栏预留宽度 */
+@media (min-width: 768px) {
+  .column {
+    margin-left: var(--igm-sidebar-width-rail);
+  }
+}
+
+/* 桌面端：为完整侧边栏预留宽度 */
+@media (min-width: 1024px) {
+  .column {
+    margin-left: var(--igm-sidebar-width);
+  }
+}
+
+/* 内容区：留白清晰、宽度收敛居中 */
+.main {
+  flex: 1;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px 16px 48px;
+}
+
+@media (min-width: 768px) {
+  .main {
+    padding: 36px 32px 64px;
+  }
+}
+
+/* 移动端遮罩：仅小屏显示 */
+.mask {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: var(--igm-mask);
+}
+
+@media (min-width: 768px) {
+  .mask {
+    display: none;
+  }
+}

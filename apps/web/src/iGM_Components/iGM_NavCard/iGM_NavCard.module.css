@@ -1,0 +1,73 @@
+/*
+ * 文件路径：apps/web/src/iGM_Components/iGM_NavCard/iGM_NavCard.module.css
+ * 所属层：前端 / 通用组件样式
+ * 路由：G_Home
+ * 模块：iGM_NavCard
+ * 作用：首页入口卡片样式
+ * 内容：横向结构、图标容器、hover 边框与阴影轻交互
+ */
+
+.card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 20px;
+  background: var(--igm-surface);
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  box-shadow: var(--igm-shadow);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+/* 全站统一的轻交互语义：仅边框加深 + 阴影提升 */
+.card:hover {
+  border-color: var(--igm-border-strong);
+  box-shadow: var(--igm-shadow-hover);
+}
+
+/* 图标容器 */
+.iconBox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--igm-radius);
+  background: var(--igm-accent-soft);
+  color: var(--igm-accent);
+  flex-shrink: 0;
+}
+
+/* 文本区 */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.description {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--igm-text-muted);
+}
+
+/* 右侧箭头 */
+.arrow {
+  color: var(--igm-text-subtle);
+  flex-shrink: 0;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.card:hover .arrow {
+  color: var(--igm-accent);
+  transform: translateX(2px);
+}

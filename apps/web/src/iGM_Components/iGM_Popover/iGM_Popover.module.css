@@ -1,0 +1,89 @@
+/*
+ * 文件路径：apps/web/src/iGM_Components/iGM_Popover/iGM_Popover.module.css
+ * 所属层：前端 / 通用组件样式
+ * 路由：全局
+ * 模块：iGM_Popover
+ * 作用：弹出菜单的触发器、面板与选项样式
+ * 内容：图标按钮、浮层面板、菜单项 hover/选中态
+ */
+
+/* 容器 */
+.container {
+  position: relative;
+}
+
+/* 图标触发按钮 */
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--igm-radius);
+  color: var(--igm-text-muted);
+  background: transparent;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.trigger:hover {
+  background: var(--igm-surface-subtle);
+  color: var(--igm-text);
+}
+
+.trigger[aria-expanded="true"] {
+  background: var(--igm-surface-subtle);
+  color: var(--igm-text);
+}
+
+/* 弹出面板 */
+.panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 168px;
+  padding: 4px;
+  background: var(--igm-surface);
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  box-shadow: var(--igm-shadow-hover);
+  z-index: 60;
+}
+
+/* 菜单项 */
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--igm-radius);
+  font-size: 13px;
+  color: var(--igm-text);
+  text-align: left;
+  transition: background-color 0.15s ease;
+}
+
+.item:hover {
+  background: var(--igm-surface-subtle);
+}
+
+.itemIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--igm-text-muted);
+  flex-shrink: 0;
+}
+
+.itemLabel {
+  flex: 1;
+  white-space: nowrap;
+}
+
+.itemCheck {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--igm-accent);
+  flex-shrink: 0;
+}

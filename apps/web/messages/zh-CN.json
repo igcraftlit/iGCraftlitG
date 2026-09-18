@@ -1,66 +1,243 @@
 {
-  "iGM_Brand": {
+  "site": {
     "name": "iGCraftLit Community",
-    "tagline": "为创作者打造的极简社区平台"
+    "tagline": "面向创作者的极简社区空间"
   },
-  "iGM_Nav": {
-    "navLabel": "主导航",
-    "sectionMain": "主页",
-    "sectionCommunity": "社区",
-    "sectionPersonal": "个人",
-    "sectionAdmin": "管理",
-    "G_Home": "首页",
-    "G_Notification": "通知",
-    "G_Community": "社区广场",
-    "G_Post": "帖子",
-    "G_Activity": "活动",
-    "G_Resource": "资源库",
-    "G_User": "个人主页",
-    "G_Settings": "设置",
-    "G_Admin": "管理后台"
+  "nav": {
+    "groupMain": "主页",
+    "groupCommunity": "社区",
+    "groupPersonal": "个人",
+    "groupAdmin": "管理",
+    "home": "首页",
+    "notifications": "通知",
+    "community": "社区广场",
+    "posts": "帖子",
+    "activities": "活动",
+    "resources": "资源库",
+    "profile": "个人主页",
+    "settings": "账户设置",
+    "admin": "管理后台"
   },
-  "iGM_TopBar": {
-    "openNav": "打开导航",
-    "closeNav": "关闭导航"
+  "topbar": {
+    "menu": "菜单",
+    "theme": "主题",
+    "language": "语言"
   },
-  "iGM_Theme": {
-    "label": "切换主题",
-    "light": "亮色模式",
-    "dark": "暗色模式",
-    "system": "跟随系统",
-    "currentHint": "当前：{mode}"
+  "theme": {
+    "light": "浅色",
+    "dark": "深色",
+    "system": "跟随系统"
   },
-  "iGM_Language": {
-    "label": "切换语言",
+  "language": {
+    "label": "语言",
     "zh-CN": "简体中文",
     "zh-TW": "繁體中文",
     "en": "English",
     "ja": "日本語",
     "ru": "Русский"
   },
-  "iGM_Home": {
-    "entryCommunityTitle": "社区",
-    "entryCommunityDesc": "浏览社区广场、帖子、活动与资源库",
-    "entryProfileTitle": "个人主页",
-    "entryProfileDesc": "查看与管理个人资料及账户设置",
-    "entryAdminTitle": "管理后台",
-    "entryAdminDesc": "进入用户、内容与站点管理入口"
+  "home": {
+    "heading": "iGCraftLit Community",
+    "tagline": "面向创作者的极简社区空间",
+    "cardCommunityTitle": "进入社区",
+    "cardCommunityDesc": "浏览社区广场、帖子、活动与共享资源",
+    "cardProfileTitle": "个人主页",
+    "cardProfileDesc": "查看个人资料与账号设置",
+    "cardAdminTitle": "管理后台",
+    "cardAdminDesc": "进入站点管理与维护功能"
   },
-  "iGM_Placeholder": {
-    "title": "功能建设中",
-    "description": "该模块将在后续版本中提供。"
+  "pages": {
+    "notification": {
+      "title": "通知",
+      "description": "站内消息与提醒将在此处展示"
+    },
+    "community": {
+      "title": "社区广场",
+      "description": "社区动态与讨论聚合入口"
+    },
+    "post": {
+      "title": "帖子",
+      "description": "帖子浏览与发布功能将在后续模块提供"
+    },
+    "activity": {
+      "title": "活动",
+      "description": "社区活动与日程将在此处展示"
+    },
+    "resources": {
+      "title": "资源库",
+      "description": "共享资源与素材将在此处展示"
+    },
+    "profile": {
+      "title": "个人主页",
+      "description": "个人资料页将在后续模块提供"
+    },
+    "settings": {
+      "title": "账户设置",
+      "description": "管理账户信息与登录密码"
+    },
+    "admin": {
+      "title": "管理后台",
+      "description": "站点管理功能将在后续模块提供"
+    }
   },
-  "iGM_NotFound": {
+  "placeholder": {
+    "badge": "模块一",
+    "comingSoon": "该模块将在后续版本提供"
+  },
+  "health": {
+    "title": "健康检查",
+    "frontendVersion": "前端版本",
+    "buildTime": "构建时间",
+    "backendStatus": "后端状态",
+    "backendVersion": "后端版本",
+    "apiAddress": "接口地址",
+    "checking": "检测中",
+    "online": "在线",
+    "offline": "未连接",
+    "retry": "重新检测"
+  },
+  "auth": {
+    "actions": {
+      "login": "登录",
+      "register": "注册",
+      "logout": "退出登录",
+      "verify": "验证邮箱",
+      "resend": "重新发送验证码",
+      "resendCountdown": "{seconds} 秒后可重新发送",
+      "sendResetMail": "发送重置邮件",
+      "resetPassword": "重置密码",
+      "changePassword": "保存新密码"
+    },
+    "fields": {
+      "account": "账号",
+      "accountPlaceholder": "邮箱或用户名",
+      "username": "用户名",
+      "usernamePlaceholder": "3-20 位中英文、数字或下划线",
+      "email": "邮箱",
+      "emailPlaceholder": "you@example.com",
+      "password": "密码",
+      "passwordPlaceholder": "请输入密码",
+      "confirmPassword": "确认密码",
+      "confirmPasswordPlaceholder": "请再次输入密码",
+      "code": "验证码",
+      "oldPassword": "当前密码",
+      "newPassword": "新密码",
+      "newPasswordPlaceholder": "请输入新密码",
+      "confirmNewPassword": "确认新密码",
+      "confirmNewPasswordPlaceholder": "请再次输入新密码"
+    },
+    "hints": {
+      "username": "支持中英文、数字与下划线，3-20 个字符",
+      "password": "至少 8 个字符，区分大小写"
+    },
+    "links": {
+      "forgotPassword": "忘记密码？",
+      "register": "立即注册",
+      "login": "立即登录",
+      "backToLogin": "返回登录",
+      "requestNewReset": "重新申请重置邮件",
+      "accountSettings": "前往账户设置",
+      "verifyNow": "立即验证"
+    },
+    "roles": {
+      "user": "普通用户",
+      "moderator": "协管员",
+      "admin": "管理员"
+    },
+    "status": {
+      "active": "正常",
+      "suspended": "已停用"
+    },
+    "errors": {
+      "usernameInvalid": "用户名格式不正确",
+      "emailInvalid": "邮箱格式不正确",
+      "passwordInvalid": "密码长度需为 8-128 位",
+      "passwordMismatch": "两次输入的密码不一致",
+      "emailTaken": "该邮箱已被注册",
+      "usernameTaken": "该用户名已被占用",
+      "credentialsRequired": "请填写完整的账号与密码",
+      "loginFailed": "账号或密码不正确",
+      "accountSuspended": "该账号已被停用",
+      "unauthorized": "请先登录",
+      "forbidden": "你没有权限访问该页面",
+      "tooManyRequests": "操作过于频繁，请稍后再试",
+      "badRequest": "请求内容有误",
+      "alreadyVerified": "邮箱已经验证过了",
+      "codeInvalid": "验证码应为 6 位数字",
+      "codeExpired": "验证码已过期，请重新获取",
+      "codeLocked": "验证失败次数过多，请重新获取验证码",
+      "codeMismatch": "验证码不正确",
+      "oldPasswordMismatch": "当前密码不正确",
+      "passwordSame": "新密码不能与当前密码相同",
+      "resetTokenInvalid": "重置链接无效或已过期",
+      "generic": "操作失败，请稍后再试",
+      "network": "无法连接本地后端服务",
+      "requestTimeout": "请求超时，请稍后再试"
+    },
+    "messages": {
+      "registered": "注册成功",
+      "loggedIn": "登录成功",
+      "loggedOut": "已退出登录",
+      "verificationSent": "验证码已重新发送",
+      "emailVerified": "邮箱验证成功",
+      "resetMailSent": "重置邮件已发送",
+      "passwordReset": "密码已重置，请使用新密码登录",
+      "passwordChanged": "密码修改成功"
+    },
+    "state": {
+      "checking": "正在确认登录状态…",
+      "redirecting": "正在前往登录页…",
+      "forbiddenTitle": "无访问权限",
+      "forbiddenDescription": "你的账号角色无权访问此页面",
+      "backHome": "返回首页",
+      "checkingToken": "正在校验重置链接…"
+    },
+    "login": {
+      "title": "登录",
+      "description": "使用你的 iGCraftLit Community 账号登录",
+      "noAccount": "还没有账号？"
+    },
+    "register": {
+      "title": "注册",
+      "description": "创建你的 iGCraftLit Community 账号",
+      "hasAccount": "已经有账号了？"
+    },
+    "forgot": {
+      "title": "忘记密码",
+      "description": "输入注册邮箱，我们将向你发送密码重置链接",
+      "sentHint": "如果该邮箱已注册，你很快会收到一封重置密码邮件，请在 30 分钟内完成重置"
+    },
+    "reset": {
+      "title": "重置密码",
+      "description": "为你的账号设置一个新密码"
+    },
+    "verify": {
+      "title": "邮箱验证",
+      "description": "完成验证后才能使用完整功能",
+      "alreadyVerified": "你的邮箱已成功验证",
+      "sentTo": "验证码已发送至 {email}，请注意查收（10 分钟内有效）"
+    },
+    "settings": {
+      "title": "账户设置",
+      "description": "管理你的账户信息与登录密码",
+      "accountInfo": "账户信息",
+      "role": "角色",
+      "status": "状态",
+      "emailVerified": "邮箱验证",
+      "verified": "已验证",
+      "unverified": "未验证",
+      "unverifiedHint": "你的邮箱尚未验证，部分功能可能受限。",
+      "joinedAt": "注册时间",
+      "changePassword": "修改密码",
+      "refreshSession": "刷新登录状态"
+    }
+  },
+  "notfound": {
     "title": "页面未找到",
-    "description": "您访问的页面不存在或已被移动。",
+    "description": "您访问的页面不存在或已被移动",
     "backHome": "返回首页"
   },
-  "iGM_Health": {
-    "title": "健康检查",
-    "version": "前端版本",
-    "buildTime": "构建时间"
-  },
-  "iGM_Footer": {
+  "footer": {
     "copyright": "© {year} iGCraftLit Community"
   }
 }
