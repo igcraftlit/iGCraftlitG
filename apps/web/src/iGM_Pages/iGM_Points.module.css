@@ -1,0 +1,398 @@
+/* 文件路径：apps/web/src/iGM_Pages/iGM_Points.module.css
+   所属层：前端 / 页面样式（CSS Modules）
+   路由：G_Points、G_Leaderboard、G_Badges、G_Checkin
+   模块：iGM_Points.module.css
+   作用：模块五积分体系四页面的专用样式
+   内容：积分概览卡、等级进度条、积分流水行、签到日历、
+         排行榜榜单、勋章网格与任务清单
+   说明：配色与圆角复用 iGM_Globals.css 的 --igm-* 设计变量 */
+
+/* ===== 概览卡 ===== */
+.overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.statTile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  background: var(--igm-surface-subtle);
+  border-radius: var(--igm-radius);
+}
+
+.statLabel {
+  font-size: 12px;
+  color: var(--igm-text-muted);
+}
+
+.statValue {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--igm-text);
+  line-height: 1.2;
+}
+
+.statSub {
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+/* ===== 等级进度条 ===== */
+.levelHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.levelName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.levelPoints {
+  font-size: 13px;
+  color: var(--igm-text-muted);
+}
+
+.progressTrack {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--igm-surface-subtle);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--igm-accent);
+  transition: width 0.3s ease;
+}
+
+.progressHint {
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+/* ===== 积分流水 ===== */
+.recordList {
+  display: flex;
+  flex-direction: column;
+}
+
+.recordRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--igm-border);
+}
+
+.recordRow:last-child {
+  border-bottom: none;
+}
+
+.recordMain {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.recordAction {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--igm-text);
+}
+
+.recordDesc {
+  font-size: 12px;
+  color: var(--igm-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recordSide {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.recordPoints {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-success);
+}
+
+.recordTime {
+  font-size: 11px;
+  color: var(--igm-text-subtle);
+}
+
+/* ===== 签到日历 ===== */
+.checkinPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+  padding: 20px;
+  background: var(--igm-surface-subtle);
+  border-radius: var(--igm-radius-lg);
+}
+
+.checkinStats {
+  display: flex;
+  gap: 26px;
+  justify-content: center;
+}
+
+.checkinStat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.checkinStatValue {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.checkinStatLabel {
+  font-size: 12px;
+  color: var(--igm-text-muted);
+}
+
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.calendarCell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  border-radius: var(--igm-radius);
+  color: var(--igm-text-muted);
+  background: var(--igm-surface);
+  border: 1px solid var(--igm-border);
+}
+
+.calendarCellChecked {
+  background: var(--igm-accent-soft);
+  border-color: var(--igm-accent);
+  color: var(--igm-accent);
+  font-weight: 600;
+}
+
+.calendarCellToday {
+  border-color: var(--igm-accent);
+  border-style: dashed;
+}
+
+.calendarCellEmpty {
+  visibility: hidden;
+}
+
+.checkinResult {
+  width: 100%;
+}
+
+/* ===== 排行榜 ===== */
+.rankRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--igm-border);
+}
+
+.rankRow:last-child {
+  border-bottom: none;
+}
+
+.rankNum {
+  width: 32px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--igm-text-subtle);
+  flex-shrink: 0;
+}
+
+.rankTop {
+  color: var(--igm-accent);
+}
+
+.rankName {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.rankUsername {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--igm-text);
+}
+
+.rankLevel {
+  font-size: 11px;
+  color: var(--igm-text-subtle);
+}
+
+.rankPoints {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+  flex-shrink: 0;
+}
+
+/* ===== 勋章网格 ===== */
+.badgeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.badgeCard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: var(--igm-surface);
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+}
+
+.badgeCardGranted {
+  border-color: var(--igm-accent);
+  background: var(--igm-accent-soft);
+}
+
+.badgeCardLocked {
+  opacity: 0.62;
+}
+
+.badgeIcon {
+  display: inline-flex;
+  color: var(--igm-accent);
+}
+
+.badgeCardLocked .badgeIcon {
+  color: var(--igm-text-subtle);
+}
+
+.badgeName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.badgeDescription {
+  font-size: 12px;
+  color: var(--igm-text-muted);
+  line-height: 1.5;
+}
+
+.badgeFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  font-size: 11px;
+  color: var(--igm-text-subtle);
+}
+
+.badgeGrantedTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--igm-success);
+  font-weight: 500;
+}
+
+/* ===== 任务清单 ===== */
+.taskRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--igm-border);
+}
+
+.taskRow:last-child {
+  border-bottom: none;
+}
+
+.taskMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.taskName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--igm-text);
+}
+
+.taskDescription {
+  font-size: 12px;
+  color: var(--igm-text-muted);
+}
+
+.taskSide {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.taskReward {
+  font-size: 12px;
+  color: var(--igm-success);
+  font-weight: 500;
+}
+
+.taskProgress {
+  font-size: 12px;
+  color: var(--igm-text-muted);
+}
+
+.taskDone {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--igm-success);
+}
+
+/* ===== 登录提示 ===== */
+.loginHint {
+  padding: 14px 16px;
+  border-radius: var(--igm-radius);
+  background: var(--igm-accent-soft);
+  color: var(--igm-text);
+  font-size: 13px;
+}

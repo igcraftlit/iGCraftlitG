@@ -10,9 +10,11 @@
 // 导入依赖 //
 "use client";
 
+import { iGM_UseLocaleRouter } from "../../iGM_i18n/iGM_UseLocaleRouter";
 import { useState, type FormEvent } from "react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { iGM_Link as Link } from "../../iGM_Components/iGM_Link/iGM_Link";
+import { useSearchParams } from "next/navigation";
+import { iGM_StripLocalePrefix } from "../../iGM_i18n/iGM_LocalePath";
 import { useTranslations } from "next-intl";
 import { LogIn } from "lucide-react";
 import { iGM_ApiLogin } from "../../iGM_Services/iGM_AuthClient";
@@ -31,16 +33,19 @@ import authStyles from "../../iGM_Components/iGM_AuthUI/iGM_AuthUI.module.css";
 // （本页无自定义属性）
 
 // 核心逻辑 //
-/** 安全回跳地址：仅接受站内 /G_ 开头路径，避免开放重定向 */
+/** 安全回跳地址：剥离可选语言前缀后仅接受站内 /G_ 开头路径，避免开放重定向 */
 function iGM_SafeRedirect(raw: string | null): string {
-  if (raw && raw.startsWith("/G_")) return raw;
+  if (raw) {
+    const stripped = iGM_StripLocalePrefix(raw);
+    if (stripped.startsWith("/G_")) return stripped;
+  }
   return "/G_Settings";
 }
 
 /** 登录页 */
 export function iGM_LoginPage() {
   const t = useTranslations();
-  const router = useRouter();
+  const router = iGM_UseLocaleRouter();
   const searchParams = useSearchParams();
   const { setUser } = iGM_UseAuth();
 

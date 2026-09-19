@@ -10,7 +10,7 @@
 // 导入依赖 //
 "use client";
 
-import Link from "next/link";
+import { iGM_Link as Link } from "../../iGM_Components/iGM_Link/iGM_Link";
 import type { LucideIcon } from "lucide-react";
 import { ArrowRight } from "lucide-react";
 import styles from "./iGM_NavCard.module.css";

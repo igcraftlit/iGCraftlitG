@@ -13,14 +13,15 @@
 // 导入依赖 //
 "use client";
 
+import { iGM_UseLocaleRouter } from "../../iGM_i18n/iGM_UseLocaleRouter";
 import {
   useCallback,
   useEffect,
   useState,
   type FormEvent,
 } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { iGM_Link as Link } from "../../iGM_Components/iGM_Link/iGM_Link";
 import { useTranslations } from "next-intl";
 import { ArrowLeft, LoaderCircle, PenSquare } from "lucide-react";
 import {
@@ -45,7 +46,7 @@ const iGM_ContentMax = 10000;
 /** 发帖/编辑页主体（在 Suspense 内使用 useSearchParams） */
 export function iGM_PostEditPage() {
   const t = useTranslations();
-  const router = useRouter();
+  const router = iGM_UseLocaleRouter();
   const searchParams = useSearchParams();
   const postId = searchParams.get("postId");
   const isEdit = postId !== null;

@@ -64,6 +64,7 @@ import {
 } from "../iGM_Repositories/iGM_InteractionRepository";
 import { iGM_ToUserDto, type iGM_UserDto, type iGM_UserRow } from "../iGM_Types/iGM_Auth";
 import { iGM_Notify } from "./iGM_NotificationService";
+import { iGM_AwardPoints } from "./iGM_PointsService";
 import {
   iGM_ToCategoryDto,
   iGM_ToTagDto,
@@ -482,6 +483,8 @@ export function iGM_CreatePostService(
 
   const detail = iGM_GetPostDetail(user, post.iGM_Id);
   if (!detail) throw new Error("iGM_CreatePostService：创建后详情组装失败");
+  // 模块五：发帖积分埋点（内部吞异常，不影响主流程）
+  iGM_AwardPoints(user.iGM_Id, "post_create", title);
   return detail;
 }
 
@@ -728,6 +731,8 @@ export function iGM_CreateCommentService(
   }
 
   const [dto] = iGM_AssembleComments([comment], user.iGM_Id);
+  // 模块五：评论积分埋点（内部吞异常，不影响主流程）
+  iGM_AwardPoints(user.iGM_Id, "comment_create");
   return dto as iGM_CommentDto;
 }
 
@@ -850,6 +855,14 @@ export function iGM_ToggleLikeService(
   const now = new Date().toISOString();
   if (liked) {
     iGM_AddLike(targetType, targetId, user.iGM_Id, now);
+    // 模块五：被赞积分埋点——点赞时给内容作者加分，自我点赞不发分
+    const ownerId =
+      targetType === "post"
+        ? (iGM_FindPostById(targetId)?.iGM_AuthorId ?? null)
+        : (iGM_FindCommentById(targetId)?.iGM_AuthorId ?? null);
+    if (ownerId && ownerId !== user.iGM_Id) {
+      iGM_AwardPoints(ownerId, "like_received");
+    }
   } else {
     iGM_RemoveLike(targetType, targetId, user.iGM_Id);
   }

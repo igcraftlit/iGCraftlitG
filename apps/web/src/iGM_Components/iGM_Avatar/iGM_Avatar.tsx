@@ -47,6 +47,7 @@ export function iGM_Avatar({ src, name, size = "default" }: iGM_AvatarProps) {
           src={resolvedSrc}
           alt={name}
           referrerPolicy="no-referrer"
+          crossOrigin="anonymous"
           onError={() => setFailed(true)}
         />
       </span>

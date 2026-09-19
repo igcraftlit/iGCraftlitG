@@ -11,9 +11,10 @@
 // 导入依赖 //
 "use client";
 
+import { iGM_UseLocaleRouter } from "../../iGM_i18n/iGM_UseLocaleRouter";
 import { useState, type FormEvent } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { iGM_Link as Link } from "../../iGM_Components/iGM_Link/iGM_Link";
+
 import { useTranslations } from "next-intl";
 import { UserPlus } from "lucide-react";
 import { iGM_ApiRegister } from "../../iGM_Services/iGM_AuthClient";
@@ -36,7 +37,7 @@ const iGM_EmailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 /** 注册页 */
 export function iGM_RegisterPage() {
   const t = useTranslations();
-  const router = useRouter();
+  const router = iGM_UseLocaleRouter();
   const { setUser } = iGM_UseAuth();
 
   const [username, setUsername] = useState("");

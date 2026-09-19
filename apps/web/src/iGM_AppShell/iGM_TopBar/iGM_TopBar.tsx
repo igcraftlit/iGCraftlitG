@@ -12,7 +12,7 @@
 "use client";
 
 import { Menu, UserRound } from "lucide-react";
-import Link from "next/link";
+import { iGM_Link as Link } from "../../iGM_Components/iGM_Link/iGM_Link";
 import { useTranslations } from "next-intl";
 import { iGM_ThemeToggle as IGM_ThemeToggle } from "../../iGM_Components/iGM_ThemeToggle/iGM_ThemeToggle";
 import { iGM_LanguageSwitcher as IGM_LanguageSwitcher } from "../../iGM_Components/iGM_LanguageSwitcher/iGM_LanguageSwitcher";

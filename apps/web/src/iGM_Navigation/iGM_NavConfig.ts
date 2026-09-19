@@ -4,24 +4,31 @@
  * 路由：全局
  * 模块：iGM_Navigation
  * 作用：侧边导航栏的唯一配置真源，按服务类型分区块，区块内支持树状层级
- * 内容：主页 / 社区 / 个人 / 管理四个区块的路由、图标、文案键与父子层级
+ * 内容：主页 / 社区 / 个人 / 积分 / 管理五个区块的路由、图标、文案键与父子层级
  */
 
 // 导入依赖 //
 import {
+  Award,
   Bell,
   BellRing,
+  CalendarCheck,
   CalendarDays,
   CalendarPlus,
+  FileText,
+  Flag,
   FolderOpen,
   Home,
   Library,
+  Mail,
   MessageSquareText,
   NotebookPen,
   PenSquare,
   Settings,
   Shield,
   SlidersHorizontal,
+  Sparkles,
+  Trophy,
   Upload,
   UserRound,
   Users,
@@ -141,14 +148,59 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
     ],
   },
   {
+    titleKey: "nav.groupPoints",
+    items: [
+      {
+        href: "/G_Points",
+        icon: Sparkles,
+        labelKey: "nav.points",
+        children: [
+          { href: "/G_Checkin", icon: CalendarCheck, labelKey: "nav.checkin" },
+          { href: "/G_Badges", icon: Award, labelKey: "nav.badges" },
+          { href: "/G_Leaderboard", icon: Trophy, labelKey: "nav.leaderboard" },
+        ],
+      },
+    ],
+  },
+  {
     titleKey: "nav.groupAdmin",
     items: [
       {
-        href: "/G_Admin",
+        href: "/G_AdminDashboard",
         icon: Shield,
         labelKey: "nav.admin",
-        // 管理入口仅管理员可见，页面本身另有 RequireAuth 与后端权限校验
-        roles: ["admin"],
+        // 管理入口 moderator 及以上可见，页面另有 RequireAuth 与后端权限校验
+        roles: ["moderator", "admin"],
+        children: [
+          {
+            href: "/G_AdminUsers",
+            icon: Users,
+            labelKey: "nav.adminUsers",
+          },
+          {
+            href: "/G_AdminContents",
+            icon: FileText,
+            labelKey: "nav.adminContents",
+          },
+          {
+            href: "/G_AdminReports",
+            icon: Flag,
+            labelKey: "nav.adminReports",
+          },
+          {
+            // 以下两项仅 admin（后端接口同样限 admin）
+            href: "/G_AdminSettings",
+            icon: Settings,
+            labelKey: "nav.adminSettings",
+            roles: ["admin"],
+          },
+          {
+            href: "/G_AdminMails",
+            icon: Mail,
+            labelKey: "nav.adminMails",
+            roles: ["admin"],
+          },
+        ],
       },
     ],
   },

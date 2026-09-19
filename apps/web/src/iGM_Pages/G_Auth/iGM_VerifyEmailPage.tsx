@@ -11,9 +11,10 @@
 // 导入依赖 //
 "use client";
 
+import { iGM_UseLocaleRouter } from "../../iGM_i18n/iGM_UseLocaleRouter";
 import { useEffect, useState, type FormEvent } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { iGM_Link as Link } from "../../iGM_Components/iGM_Link/iGM_Link";
+
 import { useTranslations } from "next-intl";
 import { MailCheck } from "lucide-react";
 import {
@@ -41,7 +42,7 @@ const iGM_ResendCooldown = 60;
 /** 邮箱验证页主体（需在 RequireAuth 内使用） */
 function iGM_VerifyEmailInner() {
   const t = useTranslations();
-  const router = useRouter();
+  const router = iGM_UseLocaleRouter();
   const { user, setUser } = iGM_UseAuth();
 
   const [code, setCode] = useState("");

@@ -196,6 +196,7 @@ export function iGM_ImageUploader({
           <img
             src={previewUrl}
             alt=""
+            crossOrigin="anonymous"
             className={styles.previewImage}
           />
           {uploading && (

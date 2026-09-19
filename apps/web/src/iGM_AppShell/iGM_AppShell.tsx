@@ -15,6 +15,7 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
+import { iGM_IsLandingPath } from "../iGM_i18n/iGM_LocalePath";
 import { iGM_Sidebar as IGM_Sidebar } from "./iGM_Sidebar/iGM_Sidebar";
 import { iGM_TopBar as IGM_TopBar } from "./iGM_TopBar/iGM_TopBar";
 import { iGM_Footer as IGM_Footer } from "../iGM_Components/iGM_Footer/iGM_Footer";
@@ -63,12 +64,12 @@ const IGM_ConsoleShell = function iGM_ConsoleShell({
   );
 };
 
-/** 应用骨架：根路径落地页豁免控制台外壳，其余路由挂载控制台骨架 */
+/** 应用骨架：门户落地页（/ 与 /{locale}）豁免控制台外壳，其余路由挂载控制台骨架 */
 export function iGM_AppShell({ children }: iGM_AppShellProps) {
   const pathname = usePathname();
 
-  // 根路径是控制台之前的门户落地页，自带导航与页脚，不挂载控制台骨架
-  if (pathname === "/") {
+  // 落地页是控制台之前的门户页，自带导航与页脚，不挂载控制台骨架
+  if (iGM_IsLandingPath(pathname)) {
     return <>{children}</>;
   }
 

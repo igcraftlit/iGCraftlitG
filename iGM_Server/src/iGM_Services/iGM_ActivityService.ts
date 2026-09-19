@@ -27,6 +27,7 @@ import { iGM_FindUsersByIds } from "../iGM_Repositories/iGM_UserRepository";
 import { iGM_GetFileDtoMap, iGM_GetFileDto } from "./iGM_FileService";
 import { iGM_ContentError, iGM_SanitizeContent } from "./iGM_ContentService";
 import { iGM_Notify } from "./iGM_NotificationService";
+import { iGM_AwardPoints } from "./iGM_PointsService";
 import { iGM_ListActivityResourcesService } from "./iGM_ResourceService";
 import type { iGM_AuthorDto } from "../iGM_Types/iGM_Community";
 import type { iGM_UserRow } from "../iGM_Types/iGM_Auth";
@@ -435,6 +436,8 @@ export function iGM_RegisterActivityService(
 
   const detail = iGM_GetActivityDetailService(user, activityId);
   if (!detail) throw new Error("iGM_RegisterActivityService：报名后详情组装失败");
+  // 模块五：报名活动积分埋点（内部吞异常，不影响主流程）
+  iGM_AwardPoints(user.iGM_Id, "activity_join", activity.iGM_Title);
   return detail;
 }
 

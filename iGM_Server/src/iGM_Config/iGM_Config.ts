@@ -102,7 +102,7 @@ export const iGM_Config: iGM_AppConfig = {
     "https://www.igcraftlit.com",
     "http://localhost:3000",
   ],
-  version: "0.4.0",
+  version: "0.5.0",
   auth: {
     cookieName: "iGM_SID",
     sessionTtlMs: 7 * 24 * 60 * 60 * 1000,
@@ -145,6 +145,12 @@ export const iGM_Config: iGM_AppConfig = {
     resourceDownload: { windowMs: 60 * 1000, max: 60 },
     // 模块四：通知偏好更新——10 分钟内最多 20 次
     notificationWrite: { windowMs: 10 * 60 * 1000, max: 20 },
+    // 模块五：管理后台写操作——1 分钟内最多 20 次
+    adminWrite: { windowMs: 60 * 1000, max: 20 },
+    // 模块五：每日签到——1 分钟内最多 5 次（防连点，业务层另有当日唯一约束）
+    checkin: { windowMs: 60 * 1000, max: 5 },
+    // 模块五：管理后台测试邮件——10 分钟内最多 3 次
+    mailTest: { windowMs: 10 * 60 * 1000, max: 3 },
   },
   mail: {
     // 163 邮箱 SMTP：465 端口隐式 SSL；密码使用客户端授权码（非登录密码），

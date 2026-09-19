@@ -24,7 +24,17 @@
     "myComments": "我的留言",
     "userSettings": "資料設定",
     "settings": "帳戶設定",
-    "admin": "管理後台"
+    "admin": "管理後台",
+    "groupPoints": "成長",
+    "points": "積分中心",
+    "checkin": "每日簽到",
+    "badges": "勳章牆",
+    "leaderboard": "排行榜",
+    "adminUsers": "使用者管理",
+    "adminContents": "內容審核",
+    "adminReports": "檢舉處理",
+    "adminSettings": "系統資訊",
+    "adminMails": "郵件測試"
   },
   "topbar": {
     "menu": "選單",
@@ -178,6 +188,74 @@
     "admin": {
       "title": "管理後台",
       "description": "網站管理功能將於後續模組提供"
+    },
+    "home": {
+      "title": "首頁",
+      "description": "iGCraftLit Community 社群主頁"
+    },
+    "points": {
+      "title": "積分中心",
+      "description": "查看積分、等級進度、任務與積分紀錄"
+    },
+    "leaderboard": {
+      "title": "排行榜",
+      "description": "社群成員積分排行"
+    },
+    "badges": {
+      "title": "勳章牆",
+      "description": "社群勳章與授予條件"
+    },
+    "checkin": {
+      "title": "每日簽到",
+      "description": "連續簽到贏取額外積分"
+    },
+    "authLogin": {
+      "title": "登入",
+      "description": "登入 iGCraftLit Community 帳戶"
+    },
+    "authRegister": {
+      "title": "註冊",
+      "description": "建立 iGCraftLit Community 帳戶"
+    },
+    "authForgot": {
+      "title": "找回密碼",
+      "description": "透過郵箱驗證碼重設密碼"
+    },
+    "authVerify": {
+      "title": "郵箱驗證",
+      "description": "驗證郵箱以完成註冊"
+    },
+    "authReset": {
+      "title": "重設密碼",
+      "description": "設定新的帳戶密碼"
+    },
+    "adminDashboard": {
+      "title": "資料概覽",
+      "description": "站點使用者、內容與營運指標總覽"
+    },
+    "adminUsers": {
+      "title": "使用者管理",
+      "description": "搜尋使用者、調整角色與封禁狀態"
+    },
+    "adminContents": {
+      "title": "內容審核",
+      "description": "審核貼文與留言，處理違規內容"
+    },
+    "adminReports": {
+      "title": "檢舉處理",
+      "description": "處理社群檢舉並連動內容處置"
+    },
+    "adminSettings": {
+      "title": "系統資訊",
+      "description": "查看後端執行設定（僅管理員）"
+    },
+    "adminMails": {
+      "title": "郵件測試",
+      "description": "傳送測試郵件驗證 SMTP 設定"
+    },
+    "apiHealth": {
+      "title": "服務狀態",
+      "description": "前端與後端服務健康檢查"
     }
   },
   "placeholder": {
@@ -772,5 +850,165 @@
   },
   "footer": {
     "copyright": "© {year} iGCraftLit Community"
+  },
+  "points": {
+    "loadFailed": "積分資料載入失敗",
+    "overview": {
+      "total": "總積分",
+      "level": "目前等級",
+      "levelNone": "未入門",
+      "nextLevel": "下一等級：{name}",
+      "toNext": "再獲 {points} 積分升級"
+    },
+    "records": {
+      "title": "積分紀錄",
+      "empty": "暫無積分紀錄"
+    },
+    "levels": {
+      "title": "等級規則",
+      "range": "{min} - {max} 積分",
+      "noUpper": "{min} 積分以上"
+    },
+    "tasks": {
+      "title": "任務",
+      "reward": "+{points} 積分",
+      "done": "已完成",
+      "progress": "{progress}/{target}"
+    },
+    "actions": {
+      "post_create": "發布貼文",
+      "comment_create": "發表留言",
+      "like_received": "獲得按讚",
+      "resource_upload": "上傳資源",
+      "activity_join": "報名活動",
+      "checkin": "每日簽到",
+      "task_reward": "任務獎勵"
+    },
+    "errors": {
+      "alreadyCheckedIn": "今日已簽到，明天再來"
+    }
+  },
+  "checkin": {
+    "button": "立即簽到",
+    "buttonDone": "今日已簽到",
+    "continuousDays": "連續簽到",
+    "todayPoints": "今日獲得",
+    "success": "簽到成功，獲得 {points} 積分",
+    "levelUp": "等級提升了！",
+    "newBadges": "獲得新勳章：{names}"
+  },
+  "badges": {
+    "loginHint": "登入後可查看你的勳章獲得情況",
+    "loadFailed": "勳章資料載入失敗",
+    "grantedAt": "獲得於 {date}",
+    "conditions": {
+      "posts_count": "發布 {value} 篇貼文",
+      "comments_count": "發表 {value} 條留言",
+      "resources_count": "上傳 {value} 個資源",
+      "checkin_days": "累計簽到 {value} 天",
+      "likes_received": "累計獲得 {value} 次按讚",
+      "points_total": "累計獲得 {value} 積分"
+    }
+  },
+  "leaderboard": {
+    "sortTotal": "總積分",
+    "sortWeekly": "本週增量",
+    "levelNone": "未入門",
+    "loadFailed": "排行榜載入失敗",
+    "empty": "暫無排行資料"
+  },
+  "admin": {
+    "overview": {
+      "users": "使用者總數",
+      "usersToday": "今日新增使用者",
+      "usersSuspended": "封禁使用者",
+      "posts": "貼文總數",
+      "postsToday": "今日新帖",
+      "comments": "留言總數",
+      "resources": "資源總數",
+      "activities": "活動總數",
+      "reportsPending": "待處理檢舉",
+      "checkinsToday": "今日簽到"
+    },
+    "roles": {
+      "user": "普通使用者",
+      "moderator": "協管員",
+      "admin": "管理員"
+    },
+    "status": {
+      "active": "正常",
+      "suspended": "已封禁"
+    },
+    "users": {
+      "searchPlaceholder": "搜尋使用者名稱或郵箱",
+      "search": "搜尋",
+      "empty": "沒有符合的使用者",
+      "meta": "積分 {points} · 貼文 {posts} · 留言 {comments} · 註冊於 {date}",
+      "roleLabel": "調整角色",
+      "ban": "封禁",
+      "unban": "解封"
+    },
+    "contents": {
+      "typePost": "貼文",
+      "typeComment": "留言",
+      "filterAll": "全部",
+      "filterNormal": "正常",
+      "filterHidden": "已隱藏",
+      "searchPlaceholder": "搜尋標題或內容",
+      "empty": "沒有符合的內容",
+      "authorUnknown": "作者已註銷",
+      "statusNormal": "正常",
+      "statusHidden": "已隱藏",
+      "hide": "隱藏",
+      "restore": "恢復",
+      "delete": "刪除"
+    },
+    "reports": {
+      "filterPending": "待處理",
+      "filterResolved": "已處理",
+      "filterDismissed": "已駁回",
+      "filterAll": "全部",
+      "empty": "沒有符合的檢舉",
+      "targetPost": "貼文",
+      "targetComment": "留言",
+      "by": "檢舉人：{name}",
+      "handledAt": "處理於 {time}",
+      "statusPending": "待處理",
+      "statusResolved": "已處理",
+      "statusDismissed": "已駁回",
+      "contentAction": "內容處置",
+      "actionNone": "不處置內容",
+      "actionHide": "隱藏內容",
+      "actionDelete": "刪除內容",
+      "resolve": "判定成立",
+      "dismiss": "駁回"
+    },
+    "mails": {
+      "to": "收件地址",
+      "toPlaceholder": "name@example.com",
+      "send": "傳送測試郵件",
+      "sending": "傳送中…",
+      "success": "測試郵件已傳送，請查收"
+    },
+    "messages": {
+      "userBanned": "使用者已封禁",
+      "userUnbanned": "使用者已解封",
+      "roleUpdated": "角色已更新",
+      "contentReviewed": "內容已處理",
+      "reportHandled": "檢舉已處理",
+      "mailTestSent": "測試郵件已傳送"
+    },
+    "errors": {
+      "loadFailed": "管理資料載入失敗",
+      "badRequest": "請求參數不正確",
+      "userNotFound": "使用者不存在",
+      "cannotModifySelf": "不能對自己執行該操作",
+      "cannotModifyAdmin": "不能對其他管理員執行該操作",
+      "badTargetType": "檢舉目標類型無效",
+      "reportNotFound": "檢舉不存在",
+      "reportAlreadyHandled": "該檢舉已被處理",
+      "invalidEmail": "郵箱地址無效",
+      "mailSendFailed": "郵件傳送失敗，請檢查 SMTP 設定"
+    }
   }
 }

@@ -18,14 +18,16 @@ import { iGM_AuthProvider as IGM_AuthProvider } from "./iGM_AuthProvider";
 // 类型定义 //
 interface iGM_ProvidersProps {
   children: ReactNode;
+  /** 由 [locale] 路由布局注入的初始语言 */
+  initialLocale?: string;
 }
 
 // 核心逻辑 //
 /** 全站 Provider 聚合组件：外层主题、中层语言、内层认证 */
-export function iGM_Providers({ children }: iGM_ProvidersProps) {
+export function iGM_Providers({ children, initialLocale }: iGM_ProvidersProps) {
   return (
     <IGM_ThemeProvider>
-      <IGM_LocaleProvider>
+      <IGM_LocaleProvider initialLocale={initialLocale}>
         <IGM_AuthProvider>{children}</IGM_AuthProvider>
       </IGM_LocaleProvider>
     </IGM_ThemeProvider>

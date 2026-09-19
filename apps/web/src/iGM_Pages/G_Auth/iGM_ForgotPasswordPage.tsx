@@ -11,7 +11,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import Link from "next/link";
+import { iGM_Link as Link } from "../../iGM_Components/iGM_Link/iGM_Link";
 import { useTranslations } from "next-intl";
 import { MailQuestion } from "lucide-react";
 import { iGM_ApiForgotPassword } from "../../iGM_Services/iGM_AuthClient";

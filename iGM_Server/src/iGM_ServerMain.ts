@@ -17,6 +17,8 @@ import { iGM_Fail } from "./iGM_Types/iGM_Response";
 import { iGM_AuthError } from "./iGM_Services/iGM_AuthService";
 import { iGM_ContentError } from "./iGM_Services/iGM_ContentService";
 import { iGM_StorageError, iGM_EnsureUploadRoot } from "./iGM_Services/iGM_StorageService";
+import { iGM_PointsError } from "./iGM_Services/iGM_PointsService";
+import { iGM_AdminError } from "./iGM_Services/iGM_AdminService";
 import { G_Health } from "./iGM_Routes/G_Health";
 import { G_Auth } from "./iGM_Routes/G_Auth";
 import { G_Community } from "./iGM_Routes/G_Community";
@@ -25,6 +27,9 @@ import { G_Notification } from "./iGM_Routes/G_Notification";
 import { G_File } from "./iGM_Routes/G_File";
 import { G_Activity } from "./iGM_Routes/G_Activity";
 import { G_Resource } from "./iGM_Routes/G_Resource";
+import { G_Points } from "./iGM_Routes/G_Points";
+import { G_Admin } from "./iGM_Routes/G_Admin";
+import { G_Seo } from "./iGM_Routes/G_Seo";
 
 // 类型定义 //
 // （本入口无额外类型，统一响应类型见 iGM_Types/iGM_Response.ts）
@@ -61,6 +66,16 @@ const iGM_Server = new Elysia()
       set.status = error.status;
       return iGM_Fail(error.status, error.message);
     }
+    // 模块五积分业务错误：签到重复等
+    if (error instanceof iGM_PointsError) {
+      set.status = error.status;
+      return iGM_Fail(error.status, error.message);
+    }
+    // 模块五管理后台业务错误：权限/状态冲突等
+    if (error instanceof iGM_AdminError) {
+      set.status = error.status;
+      return iGM_Fail(error.status, error.message);
+    }
     // 请求体解析失败等客户端错误（沿用模块二通用文案键）
     if (code === "PARSE" || code === "VALIDATION") {
       set.status = 400;
@@ -82,6 +97,10 @@ const iGM_Server = new Elysia()
   .use(G_File)
   .use(G_Activity)
   .use(G_Resource)
+  // 模块五：积分等级勋章、管理后台、SEO 数据
+  .use(G_Points)
+  .use(G_Admin)
+  .use(G_Seo)
   // 根路径占位
   .get("/", () => ({
     success: true,

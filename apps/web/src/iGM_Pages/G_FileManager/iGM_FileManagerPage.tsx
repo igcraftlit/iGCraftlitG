@@ -12,6 +12,7 @@
 // 导入依赖 //
 "use client";
 
+import { iGM_UseLocaleRouter } from "../../iGM_i18n/iGM_UseLocaleRouter";
 import {
   useCallback,
   useEffect,
@@ -20,7 +21,7 @@ import {
   type ChangeEvent,
   type DragEvent,
 } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   Check,
@@ -118,7 +119,7 @@ function iGM_LooksLikeImage(file: File): boolean {
 /** 个人文件管理页主体（在登录守卫内） */
 function iGM_FileManagerInner() {
   const t = useTranslations();
-  const router = useRouter();
+  const router = iGM_UseLocaleRouter();
   const searchParams = useSearchParams();
 
   const [page, setPage] = useState(1);
@@ -481,6 +482,7 @@ function iGM_FileManagerInner() {
                       <img
                         src={iGM_FilePreviewUrl(item.id)}
                         alt={item.originalName}
+                        crossOrigin="anonymous"
                         loading="lazy"
                         onError={() => iGM_HandleThumbError(item.id)}
                       />

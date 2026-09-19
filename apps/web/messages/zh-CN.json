@@ -24,7 +24,17 @@
     "myComments": "我的评论",
     "userSettings": "资料设置",
     "settings": "账户设置",
-    "admin": "管理后台"
+    "admin": "管理后台",
+    "groupPoints": "成长",
+    "points": "积分中心",
+    "checkin": "每日签到",
+    "badges": "勋章墙",
+    "leaderboard": "排行榜",
+    "adminUsers": "用户管理",
+    "adminContents": "内容审核",
+    "adminReports": "举报处理",
+    "adminSettings": "系统信息",
+    "adminMails": "邮件测试"
   },
   "topbar": {
     "menu": "菜单",
@@ -178,6 +188,74 @@
     "admin": {
       "title": "管理后台",
       "description": "站点管理功能将在后续模块提供"
+    },
+    "home": {
+      "title": "首页",
+      "description": "iGCraftLit Community 社区主页"
+    },
+    "points": {
+      "title": "积分中心",
+      "description": "查看积分、等级进度、任务与积分记录"
+    },
+    "leaderboard": {
+      "title": "排行榜",
+      "description": "社区成员积分排行"
+    },
+    "badges": {
+      "title": "勋章墙",
+      "description": "社区勋章与授予条件"
+    },
+    "checkin": {
+      "title": "每日签到",
+      "description": "连续签到赢取额外积分"
+    },
+    "authLogin": {
+      "title": "登录",
+      "description": "登录 iGCraftLit Community 账户"
+    },
+    "authRegister": {
+      "title": "注册",
+      "description": "创建 iGCraftLit Community 账户"
+    },
+    "authForgot": {
+      "title": "找回密码",
+      "description": "通过邮箱验证码重置密码"
+    },
+    "authVerify": {
+      "title": "邮箱验证",
+      "description": "验证邮箱以完成注册"
+    },
+    "authReset": {
+      "title": "重置密码",
+      "description": "设置新的账户密码"
+    },
+    "adminDashboard": {
+      "title": "数据概览",
+      "description": "站点用户、内容与运营指标总览"
+    },
+    "adminUsers": {
+      "title": "用户管理",
+      "description": "检索用户、调整角色与封禁状态"
+    },
+    "adminContents": {
+      "title": "内容审核",
+      "description": "审核帖子与评论，处理违规内容"
+    },
+    "adminReports": {
+      "title": "举报处理",
+      "description": "处理社区举报并联动内容处置"
+    },
+    "adminSettings": {
+      "title": "系统信息",
+      "description": "查看后端运行配置（仅管理员）"
+    },
+    "adminMails": {
+      "title": "邮件测试",
+      "description": "发送测试邮件验证 SMTP 配置"
+    },
+    "apiHealth": {
+      "title": "服务状态",
+      "description": "前端与后端服务健康检查"
     }
   },
   "placeholder": {
@@ -772,5 +850,165 @@
   },
   "footer": {
     "copyright": "© {year} iGCraftLit Community"
+  },
+  "points": {
+    "loadFailed": "积分数据加载失败",
+    "overview": {
+      "total": "总积分",
+      "level": "当前等级",
+      "levelNone": "未入门",
+      "nextLevel": "下一等级：{name}",
+      "toNext": "再获 {points} 积分升级"
+    },
+    "records": {
+      "title": "积分记录",
+      "empty": "暂无积分记录"
+    },
+    "levels": {
+      "title": "等级规则",
+      "range": "{min} - {max} 积分",
+      "noUpper": "{min} 积分以上"
+    },
+    "tasks": {
+      "title": "任务",
+      "reward": "+{points} 积分",
+      "done": "已完成",
+      "progress": "{progress}/{target}"
+    },
+    "actions": {
+      "post_create": "发布帖子",
+      "comment_create": "发表评论",
+      "like_received": "获得点赞",
+      "resource_upload": "上传资源",
+      "activity_join": "报名活动",
+      "checkin": "每日签到",
+      "task_reward": "任务奖励"
+    },
+    "errors": {
+      "alreadyCheckedIn": "今日已签到，明天再来"
+    }
+  },
+  "checkin": {
+    "button": "立即签到",
+    "buttonDone": "今日已签到",
+    "continuousDays": "连续签到",
+    "todayPoints": "今日获得",
+    "success": "签到成功，获得 {points} 积分",
+    "levelUp": "等级提升了！",
+    "newBadges": "获得新勋章：{names}"
+  },
+  "badges": {
+    "loginHint": "登录后可查看你的勋章获得情况",
+    "loadFailed": "勋章数据加载失败",
+    "grantedAt": "获得于 {date}",
+    "conditions": {
+      "posts_count": "发布 {value} 篇帖子",
+      "comments_count": "发表 {value} 条评论",
+      "resources_count": "上传 {value} 个资源",
+      "checkin_days": "累计签到 {value} 天",
+      "likes_received": "累计获得 {value} 次点赞",
+      "points_total": "累计获得 {value} 积分"
+    }
+  },
+  "leaderboard": {
+    "sortTotal": "总积分",
+    "sortWeekly": "本周增量",
+    "levelNone": "未入门",
+    "loadFailed": "排行榜加载失败",
+    "empty": "暂无排行数据"
+  },
+  "admin": {
+    "overview": {
+      "users": "用户总数",
+      "usersToday": "今日新增用户",
+      "usersSuspended": "封禁用户",
+      "posts": "帖子总数",
+      "postsToday": "今日新帖",
+      "comments": "评论总数",
+      "resources": "资源总数",
+      "activities": "活动总数",
+      "reportsPending": "待处理举报",
+      "checkinsToday": "今日签到"
+    },
+    "roles": {
+      "user": "普通用户",
+      "moderator": "协管员",
+      "admin": "管理员"
+    },
+    "status": {
+      "active": "正常",
+      "suspended": "已封禁"
+    },
+    "users": {
+      "searchPlaceholder": "搜索用户名或邮箱",
+      "search": "搜索",
+      "empty": "没有匹配的用户",
+      "meta": "积分 {points} · 帖子 {posts} · 评论 {comments} · 注册于 {date}",
+      "roleLabel": "调整角色",
+      "ban": "封禁",
+      "unban": "解封"
+    },
+    "contents": {
+      "typePost": "帖子",
+      "typeComment": "评论",
+      "filterAll": "全部",
+      "filterNormal": "正常",
+      "filterHidden": "已隐藏",
+      "searchPlaceholder": "搜索标题或内容",
+      "empty": "没有匹配的内容",
+      "authorUnknown": "作者已注销",
+      "statusNormal": "正常",
+      "statusHidden": "已隐藏",
+      "hide": "隐藏",
+      "restore": "恢复",
+      "delete": "删除"
+    },
+    "reports": {
+      "filterPending": "待处理",
+      "filterResolved": "已处理",
+      "filterDismissed": "已驳回",
+      "filterAll": "全部",
+      "empty": "没有匹配的举报",
+      "targetPost": "帖子",
+      "targetComment": "评论",
+      "by": "举报人：{name}",
+      "handledAt": "处理于 {time}",
+      "statusPending": "待处理",
+      "statusResolved": "已处理",
+      "statusDismissed": "已驳回",
+      "contentAction": "内容处置",
+      "actionNone": "不处置内容",
+      "actionHide": "隐藏内容",
+      "actionDelete": "删除内容",
+      "resolve": "判定成立",
+      "dismiss": "驳回"
+    },
+    "mails": {
+      "to": "收件地址",
+      "toPlaceholder": "name@example.com",
+      "send": "发送测试邮件",
+      "sending": "发送中…",
+      "success": "测试邮件已发送，请查收"
+    },
+    "messages": {
+      "userBanned": "用户已封禁",
+      "userUnbanned": "用户已解封",
+      "roleUpdated": "角色已更新",
+      "contentReviewed": "内容已处理",
+      "reportHandled": "举报已处理",
+      "mailTestSent": "测试邮件已发送"
+    },
+    "errors": {
+      "loadFailed": "管理数据加载失败",
+      "badRequest": "请求参数不正确",
+      "userNotFound": "用户不存在",
+      "cannotModifySelf": "不能对自己执行该操作",
+      "cannotModifyAdmin": "不能对其他管理员执行该操作",
+      "badTargetType": "举报目标类型无效",
+      "reportNotFound": "举报不存在",
+      "reportAlreadyHandled": "该举报已被处理",
+      "invalidEmail": "邮箱地址无效",
+      "mailSendFailed": "邮件发送失败，请检查 SMTP 配置"
+    }
   }
 }

@@ -4,7 +4,7 @@
  * 路由：全局（TopBar）
  * 模块：iGM_ThemeToggle
  * 作用：明暗模式切换，支持浅色 / 深色 / 跟随系统
- * 内容：Sun / Moon 触发图标，弹出菜单选择三种模式，next-themes 持久化
+ * 内容：Sun / Moon 触发图标，弹出菜单选择三种模式，iGM_ThemeProvider 持久化
  */
 
 // 导入依赖 //
@@ -12,7 +12,7 @@
 
 import { useEffect, useState } from "react";
 import { Check, Monitor, Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
+import { iGM_UseTheme } from "../../iGM_Providers/iGM_ThemeProvider";
 import { useTranslations } from "next-intl";
 import { iGM_Popover as IGM_Popover } from "../iGM_Popover/iGM_Popover";
 import styles from "../iGM_Popover/iGM_Popover.module.css";
@@ -24,7 +24,7 @@ type iGM_ThemeOption = "light" | "dark" | "system";
 /** 主题切换按钮与三选菜单 */
 export function iGM_ThemeToggle() {
   const t = useTranslations();
-  const { theme, resolvedTheme, setTheme } = useTheme();
+  const { theme, resolvedTheme, setTheme } = iGM_UseTheme();
   const [mounted, setMounted] = useState(false);
 
   // 避免首屏 hydration 不一致：挂载后再读取真实主题

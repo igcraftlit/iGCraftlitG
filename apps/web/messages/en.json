@@ -24,7 +24,17 @@
     "myComments": "My Comments",
     "userSettings": "Profile Settings",
     "settings": "Account Settings",
-    "admin": "Admin Panel"
+    "admin": "Admin Panel",
+    "groupPoints": "Growth",
+    "points": "Points",
+    "checkin": "Daily Check-in",
+    "badges": "Badges",
+    "leaderboard": "Leaderboard",
+    "adminUsers": "Users",
+    "adminContents": "Content Review",
+    "adminReports": "Reports",
+    "adminSettings": "System Info",
+    "adminMails": "Mail Test"
   },
   "topbar": {
     "menu": "Menu",
@@ -178,6 +188,74 @@
     "admin": {
       "title": "Admin Panel",
       "description": "Site administration features will arrive in a later module"
+    },
+    "home": {
+      "title": "Home",
+      "description": "iGCraftLit Community front page"
+    },
+    "points": {
+      "title": "Points",
+      "description": "Track your points, level progress, tasks and history"
+    },
+    "leaderboard": {
+      "title": "Leaderboard",
+      "description": "Community member points ranking"
+    },
+    "badges": {
+      "title": "Badges",
+      "description": "Community badges and how to earn them"
+    },
+    "checkin": {
+      "title": "Daily Check-in",
+      "description": "Check in consecutively for bonus points"
+    },
+    "authLogin": {
+      "title": "Sign in",
+      "description": "Sign in to your iGCraftLit Community account"
+    },
+    "authRegister": {
+      "title": "Sign up",
+      "description": "Create your iGCraftLit Community account"
+    },
+    "authForgot": {
+      "title": "Forgot password",
+      "description": "Reset your password via email code"
+    },
+    "authVerify": {
+      "title": "Email verification",
+      "description": "Verify your email to finish registration"
+    },
+    "authReset": {
+      "title": "Reset password",
+      "description": "Set a new account password"
+    },
+    "adminDashboard": {
+      "title": "Overview",
+      "description": "Site users, content and operations at a glance"
+    },
+    "adminUsers": {
+      "title": "User Management",
+      "description": "Search users, adjust roles and ban status"
+    },
+    "adminContents": {
+      "title": "Content Review",
+      "description": "Review posts and comments, handle violations"
+    },
+    "adminReports": {
+      "title": "Report Handling",
+      "description": "Handle community reports with content actions"
+    },
+    "adminSettings": {
+      "title": "System Info",
+      "description": "View backend runtime configuration (admins only)"
+    },
+    "adminMails": {
+      "title": "Mail Test",
+      "description": "Send a test email to verify SMTP settings"
+    },
+    "apiHealth": {
+      "title": "Service Status",
+      "description": "Frontend and backend health checks"
     }
   },
   "placeholder": {
@@ -772,5 +850,165 @@
   },
   "footer": {
     "copyright": "© {year} iGCraftLit Community"
+  },
+  "points": {
+    "loadFailed": "Failed to load points data",
+    "overview": {
+      "total": "Total Points",
+      "level": "Level",
+      "levelNone": "Unranked",
+      "nextLevel": "Next level: {name}",
+      "toNext": "{points} points to level up"
+    },
+    "records": {
+      "title": "Points History",
+      "empty": "No points records yet"
+    },
+    "levels": {
+      "title": "Level Rules",
+      "range": "{min} - {max} points",
+      "noUpper": "{min}+ points"
+    },
+    "tasks": {
+      "title": "Tasks",
+      "reward": "+{points} points",
+      "done": "Completed",
+      "progress": "{progress}/{target}"
+    },
+    "actions": {
+      "post_create": "Published a post",
+      "comment_create": "Posted a comment",
+      "like_received": "Received likes",
+      "resource_upload": "Uploaded a resource",
+      "activity_join": "Joined an activity",
+      "checkin": "Daily check-in",
+      "task_reward": "Task reward"
+    },
+    "errors": {
+      "alreadyCheckedIn": "Already checked in today, see you tomorrow"
+    }
+  },
+  "checkin": {
+    "button": "Check in",
+    "buttonDone": "Checked in today",
+    "continuousDays": "Streak",
+    "todayPoints": "Earned today",
+    "success": "Checked in, +{points} points",
+    "levelUp": "Level up!",
+    "newBadges": "New badges: {names}"
+  },
+  "badges": {
+    "loginHint": "Sign in to see your badge progress",
+    "loadFailed": "Failed to load badges",
+    "grantedAt": "Earned {date}",
+    "conditions": {
+      "posts_count": "Publish {value} posts",
+      "comments_count": "Post {value} comments",
+      "resources_count": "Upload {value} resources",
+      "checkin_days": "Check in {value} days in total",
+      "likes_received": "Receive {value} likes in total",
+      "points_total": "Earn {value} points in total"
+    }
+  },
+  "leaderboard": {
+    "sortTotal": "Total points",
+    "sortWeekly": "This week",
+    "levelNone": "Unranked",
+    "loadFailed": "Failed to load leaderboard",
+    "empty": "No ranking data yet"
+  },
+  "admin": {
+    "overview": {
+      "users": "Total users",
+      "usersToday": "New users today",
+      "usersSuspended": "Suspended users",
+      "posts": "Total posts",
+      "postsToday": "Posts today",
+      "comments": "Total comments",
+      "resources": "Resources",
+      "activities": "Activities",
+      "reportsPending": "Pending reports",
+      "checkinsToday": "Check-ins today"
+    },
+    "roles": {
+      "user": "User",
+      "moderator": "Moderator",
+      "admin": "Admin"
+    },
+    "status": {
+      "active": "Active",
+      "suspended": "Suspended"
+    },
+    "users": {
+      "searchPlaceholder": "Search username or email",
+      "search": "Search",
+      "empty": "No matching users",
+      "meta": "Points {points} · Posts {posts} · Comments {comments} · Joined {date}",
+      "roleLabel": "Change role",
+      "ban": "Ban",
+      "unban": "Unban"
+    },
+    "contents": {
+      "typePost": "Posts",
+      "typeComment": "Comments",
+      "filterAll": "All",
+      "filterNormal": "Normal",
+      "filterHidden": "Hidden",
+      "searchPlaceholder": "Search title or content",
+      "empty": "No matching content",
+      "authorUnknown": "Unknown author",
+      "statusNormal": "Normal",
+      "statusHidden": "Hidden",
+      "hide": "Hide",
+      "restore": "Restore",
+      "delete": "Delete"
+    },
+    "reports": {
+      "filterPending": "Pending",
+      "filterResolved": "Resolved",
+      "filterDismissed": "Dismissed",
+      "filterAll": "All",
+      "empty": "No matching reports",
+      "targetPost": "Post",
+      "targetComment": "Comment",
+      "by": "Reported by {name}",
+      "handledAt": "Handled {time}",
+      "statusPending": "Pending",
+      "statusResolved": "Resolved",
+      "statusDismissed": "Dismissed",
+      "contentAction": "Content action",
+      "actionNone": "No content action",
+      "actionHide": "Hide content",
+      "actionDelete": "Delete content",
+      "resolve": "Uphold",
+      "dismiss": "Dismiss"
+    },
+    "mails": {
+      "to": "Recipient",
+      "toPlaceholder": "name@example.com",
+      "send": "Send test email",
+      "sending": "Sending…",
+      "success": "Test email sent, please check your inbox"
+    },
+    "messages": {
+      "userBanned": "User banned",
+      "userUnbanned": "User unbanned",
+      "roleUpdated": "Role updated",
+      "contentReviewed": "Content updated",
+      "reportHandled": "Report handled",
+      "mailTestSent": "Test email sent"
+    },
+    "errors": {
+      "loadFailed": "Failed to load admin data",
+      "badRequest": "Invalid request parameters",
+      "userNotFound": "User not found",
+      "cannotModifySelf": "You cannot perform this action on yourself",
+      "cannotModifyAdmin": "You cannot perform this action on another admin",
+      "badTargetType": "Invalid report target type",
+      "reportNotFound": "Report not found",
+      "reportAlreadyHandled": "This report has already been handled",
+      "invalidEmail": "Invalid email address",
+      "mailSendFailed": "Failed to send email, please check SMTP settings"
+    }
   }
 }

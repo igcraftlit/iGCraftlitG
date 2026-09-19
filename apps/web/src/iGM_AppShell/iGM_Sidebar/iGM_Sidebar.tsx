@@ -12,8 +12,9 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { iGM_Link as Link } from "../../iGM_Components/iGM_Link/iGM_Link";
 import { usePathname } from "next/navigation";
+import { iGM_StripLocalePrefix } from "../../iGM_i18n/iGM_LocalePath";
 import { useTranslations } from "next-intl";
 import { ChevronRight } from "lucide-react";
 import {
@@ -67,7 +68,9 @@ function iGM_FilterItems(
 /** 侧边导航栏 */
 export function iGM_Sidebar({ open, onNavigate }: iGM_SidebarProps) {
   const t = useTranslations();
-  const pathname = usePathname().replace(/\/$/, "") || "/";
+  // 剥离语言前缀后再与导航配置（无前缀）比对（模块五多语言路由）
+  const pathname =
+    iGM_StripLocalePrefix(usePathname()).replace(/\/$/, "") || "/";
   const { user } = iGM_UseAuth();
 
   // 用户手动展开/折叠覆盖：缺省时命中当前路由的分支自动展开

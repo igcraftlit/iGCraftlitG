@@ -24,7 +24,17 @@
     "myComments": "マイコメント",
     "userSettings": "プロフィール設定",
     "settings": "アカウント設定",
-    "admin": "管理画面"
+    "admin": "管理画面",
+    "groupPoints": "成長",
+    "points": "ポイント",
+    "checkin": "毎日チェックイン",
+    "badges": "バッジ",
+    "leaderboard": "ランキング",
+    "adminUsers": "ユーザー管理",
+    "adminContents": "コンテンツ審査",
+    "adminReports": "通報処理",
+    "adminSettings": "システム情報",
+    "adminMails": "メールテスト"
   },
   "topbar": {
     "menu": "メニュー",
@@ -178,6 +188,74 @@
     "admin": {
       "title": "管理画面",
       "description": "サイト管理機能は後続モジュールで提供されます"
+    },
+    "home": {
+      "title": "ホーム",
+      "description": "iGCraftLit Community のフロントページ"
+    },
+    "points": {
+      "title": "ポイント",
+      "description": "ポイント・レベル進捗・タスクと履歴を確認"
+    },
+    "leaderboard": {
+      "title": "ランキング",
+      "description": "コミュニティメンバーのポイントランキング"
+    },
+    "badges": {
+      "title": "バッジ",
+      "description": "コミュニティバッジと獲得条件"
+    },
+    "checkin": {
+      "title": "毎日チェックイン",
+      "description": "連続チェックインでボーナスポイントを獲得"
+    },
+    "authLogin": {
+      "title": "ログイン",
+      "description": "iGCraftLit Community アカウントにログイン"
+    },
+    "authRegister": {
+      "title": "新規登録",
+      "description": "iGCraftLit Community アカウントを作成"
+    },
+    "authForgot": {
+      "title": "パスワードをお忘れですか",
+      "description": "メール認証コードでパスワードをリセット"
+    },
+    "authVerify": {
+      "title": "メール認証",
+      "description": "メールを認証して登録を完了"
+    },
+    "authReset": {
+      "title": "パスワードリセット",
+      "description": "新しいパスワードを設定"
+    },
+    "adminDashboard": {
+      "title": "データ概要",
+      "description": "サイトのユーザー・コンテンツ・運営指標の総覧"
+    },
+    "adminUsers": {
+      "title": "ユーザー管理",
+      "description": "ユーザー検索、ロール変更と停止状態の管理"
+    },
+    "adminContents": {
+      "title": "コンテンツ審査",
+      "description": "投稿とコメントを審査し、違反コンテンツを処理"
+    },
+    "adminReports": {
+      "title": "通報処理",
+      "description": "コミュニティの通報を処理しコンテンツを対応"
+    },
+    "adminSettings": {
+      "title": "システム情報",
+      "description": "バックエンド実行設定の閲覧（管理者のみ）"
+    },
+    "adminMails": {
+      "title": "メールテスト",
+      "description": "テストメールを送信して SMTP 設定を確認"
+    },
+    "apiHealth": {
+      "title": "サービス状態",
+      "description": "フロントエンドとバックエンドのヘルスチェック"
     }
   },
   "placeholder": {
@@ -772,5 +850,165 @@
   },
   "footer": {
     "copyright": "© {year} iGCraftLit Community"
+  },
+  "points": {
+    "loadFailed": "ポイントデータの読み込みに失敗しました",
+    "overview": {
+      "total": "合計ポイント",
+      "level": "現在のレベル",
+      "levelNone": "無レベル",
+      "nextLevel": "次のレベル：{name}",
+      "toNext": "あと {points} ポイントでレベルアップ"
+    },
+    "records": {
+      "title": "ポイント履歴",
+      "empty": "ポイント履歴はまだありません"
+    },
+    "levels": {
+      "title": "レベルルール",
+      "range": "{min} - {max} ポイント",
+      "noUpper": "{min} ポイント以上"
+    },
+    "tasks": {
+      "title": "タスク",
+      "reward": "+{points} ポイント",
+      "done": "達成済み",
+      "progress": "{progress}/{target}"
+    },
+    "actions": {
+      "post_create": "投稿を公開",
+      "comment_create": "コメントを投稿",
+      "like_received": "いいねを獲得",
+      "resource_upload": "リソースをアップロード",
+      "activity_join": "イベントに参加",
+      "checkin": "毎日チェックイン",
+      "task_reward": "タスク報酬"
+    },
+    "errors": {
+      "alreadyCheckedIn": "本日は既にチェックイン済みです"
+    }
+  },
+  "checkin": {
+    "button": "チェックイン",
+    "buttonDone": "本日はチェックイン済み",
+    "continuousDays": "連続日数",
+    "todayPoints": "本日の獲得",
+    "success": "チェックイン成功、{points} ポイント獲得",
+    "levelUp": "レベルアップしました！",
+    "newBadges": "新しいバッジ：{names}"
+  },
+  "badges": {
+    "loginHint": "ログインするとバッジの獲得状況を確認できます",
+    "loadFailed": "バッジデータの読み込みに失敗しました",
+    "grantedAt": "{date} に獲得",
+    "conditions": {
+      "posts_count": "投稿を {value} 件公開",
+      "comments_count": "コメントを {value} 件投稿",
+      "resources_count": "リソースを {value} 件アップロード",
+      "checkin_days": "累計 {value} 日チェックイン",
+      "likes_received": "累計 {value} いいねを獲得",
+      "points_total": "累計 {value} ポイントを獲得"
+    }
+  },
+  "leaderboard": {
+    "sortTotal": "合計ポイント",
+    "sortWeekly": "今週の増分",
+    "levelNone": "無レベル",
+    "loadFailed": "ランキングの読み込みに失敗しました",
+    "empty": "ランキングデータはまだありません"
+  },
+  "admin": {
+    "overview": {
+      "users": "ユーザー総数",
+      "usersToday": "本日の新規ユーザー",
+      "usersSuspended": "停止中のユーザー",
+      "posts": "投稿総数",
+      "postsToday": "本日の新規投稿",
+      "comments": "コメント総数",
+      "resources": "リソース総数",
+      "activities": "イベント総数",
+      "reportsPending": "未処理の通報",
+      "checkinsToday": "本日のチェックイン"
+    },
+    "roles": {
+      "user": "一般ユーザー",
+      "moderator": "モデレーター",
+      "admin": "管理者"
+    },
+    "status": {
+      "active": "正常",
+      "suspended": "停止中"
+    },
+    "users": {
+      "searchPlaceholder": "ユーザー名またはメールアドレスを検索",
+      "search": "検索",
+      "empty": "該当するユーザーがいません",
+      "meta": "ポイント {points} · 投稿 {posts} · コメント {comments} · 登録日 {date}",
+      "roleLabel": "ロール変更",
+      "ban": "停止",
+      "unban": "解除"
+    },
+    "contents": {
+      "typePost": "投稿",
+      "typeComment": "コメント",
+      "filterAll": "すべて",
+      "filterNormal": "正常",
+      "filterHidden": "非表示",
+      "searchPlaceholder": "タイトルまたは内容を検索",
+      "empty": "該当するコンテンツがありません",
+      "authorUnknown": "退会済みの作者",
+      "statusNormal": "正常",
+      "statusHidden": "非表示",
+      "hide": "非表示にする",
+      "restore": "復元",
+      "delete": "削除"
+    },
+    "reports": {
+      "filterPending": "未処理",
+      "filterResolved": "処理済み",
+      "filterDismissed": "却下",
+      "filterAll": "すべて",
+      "empty": "該当する通報がありません",
+      "targetPost": "投稿",
+      "targetComment": "コメント",
+      "by": "通報者：{name}",
+      "handledAt": "処理日時 {time}",
+      "statusPending": "未処理",
+      "statusResolved": "処理済み",
+      "statusDismissed": "却下",
+      "contentAction": "コンテンツ対応",
+      "actionNone": "対応しない",
+      "actionHide": "コンテンツを非表示",
+      "actionDelete": "コンテンツを削除",
+      "resolve": "認定",
+      "dismiss": "却下"
+    },
+    "mails": {
+      "to": "宛先",
+      "toPlaceholder": "name@example.com",
+      "send": "テストメールを送信",
+      "sending": "送信中…",
+      "success": "テストメールを送信しました。ご確認ください"
+    },
+    "messages": {
+      "userBanned": "ユーザーを停止しました",
+      "userUnbanned": "ユーザーの停止を解除しました",
+      "roleUpdated": "ロールを更新しました",
+      "contentReviewed": "コンテンツを処理しました",
+      "reportHandled": "通報を処理しました",
+      "mailTestSent": "テストメールを送信しました"
+    },
+    "errors": {
+      "loadFailed": "管理データの読み込みに失敗しました",
+      "badRequest": "リクエストパラメータが不正です",
+      "userNotFound": "ユーザーが見つかりません",
+      "cannotModifySelf": "自分自身に対してこの操作はできません",
+      "cannotModifyAdmin": "他の管理者に対してこの操作はできません",
+      "badTargetType": "通報対象のタイプが無効です",
+      "reportNotFound": "通報が見つかりません",
+      "reportAlreadyHandled": "この通報は既に処理されています",
+      "invalidEmail": "メールアドレスが無効です",
+      "mailSendFailed": "メールの送信に失敗しました。SMTP 設定を確認してください"
+    }
   }
 }

@@ -12,9 +12,10 @@
 // 导入依赖 //
 "use client";
 
+import { iGM_UseLocaleRouter } from "../iGM_i18n/iGM_UseLocaleRouter";
 import { useEffect, useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+
+import { iGM_Link as Link } from "../iGM_Components/iGM_Link/iGM_Link";
 import { useTranslations } from "next-intl";
 import {
   BadgeCheck,
@@ -58,7 +59,7 @@ const iGM_CodeCooldown = 60;
 /** 账户设置页主体（在登录守卫内） */
 function iGM_AccountSettingsInner() {
   const t = useTranslations();
-  const router = useRouter();
+  const router = iGM_UseLocaleRouter();
   const { locale } = iGM_UseLocale();
   const { user, logout, refresh } = iGM_UseAuth();
 

@@ -1,0 +1,153 @@
+/* 文件路径：apps/web/src/iGM_Pages/iGM_Admin.module.css
+   所属层：前端 / 页面样式（CSS Modules）
+   路由：G_AdminDashboard、G_AdminUsers、G_AdminContents、G_AdminReports、
+         G_AdminSettings、G_AdminMails
+   模块：iGM_Admin.module.css
+   作用：模块五管理后台六页面的专用样式
+   内容：数据行操作区、内联操作按钮、角色下拉、状态徽标、
+         设置键值列表与邮件表单
+   说明：通用卡片/按钮/提示复用 iGM_Module4.module.css 与
+         iGM_Points.module.css（statTile、recordRow 等） */
+
+/* ===== 数据行操作区 ===== */
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.smallButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-border-strong);
+  background: var(--igm-surface);
+  color: var(--igm-text);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.smallButton:hover:not(:disabled) {
+  background: var(--igm-surface-subtle);
+}
+
+.smallButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.smallButtonDanger {
+  border-color: var(--igm-danger);
+  color: var(--igm-danger);
+}
+
+.smallButtonDanger:hover:not(:disabled) {
+  background: var(--igm-danger-soft);
+}
+
+/* ===== 角色下拉 ===== */
+.roleSelect {
+  padding: 5px 8px;
+  font-size: 12px;
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-border-strong);
+  background: var(--igm-surface);
+  color: var(--igm-text);
+  cursor: pointer;
+}
+
+/* ===== 状态徽标 ===== */
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--igm-surface-subtle);
+  color: var(--igm-text-muted);
+}
+
+.statusActive {
+  background: var(--igm-success-soft);
+  color: var(--igm-success);
+}
+
+.statusSuspended {
+  background: var(--igm-danger-soft);
+  color: var(--igm-danger);
+}
+
+.statusPending {
+  background: var(--igm-accent-soft);
+  color: var(--igm-accent);
+}
+
+/* ===== 用户邮箱与元信息 ===== */
+.userEmail {
+  font-size: 12px;
+  color: var(--igm-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.userMeta {
+  font-size: 11px;
+  color: var(--igm-text-subtle);
+}
+
+/* ===== 概览宫格 ===== */
+.overviewGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+/* ===== 设置键值列表 ===== */
+.settingList {
+  display: flex;
+  flex-direction: column;
+}
+
+.settingRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 9px 2px;
+  border-bottom: 1px solid var(--igm-border);
+  font-size: 13px;
+}
+
+.settingRow:last-child {
+  border-bottom: none;
+}
+
+.settingKey {
+  color: var(--igm-text-muted);
+  flex-shrink: 0;
+}
+
+.settingValue {
+  color: var(--igm-text);
+  text-align: right;
+  word-break: break-all;
+}
+
+.settingGroupTitle {
+  margin-top: 8px;
+}
+
+/* ===== 邮件测试表单 ===== */
+.mailForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 480px;
+}

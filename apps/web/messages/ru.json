@@ -24,7 +24,17 @@
     "myComments": "Мои комментарии",
     "userSettings": "Настройки профиля",
     "settings": "Настройки аккаунта",
-    "admin": "Панель администратора"
+    "admin": "Панель администратора",
+    "groupPoints": "Развитие",
+    "points": "Баллы",
+    "checkin": "Ежедневная отметка",
+    "badges": "Награды",
+    "leaderboard": "Рейтинг",
+    "adminUsers": "Пользователи",
+    "adminContents": "Модерация контента",
+    "adminReports": "Жалобы",
+    "adminSettings": "Системная информация",
+    "adminMails": "Тест почты"
   },
   "topbar": {
     "menu": "Меню",
@@ -178,6 +188,74 @@
     "admin": {
       "title": "Панель администратора",
       "description": "Функции администрирования появятся в следующем модуле"
+    },
+    "home": {
+      "title": "Главная",
+      "description": "Главная страница iGCraftLit Community"
+    },
+    "points": {
+      "title": "Баллы",
+      "description": "Баллы, прогресс уровня, задания и история начислений"
+    },
+    "leaderboard": {
+      "title": "Рейтинг",
+      "description": "Рейтинг участников сообщества по баллам"
+    },
+    "badges": {
+      "title": "Награды",
+      "description": "Награды сообщества и условия их получения"
+    },
+    "checkin": {
+      "title": "Ежедневная отметка",
+      "description": "Отмечайтесь подряд и получайте бонусные баллы"
+    },
+    "authLogin": {
+      "title": "Вход",
+      "description": "Войдите в аккаунт iGCraftLit Community"
+    },
+    "authRegister": {
+      "title": "Регистрация",
+      "description": "Создайте аккаунт iGCraftLit Community"
+    },
+    "authForgot": {
+      "title": "Восстановление пароля",
+      "description": "Сбросьте пароль с помощью кода из письма"
+    },
+    "authVerify": {
+      "title": "Подтверждение почты",
+      "description": "Подтвердите email, чтобы завершить регистрацию"
+    },
+    "authReset": {
+      "title": "Сброс пароля",
+      "description": "Установите новый пароль аккаунта"
+    },
+    "adminDashboard": {
+      "title": "Обзор",
+      "description": "Пользователи, контент и показатели сайта"
+    },
+    "adminUsers": {
+      "title": "Управление пользователями",
+      "description": "Поиск пользователей, роли и блокировка"
+    },
+    "adminContents": {
+      "title": "Модерация контента",
+      "description": "Проверка постов и комментариев, обработка нарушений"
+    },
+    "adminReports": {
+      "title": "Обработка жалоб",
+      "description": "Обработка жалоб с действиями над контентом"
+    },
+    "adminSettings": {
+      "title": "Системная информация",
+      "description": "Конфигурация бэкенда (только администраторы)"
+    },
+    "adminMails": {
+      "title": "Тест почты",
+      "description": "Отправка тестового письма для проверки SMTP"
+    },
+    "apiHealth": {
+      "title": "Состояние сервисов",
+      "description": "Проверка работоспособности фронтенда и бэкенда"
     }
   },
   "placeholder": {
@@ -772,5 +850,165 @@
   },
   "footer": {
     "copyright": "© {year} iGCraftLit Community"
+  },
+  "points": {
+    "loadFailed": "Не удалось загрузить данные баллов",
+    "overview": {
+      "total": "Всего баллов",
+      "level": "Уровень",
+      "levelNone": "Без уровня",
+      "nextLevel": "Следующий уровень: {name}",
+      "toNext": "Ещё {points} баллов до повышения"
+    },
+    "records": {
+      "title": "История баллов",
+      "empty": "Записей о баллах пока нет"
+    },
+    "levels": {
+      "title": "Правила уровней",
+      "range": "{min} - {max} баллов",
+      "noUpper": "от {min} баллов"
+    },
+    "tasks": {
+      "title": "Задания",
+      "reward": "+{points} баллов",
+      "done": "Выполнено",
+      "progress": "{progress}/{target}"
+    },
+    "actions": {
+      "post_create": "Публикация поста",
+      "comment_create": "Написание комментария",
+      "like_received": "Полученные лайки",
+      "resource_upload": "Загрузка ресурса",
+      "activity_join": "Участие в активности",
+      "checkin": "Ежедневная отметка",
+      "task_reward": "Награда за задание"
+    },
+    "errors": {
+      "alreadyCheckedIn": "Сегодня вы уже отмечались, до завтра"
+    }
+  },
+  "checkin": {
+    "button": "Отметиться",
+    "buttonDone": "Сегодня уже отмечено",
+    "continuousDays": "Серия",
+    "todayPoints": "Получено сегодня",
+    "success": "Отметка выполнена, +{points} баллов",
+    "levelUp": "Уровень повышен!",
+    "newBadges": "Новые награды: {names}"
+  },
+  "badges": {
+    "loginHint": "Войдите, чтобы видеть свои награды",
+    "loadFailed": "Не удалось загрузить награды",
+    "grantedAt": "Получена {date}",
+    "conditions": {
+      "posts_count": "Опубликовать {value} постов",
+      "comments_count": "Написать {value} комментариев",
+      "resources_count": "Загрузить {value} ресурсов",
+      "checkin_days": "Отмечаться {value} дней суммарно",
+      "likes_received": "Получить {value} лайков суммарно",
+      "points_total": "Заработать {value} баллов суммарно"
+    }
+  },
+  "leaderboard": {
+    "sortTotal": "Всего баллов",
+    "sortWeekly": "За неделю",
+    "levelNone": "Без уровня",
+    "loadFailed": "Не удалось загрузить рейтинг",
+    "empty": "Данных рейтинга пока нет"
+  },
+  "admin": {
+    "overview": {
+      "users": "Всего пользователей",
+      "usersToday": "Новых сегодня",
+      "usersSuspended": "Заблокировано",
+      "posts": "Всего постов",
+      "postsToday": "Постов сегодня",
+      "comments": "Всего комментариев",
+      "resources": "Ресурсов",
+      "activities": "Активностей",
+      "reportsPending": "Жалоб в ожидании",
+      "checkinsToday": "Отметок сегодня"
+    },
+    "roles": {
+      "user": "Пользователь",
+      "moderator": "Модератор",
+      "admin": "Администратор"
+    },
+    "status": {
+      "active": "Активен",
+      "suspended": "Заблокирован"
+    },
+    "users": {
+      "searchPlaceholder": "Поиск по имени или email",
+      "search": "Найти",
+      "empty": "Подходящих пользователей нет",
+      "meta": "Баллы {points} · Посты {posts} · Комментарии {comments} · Регистрация {date}",
+      "roleLabel": "Изменить роль",
+      "ban": "Заблокировать",
+      "unban": "Разблокировать"
+    },
+    "contents": {
+      "typePost": "Посты",
+      "typeComment": "Комментарии",
+      "filterAll": "Все",
+      "filterNormal": "Обычный",
+      "filterHidden": "Скрыт",
+      "searchPlaceholder": "Поиск по заголовку или содержимому",
+      "empty": "Подходящего контента нет",
+      "authorUnknown": "Автор удалён",
+      "statusNormal": "Обычный",
+      "statusHidden": "Скрыт",
+      "hide": "Скрыть",
+      "restore": "Восстановить",
+      "delete": "Удалить"
+    },
+    "reports": {
+      "filterPending": "Ожидают",
+      "filterResolved": "Обработаны",
+      "filterDismissed": "Отклонены",
+      "filterAll": "Все",
+      "empty": "Подходящих жалоб нет",
+      "targetPost": "Пост",
+      "targetComment": "Комментарий",
+      "by": "Автор жалобы: {name}",
+      "handledAt": "Обработана {time}",
+      "statusPending": "Ожидает",
+      "statusResolved": "Обработана",
+      "statusDismissed": "Отклонена",
+      "contentAction": "Действие с контентом",
+      "actionNone": "Без действий",
+      "actionHide": "Скрыть контент",
+      "actionDelete": "Удалить контент",
+      "resolve": "Подтвердить",
+      "dismiss": "Отклонить"
+    },
+    "mails": {
+      "to": "Адрес получателя",
+      "toPlaceholder": "name@example.com",
+      "send": "Отправить тестовое письмо",
+      "sending": "Отправка…",
+      "success": "Тестовое письмо отправлено, проверьте почту"
+    },
+    "messages": {
+      "userBanned": "Пользователь заблокирован",
+      "userUnbanned": "Пользователь разблокирован",
+      "roleUpdated": "Роль обновлена",
+      "contentReviewed": "Контент обработан",
+      "reportHandled": "Жалоба обработана",
+      "mailTestSent": "Тестовое письмо отправлено"
+    },
+    "errors": {
+      "loadFailed": "Не удалось загрузить данные",
+      "badRequest": "Некорректные параметры запроса",
+      "userNotFound": "Пользователь не найден",
+      "cannotModifySelf": "Нельзя выполнить это действие над собой",
+      "cannotModifyAdmin": "Нельзя выполнить это действие над другим администратором",
+      "badTargetType": "Недопустимый тип цели жалобы",
+      "reportNotFound": "Жалоба не найдена",
+      "reportAlreadyHandled": "Эта жалоба уже обработана",
+      "invalidEmail": "Некорректный email",
+      "mailSendFailed": "Не удалось отправить письмо, проверьте настройки SMTP"
+    }
   }
 }

@@ -11,9 +11,10 @@
 // 导入依赖 //
 "use client";
 
+import { iGM_UseLocaleRouter } from "../../iGM_i18n/iGM_UseLocaleRouter";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { iGM_Link as Link } from "../../iGM_Components/iGM_Link/iGM_Link";
+
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
@@ -44,7 +45,7 @@ import styles from "../iGM_Community.module.css";
 /** 社区广场页主体（在 Suspense 内使用 useSearchParams） */
 export function iGM_CommunityPage() {
   const t = useTranslations();
-  const router = useRouter();
+  const router = iGM_UseLocaleRouter();
   const searchParams = useSearchParams();
 
   // 筛选与分页状态：首屏从查询参数读取，保证静态壳可分享链接

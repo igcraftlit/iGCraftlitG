@@ -10,10 +10,10 @@
 // 导入依赖 //
 "use client";
 
-import Link from "next/link";
 import { Home } from "lucide-react";
 import { useTranslations } from "next-intl";
 import styles from "./iGM_Page.module.css";
+import { iGM_Link as Link } from "../iGM_Components/iGM_Link/iGM_Link";
 
 // 类型定义 //
 // （404 页无属性输入）

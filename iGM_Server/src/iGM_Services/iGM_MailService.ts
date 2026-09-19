@@ -1,11 +1,12 @@
 /**
  * 文件路径：iGM_Server/src/iGM_Services/iGM_MailService.ts
  * 所属层：后端 / 基础服务层
- * 路由：G_Auth
+ * 路由：G_Auth、G_Notification
  * 模块：iGM_MailService
  * 作用：全站统一邮件发送服务（163 邮箱 SMTP）
- * 内容：通用 send 方法、注册邮箱验证码邮件、密码重置令牌邮件、
- *       模块四业务通知邮件；邮件文案至少中英双语，落款含团队名称与问题联系邮箱；
+ * 内容：通用 send 方法、验证码邮件（注册验证、修改密码验证；科幻终端风格、
+ *       五语言模板见 iGM_MailTemplates）、密码重置链接邮件、模块四业务通知邮件；
+ *       验证码邮件主题统一 ◎ 前缀，落款与页脚含团队名称与双联系邮箱；
  *       本地调试可用控制台输出而不真正发信
  */
 
@@ -13,9 +14,14 @@
 import nodemailer from "nodemailer";
 import type { Transporter } from "nodemailer";
 import { iGM_Config } from "../iGM_Config/iGM_Config";
+import {
+  iGM_CodeMailHtml,
+  iGM_CodeMailText,
+  iGM_ResolveCodeMailTemplate,
+} from "./iGM_MailTemplates";
 
 // 类型定义 //
-/** 邮件语言：至少支持中文与英文，繁中映射中文，日文/俄文映射英文 */
+/** 邮件语言：仅用于未升级模板的邮件（重置链接、通知）；验证码邮件用 iGM_MailTemplates 的五语言 */
 export type iGM_MailLocale = "zh" | "en";
 
 export interface iGM_SendMailParams {
@@ -166,110 +172,48 @@ export async function iGM_SendMail(params: iGM_SendMailParams): Promise<void> {
   });
 }
 
-/** 发送注册邮箱验证码邮件 */
+/**
+ * 发送注册邮箱验证码邮件（科幻终端风格，五语言随控制台语言切换）
+ * 主题统一 ◎ 前缀；占位符由 iGM_MailTemplates 替换
+ */
 export async function iGM_SendVerificationMail(
   params: iGM_VerifyMailParams,
 ): Promise<void> {
-  const mailLocale = iGM_ResolveMailLocale(params.locale);
-  const ttl = params.ttlMinutes;
+  const template = iGM_ResolveCodeMailTemplate(params.locale);
+  const values = {
+    username: params.username,
+    code: params.code,
+    expireMinutes: params.ttlMinutes,
+  };
 
-  const subject =
-    mailLocale === "zh"
-      ? `【iGCraftLit】邮箱验证码：${params.code}`
-      : `[iGCraftLit] Your verification code: ${params.code}`;
-
-  const text =
-    mailLocale === "zh"
-      ? `你好 ${params.username}，\n\n` +
-        `你的邮箱验证码是：${params.code}\n` +
-        `验证码 ${ttl} 分钟内有效，请勿泄露给他人。\n\n` +
-        `如非本人操作，请忽略此邮件。\n\n` +
-        `iGCraftLit Community 团队\n` +
-        `如有问题请联系：igcraftlit@outlook.com`
-      : `Hello ${params.username},\n\n` +
-        `Your email verification code is: ${params.code}\n` +
-        `The code will expire in ${ttl} minutes. Please do not share it.\n\n` +
-        `If you did not request this, you can ignore this email.\n\n` +
-        `The iGCraftLit Community Team\n` +
-        `If you have any questions, please contact: igcraftlit@outlook.com`;
-
-  const html = iGM_WrapHtml(
-    mailLocale === "zh" ? "邮箱验证" : "Verify your email",
-    `<p style="font-size:14px;color:#52525b;margin:0 0 16px;">` +
-      (mailLocale === "zh"
-        ? `你好 ${params.username}，欢迎加入 iGCraftLit Community。`
-        : `Hello ${params.username}, welcome to iGCraftLit Community.`) +
-      `</p>` +
-      `<p style="font-size:13px;color:#71717a;margin:0 0 10px;">` +
-      (mailLocale === "zh" ? "你的验证码是：" : "Your verification code is:") +
-      `</p>` +
-      `<div style="font-size:30px;font-weight:700;letter-spacing:10px;color:#2563eb;` +
-      `background:rgba(37,99,235,0.08);border-radius:8px;padding:16px;text-align:center;margin:0 0 16px;">` +
-      `${params.code}</div>` +
-      `<p style="font-size:12px;color:#a1a1aa;margin:0;">` +
-      (mailLocale === "zh"
-        ? `验证码 ${ttl} 分钟内有效，请勿泄露给他人。`
-        : `Expires in ${ttl} minutes. Please do not share this code.`) +
-      `</p>`,
-    mailLocale,
-  );
-
-  await iGM_SendMail({ to: params.to, subject, html, text });
+  await iGM_SendMail({
+    to: params.to,
+    subject: template.subject,
+    html: iGM_CodeMailHtml(template, "register", values),
+    text: iGM_CodeMailText(template, "register", values),
+  });
 }
 
 /**
  * 发送修改密码验证码邮件（旧密码可选时的身份验证途径）
- * 复用 iGM_VerifyMailParams；文案强调「修改密码」场景，避免与注册验证混淆
+ * 与注册验证共用科幻终端风格模板，仅场景行不同
  */
 export async function iGM_SendPasswordChangeMail(
   params: iGM_VerifyMailParams,
 ): Promise<void> {
-  const mailLocale = iGM_ResolveMailLocale(params.locale);
-  const ttl = params.ttlMinutes;
+  const template = iGM_ResolveCodeMailTemplate(params.locale);
+  const values = {
+    username: params.username,
+    code: params.code,
+    expireMinutes: params.ttlMinutes,
+  };
 
-  const subject =
-    mailLocale === "zh"
-      ? `【iGCraftLit】修改密码验证码：${params.code}`
-      : `[iGCraftLit] Password change code: ${params.code}`;
-
-  const text =
-    mailLocale === "zh"
-      ? `你好 ${params.username}，\n\n` +
-        `你正在修改账户密码，验证码是：${params.code}\n` +
-        `验证码 ${ttl} 分钟内有效，请勿泄露给他人。\n\n` +
-        `如非本人操作，请立即检查账户安全并忽略此邮件，密码不会被更改。\n\n` +
-        `iGCraftLit Community 团队\n` +
-        `如有问题请联系：igcraftlit@outlook.com`
-      : `Hello ${params.username},\n\n` +
-        `You are changing your account password. Your verification code is: ${params.code}\n` +
-        `The code will expire in ${ttl} minutes. Please do not share it.\n\n` +
-        `If this was not you, please secure your account and ignore this email; ` +
-        `the password will stay unchanged.\n\n` +
-        `The iGCraftLit Community Team\n` +
-        `If you have any questions, please contact: igcraftlit@outlook.com`;
-
-  const html = iGM_WrapHtml(
-    mailLocale === "zh" ? "修改密码" : "Change your password",
-    `<p style="font-size:14px;color:#52525b;margin:0 0 16px;">` +
-      (mailLocale === "zh"
-        ? `你好 ${params.username}，我们收到了修改你账户密码的请求。`
-        : `Hello ${params.username}, we received a request to change your account password.`) +
-      `</p>` +
-      `<p style="font-size:13px;color:#71717a;margin:0 0 10px;">` +
-      (mailLocale === "zh" ? "你的验证码是：" : "Your verification code is:") +
-      `</p>` +
-      `<div style="font-size:30px;font-weight:700;letter-spacing:10px;color:#2563eb;` +
-      `background:rgba(37,99,235,0.08);border-radius:8px;padding:16px;text-align:center;margin:0 0 16px;">` +
-      `${params.code}</div>` +
-      `<p style="font-size:12px;color:#a1a1aa;margin:0;">` +
-      (mailLocale === "zh"
-        ? `验证码 ${ttl} 分钟内有效，请勿泄露给他人。如非本人操作，你的密码不会被更改。`
-        : `Expires in ${ttl} minutes. Please do not share this code. If you did not request it, your password will stay unchanged.`) +
-      `</p>`,
-    mailLocale,
-  );
-
-  await iGM_SendMail({ to: params.to, subject, html, text });
+  await iGM_SendMail({
+    to: params.to,
+    subject: template.subject,
+    html: iGM_CodeMailHtml(template, "passwordChange", values),
+    text: iGM_CodeMailText(template, "passwordChange", values),
+  });
 }
 
 /** 发送密码重置邮件（含一次性重置链接） */
@@ -390,6 +334,7 @@ export async function iGM_SendNotificationMail(
 export default {
   iGM_SendMail,
   iGM_SendVerificationMail,
+  iGM_SendPasswordChangeMail,
   iGM_SendResetPasswordMail,
   iGM_SendNotificationMail,
 };

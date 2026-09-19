@@ -13,9 +13,10 @@
 // 导入依赖 //
 "use client";
 
+import { iGM_UseLocaleRouter } from "../../iGM_i18n/iGM_UseLocaleRouter";
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { iGM_Link as Link } from "../../iGM_Components/iGM_Link/iGM_Link";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   ArrowLeft,
@@ -60,7 +61,7 @@ import styles from "../iGM_Module4.module.css";
 /** 资源详情页主体（在 Suspense 内使用 useSearchParams） */
 export function iGM_ResourceDetailPage() {
   const t = useTranslations();
-  const router = useRouter();
+  const router = iGM_UseLocaleRouter();
   const searchParams = useSearchParams();
   const resourceId = searchParams.get("resourceId");
   const { status: authStatus } = iGM_UseAuth();
@@ -345,6 +346,7 @@ export function iGM_ResourceDetailPage() {
             <img
               src={iGM_FilePreviewUrl(resource.file.id)}
               alt={resource.file.originalName}
+              crossOrigin="anonymous"
             />
           </div>
         ) : (

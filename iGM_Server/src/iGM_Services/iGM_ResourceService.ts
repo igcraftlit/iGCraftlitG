@@ -29,6 +29,7 @@ import { iGM_FindUsersByIds } from "../iGM_Repositories/iGM_UserRepository";
 import { iGM_FindActivityById } from "../iGM_Repositories/iGM_ActivityRepository";
 import { iGM_ContentError, iGM_SanitizeContent } from "./iGM_ContentService";
 import { iGM_Notify } from "./iGM_NotificationService";
+import { iGM_AwardPoints } from "./iGM_PointsService";
 import {
   iGM_GetFileDto,
   iGM_GetFileDtoMap,
@@ -292,6 +293,8 @@ export function iGM_CreateResourceService(
 
   const detail = iGM_GetResourceDetail(user, resource.iGM_Id);
   if (!detail) throw new Error("iGM_CreateResourceService：创建后详情组装失败");
+  // 模块五：上传资源积分埋点（内部吞异常，不影响主流程）
+  iGM_AwardPoints(user.iGM_Id, "resource_upload", title);
   return detail;
 }
 

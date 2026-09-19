@@ -11,9 +11,10 @@
 // 导入依赖 //
 "use client";
 
+import { iGM_UseLocaleRouter } from "../../iGM_i18n/iGM_UseLocaleRouter";
 import { useEffect, type ReactNode } from "react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { iGM_Link as Link } from "../../iGM_Components/iGM_Link/iGM_Link";
+import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ShieldOff, LoaderCircle } from "lucide-react";
 import { iGM_UseAuth } from "../../iGM_Providers/iGM_AuthProvider";
@@ -31,7 +32,7 @@ interface iGM_RequireAuthProps {
 /** 登录/角色守卫组件 */
 export function iGM_RequireAuth({ role, children }: iGM_RequireAuthProps) {
   const t = useTranslations();
-  const router = useRouter();
+  const router = iGM_UseLocaleRouter();
   const pathname = usePathname();
   const { status, hasRole } = iGM_UseAuth();
 
