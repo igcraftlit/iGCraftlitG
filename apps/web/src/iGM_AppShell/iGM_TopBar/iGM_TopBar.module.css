@@ -58,13 +58,25 @@
   }
 }
 
-/* 网站名称：Cinzel 艺术字体 */
+/* 网站名称：Cinzel 艺术字体，LOGO 与文字横向排列 */
 .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: 15px;
   color: var(--igm-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* 站点 LOGO：固定高度，宽度自适应，随文字一起垂直居中 */
+.brandLogo {
+  width: auto;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  user-select: none;
 }
 
 /* 右侧操作区 */

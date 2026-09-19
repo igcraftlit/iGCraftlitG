@@ -20,6 +20,7 @@ import {
   iGM_EnforceRateLimit,
   iGM_Field,
   iGM_Query,
+  iGM_RequestLocale,
   type iGM_RouteContext,
 } from "./iGM_RouteSupport";
 import { iGM_ContentError } from "../iGM_Services/iGM_ContentService";
@@ -125,6 +126,7 @@ function iGM_HandleCreateComment(ctx: iGM_RouteContext) {
     postId,
     parentId.length > 0 ? parentId : null,
     iGM_Field(ctx.body, "content"),
+    iGM_RequestLocale(ctx),
   );
   ctx.set.status = 201;
   return iGM_Ok({ comment }, "community.messages.commentCreated");

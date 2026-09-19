@@ -3,9 +3,11 @@
  * 所属层：前端 / 页面层
  * 路由：/G_UserSettings
  * 模块：G_UserSettings
- * 作用：个人资料编辑（昵称、头像 URL、简介、网站），扩展模块二账户设置
- * 内容：资料表单、当前头像预览、保存后刷新全局登录用户、与账户设置互通链接
- * 说明：头像上传留待后续文件上传模块，本页仅接受头像 URL
+ * 作用：个人资料编辑（头像上传、昵称、简介、网站），扩展模块二账户设置
+ * 内容：资料表单、头像图片上传（复用 iGM_ImageUploader）、保存后刷新全局登录用户、
+ *       与账户设置互通链接
+ * 说明：头像上传后存站内相对路径 /G_File/preview?fileId=...（展示时按运行时 API 域名补全）；
+ *       兼容历史外部图片 URL 头像
  */
 
 // 导入依赖 //
@@ -26,7 +28,7 @@ import {
 } from "../../iGM_Services/iGM_CommunityClient";
 import { iGM_UseAuth } from "../../iGM_Providers/iGM_AuthProvider";
 import { iGM_ResolveErrorText } from "../../iGM_Components/iGM_AuthUI/iGM_AuthUI";
-import { iGM_Avatar as IGM_Avatar } from "../../iGM_Components/iGM_Avatar/iGM_Avatar";
+import { iGM_ImageUploader as IGM_ImageUploader } from "../../iGM_Components/iGM_ImageUploader/iGM_ImageUploader";
 import pageStyles from "../iGM_Page.module.css";
 import styles from "../iGM_Community.module.css";
 
@@ -35,7 +37,6 @@ import styles from "../iGM_Community.module.css";
 const iGM_DisplayNameMax = 30;
 const iGM_BioMax = 200;
 const iGM_WebsiteMax = 200;
-const iGM_AvatarMax = 500;
 
 // 核心逻辑 //
 /** 个人资料编辑页（在 iGM_RequireAuth 内渲染） */
@@ -94,7 +95,10 @@ export function iGM_UserSettingsPage() {
     );
   }
 
-  const previewName = displayName.trim() || user.username;
+  /** 头像变化：上传成功存站内文件预览相对路径，移除时清空 */
+  function iGM_HandleAvatarChange(fileId: string | null): void {
+    setAvatar(fileId ? `/G_File/preview?fileId=${fileId}` : "");
+  }
 
   return (
     <div className={pageStyles.page}>
@@ -134,21 +138,15 @@ export function iGM_UserSettingsPage() {
           </div>
         )}
 
-        {/* 头像预览 + URL */}
+        {/* 头像上传：图片文件直传，兼容历史外部 URL 头像 */}
         <div className={styles.formRow}>
           <label className={styles.label}>{t("community.settings.avatarLabel")}</label>
-          <div className={styles.activeFilterRow}>
-            <IGM_Avatar size="lg" src={avatar.trim() || null} name={previewName} />
-            <span className={styles.hint}>{t("community.settings.avatarHint")}</span>
-          </div>
-          <input
-            className={styles.input}
-            type="url"
-            value={avatar}
-            maxLength={iGM_AvatarMax}
-            placeholder={t("community.settings.avatarPlaceholder")}
-            onChange={(event) => setAvatar(event.target.value)}
+          <IGM_ImageUploader
+            value={avatar.trim() || null}
+            onChange={iGM_HandleAvatarChange}
+            disabled={saving}
           />
+          <span className={styles.hint}>{t("community.settings.avatarHint")}</span>
         </div>
 
         {/* 昵称 */}

@@ -4,8 +4,8 @@
  * 路由：G_Auth
  * 模块：iGM_MailService
  * 作用：全站统一邮件发送服务（163 邮箱 SMTP）
- * 内容：通用 send 方法、注册邮箱验证码邮件、密码重置令牌邮件；
- *       邮件文案至少中英双语，落款含团队名称与问题联系邮箱；
+ * 内容：通用 send 方法、注册邮箱验证码邮件、密码重置令牌邮件、
+ *       模块四业务通知邮件；邮件文案至少中英双语，落款含团队名称与问题联系邮箱；
  *       本地调试可用控制台输出而不真正发信
  */
 
@@ -45,6 +45,18 @@ export interface iGM_ResetMailParams {
   locale: string;
   /** 本次请求对应的前端站点地址（不传则使用配置默认值） */
   webBaseUrl?: string;
+}
+
+export interface iGM_NotificationMailParams {
+  to: string;
+  username: string;
+  /** 通知标题（已由通知服务本地化） */
+  title: string;
+  /** 通知正文摘要（已由通知服务本地化） */
+  content: string;
+  /** 站内跳转链接（相对路径，拼接到站点地址） */
+  link?: string | null;
+  locale: string;
 }
 
 // 核心逻辑 //
@@ -205,6 +217,61 @@ export async function iGM_SendVerificationMail(
   await iGM_SendMail({ to: params.to, subject, html, text });
 }
 
+/**
+ * 发送修改密码验证码邮件（旧密码可选时的身份验证途径）
+ * 复用 iGM_VerifyMailParams；文案强调「修改密码」场景，避免与注册验证混淆
+ */
+export async function iGM_SendPasswordChangeMail(
+  params: iGM_VerifyMailParams,
+): Promise<void> {
+  const mailLocale = iGM_ResolveMailLocale(params.locale);
+  const ttl = params.ttlMinutes;
+
+  const subject =
+    mailLocale === "zh"
+      ? `【iGCraftLit】修改密码验证码：${params.code}`
+      : `[iGCraftLit] Password change code: ${params.code}`;
+
+  const text =
+    mailLocale === "zh"
+      ? `你好 ${params.username}，\n\n` +
+        `你正在修改账户密码，验证码是：${params.code}\n` +
+        `验证码 ${ttl} 分钟内有效，请勿泄露给他人。\n\n` +
+        `如非本人操作，请立即检查账户安全并忽略此邮件，密码不会被更改。\n\n` +
+        `iGCraftLit Community 团队\n` +
+        `如有问题请联系：igcraftlit@outlook.com`
+      : `Hello ${params.username},\n\n` +
+        `You are changing your account password. Your verification code is: ${params.code}\n` +
+        `The code will expire in ${ttl} minutes. Please do not share it.\n\n` +
+        `If this was not you, please secure your account and ignore this email; ` +
+        `the password will stay unchanged.\n\n` +
+        `The iGCraftLit Community Team\n` +
+        `If you have any questions, please contact: igcraftlit@outlook.com`;
+
+  const html = iGM_WrapHtml(
+    mailLocale === "zh" ? "修改密码" : "Change your password",
+    `<p style="font-size:14px;color:#52525b;margin:0 0 16px;">` +
+      (mailLocale === "zh"
+        ? `你好 ${params.username}，我们收到了修改你账户密码的请求。`
+        : `Hello ${params.username}, we received a request to change your account password.`) +
+      `</p>` +
+      `<p style="font-size:13px;color:#71717a;margin:0 0 10px;">` +
+      (mailLocale === "zh" ? "你的验证码是：" : "Your verification code is:") +
+      `</p>` +
+      `<div style="font-size:30px;font-weight:700;letter-spacing:10px;color:#2563eb;` +
+      `background:rgba(37,99,235,0.08);border-radius:8px;padding:16px;text-align:center;margin:0 0 16px;">` +
+      `${params.code}</div>` +
+      `<p style="font-size:12px;color:#a1a1aa;margin:0;">` +
+      (mailLocale === "zh"
+        ? `验证码 ${ttl} 分钟内有效，请勿泄露给他人。如非本人操作，你的密码不会被更改。`
+        : `Expires in ${ttl} minutes. Please do not share this code. If you did not request it, your password will stay unchanged.`) +
+      `</p>`,
+    mailLocale,
+  );
+
+  await iGM_SendMail({ to: params.to, subject, html, text });
+}
+
 /** 发送密码重置邮件（含一次性重置链接） */
 export async function iGM_SendResetPasswordMail(
   params: iGM_ResetMailParams,
@@ -261,9 +328,68 @@ export async function iGM_SendResetPasswordMail(
   await iGM_SendMail({ to: params.to, subject, html, text });
 }
 
+/**
+ * 发送模块四业务通知邮件（评论、回复、活动报名、资源下载等）
+ * 仅在用户开启邮件通知偏好时由 iGM_NotificationService 调用
+ */
+export async function iGM_SendNotificationMail(
+  params: iGM_NotificationMailParams,
+): Promise<void> {
+  const mailLocale = iGM_ResolveMailLocale(params.locale);
+  const webBaseUrl = iGM_Config.auth.webBaseUrl;
+  const targetUrl =
+    params.link && params.link.startsWith("/")
+      ? `${webBaseUrl}${params.link}`
+      : null;
+
+  const subject =
+    mailLocale === "zh"
+      ? `【iGCraftLit】${params.title}`
+      : `[iGCraftLit] ${params.title}`;
+
+  const text =
+    mailLocale === "zh"
+      ? `你好 ${params.username}，\n\n${params.title}\n${params.content}\n` +
+        (targetUrl ? `\n查看详情：${targetUrl}\n` : "") +
+        `\n如不想接收此类邮件，可在通知偏好设置中关闭邮件通知。\n\n` +
+        `iGCraftLit Community 团队\n` +
+        `如有问题请联系：igcraftlit@outlook.com`
+      : `Hello ${params.username},\n\n${params.title}\n${params.content}\n` +
+        (targetUrl ? `\nView details: ${targetUrl}\n` : "") +
+        `\nIf you do not want these emails, you can turn off email notifications in your notification preferences.\n\n` +
+        `The iGCraftLit Community Team\n` +
+        `If you have any questions, please contact: igcraftlit@outlook.com`;
+
+  const html = iGM_WrapHtml(
+    params.title,
+    `<p style="font-size:14px;color:#52525b;margin:0 0 16px;">` +
+      (mailLocale === "zh"
+        ? `你好 ${params.username}，`
+        : `Hello ${params.username},`) +
+      `</p>` +
+      `<p style="font-size:14px;color:#3f3f46;line-height:1.7;margin:0 0 16px;white-space:pre-wrap;">` +
+      `${params.content}</p>` +
+      (targetUrl
+        ? `<a href="${targetUrl}" style="display:inline-block;background:#2563eb;color:#ffffff;` +
+          `text-decoration:none;font-size:14px;font-weight:500;border-radius:8px;padding:11px 22px;margin:0 0 16px;">` +
+          (mailLocale === "zh" ? "查看详情" : "View details") +
+          `</a>`
+        : "") +
+      `<p style="font-size:12px;color:#a1a1aa;margin:0;">` +
+      (mailLocale === "zh"
+        ? `如不想接收此类邮件，可在通知偏好设置中关闭邮件通知。`
+        : `You can turn off email notifications in your notification preferences.`) +
+      `</p>`,
+    mailLocale,
+  );
+
+  await iGM_SendMail({ to: params.to, subject, html, text });
+}
+
 // 导出 //
 export default {
   iGM_SendMail,
   iGM_SendVerificationMail,
   iGM_SendResetPasswordMail,
+  iGM_SendNotificationMail,
 };

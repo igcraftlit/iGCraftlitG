@@ -16,10 +16,15 @@ import { iGM_RunMigrations } from "./iGM_Database/iGM_Database";
 import { iGM_Fail } from "./iGM_Types/iGM_Response";
 import { iGM_AuthError } from "./iGM_Services/iGM_AuthService";
 import { iGM_ContentError } from "./iGM_Services/iGM_ContentService";
+import { iGM_StorageError, iGM_EnsureUploadRoot } from "./iGM_Services/iGM_StorageService";
 import { G_Health } from "./iGM_Routes/G_Health";
 import { G_Auth } from "./iGM_Routes/G_Auth";
 import { G_Community } from "./iGM_Routes/G_Community";
 import { G_Post } from "./iGM_Routes/G_Post";
+import { G_Notification } from "./iGM_Routes/G_Notification";
+import { G_File } from "./iGM_Routes/G_File";
+import { G_Activity } from "./iGM_Routes/G_Activity";
+import { G_Resource } from "./iGM_Routes/G_Resource";
 
 // 类型定义 //
 // （本入口无额外类型，统一响应类型见 iGM_Types/iGM_Response.ts）
@@ -51,6 +56,11 @@ const iGM_Server = new Elysia()
       set.status = error.status;
       return iGM_Fail(error.status, error.message);
     }
+    // 模块四文件存储业务错误：类型/大小/落盘失败等
+    if (error instanceof iGM_StorageError) {
+      set.status = error.status;
+      return iGM_Fail(error.status, error.message);
+    }
     // 请求体解析失败等客户端错误（沿用模块二通用文案键）
     if (code === "PARSE" || code === "VALIDATION") {
       set.status = 400;
@@ -67,6 +77,11 @@ const iGM_Server = new Elysia()
   // 模块三：社区帖子评论系统与用户个人中心
   .use(G_Community)
   .use(G_Post)
+  // 模块四：通知系统、文件上传与媒体管理、活动与资源库
+  .use(G_Notification)
+  .use(G_File)
+  .use(G_Activity)
+  .use(G_Resource)
   // 根路径占位
   .get("/", () => ({
     success: true,
@@ -74,6 +89,9 @@ const iGM_Server = new Elysia()
     message: "iGCraftLit Community API",
     data: null,
   }));
+
+// 启动前确保上传根目录存在（建目录不幂等、空实现即可安全重复调用）
+await iGM_EnsureUploadRoot();
 
 // 启动时自动执行数据库迁移
 await iGM_RunMigrations();

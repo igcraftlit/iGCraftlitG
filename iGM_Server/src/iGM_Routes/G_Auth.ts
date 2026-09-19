@@ -4,7 +4,7 @@
  * 路由：/G_Auth/*
  * 模块：G_Auth
  * 作用：用户认证与账户体系接口集合
- * 内容：注册、登录、登出、当前用户、邮箱验证码发送与校验、
+ * 内容：注册、登录、登出、当前用户、邮箱验证码发送与校验、修改密码验证码发送、
  *       忘记密码、重置令牌校验、重置密码、修改密码、管理员用户列表
  * 约束：统一响应 { success, code, message, data }；
  *       登录态由 HttpOnly Cookie（iGM_SID）承载；角色接口做基础权限校验
@@ -24,6 +24,7 @@ import {
   iGM_Logout,
   iGM_Register,
   iGM_ResolveSession,
+  iGM_SendPasswordChangeCode,
   iGM_SendVerification,
   iGM_VerifyEmail,
   iGM_ResetPassword,
@@ -175,6 +176,18 @@ async function iGM_HandleSendVerification(ctx: iGM_RouteContext) {
   return iGM_Ok({ sent: true }, "auth.messages.verificationSent");
 }
 
+/* ---------- 发送修改密码验证码（登录态，旧密码缺省时的身份验证途径） ---------- */
+async function iGM_HandleSendPasswordChangeCode(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(iGM_ResolveSession(iGM_GetSessionId(ctx.request)));
+  iGM_EnforceRateLimit(ctx, "sendVerification", `user:${user.iGM_Id}`);
+
+  await iGM_SendPasswordChangeCode(
+    user,
+    ctx.request.headers.get("x-igm-locale") ?? "zh-CN",
+  );
+  return iGM_Ok({ sent: true }, "auth.messages.changeCodeSent");
+}
+
 /* ---------- 校验邮箱验证码 ---------- */
 async function iGM_HandleVerifyEmail(ctx: iGM_RouteContext) {
   const user = iGM_RequireUser(iGM_ResolveSession(iGM_GetSessionId(ctx.request)));
@@ -230,6 +243,7 @@ async function iGM_HandleChangePassword(ctx: iGM_RouteContext) {
     user,
     iGM_Field(ctx.body, "oldPassword"),
     iGM_Field(ctx.body, "newPassword"),
+    iGM_Field(ctx.body, "emailCode"),
     rawSessionId ? iGM_Sha256(rawSessionId) : null,
   );
   return iGM_Ok(null, "auth.messages.passwordChanged");
@@ -264,6 +278,7 @@ export const G_Auth = new Elysia({ name: "G_Auth" })
   .post("/G_Auth/logout", iGM_HandleLogout as never)
   .get("/G_Auth/me", iGM_HandleMe as never)
   .post("/G_Auth/send-verification", iGM_HandleSendVerification as never)
+  .post("/G_Auth/send-password-change-code", iGM_HandleSendPasswordChangeCode as never)
   .post("/G_Auth/verify-email", iGM_HandleVerifyEmail as never)
   .post("/G_Auth/forgot-password", iGM_HandleForgotPassword as never)
   .get("/G_Auth/reset-token", iGM_HandleCheckResetToken as never)

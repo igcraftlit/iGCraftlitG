@@ -1,15 +1,38 @@
 /**
  * 文件路径：apps/web/src/app/G_Activity/page.tsx
  * 所属层：前端 / 路由入口（Next.js App Router 框架必需文件）
- * 路由：/G_Activity
+ * 路由：/G_Activity?category=&status=&q=&page=
  * 模块：G_Activity
- * 作用：活动骨架页路由入口，实际页面见 iGM_Pages/iGM_PlaceholderPage
+ * 作用：活动列表路由入口，纯静态壳 + 客户端按查询参数加载数据
+ * 说明：useSearchParams 必须包在 Suspense 内，以满足 Next.js 静态导出要求
  */
 
 // 导入依赖 //
-import { iGM_PlaceholderPage as IGM_PlaceholderPage } from "../../iGM_Pages/iGM_PlaceholderPage";
+import { Suspense } from "react";
+import { LoaderCircle } from "lucide-react";
+import { iGM_ActivityPage as IGM_ActivityPage } from "../../iGM_Pages/G_Activity/iGM_ActivityPage";
 
 // 导出 //
-export default function G_ActivityPage() {
-  return <IGM_PlaceholderPage pageId="activity" href="/G_Activity" />;
+export default function G_ActivityRoute() {
+  return (
+    <Suspense
+      fallback={
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            minHeight: "40vh",
+            color: "var(--igm-text-muted)",
+            fontSize: 13,
+          }}
+        >
+          <LoaderCircle size={16} className="igm-spin" />
+        </div>
+      }
+    >
+      <IGM_ActivityPage />
+    </Suspense>
+  );
 }

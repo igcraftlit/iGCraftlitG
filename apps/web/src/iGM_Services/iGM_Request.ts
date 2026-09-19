@@ -134,6 +134,82 @@ export function iGM_Delete<T>(path: string): Promise<iGM_ApiResponse<T>> {
   return iGM_Request<T>(path, { method: "DELETE" });
 }
 
+/**
+ * 文件上传方法（模块四，支持上传进度）
+ * 说明：使用 FormData 提交，禁止手动设置 Content-Type，
+ *       由浏览器自动附带 multipart boundary；上传体积大，默认超时放宽到 60000ms。
+ *       fetch 无法获取上传进度，因此底层改用 XMLHttpRequest，
+ *       错误归一化口径与 iGM_Request 完全一致
+ * @param path 以 / 开头的后端上传路由，例如 /G_File/upload
+ * @param form 已装配好的 FormData（字段名与后端约定一致）
+ * @param onUploadProgress 进度回调，loaded/total 为已发送与总字节数
+ */
+export async function iGM_Upload<T>(
+  path: string,
+  form: FormData,
+  timeoutMs = 60000,
+  onUploadProgress?: (loaded: number, total: number) => void,
+): Promise<iGM_ApiResponse<T>> {
+  return new Promise<iGM_ApiResponse<T>>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${iGM_Config.apiBase}${path}`);
+    xhr.withCredentials = true;
+    xhr.timeout = timeoutMs;
+    // 不设置 Content-Type：交由浏览器生成 multipart/form-data; boundary=...
+    xhr.setRequestHeader("Accept", "application/json");
+    xhr.setRequestHeader("x-igm-locale", iGM_ReadLocaleCookie());
+
+    if (onUploadProgress && xhr.upload) {
+      xhr.upload.onprogress = (event: ProgressEvent) => {
+        if (event.lengthComputable) {
+          onUploadProgress(event.loaded, event.total);
+        }
+      };
+    }
+
+    xhr.onload = () => {
+      let payload: iGM_ApiResponse<T> | null = null;
+      try {
+        payload = JSON.parse(xhr.responseText) as iGM_ApiResponse<T>;
+      } catch {
+        reject(new iGM_RequestError(`HTTP ${xhr.status}`, "business", xhr.status));
+        return;
+      }
+      if (xhr.status < 200 || xhr.status >= 300 || !payload.success) {
+        reject(
+          new iGM_RequestError(
+            payload.message || `HTTP ${xhr.status}`,
+            "business",
+            payload.code ?? xhr.status,
+          ),
+        );
+        return;
+      }
+      resolve(payload);
+    };
+
+    xhr.onerror = () => {
+      reject(new iGM_RequestError("无法连接本地后端服务", "network"));
+    };
+    xhr.ontimeout = () => {
+      reject(new iGM_RequestError("请求超时", "timeout"));
+    };
+    xhr.onabort = () => {
+      reject(new iGM_RequestError("请求超时", "timeout"));
+    };
+
+    xhr.send(form);
+  });
+}
+
+/** 构造后端文件下载/预览的完整地址（浏览器直接打开或用作 img src） */
+export function iGM_BuildFileUrl(
+  path: string,
+  fileId: string,
+): string {
+  return `${iGM_Config.apiBase}${path}?fileId=${encodeURIComponent(fileId)}`;
+}
+
 /** 后端健康检查数据结构 */
 export interface iGM_HealthResult {
   status: "ok";

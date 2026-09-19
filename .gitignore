@@ -5,6 +5,7 @@ out
 .dev.vars*
 *.sqlite
 *.sqlite-journal
+uploads/
 .DS_Store
 .trae/
 *.tsbuildinfo

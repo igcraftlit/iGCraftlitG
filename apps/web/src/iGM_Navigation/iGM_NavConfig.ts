@@ -10,7 +10,10 @@
 // 导入依赖 //
 import {
   Bell,
+  BellRing,
   CalendarDays,
+  CalendarPlus,
+  FolderOpen,
   Home,
   Library,
   MessageSquareText,
@@ -19,6 +22,7 @@ import {
   Settings,
   Shield,
   SlidersHorizontal,
+  Upload,
   UserRound,
   Users,
   type LucideIcon,
@@ -66,8 +70,30 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
           { href: "/G_PostEdit", icon: PenSquare, labelKey: "nav.createPost" },
         ],
       },
-      { href: "/G_Activity", icon: CalendarDays, labelKey: "nav.activities" },
-      { href: "/G_Resources", icon: Library, labelKey: "nav.resources" },
+      {
+        href: "/G_Activity",
+        icon: CalendarDays,
+        labelKey: "nav.activities",
+        children: [
+          {
+            href: "/G_ActivityEdit",
+            icon: CalendarPlus,
+            labelKey: "nav.createActivity",
+          },
+        ],
+      },
+      {
+        href: "/G_Resource",
+        icon: Library,
+        labelKey: "nav.resources",
+        children: [
+          {
+            href: "/G_ResourceEdit",
+            icon: Upload,
+            labelKey: "nav.uploadResource",
+          },
+        ],
+      },
     ],
   },
   {
@@ -100,7 +126,17 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
             icon: SlidersHorizontal,
             labelKey: "nav.userSettings",
           },
+          {
+            href: "/G_NotificationSettings",
+            icon: BellRing,
+            labelKey: "nav.notificationSettings",
+          },
         ],
+      },
+      {
+        href: "/G_FileManager",
+        icon: FolderOpen,
+        labelKey: "nav.myFiles",
       },
     ],
   },

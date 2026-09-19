@@ -46,6 +46,7 @@ import {
   iGM_VerifyPassword,
 } from "./iGM_SecurityService";
 import {
+  iGM_SendPasswordChangeMail,
   iGM_SendResetPasswordMail,
   iGM_SendVerificationMail,
 } from "./iGM_MailService";
@@ -277,6 +278,43 @@ export async function iGM_SendVerification(
   await iGM_IssueVerifyCode(user, locale);
 }
 
+/**
+ * 签发修改密码验证码（purpose=password_change，与注册验证码隔离）并发送邮件；
+ * 不受邮箱是否已验证限制——修改密码本身要求验证邮箱收码
+ */
+async function iGM_IssuePasswordChangeCode(
+  user: iGM_UserRow,
+  locale: string,
+): Promise<void> {
+  const now = Date.now();
+  const code = iGM_GenerateVerifyCode();
+  iGM_RevokeActiveTokens(user.iGM_Id, "password_change", new Date(now).toISOString());
+  iGM_CreateToken({
+    id: iGM_RandomUuid(),
+    userId: user.iGM_Id,
+    purpose: "password_change",
+    secretHash: await iGM_HashPassword(code),
+    createdAt: new Date(now).toISOString(),
+    expiresAt: new Date(now + iGM_Config.auth.verifyCodeTtlMs).toISOString(),
+  });
+
+  await iGM_SendPasswordChangeMail({
+    to: user.iGM_Email,
+    username: user.iGM_Username,
+    code,
+    ttlMinutes: Math.round(iGM_Config.auth.verifyCodeTtlMs / 60000),
+    locale,
+  });
+}
+
+/** 发送修改密码验证码（需登录），供路由在限流后调用 */
+export async function iGM_SendPasswordChangeCode(
+  user: iGM_UserRow,
+  locale: string,
+): Promise<void> {
+  await iGM_IssuePasswordChangeCode(user, locale);
+}
+
 /** 校验邮箱验证码（需登录），成功后更新 emailVerified */
 export async function iGM_VerifyEmail(
   user: iGM_UserRow,
@@ -393,22 +431,60 @@ export async function iGM_ResetPassword(
   iGM_DeleteSessionsByUser(token.iGM_UserId);
 }
 
-/** 修改密码：校验旧密码，更新后保留当前会话、作废其他会话 */
+/**
+ * 修改密码：当前密码为可选项——
+ *  - 填写了当前密码：校验旧密码后更新（原有路径）
+ *  - 未填写当前密码：必须携带发送至本人邮箱的修改密码验证码（purpose=password_change）
+ * 更新后保留当前会话、作废其他会话
+ */
 export async function iGM_ChangePassword(
   user: iGM_UserRow,
   oldPassword: string,
   newPassword: string,
+  emailCode: string,
   currentSessionIdHash: string | null,
 ): Promise<void> {
   iGM_ValidateCredentials({ password: newPassword });
-  if (!oldPassword) {
-    throw new iGM_AuthError("auth.errors.credentialsRequired", 422);
+
+  if (oldPassword) {
+    // 路径一：当前密码验证
+    const matched = await iGM_VerifyPassword(oldPassword, user.iGM_PasswordHash);
+    if (!matched) {
+      throw new iGM_AuthError("auth.errors.oldPasswordMismatch", 400);
+    }
+    if (oldPassword === newPassword) {
+      throw new iGM_AuthError("auth.errors.passwordSame", 400);
+    }
+  } else {
+    // 路径二：邮箱验证码验证（旧密码缺省时必填）
+    const code = emailCode.trim();
+    if (!/^\d{6}$/.test(code)) {
+      throw new iGM_AuthError("auth.errors.codeInvalid", 422);
+    }
+
+    const nowIso = new Date().toISOString();
+    const token = iGM_FindLatestToken(user.iGM_Id, "password_change", nowIso);
+    if (!token) {
+      throw new iGM_AuthError("auth.errors.codeExpired", 400);
+    }
+    if (token.iGM_Attempts >= iGM_Config.auth.maxVerifyAttempts) {
+      throw new iGM_AuthError("auth.errors.codeLocked", 429);
+    }
+
+    const matched = await iGM_VerifyPassword(code, token.iGM_SecretHash);
+    if (!matched) {
+      iGM_IncrementTokenAttempts(token.iGM_Id);
+      throw new iGM_AuthError("auth.errors.codeMismatch", 400);
+    }
+    // 一次性消费：验证通过即作废该验证码
+    if (!iGM_ConsumeToken(token.iGM_Id, nowIso)) {
+      throw new iGM_AuthError("auth.errors.codeExpired", 400);
+    }
   }
-  const matched = await iGM_VerifyPassword(oldPassword, user.iGM_PasswordHash);
-  if (!matched) {
-    throw new iGM_AuthError("auth.errors.oldPasswordMismatch", 400);
-  }
-  if (oldPassword === newPassword) {
+
+  // 两种路径都拒绝新密码与当前密码相同
+  const sameAsCurrent = await iGM_VerifyPassword(newPassword, user.iGM_PasswordHash);
+  if (sameAsCurrent) {
     throw new iGM_AuthError("auth.errors.passwordSame", 400);
   }
 
@@ -425,6 +501,7 @@ export default {
   iGM_Logout,
   iGM_ResolveSession,
   iGM_SendVerification,
+  iGM_SendPasswordChangeCode,
   iGM_VerifyEmail,
   iGM_ForgotPassword,
   iGM_CheckResetToken,

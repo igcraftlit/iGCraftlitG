@@ -43,6 +43,13 @@ export function iGM_TopBar({ onOpenMenu }: iGM_TopBarProps) {
           <Menu size={20} strokeWidth={1.8} />
         </button>
         <Link href="/G_Home" className={`igm-font-brand ${styles.brand}`}>
+          {/* 站点 LOGO：D:/IGWEB/image/save1.ico，静态资源位于 public 根目录 */}
+          <img
+            src="/iGM_save1.ico"
+            alt=""
+            aria-hidden
+            className={styles.brandLogo}
+          />
           {t("site.name")}
         </Link>
       </div>

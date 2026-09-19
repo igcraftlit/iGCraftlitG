@@ -4,7 +4,7 @@
  * 路由：调用后端 /G_Auth/*
  * 模块：iGM_AuthClient
  * 作用：认证相关后端接口的唯一前端调用出口
- * 内容：用户类型定义、注册、登录、登出、当前用户、邮箱验证、
+ * 内容：用户类型定义、注册、登录、登出、当前用户、邮箱验证、修改密码验证码、
  *       忘记密码、重置令牌预检、重置密码、修改密码
  * 约束：只经 iGM_Request 发请求；前端不保存明文密码以外的任何敏感凭据，
  *       会话由后端 HttpOnly Cookie 承载
@@ -108,10 +108,21 @@ export function iGM_ApiResetPassword(input: {
   return iGM_Post("/G_Auth/reset-password", input);
 }
 
-/** 修改密码（登录态），成功后其他会话失效 */
+/** 发送修改密码验证码（需登录，发送至本人邮箱） */
+export function iGM_ApiSendPasswordChangeCode(): Promise<
+  iGM_ApiResponse<{ sent: boolean }>
+> {
+  return iGM_Post("/G_Auth/send-password-change-code", undefined, 15000);
+}
+
+/**
+ * 修改密码（登录态），成功后其他会话失效。
+ * 当前密码为可选项：不填时必须携带发送至本人邮箱的修改密码验证码
+ */
 export function iGM_ApiChangePassword(input: {
-  oldPassword: string;
+  oldPassword?: string;
   newPassword: string;
+  emailCode?: string;
 }): Promise<iGM_ApiResponse<null>> {
   return iGM_Post("/G_Auth/change-password", input);
 }
@@ -123,6 +134,7 @@ export default {
   iGM_ApiLogout,
   iGM_ApiMe,
   iGM_ApiSendVerification,
+  iGM_ApiSendPasswordChangeCode,
   iGM_ApiVerifyEmail,
   iGM_ApiForgotPassword,
   iGM_ApiCheckResetToken,

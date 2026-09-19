@@ -18,7 +18,7 @@ export type iGM_UserRole = "user" | "moderator" | "admin";
 export type iGM_UserStatus = "active" | "suspended";
 
 /** 令牌用途 */
-export type iGM_TokenPurpose = "email_verify" | "password_reset";
+export type iGM_TokenPurpose = "email_verify" | "password_reset" | "password_change";
 
 /** iGM_Users 表数据行（包含密码哈希，禁止对外返回） */
 export interface iGM_UserRow {

@@ -63,6 +63,7 @@ import {
   iGM_RemoveLike,
 } from "../iGM_Repositories/iGM_InteractionRepository";
 import { iGM_ToUserDto, type iGM_UserDto, type iGM_UserRow } from "../iGM_Types/iGM_Auth";
+import { iGM_Notify } from "./iGM_NotificationService";
 import {
   iGM_ToCategoryDto,
   iGM_ToTagDto,
@@ -180,16 +181,24 @@ function iGM_NormalizeOptional(
   return cleaned.length > 0 ? cleaned : null;
 }
 
-/** 校验 http/https URL，空串视为未填写 */
+/**
+ * 校验 http/https URL，空串视为未填写；
+ * allowSiteRelative 时额外接受站内相对路径（须以 / 开头且不含空白），
+ * 用于头像等由本站文件服务生成的 /G_File/preview?fileId=... 引用
+ */
 function iGM_NormalizeUrl(
   input: unknown,
   maxLength: number,
   errorKey: string,
+  options?: { allowSiteRelative?: boolean },
 ): string | null {
   if (typeof input !== "string") return null;
   const value = input.trim();
   if (value.length === 0) return null;
-  if (value.length > maxLength || !/^https?:\/\/[^\s]+$/i.test(value)) {
+  const absolute = /^https?:\/\/[^\s]+$/i.test(value);
+  const relative =
+    options?.allowSiteRelative === true && /^\/[^\s]*$/.test(value);
+  if (value.length > maxLength || (!absolute && !relative)) {
     throw new iGM_ContentError(errorKey, 422);
   }
   return value;
@@ -655,12 +664,13 @@ export function iGM_ListUserPostsService(
 
 /* ---------- 评论 ---------- */
 
-/** 发表评论或回复 */
+/** 发表评论或回复；评论通知帖子作者，回复通知父评论作者 */
 export function iGM_CreateCommentService(
   user: iGM_UserRow,
   postId: string,
   parentId: string | null,
   rawContent: unknown,
+  locale?: string,
 ): iGM_CommentDto {
   const post = iGM_FindPostById(postId);
   if (!post || post.iGM_Status !== "published") {
@@ -669,6 +679,7 @@ export function iGM_CreateCommentService(
   const content = iGM_ValidateCommentContent(rawContent);
 
   let resolvedParentId: string | null = null;
+  let parentAuthorId: string | null = null;
   if (parentId) {
     const parent = iGM_FindCommentById(parentId);
     // 父评论必须存在、属于同一帖子且未被隐藏
@@ -680,6 +691,7 @@ export function iGM_CreateCommentService(
       throw new iGM_ContentError("community.errors.parentInvalid", 422);
     }
     resolvedParentId = parent.iGM_Id;
+    parentAuthorId = parent.iGM_AuthorId;
   }
 
   const comment = iGM_CreateComment({
@@ -689,6 +701,32 @@ export function iGM_CreateCommentService(
     content,
     now: new Date().toISOString(),
   });
+
+  // 模块四：评论通知帖子作者、回复通知父评论作者（自我触发在服务内自动跳过）
+  const actorName = user.iGM_DisplayName ?? user.iGM_Username;
+  const link = `/G_Post?postId=${postId}`;
+  if (parentAuthorId) {
+    iGM_Notify({
+      userId: parentAuthorId,
+      actorId: user.iGM_Id,
+      actorName,
+      type: "reply",
+      title: post.iGM_Title,
+      link,
+      locale,
+    });
+  } else {
+    iGM_Notify({
+      userId: post.iGM_AuthorId,
+      actorId: user.iGM_Id,
+      actorName,
+      type: "comment",
+      title: post.iGM_Title,
+      link,
+      locale,
+    });
+  }
+
   const [dto] = iGM_AssembleComments([comment], user.iGM_Id);
   return dto as iGM_CommentDto;
 }
@@ -893,6 +931,7 @@ export function iGM_UpdateMyProfileService(
     input.avatar,
     iGM_AvatarMaxLength,
     "community.errors.avatarInvalid",
+    { allowSiteRelative: true },
   );
 
   iGM_UpdateProfile(user.iGM_Id, {

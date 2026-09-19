@@ -3,9 +3,9 @@
  * 所属层：后端 / 路由层
  * 路由：G_Community、G_Post
  * 模块：iGM_RouteSupport
- * 作用：模块三路由处理器共享的请求解析工具
+ * 作用：模块三、模块四路由处理器共享的请求解析工具
  * 内容：路由上下文最小类型、请求体字符串字段读取、查询参数读取、
- *       基于配置的基础限流守卫、当前登录用户解析
+ *       基于配置的基础限流守卫、当前登录用户解析、界面语言读取
  * 说明：与 G_Auth 中同类工具保持一致的处理口径，业务错误由全局错误处理器统一格式化
  */
 
@@ -68,6 +68,15 @@ export function iGM_ClientIp(ctx: iGM_RouteContext): string {
   return iGM_GetClientIp(ctx.request, ctx.server);
 }
 
+/**
+ * 读取界面语言（前端 iGM_Request 统一附带 x-igm-locale 头）
+ * 用于模块四通知与邮件的文案本地化，缺省回退简体中文
+ */
+export function iGM_RequestLocale(ctx: iGM_RouteContext): string {
+  const header = ctx.request.headers.get("x-igm-locale");
+  return header && header.length > 0 ? header : "zh-CN";
+}
+
 /** 解析分页查询参数 */
 export function iGM_PageQuery(
   ctx: iGM_RouteContext,
@@ -102,6 +111,7 @@ export default {
   iGM_Query,
   iGM_CurrentUser,
   iGM_ClientIp,
+  iGM_RequestLocale,
   iGM_PageQuery,
   iGM_EnforceRateLimit,
 };

@@ -1,8 +1,7 @@
 /**
  * 文件路径：apps/web/src/iGM_Pages/iGM_PlaceholderPage.tsx
  * 所属层：前端 / 页面层
- * 路由：G_Notification、G_Community、G_Post、G_Activity、
- *       G_Resources、G_User、G_Settings、G_Admin
+ * 路由：G_Admin（模块一遗留占位骨架，其余业务页已由各模块实现替换）
  * 模块：iGM_PlaceholderPage
  * 作用：模块一各业务页的统一界面骨架占位
  * 内容：页头（图标 + 标题 + 说明）与“后续版本提供”占位面板，不含业务逻辑

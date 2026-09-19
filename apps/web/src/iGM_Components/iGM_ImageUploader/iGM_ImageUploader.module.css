@@ -1,0 +1,188 @@
+/*
+ * 文件路径：apps/web/src/iGM_Components/iGM_ImageUploader/iGM_ImageUploader.module.css
+ * 所属层：前端 / 通用组件样式
+ * 路由：被 G_ActivityEdit、G_ResourceEdit 复用
+ * 模块：iGM_ImageUploader
+ * 作用：图片上传组件的拖拽区、预览卡片、进度条与错误提示样式
+ * 内容：虚线投放区（含拖拽高亮/禁用态）、16:9 预览卡片、遮罩进度条、
+ *       右上角移除按钮、更换图片按钮
+ */
+
+/* 组件容器 */
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 隐藏的原生文件选择框：交互由拖拽区与按钮代理 */
+.hiddenInput {
+  display: none;
+}
+
+/* 拖拽投放区 */
+.dropZone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 22px 16px;
+  border: 1.5px dashed var(--igm-border-strong);
+  border-radius: var(--igm-radius-lg);
+  background: var(--igm-surface-subtle);
+  color: var(--igm-text-muted);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.dropZone:hover {
+  border-color: var(--igm-accent);
+  color: var(--igm-text);
+}
+
+/* 拖拽悬停高亮 */
+.dropZoneActive {
+  border-color: var(--igm-accent);
+  background: var(--igm-accent-soft);
+  color: var(--igm-accent);
+}
+
+/* 禁用与上传中态 */
+.dropZoneDisabled {
+  opacity: 0.6;
+  cursor: default;
+  pointer-events: none;
+}
+
+.dropIcon {
+  display: inline-flex;
+  color: var(--igm-text-muted);
+}
+
+.dropZoneActive .dropIcon {
+  color: var(--igm-accent);
+}
+
+.dropText {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--igm-text);
+}
+
+.dropHint {
+  font-size: 12px;
+  color: var(--igm-text-muted);
+}
+
+/* 预览卡片：固定 16:9 画幅，避免封面尺寸不一造成布局跳动 */
+.previewCard {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--igm-radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--igm-border);
+  background: var(--igm-surface-subtle);
+}
+
+.previewImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* 右上角移除按钮 */
+.clearButton {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--igm-border-strong);
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.clearButton:hover {
+  background: var(--igm-danger);
+}
+
+/* 上传进度遮罩 */
+.progressOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+}
+
+.progressTrack {
+  width: 70%;
+  max-width: 200px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  overflow: hidden;
+}
+
+.progressBar {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--igm-accent);
+  transition: width 0.15s linear;
+}
+
+.progressText {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 更换图片按钮（极简幽灵按钮） */
+.replaceButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 6px 12px;
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-border-strong);
+  background: transparent;
+  color: var(--igm-text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.replaceButton:hover:not(:disabled) {
+  color: var(--igm-text);
+  border-color: var(--igm-accent);
+  background: var(--igm-accent-soft);
+}
+
+.replaceButton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* 错误提示 */
+.errorText {
+  font-size: 12px;
+  color: var(--igm-danger);
+}

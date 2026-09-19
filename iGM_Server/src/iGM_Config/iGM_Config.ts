@@ -5,7 +5,8 @@
  * 模块：iGM_Config
  * 作用：统一读取本地后端运行所需的环境配置
  * 内容：服务端口、SQLite 文件路径、CORS 白名单、认证会话参数、
- *       邮箱验证码与重置令牌时效、基础限流参数、163 邮箱 SMTP 邮件配置
+ *       邮箱验证码与重置令牌时效、基础限流参数、163 邮箱 SMTP 邮件配置、
+ *       模块四本地文件上传存储配置
  */
 
 // 导入依赖 //
@@ -53,6 +54,20 @@ export interface iGM_MailConfig {
   from: string;
 }
 
+/** 模块四：本地文件上传与存储配置 */
+export interface iGM_UploadConfig {
+  /** 本地存储根目录（禁止前端直接访问磁盘路径） */
+  rootDir: string;
+  /** 单文件大小上限（字节），默认 20MB */
+  maxFileSize: number;
+  /** 图片单边像素上限，防止解压炸弹，默认 8000px */
+  imageMaxDimension: number;
+  /** 允许的扩展名白名单（小写，不含点） */
+  allowedExtensions: string[];
+  /** 允许的 MIME 类型白名单（用于交叉校验） */
+  allowedMimeTypes: string[];
+}
+
 export interface iGM_AppConfig {
   /** 后端监听端口 */
   port: number;
@@ -68,6 +83,8 @@ export interface iGM_AppConfig {
   rateLimits: Record<string, iGM_RateLimitRule>;
   /** 163 邮箱 SMTP 邮件配置 */
   mail: iGM_MailConfig;
+  /** 模块四：本地文件上传存储配置 */
+  upload: iGM_UploadConfig;
 }
 
 // 核心逻辑 //
@@ -85,7 +102,7 @@ export const iGM_Config: iGM_AppConfig = {
     "https://www.igcraftlit.com",
     "http://localhost:3000",
   ],
-  version: "0.3.0",
+  version: "0.4.0",
   auth: {
     cookieName: "iGM_SID",
     sessionTtlMs: 7 * 24 * 60 * 60 * 1000,
@@ -116,6 +133,18 @@ export const iGM_Config: iGM_AppConfig = {
     interact: { windowMs: 60 * 1000, max: 60 },
     // 模块三：资料编辑——10 分钟内最多 10 次
     profileUpdate: { windowMs: 10 * 60 * 1000, max: 10 },
+    // 模块四：文件上传——10 分钟内最多 30 次
+    upload: { windowMs: 10 * 60 * 1000, max: 30 },
+    // 模块四：活动创建/编辑——10 分钟内最多 20 次
+    activityWrite: { windowMs: 10 * 60 * 1000, max: 20 },
+    // 模块四：活动报名/取消报名——1 分钟内最多 20 次
+    activityRegister: { windowMs: 60 * 1000, max: 20 },
+    // 模块四：资源创建/编辑——10 分钟内最多 20 次
+    resourceWrite: { windowMs: 10 * 60 * 1000, max: 20 },
+    // 模块四：资源下载——1 分钟内最多 60 次
+    resourceDownload: { windowMs: 60 * 1000, max: 60 },
+    // 模块四：通知偏好更新——10 分钟内最多 20 次
+    notificationWrite: { windowMs: 10 * 60 * 1000, max: 20 },
   },
   mail: {
     // 163 邮箱 SMTP：465 端口隐式 SSL；密码使用客户端授权码（非登录密码），
@@ -127,6 +156,41 @@ export const iGM_Config: iGM_AppConfig = {
     pass: process.env.SMTP_PASS ?? "",
     // 163 要求发件人与认证账号一致
     from: process.env.MAIL_FROM ?? "",
+  },
+  upload: {
+    // 本地存储根目录：D:/IGWEB/uploads，按 用户/年月 分目录存放
+    rootDir:
+      process.env.IGM_UPLOAD_DIR ??
+      resolve(import.meta.dir, "../../../uploads"),
+    // 单文件上限 20MB（可通过 IGM_UPLOAD_MAX_SIZE 覆盖）
+    maxFileSize: Number(process.env.IGM_UPLOAD_MAX_SIZE ?? 20 * 1024 * 1024),
+    // 图片单边像素上限 8000px（可通过 IGM_UPLOAD_IMAGE_MAX_DIM 覆盖）
+    imageMaxDimension: Number(process.env.IGM_UPLOAD_IMAGE_MAX_DIM ?? 8000),
+    // 允许扩展名：图片、文档、压缩包等常见格式
+    allowedExtensions: [
+      "png", "jpg", "jpeg", "gif", "webp", "svg", "bmp",
+      "pdf", "txt", "md", "csv",
+      "doc", "docx", "xls", "xlsx", "ppt", "pptx",
+      "zip", "rar", "7z", "gz", "tar",
+      "json", "xml", "yml", "yaml",
+      "jar", "mcpack", "mcaddon", "mcworld",
+    ],
+    // 允许 MIME：与扩展名交叉校验，防止伪装扩展名上传可执行文件
+    allowedMimeTypes: [
+      "image/png", "image/jpeg", "image/gif", "image/webp", "image/svg+xml",
+      "image/bmp", "image/x-icon",
+      "application/pdf", "text/plain", "text/markdown", "text/csv",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-powerpoint",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "application/zip", "application/x-zip-compressed", "application/x-rar-compressed",
+      "application/x-7z-compressed", "application/gzip", "application/x-tar",
+      "application/json", "application/xml", "text/xml", "text/yaml",
+      "application/java-archive",
+    ],
   },
 };
 

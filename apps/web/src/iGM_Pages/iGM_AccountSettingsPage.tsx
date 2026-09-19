@@ -5,13 +5,14 @@
  * 模块：G_Settings / G_Auth
  * 作用：账户设置页，展示账户信息、邮箱验证状态、修改密码与登出
  * 内容：账户信息列表、角色/状态徽标、未验证提醒、修改密码表单、登出按钮
- * 说明：需要登录，由 iGM_RequireAuth 守卫
+ * 说明：需要登录，由 iGM_RequireAuth 守卫；
+ *       修改密码的当前密码为可选项——不填时需先向本人邮箱索取验证码完成身份验证
  */
 
 // 导入依赖 //
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -25,7 +26,10 @@ import {
 } from "lucide-react";
 import { iGM_UseAuth } from "../iGM_Providers/iGM_AuthProvider";
 import { iGM_UseLocale } from "../iGM_Providers/iGM_LocaleProvider";
-import { iGM_ApiChangePassword } from "../iGM_Services/iGM_AuthClient";
+import {
+  iGM_ApiChangePassword,
+  iGM_ApiSendPasswordChangeCode,
+} from "../iGM_Services/iGM_AuthClient";
 import type { iGM_UserRole } from "../iGM_Services/iGM_AuthClient";
 // JSX 要求组件标识符首字母大写，iGM_ 前缀组件在使用处统一别名为 IGM_
 import { iGM_RequireAuth as IGM_RequireAuth } from "../iGM_Components/iGM_RequireAuth/iGM_RequireAuth";
@@ -47,6 +51,9 @@ const iGM_RoleBadgeClass: Record<iGM_UserRole, string> = {
   admin: authStyles.badgeAccent,
 };
 
+/** 发送修改密码验证码的冷却秒数 */
+const iGM_CodeCooldown = 60;
+
 // 核心逻辑 //
 /** 账户设置页主体（在登录守卫内） */
 function iGM_AccountSettingsInner() {
@@ -56,14 +63,44 @@ function iGM_AccountSettingsInner() {
   const { user, logout, refresh } = iGM_UseAuth();
 
   const [oldPassword, setOldPassword] = useState("");
+  const [emailCode, setEmailCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sendingCode, setSendingCode] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const [codeNotice, setCodeNotice] = useState<string | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [successText, setSuccessText] = useState<string | null>(null);
 
+  // 验证码发送冷却倒计时
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setTimeout(() => setCooldown((value) => value - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [cooldown]);
+
   if (!user) return null;
+
+  /** 发送修改密码验证码至本人邮箱（60 秒冷却内忽略重复点击） */
+  async function iGM_HandleSendCode() {
+    if (sendingCode || cooldown > 0) return;
+    setErrorText(null);
+    setCodeNotice(null);
+    setSendingCode(true);
+    try {
+      await iGM_ApiSendPasswordChangeCode();
+      setCodeNotice(
+        t("auth.settings.changeCodeSent", { email: user?.email ?? "" }),
+      );
+      setCooldown(iGM_CodeCooldown);
+    } catch (error) {
+      setErrorText(iGM_ResolveErrorText(t, error));
+    } finally {
+      setSendingCode(false);
+    }
+  }
 
   async function iGM_HandleChangePassword(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -78,14 +115,27 @@ function iGM_AccountSettingsInner() {
       setErrorText(t("auth.errors.passwordMismatch"));
       return;
     }
+    // 当前密码缺省时必须携带邮箱验证码
+    const trimmedCode = emailCode.trim();
+    if (!oldPassword && !/^\d{6}$/.test(trimmedCode)) {
+      setErrorText(t("auth.errors.emailCodeRequired"));
+      return;
+    }
 
     setLoading(true);
     try {
-      await iGM_ApiChangePassword({ oldPassword, newPassword });
+      await iGM_ApiChangePassword({
+        oldPassword: oldPassword || undefined,
+        newPassword,
+        emailCode: oldPassword ? undefined : trimmedCode,
+      });
       setSuccessText(t("auth.messages.passwordChanged"));
       setOldPassword("");
+      setEmailCode("");
       setNewPassword("");
       setConfirm("");
+      setCodeNotice(null);
+      setCooldown(0);
     } catch (error) {
       setErrorText(iGM_ResolveErrorText(t, error));
     } finally {
@@ -215,10 +265,12 @@ function iGM_AccountSettingsInner() {
             >
               {errorText && <IGM_Alert tone="error">{errorText}</IGM_Alert>}
               {successText && <IGM_Alert tone="success">{successText}</IGM_Alert>}
+              {codeNotice && <IGM_Alert tone="success">{codeNotice}</IGM_Alert>}
 
               <IGM_FormField
                 id="igm-settings-old-password"
                 label={t("auth.fields.oldPassword")}
+                hint={t("auth.settings.oldPasswordHint")}
               >
                 <input
                   id="igm-settings-old-password"
@@ -227,8 +279,48 @@ function iGM_AccountSettingsInner() {
                   autoComplete="current-password"
                   value={oldPassword}
                   onChange={(event) => setOldPassword(event.target.value)}
-                  required
+                  maxLength={128}
                 />
+              </IGM_FormField>
+
+              <IGM_FormField
+                id="igm-settings-email-code"
+                label={t("auth.fields.code")}
+                hint={t("auth.settings.emailCodeHint")}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    alignItems: "stretch",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <input
+                    id="igm-settings-email-code"
+                    className={`${authStyles.fieldInput} ${authStyles.codeInput}`}
+                    style={{ flex: "1 1 140px" }}
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    value={emailCode}
+                    onChange={(event) =>
+                      setEmailCode(
+                        event.target.value.replace(/\D/g, "").slice(0, 6),
+                      )
+                    }
+                    placeholder="000000"
+                    maxLength={6}
+                  />
+                  <IGM_SecondaryButton
+                    onClick={() => void iGM_HandleSendCode()}
+                    loading={sendingCode}
+                  >
+                    {cooldown > 0
+                      ? t("auth.actions.resendCountdown", { seconds: cooldown })
+                      : t("auth.settings.sendChangeCode")}
+                  </IGM_SecondaryButton>
+                </div>
               </IGM_FormField>
 
               <IGM_FormField
