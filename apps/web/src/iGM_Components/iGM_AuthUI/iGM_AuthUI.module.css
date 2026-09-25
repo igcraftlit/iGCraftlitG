@@ -287,13 +287,13 @@
   justify-content: center;
 }
 
-/* 验证码输入：数字居中、大字距、等宽数字 */
+/* 验证码输入：数字居中、大字距、等宽数字（字号适配 400px 卡片） */
 .codeInput {
   text-align: center;
-  letter-spacing: 12px;
-  font-size: 22px;
+  letter-spacing: 8px;
+  font-size: 18px;
   font-variant-numeric: tabular-nums;
-  padding-left: 12px;
+  padding-left: 8px;
 }
 
 /* 账户设置页分区 */

@@ -362,8 +362,10 @@ function iGM_RegisterWizard({ onSwitchTab }: { onSwitchTab: () => void }) {
         onSubmit={iGM_GoNext}
         noValidate
       >
-        {errorText && <IGM_Alert tone="error">{errorText}</IGM_Alert>}
-        {noticeText && <IGM_Alert tone="success">{noticeText}</IGM_Alert>}
+        {errorText && step <= 3 && <IGM_Alert tone="error">{errorText}</IGM_Alert>}
+        {noticeText && step <= 3 && (
+          <IGM_Alert tone="success">{noticeText}</IGM_Alert>
+        )}
 
         {/* 第一框：用户名 */}
         {step === 1 && (
@@ -510,11 +512,8 @@ function iGM_RegisterWizard({ onSwitchTab }: { onSwitchTab: () => void }) {
           noValidate
         >
           {errorText && <IGM_Alert tone="error">{errorText}</IGM_Alert>}
-          {noticeText && !verifiedDone && (
-            <IGM_Alert tone="success">{noticeText}</IGM_Alert>
-          )}
 
-          {/* 已向该邮箱发送验证码提示横幅 */}
+          {/* 已向该邮箱发送验证码提示横幅（注册成功提示并入此条，不重复展示） */}
           <p className={styles.sentBanner}>
             <ShieldCheck size={15} strokeWidth={1.8} aria-hidden />
             <span>

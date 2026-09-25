@@ -66,20 +66,23 @@ export function iGM_ResolveRequestUser(request: Request): iGM_UserRow | null {
 }
 
 /**
- * 解析客户端 IP：优先 Elysia/Bun 原生连接信息，
- * 其次反向代理 x-forwarded-for，本地直连回退 127.0.0.1。
+ * 解析客户端真实 IP：
+ * 优先反向代理注入的客户端头（Cloudflare 隧道经 cloudflared 转发时，
+ * 直连地址恒为 127.0.0.1，真实访客 IP 在头部），
+ * 顺序：cf-connecting-ip → x-forwarded-for 首段 → x-real-ip
+ * → Bun 原生连接信息 → 本地回退 127.0.0.1。
  * 纯自研解析，不调用任何第三方 IP 库
  */
 export function iGM_GetClientIp(
   request: Request,
   server: iGM_NetworkServer | null,
 ): string {
-  const direct = server?.requestIP(request)?.address;
-  let ip = direct;
-  if (!ip) {
-    const forwarded = request.headers.get("x-forwarded-for");
-    ip = forwarded ? forwarded.split(",")[0].trim() : "127.0.0.1";
-  }
+  let ip =
+    request.headers.get("cf-connecting-ip")?.trim() ||
+    request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+    request.headers.get("x-real-ip")?.trim() ||
+    server?.requestIP(request)?.address ||
+    "127.0.0.1";
 
   // 规范化显示：去除 IPv4-mapped IPv6 前缀，IPv6 回环统一为 IPv4 回环
   if (ip.startsWith("::ffff:")) ip = ip.slice("::ffff:".length);

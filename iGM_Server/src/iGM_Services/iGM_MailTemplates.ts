@@ -179,19 +179,20 @@ export function iGM_FillPlaceholders(input: string, values: iGM_CodeMailValues):
     .replaceAll("{expireMinutes}", String(values.expireMinutes));
 }
 
-/** 验证码方框：深色卡片，左上角 Orbitron 站名，居中大号验证码 */
+/** 验证码方框：浅色卡片，左上角 Orbitron 站名，居中大号黑色楷体验证码 */
 function iGM_CodeBoxHtml(code: string, boxLabel: string): string {
   return (
-    `<div style="background:#1b212e;border:1px solid #2b364a;border-radius:12px;` +
+    // 浅色方框：配合黑色验证码数字保持可读性
+    `<div style="background:#f4f6fb;border:1px solid #dbe2f0;border-radius:12px;` +
     `padding:14px 18px 26px;margin:0 0 18px;">` +
     // 方框左上角：科幻字体站名（Orbitron，回退 Michroma/系统字体）
     `<div style="font-family:'Orbitron','Michroma','Segoe UI',Arial,sans-serif;` +
-    `font-size:10px;font-weight:600;letter-spacing:2px;color:#8ea2ff;` +
+    `font-size:10px;font-weight:600;letter-spacing:2px;color:#5b74c9;` +
     `text-transform:uppercase;margin:0 0 18px;">iGCraftLit Community</div>` +
-    `<div style="font-size:12px;color:#aab4d0;text-align:center;margin:0 0 10px;">${boxLabel}</div>` +
+    `<div style="font-size:12px;color:#71717a;text-align:center;margin:0 0 10px;">${boxLabel}</div>` +
     // 验证码数字：楷体（KaiTi/STKaiti/Kaiti SC 跨平台回退，衬线兜底）
     `<div style="font-family:'KaiTi','STKaiti','Kaiti SC','KaiTi_GB2312','楷体',serif;` +
-    `font-size:36px;line-height:1.2;font-weight:700;color:#6d8eff;` +
+    `font-size:36px;line-height:1.2;font-weight:700;color:#18181b;` +
     `letter-spacing:8px;text-align:center;">${code}</div>` +
     `</div>`
   );
