@@ -22,6 +22,8 @@ import type {
 /** 用户管理列表行（原始行 + 计数） */
 export interface iGM_AdminUserListRow {
   iGM_Id: string;
+  // 模块七增强：11 位全局唯一 iGMUid
+  iGM_Uid: string;
   iGM_Username: string;
   iGM_Email: string;
   iGM_Role: string;
@@ -29,6 +31,8 @@ export interface iGM_AdminUserListRow {
   iGM_EmailVerified: number;
   iGM_DisplayName: string | null;
   iGM_Avatar: string | null;
+  // 模块七：认证组织 id（徽标由服务层解析）
+  iGM_VerifiedOrgId: string | null;
   iGM_CreatedAt: string;
   iGM_TotalPoints: number;
   iGM_PostCount: number;
@@ -46,18 +50,21 @@ export function iGM_ListUsersForAdmin(
 ): { items: iGM_AdminUserListRow[]; total: number } {
   // 说明：bun:sqlite 命名参数绑定到 LIMIT 位置会触发 SQLITE_MISMATCH，
   // 因此本查询统一使用位置参数（与仓库层其他分页查询一致）
+  // 模块七增强：搜索同时匹配 iGMUid（精确优先，模糊兜底）
   const where = search
-    ? `WHERE u.iGM_Username LIKE ? OR u.iGM_Email LIKE ?`
+    ? `WHERE u.iGM_Username LIKE ? OR u.iGM_Email LIKE ? OR u.iGM_Uid = ?`
     : ``;
-  const searchArgs = search ? [`%${search}%`, `%${search}%`] : [];
+  const searchArgs = search
+    ? [`%${search}%`, `%${search}%`, search.trim()]
+    : [];
   const total = (
     iGM_Db.query(
       `SELECT COUNT(*) AS total FROM iGM_Users u ${where}`,
     ).get(...searchArgs) as { total: number }
   ).total;
   const items = iGM_Db.query(
-    `SELECT u.iGM_Id, u.iGM_Username, u.iGM_Email, u.iGM_Role, u.iGM_Status,
-            u.iGM_EmailVerified, u.iGM_DisplayName, u.iGM_Avatar, u.iGM_CreatedAt,
+    `SELECT u.iGM_Id, u.iGM_Uid, u.iGM_Username, u.iGM_Email, u.iGM_Role, u.iGM_Status,
+            u.iGM_EmailVerified, u.iGM_DisplayName, u.iGM_Avatar, u.iGM_VerifiedOrgId, u.iGM_CreatedAt,
             COALESCE(up.iGM_TotalPoints, 0) AS iGM_TotalPoints,
             (SELECT COUNT(*) FROM iGM_Posts p WHERE p.iGM_AuthorId = u.iGM_Id) AS iGM_PostCount,
             (SELECT COUNT(*) FROM iGM_Comments c WHERE c.iGM_AuthorId = u.iGM_Id) AS iGM_CommentCount

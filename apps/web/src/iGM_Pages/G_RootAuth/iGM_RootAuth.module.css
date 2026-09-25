@@ -1,0 +1,297 @@
+/*
+ * 文件路径：apps/web/src/iGM_Pages/G_RootAuth/iGM_RootAuth.module.css
+ * 所属层：前端 / 页面样式（CSS Modules）
+ * 路由：/G_Auth/login、/G_Auth/register（全屏认证页，豁免控制台外壳）
+ * 模块：G_RootAuth
+ * 作用：登录/注册界面样式——品牌视觉区、登录/注册卡片、页签、
+ *       注册五框向导步骤圆点、验证码提示横幅、第四框规定阅读区
+ */
+
+/* ===== 页面外层：全屏居中布局（豁免控制台外壳，无侧边导航/顶栏） ===== */
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  min-height: 100vh;
+  padding: 56px 20px 64px;
+}
+
+/* ===== 品牌区 ===== */
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.brandName {
+  font-size: 34px;
+  line-height: 1.2;
+  color: var(--igm-text);
+}
+
+.slogan {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--igm-text);
+}
+
+.description {
+  max-width: 560px;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+/* ===== 登录/注册卡片 ===== */
+.card {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 26px 24px;
+  background: var(--igm-surface);
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  box-shadow: var(--igm-shadow);
+}
+
+/* 页签：注册 / 登录 */
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--igm-border);
+}
+
+.tab {
+  padding: 8px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--igm-text-muted);
+  border-bottom: 2px solid transparent;
+  transition:
+    color 0.15s var(--igm-motion-ease),
+    border-color 0.15s var(--igm-motion-ease);
+}
+
+.tab:hover {
+  color: var(--igm-text);
+}
+
+.tabActive,
+.tabActive:hover {
+  color: var(--igm-text);
+  font-weight: 600;
+  border-bottom-color: var(--igm-text);
+}
+
+/* 已登录欢迎回执 */
+.welcomeBack {
+  padding: 9px 12px;
+  font-size: 13px;
+  color: var(--igm-success);
+  background: var(--igm-success-soft);
+  border: 1px solid var(--igm-success-soft);
+  border-radius: var(--igm-radius);
+}
+
+/* ===== 步骤圆点：已完成实心、当前放大深色、未到灰色（与设计稿一致） ===== */
+.dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+/* 当前框副标题：圆点下居中一行 */
+.stepSubtitle {
+  margin-bottom: 18px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  color: var(--igm-text);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--igm-border-strong);
+  transition:
+    background-color 0.2s var(--igm-motion-ease),
+    width 0.2s var(--igm-motion-ease),
+    height 0.2s var(--igm-motion-ease);
+}
+
+.dotDone {
+  background: var(--igm-text);
+}
+
+.dotActive {
+  width: 14px;
+  height: 14px;
+  background: var(--igm-text);
+}
+
+.dotLine {
+  width: 22px;
+  height: 1px;
+  background: var(--igm-border-strong);
+}
+
+/* ===== 第四框：跳转独立规定页 ===== */
+.step4Frame {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.step4Intro {
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--igm-text-muted);
+}
+
+/* 前往阅读按钮：描边按钮，强调独立页面入口 */
+.viewRulesButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--igm-text);
+  border: 1px solid var(--igm-border-strong);
+  border-radius: var(--igm-radius);
+  transition:
+    border-color 0.15s var(--igm-motion-ease),
+    background-color 0.15s var(--igm-motion-ease),
+    color 0.15s var(--igm-motion-ease);
+}
+
+.viewRulesButton:hover {
+  border-color: var(--igm-accent);
+  color: var(--igm-accent);
+  background: var(--igm-accent-soft);
+}
+
+.rulesActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.rulesActions > :first-child {
+  flex: 0 0 auto;
+}
+
+/* 同意按钮：深色主按钮（独立页阅读同意返回后解锁） */
+.agreeButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1;
+  height: 40px;
+  padding: 0 16px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--igm-accent-contrast);
+  background: var(--igm-text);
+  border-radius: var(--igm-radius);
+  transition: opacity 0.15s var(--igm-motion-ease);
+}
+
+.agreeButton:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.agreeButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ===== 第五框：验证码 ===== */
+.sentBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--igm-text-muted);
+  background: var(--igm-surface-subtle);
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius);
+}
+
+.sentBanner svg {
+  flex: 0 0 auto;
+  margin-top: 3px;
+  color: var(--igm-text);
+}
+
+/* 底部链接行：重新发送 ← 返回修改 / 已有账号？立即登录 */
+.wizardFooter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.footerRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--igm-text-muted);
+}
+
+.footerDivider {
+  color: var(--igm-text-subtle);
+}
+
+.linkButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--igm-text);
+  transition: color 0.15s var(--igm-motion-ease);
+}
+
+.linkButton:hover:not(:disabled) {
+  color: var(--igm-text-muted);
+}
+
+.linkButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== 响应式 ===== */
+@media (max-width: 480px) {
+  .page {
+    padding: 36px 14px 48px;
+  }
+
+  .brandName {
+    font-size: 28px;
+  }
+
+  .card {
+    padding: 22px 16px;
+  }
+}

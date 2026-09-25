@@ -48,6 +48,7 @@ import { iGM_UseAuth } from "../../iGM_Providers/iGM_AuthProvider";
 import { iGM_UseLocale } from "../../iGM_Providers/iGM_LocaleProvider";
 import { iGM_ResolveErrorText } from "../../iGM_Components/iGM_AuthUI/iGM_AuthUI";
 import { iGM_Avatar as IGM_Avatar } from "../../iGM_Components/iGM_Avatar/iGM_Avatar";
+import { iGM_VerifiedBadge as IGM_VerifiedBadge } from "../../iGM_Components/iGM_VerifiedBadge/iGM_VerifiedBadge";
 import { iGM_CommentList as IGM_CommentList } from "../../iGM_Components/iGM_CommentList/iGM_CommentList";
 import { iGM_EmptyState as IGM_EmptyState } from "../../iGM_Components/iGM_EmptyState/iGM_EmptyState";
 import { iGM_FormatDateTime } from "../../iGM_Components/iGM_Format/iGM_Format";
@@ -375,6 +376,8 @@ export function iGM_PostDetailPage() {
               <IGM_Avatar size="sm" src={post.author.avatar} name={authorName} />
               <span>{authorName}</span>
             </Link>
+            {/* 模块七：认证组织徽标 */}
+            <IGM_VerifiedBadge org={post.author.verifiedOrg} />
             <span>{iGM_FormatDateTime(locale, post.createdAt)}</span>
             {categoryLabel && <span className={styles.hiddenBadge} style={{ background: "var(--igm-accent-soft)", color: "var(--igm-accent)" }}>{categoryLabel}</span>}
             {post.status === "hidden" && (

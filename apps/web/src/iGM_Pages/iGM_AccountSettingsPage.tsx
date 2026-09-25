@@ -3,8 +3,9 @@
  * 所属层：前端 / 页面层
  * 路由：/G_Settings
  * 模块：G_Settings / G_Auth
- * 作用：账户设置页，展示账户信息、邮箱验证状态、修改密码与登出
- * 内容：账户信息列表、角色/状态徽标、未验证提醒、修改密码表单、登出按钮
+ * 作用：账户设置页，展示账户信息、邮箱验证状态、修改密码、删除账号与登出
+ * 内容：账户信息列表、角色/状态徽标、未验证提醒、修改密码表单、
+ *       删除账号（邮箱验证码二次校验）、登出按钮
  * 说明：需要登录，由 iGM_RequireAuth 守卫；
  *       修改密码的当前密码为可选项——不填时需先向本人邮箱索取验证码完成身份验证
  */
@@ -23,12 +24,16 @@ import {
   LogOut,
   MailWarning,
   Settings,
+  Trash2,
+  TriangleAlert,
   UserRound,
 } from "lucide-react";
 import { iGM_UseAuth } from "../iGM_Providers/iGM_AuthProvider";
 import { iGM_UseLocale } from "../iGM_Providers/iGM_LocaleProvider";
 import {
   iGM_ApiChangePassword,
+  iGM_ApiDeleteAccount,
+  iGM_ApiSendDeleteCode,
   iGM_ApiSendPasswordChangeCode,
 } from "../iGM_Services/iGM_AuthClient";
 import type { iGM_UserRole } from "../iGM_Services/iGM_AuthClient";
@@ -75,12 +80,31 @@ function iGM_AccountSettingsInner() {
   const [errorText, setErrorText] = useState<string | null>(null);
   const [successText, setSuccessText] = useState<string | null>(null);
 
+  // 模块七第三轮：删除账号（邮箱验证码）表单状态
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteCode, setDeleteCode] = useState("");
+  const [deleteSending, setDeleteSending] = useState(false);
+  const [deleteCooldown, setDeleteCooldown] = useState(0);
+  const [deleteNotice, setDeleteNotice] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
   // 验证码发送冷却倒计时
   useEffect(() => {
     if (cooldown <= 0) return;
     const timer = setTimeout(() => setCooldown((value) => value - 1), 1000);
     return () => clearTimeout(timer);
   }, [cooldown]);
+
+  // 删除账号验证码发送冷却倒计时
+  useEffect(() => {
+    if (deleteCooldown <= 0) return;
+    const timer = setTimeout(
+      () => setDeleteCooldown((value) => value - 1),
+      1000,
+    );
+    return () => clearTimeout(timer);
+  }, [deleteCooldown]);
 
   if (!user) return null;
 
@@ -150,6 +174,54 @@ function iGM_AccountSettingsInner() {
     router.replace("/G_Auth/login");
   }
 
+  /** 发送删除账号验证码至本人邮箱（60 秒冷却） */
+  async function iGM_HandleSendDeleteCode() {
+    if (deleteSending || deleteCooldown > 0) return;
+    setDeleteError(null);
+    setDeleteNotice(null);
+    setDeleteSending(true);
+    try {
+      await iGM_ApiSendDeleteCode();
+      setDeleteNotice(
+        t("auth.settings.deleteAccount.codeSent", {
+          email: user?.email ?? "",
+        }),
+      );
+      setDeleteCooldown(iGM_CodeCooldown);
+    } catch (error) {
+      setDeleteError(iGM_ResolveErrorText(t, error));
+    } finally {
+      setDeleteSending(false);
+    }
+  }
+
+  /** 校验邮箱验证码后永久删除账号；成功则清理登录态并跳转登录页 */
+  async function iGM_HandleDeleteAccount(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setDeleteError(null);
+
+    const trimmedCode = deleteCode.trim();
+    if (!/^\d{6}$/.test(trimmedCode)) {
+      setDeleteError(t("auth.errors.emailCodeRequired"));
+      return;
+    }
+    // 不可逆操作：再次弹窗确认
+    if (!window.confirm(t("auth.settings.deleteAccount.confirmPrompt"))) {
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      await iGM_ApiDeleteAccount(trimmedCode);
+      // 后端已物理删除并清理会话；前端同步清空登录态
+      await logout();
+      router.replace("/G_Auth/login");
+    } catch (error) {
+      setDeleteError(iGM_ResolveErrorText(t, error));
+      setDeleting(false);
+    }
+  }
+
   const createdAt = new Intl.DateTimeFormat(locale, {
     dateStyle: "medium",
   }).format(new Date(user.createdAt));
@@ -192,6 +264,11 @@ function iGM_AccountSettingsInner() {
             )}
 
             <div className={authStyles.infoList}>
+              {/* 模块七增强：11 位全局唯一 iGMUid（注册分配，不可修改） */}
+              <div className={authStyles.infoRow}>
+                <span className={authStyles.infoLabel}>{t("auth.settings.uid")}</span>
+                <span className={authStyles.infoValue}>{user.uid}</span>
+              </div>
               <div className={authStyles.infoRow}>
                 <span className={authStyles.infoLabel}>{t("auth.fields.username")}</span>
                 <span className={authStyles.infoValue}>{user.username}</span>
@@ -363,6 +440,134 @@ function iGM_AccountSettingsInner() {
                 {t("auth.actions.changePassword")}
               </IGM_SubmitButton>
             </form>
+          </div>
+
+          <hr className={authStyles.divider} />
+
+          {/* 模块七第三轮：危险操作——永久删除账号（须邮箱验证码） */}
+          <div className={authStyles.settingsSection}>
+            <h2 className={authStyles.settingsSectionTitle}>
+              <span className={authStyles.settingsSectionIcon}>
+                <TriangleAlert size={16} strokeWidth={1.8} />
+              </span>
+              {t("auth.settings.deleteAccount.title")}
+            </h2>
+
+            <IGM_Alert tone="error">
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                <TriangleAlert size={15} strokeWidth={2} />
+                {t("auth.settings.deleteAccount.warning")}
+              </span>
+            </IGM_Alert>
+
+            {!deleteOpen ? (
+              <div>
+                <button
+                  type="button"
+                  className={authStyles.dangerGhostButton}
+                  onClick={() => setDeleteOpen(true)}
+                >
+                  <Trash2 size={15} strokeWidth={1.8} />
+                  {t("auth.settings.deleteAccount.sendCode")}
+                </button>
+              </div>
+            ) : (
+              <form
+                className={authStyles.form}
+                onSubmit={iGM_HandleDeleteAccount}
+                noValidate
+              >
+                <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6 }}>
+                  {t("auth.settings.deleteAccount.description")}
+                </p>
+
+                {deleteError && <IGM_Alert tone="error">{deleteError}</IGM_Alert>}
+                {deleteNotice && (
+                  <IGM_Alert tone="success">{deleteNotice}</IGM_Alert>
+                )}
+
+                <IGM_FormField
+                  id="igm-settings-delete-code"
+                  label={t("auth.settings.deleteAccount.codeLabel")}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 8,
+                      alignItems: "stretch",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <input
+                      id="igm-settings-delete-code"
+                      className={`${authStyles.fieldInput} ${authStyles.codeInput}`}
+                      style={{ flex: "1 1 140px" }}
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      value={deleteCode}
+                      onChange={(event) =>
+                        setDeleteCode(
+                          event.target.value.replace(/\D/g, "").slice(0, 6),
+                        )
+                      }
+                      placeholder={t(
+                        "auth.settings.deleteAccount.codePlaceholder",
+                      )}
+                      maxLength={6}
+                    />
+                    <IGM_SecondaryButton
+                      onClick={() => void iGM_HandleSendDeleteCode()}
+                      loading={deleteSending}
+                    >
+                      {deleteCooldown > 0
+                        ? t("auth.actions.resendCountdown", {
+                            seconds: deleteCooldown,
+                          })
+                        : t("auth.settings.deleteAccount.resend")}
+                    </IGM_SecondaryButton>
+                  </div>
+                </IGM_FormField>
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 10,
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                  }}
+                >
+                  <button
+                    type="submit"
+                    className={authStyles.dangerButton}
+                    disabled={deleting}
+                  >
+                    {deleting ? (
+                      t("auth.settings.deleteAccount.confirming")
+                    ) : (
+                      <>
+                        <Trash2 size={15} strokeWidth={1.8} />
+                        {t("auth.settings.deleteAccount.confirmButton")}
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    className={authStyles.secondaryButton}
+                    style={{ padding: "0 14px" }}
+                    onClick={() => {
+                      setDeleteOpen(false);
+                      setDeleteCode("");
+                      setDeleteError(null);
+                      setDeleteNotice(null);
+                    }}
+                    disabled={deleting}
+                  >
+                    {t("auth.settings.deleteAccount.cancel")}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
 
           <hr className={authStyles.divider} />

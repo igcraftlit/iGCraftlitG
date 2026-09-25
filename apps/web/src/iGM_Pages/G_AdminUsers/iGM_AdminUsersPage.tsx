@@ -3,11 +3,13 @@
  * 所属层：前端 / 页面层
  * 路由：/G_AdminUsers
  * 模块：G_AdminUsers
- * 作用：用户管理——用户检索、封禁/解封与角色调整
- * 内容：搜索框、分页用户列表（角色/状态/积分/发帖评论数）、
- *       封禁与解封按钮、角色下拉（仅 admin 可见，不可操作自己与其他 admin）
+ * 作用：用户管理——用户检索、封禁/解封、角色调整与删除账号
+ * 内容：搜索框、分页用户列表（头像/认证组织/角色/状态/积分/发帖评论数）、
+ *       封禁与解封按钮、角色下拉（仅 admin 可见，不可操作自己与其他 admin）、
+ *       模块七第三轮：删除账号按钮（仅 admin，不可删自己与其他 admin）
  * 说明：纯静态 SSG，数据在客户端经 iGM_AdminClient 调用本地后端；
- *       权限由后端严格校验，前端按当前角色隐藏 admin 专属操作
+ *       权限由后端严格校验，前端按当前角色隐藏 admin 专属操作；
+ *       模块七：列表显示用户头像（空则首字符占位）与认证组织徽标
  */
 
 // 导入依赖 //
@@ -15,8 +17,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Ban, CircleCheck, LoaderCircle, Search, Users } from "lucide-react";
+import { Ban, CircleCheck, LoaderCircle, Search, Trash2, Users } from "lucide-react";
 import {
+  iGM_ApiAdminDeleteUser,
   iGM_ApiAdminSetUserRole,
   iGM_ApiAdminSetUserStatus,
   iGM_ApiAdminUsers,
@@ -28,10 +31,13 @@ import { iGM_ResolveErrorText } from "../../iGM_Components/iGM_AuthUI/iGM_AuthUI
 import { iGM_FormatDate } from "../../iGM_Components/iGM_Format/iGM_Format";
 import { iGM_UseLocale } from "../../iGM_Providers/iGM_LocaleProvider";
 import { iGM_Pagination as IGM_Pagination } from "../../iGM_Components/iGM_Pagination/iGM_Pagination";
+import { iGM_Avatar as IGM_Avatar } from "../../iGM_Components/iGM_Avatar/iGM_Avatar";
+import { iGM_VerifiedBadge as IGM_VerifiedBadge } from "../../iGM_Components/iGM_VerifiedBadge/iGM_VerifiedBadge";
 import pageStyles from "../iGM_Page.module.css";
 import uiStyles from "../iGM_Module4.module.css";
 import tileStyles from "../iGM_Points.module.css";
 import styles from "../iGM_Admin.module.css";
+import verifyStyles from "../iGM_OrgVerify.module.css";
 
 // 类型定义 //
 type iGM_RoleOption = "user" | "moderator" | "admin";
@@ -111,6 +117,20 @@ function iGM_UsersInner() {
     }
   }
 
+  /** 模块七第三轮：管理员直接删除账号（无需验证码，不可删自己/其他 admin） */
+  async function iGM_HandleDelete(target: iGM_AdminUser): Promise<void> {
+    const name = target.displayName || target.username;
+    if (!window.confirm(t("admin.users.deleteConfirm", { name }))) return;
+    setErrorText(null);
+    try {
+      await iGM_ApiAdminDeleteUser(target.id);
+      // 删除后当前页可能变空，交给加载逻辑按分页重新渲染
+      iGM_Load(page, search);
+    } catch (error) {
+      setErrorText(iGM_ResolveErrorText(t, error));
+    }
+  }
+
   return (
     <div className={pageStyles.page}>
       {/* 页头 */}
@@ -173,13 +193,28 @@ function iGM_UsersInner() {
                 <div key={user.id} className={tileStyles.recordRow}>
                   <div className={tileStyles.recordMain}>
                     <span className={tileStyles.recordAction}>
-                      {user.displayName || user.username}
-                      <span className={styles.userMeta}>
-                        {" "}
-                        · @{user.username} · {t(`admin.roles.${user.role}`)}
+                      {/* 模块七：用户头像（空则首字符占位）+ 认证组织徽标 */}
+                      <span className={verifyStyles.userCell}>
+                        <IGM_Avatar
+                          src={user.avatar}
+                          name={user.displayName || user.username}
+                          size="sm"
+                        />
+                        <span className={verifyStyles.userNameRow}>
+                          {user.displayName || user.username}
+                          <IGM_VerifiedBadge org={user.verifiedOrg} />
+                          <span className={styles.userMeta}>
+                            {" "}
+                            · @{user.username} · {t(`admin.roles.${user.role}`)}
+                          </span>
+                        </span>
                       </span>
                     </span>
                     <span className={styles.userEmail}>{user.email}</span>
+                    {/* 模块七增强：11 位全局唯一 iGMUid */}
+                    <span className={styles.userMeta}>
+                      {t("admin.users.uid")}：{user.uid}
+                    </span>
                     <span className={styles.userMeta}>
                       {t("admin.users.meta", {
                         points: user.totalPoints,
@@ -238,6 +273,16 @@ function iGM_UsersInner() {
                           {t("admin.users.unban")}
                         </button>
                       )
+                    )}
+                    {isAdmin && !isSelf && user.role !== "admin" && (
+                      <button
+                        type="button"
+                        className={`${styles.smallButton} ${styles.smallButtonDanger}`}
+                        onClick={() => iGM_HandleDelete(user)}
+                      >
+                        <Trash2 size={13} strokeWidth={1.8} />
+                        {t("admin.users.delete")}
+                      </button>
                     )}
                   </div>
                 </div>

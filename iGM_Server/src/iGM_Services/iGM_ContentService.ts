@@ -63,6 +63,7 @@ import {
   iGM_RemoveLike,
 } from "../iGM_Repositories/iGM_InteractionRepository";
 import { iGM_ToUserDto, type iGM_UserDto, type iGM_UserRow } from "../iGM_Types/iGM_Auth";
+import { iGM_ResolveUserOrgBadge } from "../iGM_Repositories/iGM_OrgVerifyRepository";
 import { iGM_Notify } from "./iGM_NotificationService";
 import { iGM_AwardPoints } from "./iGM_PointsService";
 import {
@@ -302,6 +303,11 @@ function iGM_ToAuthorDto(user: iGM_UserRow): iGM_AuthorDto {
     displayName: user.iGM_DisplayName,
     avatar: user.iGM_Avatar,
     role: user.iGM_Role,
+    // 模块七：认证组织徽标（负责人邮箱匹配时带 isOwner 金标）
+    verifiedOrg: iGM_ResolveUserOrgBadge(
+      user.iGM_VerifiedOrgId ?? null,
+      user.iGM_Email,
+    ),
   };
 }
 
@@ -362,6 +368,7 @@ function iGM_DeletedAuthorPlaceholder(authorId: string): iGM_AuthorDto {
     displayName: null,
     avatar: null,
     role: "user",
+    verifiedOrg: null,
   };
 }
 
@@ -914,6 +921,11 @@ export function iGM_GetPublicProfileService(
     bio: user.iGM_Bio,
     website: user.iGM_Website,
     role: user.iGM_Role,
+    // 模块七：认证组织徽标（负责人邮箱匹配时带 isOwner 金标）
+    verifiedOrg: iGM_ResolveUserOrgBadge(
+      user.iGM_VerifiedOrgId ?? null,
+      user.iGM_Email,
+    ),
     createdAt: user.iGM_CreatedAt,
     postCount: iGM_CountPostsByAuthor(user.iGM_Id, ["published"]),
     commentCount: iGM_CountCommentsByAuthor(user.iGM_Id, ["visible"]),

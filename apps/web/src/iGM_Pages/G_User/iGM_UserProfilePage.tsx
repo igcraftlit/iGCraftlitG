@@ -40,6 +40,7 @@ import { iGM_UseAuth } from "../../iGM_Providers/iGM_AuthProvider";
 import { iGM_UseLocale } from "../../iGM_Providers/iGM_LocaleProvider";
 import { iGM_ResolveErrorText } from "../../iGM_Components/iGM_AuthUI/iGM_AuthUI";
 import { iGM_Avatar as IGM_Avatar } from "../../iGM_Components/iGM_Avatar/iGM_Avatar";
+import { iGM_VerifiedBadge as IGM_VerifiedBadge } from "../../iGM_Components/iGM_VerifiedBadge/iGM_VerifiedBadge";
 import { iGM_PostCard as IGM_PostCard } from "../../iGM_Components/iGM_PostCard/iGM_PostCard";
 import { iGM_Pagination as IGM_Pagination } from "../../iGM_Components/iGM_Pagination/iGM_Pagination";
 import { iGM_EmptyState as IGM_EmptyState } from "../../iGM_Components/iGM_EmptyState/iGM_EmptyState";
@@ -203,6 +204,8 @@ export function iGM_UserProfilePage() {
               <ShieldCheck size={13} strokeWidth={1.8} />
               {t(roleKey)}
             </span>
+            {/* 模块七：认证组织徽标 */}
+            <IGM_VerifiedBadge org={profile.verifiedOrg} />
           </div>
           {profile.bio && <p className={styles.profileBio}>{profile.bio}</p>}
           <div className={styles.profileMetaRow}>
@@ -222,6 +225,12 @@ export function iGM_UserProfilePage() {
                 date: iGM_FormatDate(locale, profile.createdAt),
               })}
             </span>
+            {/* 模块七增强：iGMUid 仅本人可见 */}
+            {isSelf && user?.uid && (
+              <span className={styles.profileJoined}>
+                {t("community.profile.uidLabel")}：{user.uid}
+              </span>
+            )}
           </div>
           <div className={styles.profileStats}>
             <span>

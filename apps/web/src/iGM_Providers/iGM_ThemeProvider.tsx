@@ -5,7 +5,8 @@
  * 模块：iGM_ThemeProvider
  * 作用：基于 React Context 提供 light / dark / system 三种明暗模式
  * 内容：默认跟随系统，切换即时生效并持久化到 localStorage（键 iGM_THEME），
- *       通过 html[data-theme] 驱动全局 CSS 变量
+ *       通过 html[data-theme] 驱动全局 CSS 变量；切换瞬间触发 200ms 全局
+ *       短淡入（data-igm-theme-anim），避免明暗色彩闪烁，减少动态偏好下不播放
  * 说明：防 FOUC 的初始化脚本放在根布局 <head> 中（next/script beforeInteractive），
  *       不渲染在本客户端组件树内，避免 React 19 对 <script> 的运行时警告；
  *       本组件仅负责运行时状态同步与系统主题监听
@@ -23,6 +24,10 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import {
+  iGM_MotionDuration,
+  iGM_ReducedMotionQuery,
+} from "../iGM_Components/iGM_PageTransition/iGM_TransitionVariants";
 
 // 类型定义 //
 /** 可选主题模式 */
@@ -84,6 +89,24 @@ function iGM_ApplyTheme(resolved: iGM_ResolvedTheme): void {
 }
 
 /**
+ * 主题切换短淡入：在色彩变量置换前后于 <html> 临时打上
+ * data-igm-theme-anim="active"，触发全局 iGM_Globals.css 中的
+ * igmThemeFade 极短淡入（200ms），遮盖明暗色彩瞬间置换，避免闪烁；
+ * 仅动 opacity，不拦截任何交互。减少动态偏好下直接切换不播放
+ */
+function iGM_RunThemeFade(): void {
+  if (typeof document === "undefined") return;
+  if (window.matchMedia(iGM_ReducedMotionQuery).matches) return;
+
+  const root = document.documentElement;
+  root.setAttribute("data-igm-theme-anim", "active");
+  // 略长于动画时长收尾，确保 keyframes 完整播放后再摘除
+  window.setTimeout(() => {
+    root.removeAttribute("data-igm-theme-anim");
+  }, iGM_MotionDuration.theme + 40);
+}
+
+/**
  * 主题 Provider：
  * - 挂载时读取 localStorage 与 data-theme 初始化
  * - system 模式下监听系统主题变化并同步
@@ -107,6 +130,7 @@ export function iGM_ThemeProvider({ children }: { children: ReactNode }) {
     const onChange = (e: MediaQueryListEvent) => {
       const resolved = e.matches ? "dark" : "light";
       setResolvedTheme(resolved);
+      iGM_RunThemeFade();
       iGM_ApplyTheme(resolved);
     };
     media.addEventListener("change", onChange);
@@ -117,6 +141,7 @@ export function iGM_ThemeProvider({ children }: { children: ReactNode }) {
     setThemeState(mode);
     const resolved = mode === "system" ? iGM_ResolveSystemTheme() : mode;
     setResolvedTheme(resolved);
+    iGM_RunThemeFade();
     iGM_ApplyTheme(resolved);
     try {
       window.localStorage.setItem(iGM_THEME_STORAGE_KEY, mode);

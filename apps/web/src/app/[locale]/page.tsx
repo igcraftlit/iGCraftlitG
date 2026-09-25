@@ -4,7 +4,8 @@
  * 路由：/{locale}（如 /zh-CN、/en）
  * 模块：G_Landing
  * 作用：各语言前缀根路径入口，渲染控制台之前的品牌门户落地页
- * 说明：本文件为 Next.js 强制命名的框架入口，实际逻辑见 iGM_Pages/G_Landing/iGM_LandingPage
+ * 说明：本文件为 Next.js 强制命名的框架入口，实际逻辑见 iGM_Pages/G_Landing/iGM_LandingPage；
+ *       登录/注册为独立全屏界面（/G_Auth/login、/G_Auth/register，五框向导）
  */
 
 // 导入依赖 //

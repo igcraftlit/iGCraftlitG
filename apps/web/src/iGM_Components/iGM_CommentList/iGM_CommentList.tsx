@@ -29,6 +29,7 @@ import { iGM_UseLocale } from "../../iGM_Providers/iGM_LocaleProvider";
 import { iGM_ResolveErrorText } from "../iGM_AuthUI/iGM_AuthUI";
 import { iGM_FormatRelative } from "../iGM_Format/iGM_Format";
 import { iGM_Avatar as IGM_Avatar } from "../iGM_Avatar/iGM_Avatar";
+import { iGM_VerifiedBadge as IGM_VerifiedBadge } from "../iGM_VerifiedBadge/iGM_VerifiedBadge";
 import styles from "./iGM_CommentList.module.css";
 
 // 类型定义 //
@@ -186,6 +187,8 @@ const IGM_CommentNode = function iGM_CommentNode(props: {
           <IGM_Avatar size="sm" src={comment.author.avatar} name={displayName} />
           <span>{displayName}</span>
         </Link>
+        {/* 模块七：认证组织徽标（紧凑场景仅图标） */}
+        <IGM_VerifiedBadge org={comment.author.verifiedOrg} showName={false} />
         <span className={styles.time}>
           {iGM_FormatRelative(locale, comment.createdAt)}
         </span>

@@ -12,6 +12,7 @@
 // 导入依赖 //
 import { iGM_Get, iGM_Post, type iGM_ApiResponse } from "./iGM_Request";
 import type { iGM_User, iGM_UserRole } from "./iGM_AuthClient";
+import type { iGM_OrgBadge } from "./iGM_OrgVerifyClient";
 
 // 类型定义 //
 /** 帖子状态 */
@@ -42,6 +43,8 @@ export interface iGM_Author {
   displayName: string | null;
   avatar: string | null;
   role: iGM_UserRole;
+  // 模块七：认证组织徽标（未认证为 null）
+  verifiedOrg: iGM_OrgBadge | null;
 }
 
 /** 帖子列表项 */
@@ -113,6 +116,8 @@ export interface iGM_PublicProfile {
   bio: string | null;
   website: string | null;
   role: iGM_UserRole;
+  // 模块七：认证组织徽标（未认证为 null）
+  verifiedOrg: iGM_OrgBadge | null;
   createdAt: string;
   postCount: number;
   commentCount: number;

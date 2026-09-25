@@ -151,6 +151,8 @@ export const iGM_Config: iGM_AppConfig = {
     checkin: { windowMs: 60 * 1000, max: 5 },
     // 模块五：管理后台测试邮件——10 分钟内最多 3 次
     mailTest: { windowMs: 10 * 60 * 1000, max: 3 },
+    // 模块七：组织认证申请提交/取消——10 分钟内最多 5 次
+    orgVerifyWrite: { windowMs: 10 * 60 * 1000, max: 5 },
   },
   mail: {
     // 163 邮箱 SMTP：465 端口隐式 SSL；密码使用客户端授权码（非登录密码），

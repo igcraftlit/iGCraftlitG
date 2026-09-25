@@ -4,7 +4,7 @@
  * 路由：调用后端 /G_Admin/*
  * 模块：iGM_AdminClient
  * 作用：管理后台相关后端接口的唯一前端调用出口
- * 内容：数据概览、用户列表、封禁/解封、修改角色、内容列表、审核与删除、
+ * 内容：数据概览、用户列表、封禁/解封、修改角色、删除用户、内容列表、审核与删除、
  *       举报列表与处理、测试邮件、操作日志、系统信息
  * 约束：只经 iGM_Request 发请求；类型与后端 iGM_Types/iGM_Admin.ts 保持一致；
  *       权限由后端严格校验，前端仅做展示层控制
@@ -13,6 +13,7 @@
 // 导入依赖 //
 import { iGM_Get, iGM_Post, type iGM_ApiResponse } from "./iGM_Request";
 import type { iGM_UserRole } from "./iGM_AuthClient";
+import type { iGM_OrgBadge } from "./iGM_OrgVerifyClient";
 
 // 类型定义 //
 /** 用户状态（与后端 iGM_Types/iGM_Auth.ts 定义一致） */
@@ -35,6 +36,8 @@ export interface iGM_AdminOverview {
 /** 后台用户条目 */
 export interface iGM_AdminUser {
   id: string;
+  /** 模块七增强：11 位全局唯一 iGMUid */
+  uid: string;
   username: string;
   email: string;
   role: iGM_UserRole;
@@ -42,6 +45,8 @@ export interface iGM_AdminUser {
   emailVerified: boolean;
   displayName: string | null;
   avatar: string | null;
+  // 模块七：认证组织徽标（未认证为 null；负责人带 isOwner 金标）
+  verifiedOrg: iGM_OrgBadge | null;
   createdAt: string;
   totalPoints: number;
   postCount: number;
@@ -139,6 +144,13 @@ export function iGM_ApiAdminSetUserRole(
   return iGM_Post("/G_Admin/users/role", { userId, role });
 }
 
+/** 模块七第三轮：管理员直接删除用户账号（仅 admin，无需邮箱验证码） */
+export function iGM_ApiAdminDeleteUser(
+  userId: string,
+): Promise<iGM_ApiResponse<{ userId: string }>> {
+  return iGM_Post("/G_Admin/users/delete", { userId });
+}
+
 /** 内容列表（moderator 及以上；type=post|comment） */
 export function iGM_ApiAdminContents(input: {
   type: "post" | "comment";
@@ -225,6 +237,7 @@ export default {
   iGM_ApiAdminUsers,
   iGM_ApiAdminSetUserStatus,
   iGM_ApiAdminSetUserRole,
+  iGM_ApiAdminDeleteUser,
   iGM_ApiAdminContents,
   iGM_ApiAdminReviewContent,
   iGM_ApiAdminReports,

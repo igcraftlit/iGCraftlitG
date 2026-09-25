@@ -4,7 +4,7 @@
  * 路由：G_Admin
  * 模块：iGM_AdminService
  * 作用：管理后台核心业务编排
- * 内容：数据概览、用户管理（检索/封禁/解封/改角色）、内容审核（隐藏/恢复/删除）、
+ * 内容：数据概览、用户管理（检索/封禁/解封/改角色/删除账号）、内容审核（隐藏/恢复/删除）、
  *       举报处理、测试邮件发送、操作日志与系统信息查询
  * 权限：全部接口要求 moderator 及以上；封禁/解封、角色修改、
  *       系统信息与测试邮件仅 admin；所有写操作写入 iGM_AdminLogs
@@ -13,7 +13,7 @@
 // 导入依赖 //
 import { iGM_Db } from "../iGM_Database/iGM_Database";
 import { iGM_Config } from "../iGM_Config/iGM_Config";
-import { iGM_FindUserById, iGM_UpdateUserAdmin } from "../iGM_Repositories/iGM_UserRepository";
+import { iGM_FindUserById, iGM_DeleteUser, iGM_UpdateUserAdmin } from "../iGM_Repositories/iGM_UserRepository";
 import { iGM_DeleteSessionsByUser } from "../iGM_Repositories/iGM_SessionRepository";
 import {
   iGM_GetOverviewStats,
@@ -33,6 +33,7 @@ import {
   iGM_SetPostStatusService,
 } from "./iGM_ContentService";
 import { iGM_SendMail } from "./iGM_MailService";
+import { iGM_ResolveUserOrgBadge } from "../iGM_Repositories/iGM_OrgVerifyRepository";
 import { iGM_ToUserDto, type iGM_UserRow } from "../iGM_Types/iGM_Auth";
 import type {
   iGM_AdminContentDto,
@@ -123,6 +124,8 @@ export function iGM_ListUsersService(
   return {
     items: items.map((row) => ({
       id: row.iGM_Id,
+      // 模块七增强：管理员可查看每个用户的 11 位 iGMUid
+      uid: row.iGM_Uid,
       username: row.iGM_Username,
       email: row.iGM_Email,
       role: row.iGM_Role as iGM_AdminUserDto["role"],
@@ -130,6 +133,11 @@ export function iGM_ListUsersService(
       emailVerified: row.iGM_EmailVerified === 1,
       displayName: row.iGM_DisplayName,
       avatar: row.iGM_Avatar,
+      // 模块七：认证组织徽标（负责人带 isOwner 金标）
+      verifiedOrg: iGM_ResolveUserOrgBadge(
+        row.iGM_VerifiedOrgId ?? null,
+        row.iGM_Email,
+      ),
       createdAt: row.iGM_CreatedAt,
       totalPoints: row.iGM_TotalPoints,
       postCount: row.iGM_PostCount,
@@ -203,6 +211,76 @@ export function iGM_SetUserRoleService(
     targetId: userId,
     detail: `${target.iGM_Username}: ${target.iGM_Role} -> ${role}`,
   });
+  return userId;
+}
+
+/**
+ * 删除用户账号（模块七第三轮）：仅 admin；无需邮箱验证码，直接物理删除。
+ * 安全边界：管理员不可删除自己；其他管理员账号同样受保护（与封禁/改角色一致），
+ * 防止误操作造成无管理员；组织负责人账号角色为 user，可由管理员删除，
+ * 删除后其邮箱重新注册仍会按负责人规则恢复组织认证。
+ * 外键级联清理帖子、评论、会话、通知等全部关联数据。
+ */
+export function iGM_DeleteUserService(
+  admin: iGM_UserRow,
+  userId: string,
+  locale: string,
+): string {
+  if (admin.iGM_Role !== "admin") {
+    throw new iGM_AdminError("auth.errors.forbidden", 403);
+  }
+  if (userId === admin.iGM_Id) {
+    throw new iGM_AdminError("admin.errors.cannotDeleteSelf", 422);
+  }
+  const target = iGM_FindUserById(userId);
+  if (!target) throw new iGM_AdminError("admin.errors.userNotFound", 404);
+  if (target.iGM_Role === "admin") {
+    throw new iGM_AdminError("admin.errors.cannotModifyAdmin", 403);
+  }
+
+  iGM_Db.transaction(() => {
+    iGM_DeleteSessionsByUser(userId);
+    iGM_DeleteUser(userId);
+  })();
+
+  iGM_Log({
+    adminId: admin.iGM_Id,
+    action: "user_delete",
+    targetType: "user",
+    targetId: userId,
+    detail: target.iGM_Username,
+  });
+
+  // 通知用户账号已被管理员删除（邮件失败不阻断删除结果）
+  const isZh = locale === "zh-CN" || locale === "zh-TW" || locale.startsWith("zh");
+  iGM_SendMail({
+    to: target.iGM_Email,
+    subject: isZh
+      ? "【iGCraftLit】你的账号已被删除"
+      : "[iGCraftLit] Your account has been deleted",
+    text: isZh
+      ? `你好 ${target.iGM_Username}，\n\n` +
+        `你的 iGCraftLit Community 账号已被管理员删除，账号相关数据已被清理且无法恢复。\n` +
+        `如你认为此项操作有误，请联系：igcraftlit@outlook.com\n\n` +
+        `iGCraftLit Community 团队`
+      : `Hello ${target.iGM_Username},\n\n` +
+        `Your iGCraftLit Community account has been deleted by an administrator. ` +
+        `Account-related data has been removed and cannot be restored.\n` +
+        `If you believe this was a mistake, please contact: igcraftlit@outlook.com\n\n` +
+        `The iGCraftLit Community Team`,
+    html: isZh
+      ? `<p style="font-size:14px;color:#52525b;">你好 ${target.iGM_Username}，</p>` +
+        `<p style="font-size:14px;color:#52525b;">你的 iGCraftLit Community 账号已被管理员删除，账号相关数据已被清理且无法恢复。</p>` +
+        `<p style="font-size:13px;color:#71717a;">如你认为此项操作有误，请联系：igcraftlit@outlook.com</p>` +
+        `<p style="font-size:12px;color:#71717a;">iGCraftLit Community 团队</p>`
+      : `<p style="font-size:14px;color:#52525b;">Hello ${target.iGM_Username},</p>` +
+        `<p style="font-size:14px;color:#52525b;">Your iGCraftLit Community account has been deleted by an administrator. Account-related data has been removed and cannot be restored.</p>` +
+        `<p style="font-size:13px;color:#71717a;">If you believe this was a mistake, please contact: igcraftlit@outlook.com</p>` +
+        `<p style="font-size:12px;color:#71717a;">The iGCraftLit Community Team</p>`,
+  }).catch((error) => {
+    console.warn("[iGM_AdminService] 删除账号通知邮件发送失败", error);
+  });
+
   return userId;
 }
 

@@ -18,6 +18,7 @@ import type { iGM_PostListItem } from "../../iGM_Services/iGM_CommunityClient";
 import { iGM_UseLocale } from "../../iGM_Providers/iGM_LocaleProvider";
 import { iGM_FormatRelative } from "../iGM_Format/iGM_Format";
 import { iGM_Avatar as IGM_Avatar } from "../iGM_Avatar/iGM_Avatar";
+import { iGM_VerifiedBadge as IGM_VerifiedBadge } from "../iGM_VerifiedBadge/iGM_VerifiedBadge";
 import styles from "./iGM_PostCard.module.css";
 
 // 类型定义 //
@@ -52,6 +53,8 @@ export function iGM_PostCard({ post }: iGM_PostCardProps) {
           />
           <span>{displayName}</span>
         </Link>
+        {/* 模块七：认证组织徽标（紧凑场景仅图标） */}
+        <IGM_VerifiedBadge org={post.author.verifiedOrg} showName={false} />
         <span className={styles.dot} />
         <span>{iGM_FormatRelative(locale, post.createdAt)}</span>
         {post.category && (

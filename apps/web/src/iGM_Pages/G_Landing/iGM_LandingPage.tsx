@@ -33,6 +33,7 @@ import type { LucideIcon } from "lucide-react";
 import { iGM_Reveal as IGM_Reveal } from "../../iGM_Components/iGM_Reveal/iGM_Reveal";
 import { iGM_ThemeToggle as IGM_ThemeToggle } from "../../iGM_Components/iGM_ThemeToggle/iGM_ThemeToggle";
 import { iGM_LanguageSwitcher as IGM_LanguageSwitcher } from "../../iGM_Components/iGM_LanguageSwitcher/iGM_LanguageSwitcher";
+import { iGM_UseAuth } from "../../iGM_Providers/iGM_AuthProvider";
 import styles from "./iGM_Landing.module.css";
 
 // 类型定义 //
@@ -73,6 +74,8 @@ const iGM_WhyTags = ["t1", "t2", "t3", "t4"];
 export function iGM_LandingPage() {
   const t = useTranslations();
   const year = new Date().getFullYear();
+  // 顶部导航主按钮：未登录显示"登录/注册"（进入五框向导），已登录显示"进入控制台"
+  const { user } = iGM_UseAuth();
 
   return (
     <div className={styles.landing} id="top">
@@ -96,9 +99,16 @@ export function iGM_LandingPage() {
           </nav>
 
           <div className={styles.navActions}>
-            <Link href="/G_Home" className={styles.consoleButton}>
-              {t("landing.nav.console")}
-            </Link>
+            {user ? (
+              <Link href="/G_Home" className={styles.consoleButton}>
+                {t("landing.nav.console")}
+              </Link>
+            ) : (
+              <Link href="/G_Auth/login" className={styles.consoleButton}>
+                <LogIn size={15} strokeWidth={2} />
+                {t("landing.nav.auth")}
+              </Link>
+            )}
             <IGM_LanguageSwitcher />
             <IGM_ThemeToggle />
           </div>

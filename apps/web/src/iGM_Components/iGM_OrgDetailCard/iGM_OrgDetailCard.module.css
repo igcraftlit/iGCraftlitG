@@ -1,0 +1,146 @@
+/* 文件路径：apps/web/src/iGM_Components/iGM_OrgDetailCard/iGM_OrgDetailCard.module.css
+   所属层：前端 / 通用组件样式（CSS Modules）
+   路由：G_OrgVerify、G_OrgDetails
+   模块：iGM_OrgDetailCard
+   作用：组织详情卡片样式——标题行、负责人标记、关于组织正文、退出区
+   说明：极简风格，沿用全局设计变量；卡片/按钮/表单复用 iGM_Module4 */
+
+.detailHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.orgIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: 10px;
+  border: 1px solid var(--igm-border-strong);
+  background: var(--igm-surface-subtle);
+  color: var(--igm-text);
+}
+
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.orgTitleRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.orgTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.verifiedIcon {
+  color: var(--igm-accent);
+  flex: 0 0 auto;
+}
+
+/* 模块七第三轮：负责人金标（金色描边胶囊 + 皇冠） */
+.ownerChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  align-self: flex-start;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(184, 134, 11, 0.35);
+  background: rgba(184, 134, 11, 0.12);
+  font-size: 11px;
+  font-weight: 600;
+  color: #a06d08;
+}
+
+.ownerChipIcon {
+  color: #c99313;
+  flex-shrink: 0;
+}
+
+html[data-theme="dark"] .ownerChip {
+  border-color: rgba(230, 185, 77, 0.38);
+  background: rgba(230, 185, 77, 0.14);
+  color: #e6b94d;
+}
+
+html[data-theme="dark"] .ownerChipIcon {
+  color: #e6b94d;
+}
+
+.orgDescription {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+.aboutBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--igm-border);
+}
+
+.aboutBody {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--igm-text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.aboutEmpty {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+.aboutLink {
+  color: var(--igm-accent);
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.aboutLink:hover {
+  text-decoration: underline;
+}
+
+.aboutEdit {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.leaveBar {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--igm-border);
+}
+
+/* 所有者不可退出提示 */
+.ownerNotice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--igm-text-muted);
+}

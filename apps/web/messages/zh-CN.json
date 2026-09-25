@@ -34,12 +34,17 @@
     "adminContents": "内容审核",
     "adminReports": "举报处理",
     "adminSettings": "系统信息",
-    "adminMails": "邮件测试"
+    "adminMails": "邮件测试",
+    "orgVerify": "组织认证",
+    "orgVerifyStatus": "申请记录",
+    "adminOrgVerify": "认证审核",
+    "orgDetails": "组织详情"
   },
   "topbar": {
     "menu": "菜单",
     "theme": "主题",
-    "language": "语言"
+    "language": "语言",
+    "login": "登录"
   },
   "theme": {
     "light": "浅色",
@@ -70,7 +75,8 @@
       "home": "首页",
       "community": "社区",
       "join": "加入我们",
-      "console": "进入控制台"
+      "console": "进入控制台",
+      "auth": "登录 / 注册"
     },
     "hero": {
       "slogan": "「以方块之名，向世界敞开。」",
@@ -256,6 +262,26 @@
     "apiHealth": {
       "title": "服务状态",
       "description": "前端与后端服务健康检查"
+    },
+    "orgVerify": {
+      "title": "组织认证",
+      "description": "申请加入受信任组织，通过审核后展示认证标识"
+    },
+    "orgVerifyStatus": {
+      "title": "申请记录",
+      "description": "查看我的组织认证申请状态与历史"
+    },
+    "adminOrgVerify": {
+      "title": "认证审核",
+      "description": "审核组织认证申请，通过或拒绝并填写审核意见"
+    },
+    "orgDetails": {
+      "title": "组织详情",
+      "description": "查看受信任组织信息与关于组织介绍"
+    },
+    "userRules": {
+      "title": "用户管理规定",
+      "description": "iGCraftLit Community 用户管理规定全文：全球共处、账号管理、行为规范、知识产权与量化处罚"
     }
   },
   "placeholder": {
@@ -361,7 +387,9 @@
       "emailVerified": "邮箱验证成功",
       "resetMailSent": "重置邮件已发送",
       "passwordReset": "密码已重置，请使用新密码登录",
-      "passwordChanged": "密码修改成功"
+      "passwordChanged": "密码修改成功",
+      "deleteCodeSent": "注销验证码已发送至你的邮箱，10 分钟内有效",
+      "accountDeleted": "账号已注销"
     },
     "state": {
       "checking": "正在确认登录状态…",
@@ -379,7 +407,17 @@
     "register": {
       "title": "注册",
       "description": "创建你的 iGCraftLit Community 账号",
-      "hasAccount": "已经有账号了？"
+      "hasAccount": "已经有账号了？",
+      "agreementPrefix": "我已阅读并同意",
+      "agreementRules": "《iGCraftLit 用户管理规定》",
+      "agreementSuffix": "",
+      "agreementRequired": "请先阅读并同意《iGCraftLit 用户管理规定》",
+      "rulesModal": {
+        "title": "iGCraftLit 用户管理规定",
+        "scrollHint": "请滚动阅读至底部后，再确认同意",
+        "finish": "已完成阅读，选择遵守规定",
+        "cancel": "暂不同意"
+      }
     },
     "forgot": {
       "title": "忘记密码",
@@ -412,7 +450,42 @@
       "emailCodeHint": "仅在不填写当前密码时必填",
       "sendChangeCode": "发送验证码",
       "changeCodeSent": "验证码已发送至 {email}，10 分钟内有效",
-      "refreshSession": "刷新登录状态"
+      "refreshSession": "刷新登录状态",
+      "uid": "iGMUid",
+      "deleteAccount": {
+        "title": "删除账号",
+        "description": "永久注销你的 iGCraftLit Community 账号。",
+        "warning": "账号删除后，你的帖子、评论、收藏、积分与组织认证等全部数据将被永久清除，无法恢复。",
+        "sendCode": "发送验证码到邮箱",
+        "resend": "重新发送",
+        "codeSent": "验证码已发送至你的邮箱，如未收到可稍后重发",
+        "codeLabel": "邮箱验证码",
+        "codePlaceholder": "输入 6 位验证码",
+        "confirmButton": "确认删除账号",
+        "confirming": "删除中…",
+        "confirmPrompt": "此操作不可恢复。确定要永久删除你的账号吗？",
+        "cancel": "取消"
+      }
+    },
+    "wizard": {
+      "stepSubtitle1": "输入用户名",
+      "stepSubtitle2": "填写邮箱",
+      "stepSubtitle3": "设置密码",
+      "stepSubtitle4": "阅读并同意用户管理规定",
+      "stepSubtitle5": "验证你的邮箱",
+      "next": "下一步",
+      "back": "上一步",
+      "agreeAndContinue": "已完成阅读，同意并继续",
+      "rulesFullPage": "查看完整规定页面",
+      "codeSentTo": "我们已向 {email} 发送了验证码，请输入邮件中的 6 位验证码",
+      "codePlaceholder": "请输入 6 位验证码",
+      "verify": "验证",
+      "backToEdit": "返回修改",
+      "welcomeBack": "欢迎回来，{name}",
+      "stepLabel": "第 {current} 步，共 {total} 步",
+      "step4Intro": "注册前请先阅读《iGCraftLit 用户管理规定》。请点击下方按钮前往独立页面查看全文，阅读并同意后返回本向导。",
+      "viewRules": "阅读《用户管理规定》",
+      "acceptedInfo": "已阅读并同意规定 · IP：{ip} · {time}"
     }
   },
   "community": {
@@ -535,7 +608,8 @@
       "emptyPostsTitle": "还没有帖子",
       "emptyPostsDesc": "TA 还没有公开发布的帖子",
       "emptyCommentsTitle": "还没有评论",
-      "emptyCommentsDesc": "TA 还没有公开发表的评论"
+      "emptyCommentsDesc": "TA 还没有公开发表的评论",
+      "uidLabel": "iGMUid"
     },
     "myPosts": {
       "title": "我的帖子",
@@ -940,13 +1014,16 @@
       "suspended": "已封禁"
     },
     "users": {
-      "searchPlaceholder": "搜索用户名或邮箱",
+      "searchPlaceholder": "搜索用户名、邮箱或 iGMUid",
       "search": "搜索",
       "empty": "没有匹配的用户",
       "meta": "积分 {points} · 帖子 {posts} · 评论 {comments} · 注册于 {date}",
       "roleLabel": "调整角色",
       "ban": "封禁",
-      "unban": "解封"
+      "unban": "解封",
+      "uid": "iGMUid",
+      "delete": "删除",
+      "deleteConfirm": "确定要删除用户 {name} 吗？该用户的全部数据将被永久清除且无法恢复。"
     },
     "contents": {
       "typePost": "帖子",
@@ -996,7 +1073,8 @@
       "roleUpdated": "角色已更新",
       "contentReviewed": "内容已处理",
       "reportHandled": "举报已处理",
-      "mailTestSent": "测试邮件已发送"
+      "mailTestSent": "测试邮件已发送",
+      "userDeleted": "用户已删除"
     },
     "errors": {
       "loadFailed": "管理数据加载失败",
@@ -1008,7 +1086,237 @@
       "reportNotFound": "举报不存在",
       "reportAlreadyHandled": "该举报已被处理",
       "invalidEmail": "邮箱地址无效",
-      "mailSendFailed": "邮件发送失败，请检查 SMTP 配置"
+      "mailSendFailed": "邮件发送失败，请检查 SMTP 配置",
+      "cannotDeleteSelf": "不能删除你自己的账号"
     }
+  },
+  "orgVerify": {
+    "apply": {
+      "chooseOrg": "选择受信任组织",
+      "reason": "申请理由",
+      "reasonPlaceholder": "请说明你与该组织的关联，以及申请认证的原因…",
+      "reasonHint": "必填，最多 1000 字",
+      "proof": "证明材料（可选）",
+      "proofHint": "可上传一份证明材料（图片或文档，最大 20MB）",
+      "proofUpload": "上传附件",
+      "proofUploading": "上传中…",
+      "proofUploaded": "已上传附件",
+      "proofRemove": "移除附件",
+      "submit": "提交申请",
+      "submitting": "提交中…",
+      "pendingTip": "你已有一条待审核的申请，可在申请记录页查看，或取消后重新申请。",
+      "viewStatus": "查看申请记录"
+    },
+    "status": {
+      "pending": "待审核",
+      "approved": "已通过",
+      "rejected": "已拒绝",
+      "cancelled": "已取消",
+      "left": "已退出"
+    },
+    "list": {
+      "empty": "暂无申请记录",
+      "cancel": "取消申请",
+      "reason": "申请理由",
+      "proof": "证明材料",
+      "proofView": "查看附件",
+      "reviewComment": "审核意见",
+      "reviewer": "审核人",
+      "submittedAt": "提交于 {time}",
+      "updatedAt": "更新于 {time}",
+      "applyNow": "立即申请组织认证"
+    },
+    "admin": {
+      "filterPending": "待审核",
+      "filterApproved": "已通过",
+      "filterRejected": "已拒绝",
+      "filterCancelled": "已取消",
+      "filterAll": "全部",
+      "empty": "没有匹配的申请",
+      "applicant": "申请人",
+      "approve": "通过",
+      "reject": "拒绝",
+      "commentPlaceholder": "审核意见（可选，最多 500 字）",
+      "selfTip": "不能审核自己的申请",
+      "filterOrg": "按组织筛选",
+      "filterOrgAll": "全部组织"
+    },
+    "messages": {
+      "submitted": "申请已提交，请等待审核",
+      "cancelled": "申请已取消",
+      "approved": "已通过该申请",
+      "rejected": "已拒绝该申请",
+      "left": "已退出组织，认证标识已移除",
+      "aboutUpdated": "关于组织内容已更新"
+    },
+    "errors": {
+      "badRequest": "请求参数不正确",
+      "reasonTooLong": "申请理由不能超过 1000 字",
+      "proofTooLong": "证明材料信息过长",
+      "commentTooLong": "审核意见不能超过 500 字",
+      "orgNotFound": "组织不存在或未开放认证",
+      "pendingExists": "你已有一条待审核的申请",
+      "notFound": "申请不存在",
+      "notPending": "该申请已不在待审核状态",
+      "cannotReviewOwn": "不能审核自己的申请",
+      "loadFailed": "加载失败，请稍后重试",
+      "alreadyVerified": "你已持有组织认证，需先退出后才能重新申请",
+      "notOrgMember": "你当前不属于任何受信任组织",
+      "forbidden": "你没有权限执行此操作",
+      "aboutTooLong": "关于组织内容不能超过 5000 字",
+      "ownerCannotLeave": "组织所有者不能退出自己的组织"
+    },
+    "badge": "已认证：{name}",
+    "details": {
+      "title": "我的组织认证",
+      "ownerTag": "组织负责人",
+      "about": "关于组织",
+      "aboutEmpty": "该组织暂未填写介绍内容。",
+      "editAbout": "编辑关于组织",
+      "aboutPlaceholder": "填写组织简介、愿景、联系方式、官网链接等（最多 5000 字）",
+      "save": "保存",
+      "saving": "保存中…",
+      "cancel": "取消",
+      "leave": "申请退出",
+      "leaveConfirm": "确定要退出该组织吗？退出后认证标识将被移除，你可以随时重新申请。",
+      "leaveReason": "退出理由（可选）",
+      "leaveReasonPlaceholder": "可简单说明退出原因…",
+      "viewDetails": "查看组织详情页",
+      "ownerCannotLeave": "你是该组织的所有者，无法退出组织。"
+    },
+    "ownerBadge": "所有者",
+    "badgeOwner": "{name} 组织所有者"
+  },
+  "userRules": {
+    "title": "iGCraftLit 用户管理规定",
+    "tocTitle": "ON THIS PAGE",
+    "chapters": [
+      {
+        "id": "chapter-1",
+        "title": "第一章 总则",
+        "paragraphs": [
+          "iGCraftLit Community 是面向所有探星者的开放社区，我们因梦想而聚，因创造而强，在探索中前行，在创新中突破，以求真之心共建社区。",
+          "本社区立足国际背景，面向全球用户，致力于打造一个跨越国界、多元共存、平等交流的全球性社区。为维护社区秩序，保障全球用户权益，特制定本规定。"
+        ]
+      },
+      {
+        "id": "chapter-2",
+        "title": "第二章 全球共处原则",
+        "items": [
+          "本社区倡导全球共处、多元包容、彼此尊重。来自不同国家、地区、民族、文化背景的探星者，均可在本社区平等交流。",
+          "用户应尊重不同文化、宗教信仰与风俗习惯，不得因国籍、种族、性别、宗教、地域等差异歧视、攻击或侮辱他人。",
+          "本社区不隶属于任何国家或政治实体，用户须自行遵守所在地法律及国际通行准则。",
+          "在跨越文化差异时，应以理性、克制、友善为交流底线，共同维护全球社区的良好氛围。"
+        ]
+      },
+      {
+        "id": "chapter-3",
+        "title": "第三章 账号管理",
+        "items": [
+          "用户注册须提供真实可用的邮箱。",
+          "账号归 iGCraftLit 所有，用户享有使用权。禁止转让、出租、售卖账号。",
+          "用户须妥善保管密码，因密码泄露造成的损失由用户自行承担。",
+          "注册成功后，系统自动分配 11 位 iGMUid，作为用户在社区中的唯一认证值。"
+        ]
+      },
+      {
+        "id": "chapter-4",
+        "title": "第四章 社区行为规范与法律底线",
+        "items": [
+          "用户须遵守所在地法律法规以及国际公认的法律准则，不得利用本社区从事任何违法活动。",
+          "严禁发布、传播、存储以下内容，包括但不限于：色情、淫秽、低俗、性暗示内容；暴力、血腥、恐怖、残忍、自杀自残内容；煽动仇恨、歧视、民族对立、宗教冲突内容；虚假信息、谣言、诈骗、传销、非法广告；侵犯他人隐私、肖像权、名誉权、知识产权的行为；病毒、木马、外挂、恶意代码、网络攻击工具；涉及未成年人保护的违规内容。",
+          "禁止刷屏、恶意灌水、恶意举报、扰乱社区秩序等行为。",
+          "尊重他人，理性讨论，不得人身攻击、诽谤、侮辱、威胁他人。",
+          "不得以 iGCraftLit 名义从事任何未经授权的商业活动或政治活动。"
+        ]
+      },
+      {
+        "id": "chapter-5",
+        "title": "第五章 知识产权",
+        "items": [
+          "用户在社区发布的内容，其著作权归用户所有。",
+          "用户授权 iGCraftLit 在社区范围内展示、传播、存储相关内容。",
+          "禁止未经授权转载、抄袭他人原创内容，违者将承担相应法律责任。",
+          "用户应确保自己发布的内容不侵犯任何第三方的知识产权，如产生纠纷，由发布者自行承担全部责任。"
+        ]
+      },
+      {
+        "id": "chapter-6",
+        "title": "第六章 违规处理与量化处罚",
+        "intro": "若用户在社区内的违规行为被管理员发现，将依照中华人民共和国相关法律法规及本规定进行处置，并对违规账号执行相应的量化处罚：",
+        "penalties": [
+          {
+            "id": "rule-6-1",
+            "title": "首次轻微违规",
+            "detail": "予以警告，或处以 1 天禁言处罚。"
+          },
+          {
+            "id": "rule-6-2",
+            "title": "一般违规行为",
+            "detail": "处以 3 天禁言处罚。"
+          },
+          {
+            "id": "rule-6-3",
+            "title": "较重违规行为",
+            "detail": "处以 7 天禁言处罚。"
+          },
+          {
+            "id": "rule-6-4",
+            "title": "严重违规行为",
+            "detail": "处以 30 天封禁处罚。"
+          },
+          {
+            "id": "rule-6-5",
+            "title": "情节特别严重",
+            "detail": "情节特别严重、触犯法律或多次拒不改正的：予以永久封禁，最高予以删除账号处置，并保留配合执法机关调查的权利。"
+          },
+          {
+            "id": "rule-6-6",
+            "title": "损失赔偿",
+            "detail": "因违规行为给社区或第三方造成损失的，违规者应承担相应赔偿责任。"
+          }
+        ]
+      },
+      {
+        "id": "chapter-7",
+        "title": "第七章 附则",
+        "items": [
+          "本规定解释权归 iGCraftLit Community 所有。",
+          "本规定自用户注册之日起生效。用户继续使用社区服务即视为同意本规定。",
+          "本规定可能根据法律要求或社区发展进行更新，更新后将在社区公告中发布，用户继续使用即视为接受更新后的规定。"
+        ]
+      }
+    ],
+    "faq": {
+      "title": "常见问题",
+      "items": [
+        {
+          "id": "faq-q1",
+          "q": "Q1: 违规后会受到什么处罚？",
+          "a": "管理员将根据违规情节，依照本规定第六章执行警告、1 天/3 天/7 天禁言、30 天封禁、永久封禁直至删除账号的量化处罚；触犯法律的，将配合执法机关调查。"
+        },
+        {
+          "id": "faq-q2",
+          "q": "Q2: 账号可以转让或买卖吗？",
+          "a": "不可以。账号归 iGCraftLit 所有，用户仅享有使用权，禁止转让、出租或售卖账号。"
+        },
+        {
+          "id": "faq-q3",
+          "q": "Q3: 对处罚结果有异议怎么办？",
+          "a": "如对处罚有异议，可通过社区通知或邮件 igcraftlit@outlook.com 联系管理员申请复核，我们会核实情况后予以答复。"
+        },
+        {
+          "id": "faq-q4",
+          "q": "Q4: 规定更新后如何生效？",
+          "a": "规定更新后将在社区公告中发布；你继续使用社区服务，即视为接受更新后的规定。"
+        }
+      ]
+    },
+    "ipDetecting": "正在检测你的 IP 地址…",
+    "ipNotice": "你的 IP 地址：{ip}。注册并同意本规定时，系统将记录该 IP 与时间，用于违规处置及配合执法机关调查。",
+    "ipDetectFailed": "暂时无法检测到 IP 地址，请确认本地后端正在运行。",
+    "registerHint": "你正在注册新账号。请完整阅读本规定，滚动到页面底部后即可同意并返回注册向导。",
+    "scrollToAccept": "请继续向下滚动，阅读完规定全文后即可同意",
+    "acceptAndReturn": "我已阅读完毕，同意并返回注册"
   }
 }

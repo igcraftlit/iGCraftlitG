@@ -9,6 +9,7 @@
 
 // 导入依赖 //
 import type { iGM_UserRole } from "./iGM_Auth";
+import type { iGM_OrgBadgeDto } from "./iGM_OrgVerify";
 
 // 类型定义 //
 /** 帖子状态：published 已发布 / hidden 被作者或管理员隐藏 */
@@ -81,6 +82,8 @@ export interface iGM_AuthorDto {
   displayName: string | null;
   avatar: string | null;
   role: iGM_UserRole;
+  /** 模块七：认证组织徽标（未认证为 null） */
+  verifiedOrg: iGM_OrgBadgeDto | null;
 }
 
 /** 用户公开资料 DTO：不含邮箱、状态等隐私字段 */
@@ -92,6 +95,8 @@ export interface iGM_PublicProfileDto {
   bio: string | null;
   website: string | null;
   role: iGM_UserRole;
+  /** 模块七：认证组织徽标（未认证为 null） */
+  verifiedOrg: iGM_OrgBadgeDto | null;
   createdAt: string;
   postCount: number;
   commentCount: number;

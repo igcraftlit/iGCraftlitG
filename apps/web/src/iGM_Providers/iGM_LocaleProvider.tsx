@@ -25,6 +25,7 @@ import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import {
   iGM_DefaultLocale,
+  iGM_DefaultTimeZone,
   iGM_IsLocale,
   iGM_LocaleCookieMaxAge,
   iGM_LocaleCookieName,
@@ -101,7 +102,11 @@ export function iGM_LocaleProvider({ children, initialLocale }: iGM_LocaleProvid
 
   return (
     <iGM_LocaleContext.Provider value={contextValue}>
-      <NextIntlClientProvider locale={locale} messages={iGM_GetMessages(locale)}>
+      <NextIntlClientProvider
+        locale={locale}
+        timeZone={iGM_DefaultTimeZone}
+        messages={iGM_GetMessages(locale)}
+      >
         {children}
       </NextIntlClientProvider>
     </iGM_LocaleContext.Provider>

@@ -34,12 +34,17 @@
     "adminContents": "內容審核",
     "adminReports": "檢舉處理",
     "adminSettings": "系統資訊",
-    "adminMails": "郵件測試"
+    "adminMails": "郵件測試",
+    "orgVerify": "組織認證",
+    "orgVerifyStatus": "申請記錄",
+    "adminOrgVerify": "認證審核",
+    "orgDetails": "組織詳情"
   },
   "topbar": {
     "menu": "選單",
     "theme": "主題",
-    "language": "語言"
+    "language": "語言",
+    "login": "登入"
   },
   "theme": {
     "light": "淺色",
@@ -70,7 +75,8 @@
       "home": "首頁",
       "community": "社群",
       "join": "加入我們",
-      "console": "進入控制台"
+      "console": "進入控制台",
+      "auth": "登入 / 註冊"
     },
     "hero": {
       "slogan": "「以方塊之名，向世界敞開。」",
@@ -256,6 +262,26 @@
     "apiHealth": {
       "title": "服務狀態",
       "description": "前端與後端服務健康檢查"
+    },
+    "orgVerify": {
+      "title": "組織認證",
+      "description": "申請加入受信任組織，通過審核後展示認證標識"
+    },
+    "orgVerifyStatus": {
+      "title": "申請記錄",
+      "description": "查看我的組織認證申請狀態與歷史"
+    },
+    "adminOrgVerify": {
+      "title": "認證審核",
+      "description": "審核組織認證申請，通過或拒絕並填寫審核意見"
+    },
+    "orgDetails": {
+      "title": "組織詳情",
+      "description": "查看受信任組織資訊與關於組織介紹"
+    },
+    "userRules": {
+      "title": "使用者管理規定",
+      "description": "iGCraftLit Community 使用者管理規定全文：全球共處、帳號管理、行為規範、智慧財產權與量化處罰"
     }
   },
   "placeholder": {
@@ -361,7 +387,9 @@
       "emailVerified": "信箱驗證成功",
       "resetMailSent": "重設郵件已發送",
       "passwordReset": "密碼已重設，請使用新密碼登入",
-      "passwordChanged": "密碼修改成功"
+      "passwordChanged": "密碼修改成功",
+      "deleteCodeSent": "註銷驗證碼已發送至你的信箱，10 分鐘內有效",
+      "accountDeleted": "帳號已註銷"
     },
     "state": {
       "checking": "正在確認登入狀態…",
@@ -379,7 +407,17 @@
     "register": {
       "title": "註冊",
       "description": "建立你的 iGCraftLit Community 帳號",
-      "hasAccount": "已經有帳號了？"
+      "hasAccount": "已經有帳號了？",
+      "agreementPrefix": "我已閱讀並同意",
+      "agreementRules": "《iGCraftLit 使用者管理規定》",
+      "agreementSuffix": "",
+      "agreementRequired": "請先閱讀並同意《iGCraftLit 使用者管理規定》",
+      "rulesModal": {
+        "title": "iGCraftLit 使用者管理規定",
+        "scrollHint": "請捲動閱讀至底部後，再確認同意",
+        "finish": "已完成閱讀，選擇遵守規定",
+        "cancel": "暫不同意"
+      }
     },
     "forgot": {
       "title": "忘記密碼",
@@ -412,7 +450,42 @@
       "emailCodeHint": "僅在不填寫目前密碼時必填",
       "sendChangeCode": "傳送驗證碼",
       "changeCodeSent": "驗證碼已傳送至 {email}，10 分鐘內有效",
-      "refreshSession": "重新整理登入狀態"
+      "refreshSession": "重新整理登入狀態",
+      "uid": "iGMUid",
+      "deleteAccount": {
+        "title": "刪除帳號",
+        "description": "永久註銷你的 iGCraftLit Community 帳號。",
+        "warning": "帳號刪除後，你的貼文、留言、收藏、積分與組織認證等全部資料將被永久清除，無法復原。",
+        "sendCode": "發送驗證碼到信箱",
+        "resend": "重新發送",
+        "codeSent": "驗證碼已發送至你的信箱，如未收到可稍後重發",
+        "codeLabel": "信箱驗證碼",
+        "codePlaceholder": "輸入 6 位驗證碼",
+        "confirmButton": "確認刪除帳號",
+        "confirming": "刪除中…",
+        "confirmPrompt": "此操作無法復原。確定要永久刪除你的帳號嗎？",
+        "cancel": "取消"
+      }
+    },
+    "wizard": {
+      "stepSubtitle1": "輸入使用者名稱",
+      "stepSubtitle2": "填寫信箱",
+      "stepSubtitle3": "設定密碼",
+      "stepSubtitle4": "閱讀並同意使用者管理規定",
+      "stepSubtitle5": "驗證你的信箱",
+      "next": "下一步",
+      "back": "上一步",
+      "agreeAndContinue": "已完成閱讀，同意並繼續",
+      "rulesFullPage": "查看完整規定頁面",
+      "codeSentTo": "我們已向 {email} 發送了驗證碼，請輸入郵件中的 6 位驗證碼",
+      "codePlaceholder": "請輸入 6 位驗證碼",
+      "verify": "驗證",
+      "backToEdit": "返回修改",
+      "welcomeBack": "歡迎回來，{name}",
+      "stepLabel": "第 {current} 步，共 {total} 步",
+      "step4Intro": "註冊前請先閱讀《iGCraftLit 使用者管理規定》。請點擊下方按鈕前往獨立頁面查看全文，閱讀並同意後返回本精靈。",
+      "viewRules": "閱讀《使用者管理規定》",
+      "acceptedInfo": "已閱讀並同意規定 · IP：{ip} · {time}"
     }
   },
   "community": {
@@ -535,7 +608,8 @@
       "emptyPostsTitle": "還沒有貼文",
       "emptyPostsDesc": "TA 還沒有公開發布的貼文",
       "emptyCommentsTitle": "還沒有留言",
-      "emptyCommentsDesc": "TA 還沒有公開發表的留言"
+      "emptyCommentsDesc": "TA 還沒有公開發表的留言",
+      "uidLabel": "iGMUid"
     },
     "myPosts": {
       "title": "我的貼文",
@@ -940,13 +1014,16 @@
       "suspended": "已封禁"
     },
     "users": {
-      "searchPlaceholder": "搜尋使用者名稱或郵箱",
+      "searchPlaceholder": "搜尋使用者名稱、郵箱或 iGMUid",
       "search": "搜尋",
       "empty": "沒有符合的使用者",
       "meta": "積分 {points} · 貼文 {posts} · 留言 {comments} · 註冊於 {date}",
       "roleLabel": "調整角色",
       "ban": "封禁",
-      "unban": "解封"
+      "unban": "解封",
+      "uid": "iGMUid",
+      "delete": "刪除",
+      "deleteConfirm": "確定要刪除使用者 {name} 嗎？該使用者的全部資料將被永久清除且無法復原。"
     },
     "contents": {
       "typePost": "貼文",
@@ -996,7 +1073,8 @@
       "roleUpdated": "角色已更新",
       "contentReviewed": "內容已處理",
       "reportHandled": "檢舉已處理",
-      "mailTestSent": "測試郵件已傳送"
+      "mailTestSent": "測試郵件已傳送",
+      "userDeleted": "使用者已刪除"
     },
     "errors": {
       "loadFailed": "管理資料載入失敗",
@@ -1008,7 +1086,237 @@
       "reportNotFound": "檢舉不存在",
       "reportAlreadyHandled": "該檢舉已被處理",
       "invalidEmail": "郵箱地址無效",
-      "mailSendFailed": "郵件傳送失敗，請檢查 SMTP 設定"
+      "mailSendFailed": "郵件傳送失敗，請檢查 SMTP 設定",
+      "cannotDeleteSelf": "不能刪除你自己的帳號"
     }
+  },
+  "orgVerify": {
+    "apply": {
+      "chooseOrg": "選擇受信任組織",
+      "reason": "申請理由",
+      "reasonPlaceholder": "請說明你與該組織的關聯，以及申請認證的原因…",
+      "reasonHint": "必填，最多 1000 字",
+      "proof": "證明材料（可選）",
+      "proofHint": "可上傳一份證明材料（圖片或文件，最大 20MB）",
+      "proofUpload": "上傳附件",
+      "proofUploading": "上傳中…",
+      "proofUploaded": "已上傳附件",
+      "proofRemove": "移除附件",
+      "submit": "提交申請",
+      "submitting": "提交中…",
+      "pendingTip": "你已有一條待審核的申請，可在申請記錄頁查看，或取消後重新申請。",
+      "viewStatus": "查看申請記錄"
+    },
+    "status": {
+      "pending": "待審核",
+      "approved": "已通過",
+      "rejected": "已拒絕",
+      "cancelled": "已取消",
+      "left": "已退出"
+    },
+    "list": {
+      "empty": "暫無申請記錄",
+      "cancel": "取消申請",
+      "reason": "申請理由",
+      "proof": "證明材料",
+      "proofView": "查看附件",
+      "reviewComment": "審核意見",
+      "reviewer": "審核人",
+      "submittedAt": "提交於 {time}",
+      "updatedAt": "更新於 {time}",
+      "applyNow": "立即申請組織認證"
+    },
+    "admin": {
+      "filterPending": "待審核",
+      "filterApproved": "已通過",
+      "filterRejected": "已拒絕",
+      "filterCancelled": "已取消",
+      "filterAll": "全部",
+      "empty": "沒有匹配的申請",
+      "applicant": "申請人",
+      "approve": "通過",
+      "reject": "拒絕",
+      "commentPlaceholder": "審核意見（可選，最多 500 字）",
+      "selfTip": "不能審核自己的申請",
+      "filterOrg": "按組織篩選",
+      "filterOrgAll": "全部組織"
+    },
+    "messages": {
+      "submitted": "申請已提交，請等待審核",
+      "cancelled": "申請已取消",
+      "approved": "已通過該申請",
+      "rejected": "已拒絕該申請",
+      "left": "已退出組織，認證標識已移除",
+      "aboutUpdated": "關於組織內容已更新"
+    },
+    "errors": {
+      "badRequest": "請求參數不正確",
+      "reasonTooLong": "申請理由不能超過 1000 字",
+      "proofTooLong": "證明材料資訊過長",
+      "commentTooLong": "審核意見不能超過 500 字",
+      "orgNotFound": "組織不存在或未開放認證",
+      "pendingExists": "你已有一條待審核的申請",
+      "notFound": "申請不存在",
+      "notPending": "該申請已不在待審核狀態",
+      "cannotReviewOwn": "不能審核自己的申請",
+      "loadFailed": "載入失敗，請稍後重試",
+      "alreadyVerified": "你已持有組織認證，需先退出後才能重新申請",
+      "notOrgMember": "你當前不屬於任何受信任組織",
+      "forbidden": "你沒有權限執行此操作",
+      "aboutTooLong": "關於組織內容不能超過 5000 字",
+      "ownerCannotLeave": "組織擁有者不能退出自己的組織"
+    },
+    "badge": "已認證：{name}",
+    "details": {
+      "title": "我的組織認證",
+      "ownerTag": "組織負責人",
+      "about": "關於組織",
+      "aboutEmpty": "該組織暫未填寫介紹內容。",
+      "editAbout": "編輯關於組織",
+      "aboutPlaceholder": "填寫組織簡介、願景、聯絡方式、官網連結等（最多 5000 字）",
+      "save": "儲存",
+      "saving": "儲存中…",
+      "cancel": "取消",
+      "leave": "申請退出",
+      "leaveConfirm": "確定要退出該組織嗎？退出後認證標識將被移除，你可以隨時重新申請。",
+      "leaveReason": "退出理由（可選）",
+      "leaveReasonPlaceholder": "可簡單說明退出原因…",
+      "viewDetails": "查看組織詳情頁",
+      "ownerCannotLeave": "你是該組織的擁有者，無法退出組織。"
+    },
+    "ownerBadge": "擁有者",
+    "badgeOwner": "{name} 組織擁有者"
+  },
+  "userRules": {
+    "title": "iGCraftLit 使用者管理規定",
+    "tocTitle": "ON THIS PAGE",
+    "chapters": [
+      {
+        "id": "chapter-1",
+        "title": "第一章 總則",
+        "paragraphs": [
+          "iGCraftLit Community 是面向所有探星者的開放社群，我們因夢想而聚，因創造而強，在探索中前行，在創新中突破，以求真之心共建社群。",
+          "本社群立足國際背景，面向全球使用者，致力於打造一個跨越國界、多元共存、平等交流的全球性社群。為維護社群秩序，保障全球使用者權益，特制定本規定。"
+        ]
+      },
+      {
+        "id": "chapter-2",
+        "title": "第二章 全球共處原則",
+        "items": [
+          "本社群倡導全球共處、多元包容、彼此尊重。來自不同國家、地區、民族、文化背景的探星者，均可在本社群平等交流。",
+          "使用者應尊重不同文化、宗教信仰與風俗習慣，不得因國籍、種族、性別、宗教、地域等差異歧視、攻擊或侮辱他人。",
+          "本社群不隸屬於任何國家或政治實體，使用者須自行遵守所在地法律及國際通行準則。",
+          "在跨越文化差異時，應以理性、克制、友善為交流底線，共同維護全球社群的良好氛圍。"
+        ]
+      },
+      {
+        "id": "chapter-3",
+        "title": "第三章 帳號管理",
+        "items": [
+          "使用者註冊須提供真實可用的信箱。",
+          "帳號歸 iGCraftLit 所有，使用者享有使用權。禁止轉讓、出租、販售帳號。",
+          "使用者須妥善保管密碼，因密碼外洩造成的損失由使用者自行承擔。",
+          "註冊成功後，系統自動分配 11 位 iGMUid，作為使用者在社群中的唯一認證值。"
+        ]
+      },
+      {
+        "id": "chapter-4",
+        "title": "第四章 社群行為規範與法律底線",
+        "items": [
+          "使用者須遵守所在地法律法規以及國際公認的法律準則，不得利用本社群從事任何違法活動。",
+          "嚴禁發布、傳播、儲存以下內容，包括但不限於：色情、猥褻、低俗、性暗示內容；暴力、血腥、恐怖、殘忍、自殺自殘內容；煽動仇恨、歧視、民族對立、宗教衝突內容；虛假資訊、謠言、詐騙、傳銷、非法廣告；侵犯他人隱私、肖像權、名譽權、智慧財產權的行為；病毒、木馬、外掛、惡意程式碼、網路攻擊工具；涉及未成年人保護的違規內容。",
+          "禁止洗版、惡意灌水、惡意檢舉、擾亂社群秩序等行為。",
+          "尊重他人，理性討論，不得人身攻擊、誹謗、侮辱、威脅他人。",
+          "不得以 iGCraftLit 名義從事任何未經授權的商業活動或政治活動。"
+        ]
+      },
+      {
+        "id": "chapter-5",
+        "title": "第五章 智慧財產權",
+        "items": [
+          "使用者在社群發布的內容，其著作權歸使用者所有。",
+          "使用者授權 iGCraftLit 在社群範圍內展示、傳播、儲存相關內容。",
+          "禁止未經授權轉載、抄襲他人原創內容，違者將承擔相應法律責任。",
+          "使用者應確保自己發布的內容不侵犯任何第三方的智慧財產權，如產生糾紛，由發布者自行承擔全部責任。"
+        ]
+      },
+      {
+        "id": "chapter-6",
+        "title": "第六章 違規處理與量化處罰",
+        "intro": "若使用者在社群內的違規行為被管理員發現，將依照中華人民共和國相關法律法規及本規定進行處置，並對違規帳號執行相應的量化處罰：",
+        "penalties": [
+          {
+            "id": "rule-6-1",
+            "title": "首次輕微違規",
+            "detail": "予以警告，或處以 1 天禁言處罰。"
+          },
+          {
+            "id": "rule-6-2",
+            "title": "一般違規行為",
+            "detail": "處以 3 天禁言處罰。"
+          },
+          {
+            "id": "rule-6-3",
+            "title": "較重違規行為",
+            "detail": "處以 7 天禁言處罰。"
+          },
+          {
+            "id": "rule-6-4",
+            "title": "嚴重違規行為",
+            "detail": "處以 30 天封鎖處罰。"
+          },
+          {
+            "id": "rule-6-5",
+            "title": "情節特別嚴重",
+            "detail": "情節特別嚴重、觸犯法律或多次拒不改正的：予以永久封鎖，最高予以刪除帳號處置，並保留配合執法機關調查的權利。"
+          },
+          {
+            "id": "rule-6-6",
+            "title": "損失賠償",
+            "detail": "因違規行為給社群或第三方造成損失的，違規者應承擔相應賠償責任。"
+          }
+        ]
+      },
+      {
+        "id": "chapter-7",
+        "title": "第七章 附則",
+        "items": [
+          "本規定解釋權歸 iGCraftLit Community 所有。",
+          "本規定自使用者註冊之日起生效。使用者繼續使用社群服務即視為同意本規定。",
+          "本規定可能根據法律要求或社群發展進行更新，更新後將在社群公告中發布，使用者繼續使用即視為接受更新後的規定。"
+        ]
+      }
+    ],
+    "faq": {
+      "title": "常見問題",
+      "items": [
+        {
+          "id": "faq-q1",
+          "q": "Q1: 違規後會受到什麼處罰？",
+          "a": "管理員將依違規情節，按照本規定第六章執行警告、1 天／3 天／7 天禁言、30 天封鎖、永久封鎖直至刪除帳號的量化處罰；觸犯法律的，將配合執法機關調查。"
+        },
+        {
+          "id": "faq-q2",
+          "q": "Q2: 帳號可以轉讓或買賣嗎？",
+          "a": "不可以。帳號歸 iGCraftLit 所有，使用者僅享有使用權，禁止轉讓、出租或販售帳號。"
+        },
+        {
+          "id": "faq-q3",
+          "q": "Q3: 對處罰結果有異議怎麼辦？",
+          "a": "如對處罰有異議，可透過社群通知或信件 igcraftlit@outlook.com 聯絡管理員申請複核，我們會核實情況後予以答覆。"
+        },
+        {
+          "id": "faq-q4",
+          "q": "Q4: 規定更新後如何生效？",
+          "a": "規定更新後將在社群公告中發布；你繼續使用社群服務，即視為接受更新後的規定。"
+        }
+      ]
+    },
+    "ipDetecting": "正在偵測你的 IP 位址…",
+    "ipNotice": "你的 IP 位址：{ip}。註冊並同意本規定時，系統將記錄該 IP 與時間，用於違規處置及配合執法機關調查。",
+    "ipDetectFailed": "暫時無法偵測到 IP 位址，請確認本地後端正在運行。",
+    "registerHint": "你正在註冊新帳號。請完整閱讀本規定，捲動到頁面底部後即可同意並返回註冊精靈。",
+    "scrollToAccept": "請繼續向下捲動，閱讀完規定全文後即可同意",
+    "acceptAndReturn": "我已閱讀完畢，同意並返回註冊"
   }
 }

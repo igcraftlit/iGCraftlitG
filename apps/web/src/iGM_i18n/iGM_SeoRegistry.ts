@@ -35,6 +35,8 @@ export const iGM_SeoPublicPaths = [
   "/G_Badges",
   "/G_Checkin",
   "/G_Api_Health",
+  // 模块八：用户管理规定（公开、可收录）
+  "/G_UserRules",
 ] as const;
 
 /** 爬虫禁止收录的路径前缀（robots.txt 通配规则） */
@@ -44,11 +46,17 @@ export const iGM_SeoDisallowPatterns = [
   "/*/G_AdminUsers",
   "/*/G_AdminContents",
   "/*/G_AdminReports",
+  // 模块七：认证审核管理页
+  "/*/G_AdminOrgVerify",
   "/*/G_AdminSettings",
   "/*/G_AdminMails",
   "/*/G_Auth",
   "/*/G_Settings",
   "/*/G_Notification",
+  // 模块七：组织认证申请、记录与详情（详情带查询参数，保守不收录）
+  "/*/G_OrgVerify",
+  "/*/G_OrgVerifyStatus",
+  "/*/G_OrgDetails",
   "/G_Admin",
   "/G_Auth",
 ] as const;

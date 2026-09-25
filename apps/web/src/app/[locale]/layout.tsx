@@ -6,7 +6,7 @@
  * 作用：语言路由段布局——构建期为五种语言各自生成静态页面，注入初始语言并挂载控制台外壳
  * 内容：generateStaticParams 五语言参数、generateMetadata 每语言元数据
  *       （标题/描述/Open Graph/hreflang 互链）、JSON-LD 结构化数据、
- *       Provider(key=locale) + AppShell + 转场幕布
+ *       Provider(key=locale) + AppShell；页面切换动画由 template.tsx 驱动
  * 说明：URL 前缀是语言唯一真源；本布局内组件随语言切换整体重挂载，
  *       保证静态导出产物语言正确（模块五国际化与 SEO 完善核心）
  */
@@ -16,7 +16,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { iGM_AppShell as IGM_AppShell } from "../../iGM_AppShell/iGM_AppShell";
-import { iGM_NavVeil as IGM_NavVeil } from "../../iGM_Components/iGM_NavVeil/iGM_NavVeil";
 import { iGM_Providers as IGM_Providers } from "../../iGM_Providers/iGM_Providers";
 import {
   iGM_GetMessages,
@@ -108,7 +107,6 @@ export default async function iGM_LocaleLayout({
   return (
     <IGM_Providers key={locale} initialLocale={locale}>
       <IGM_AppShell>{children}</IGM_AppShell>
-      <IGM_NavVeil />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

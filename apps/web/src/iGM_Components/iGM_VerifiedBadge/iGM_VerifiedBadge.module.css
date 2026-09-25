@@ -1,0 +1,70 @@
+/* 文件路径：apps/web/src/iGM_Components/iGM_VerifiedBadge/iGM_VerifiedBadge.module.css
+   所属层：前端 / 通用组件样式（CSS Modules）
+   路由：G_Community、G_Post、G_User、G_AdminUsers、G_AdminOrgVerify
+   模块：iGM_VerifiedBadge.module.css
+   作用：模块七组织认证徽标样式（普通蓝标 + 模块七第三轮所有者金标）
+   内容：胶囊徽标、认证/皇冠图标、组织名称、所有者标签（极简风格） */
+
+/* ===== 认证徽标（普通成员：蓝色） ===== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
+  vertical-align: middle;
+  background: var(--igm-accent-soft);
+  color: var(--igm-accent);
+  white-space: nowrap;
+}
+
+.icon {
+  flex-shrink: 0;
+}
+
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+/* ===== 所有者金标（组织负责人：金色） ===== */
+.badgeOwner {
+  gap: 4px;
+  background: rgba(184, 134, 11, 0.12);
+  color: #a06d08;
+  border: 1px solid rgba(184, 134, 11, 0.35);
+  padding: 0 7px;
+  font-weight: 600;
+}
+
+.badgeOwner .icon {
+  color: #c99313;
+}
+
+/* 组织名与“所有者”标签之间的分隔 */
+.ownerTag {
+  display: inline-flex;
+  align-items: center;
+  padding-left: 5px;
+  border-left: 1px solid rgba(184, 134, 11, 0.3);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+html[data-theme="dark"] .badgeOwner {
+  background: rgba(230, 185, 77, 0.14);
+  color: #e6b94d;
+  border-color: rgba(230, 185, 77, 0.38);
+}
+
+html[data-theme="dark"] .badgeOwner .icon {
+  color: #e6b94d;
+}
+
+html[data-theme="dark"] .ownerTag {
+  border-left-color: rgba(230, 185, 77, 0.35);
+}

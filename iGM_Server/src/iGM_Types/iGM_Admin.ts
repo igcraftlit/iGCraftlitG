@@ -9,6 +9,7 @@
 
 // 导入依赖 //
 import type { iGM_UserRole, iGM_UserStatus } from "./iGM_Auth";
+import type { iGM_OrgBadgeDto } from "./iGM_OrgVerify";
 
 // 类型定义 //
 /** iGM_AdminLogs 表数据行 */
@@ -47,6 +48,10 @@ export interface iGM_AdminUserDto {
   emailVerified: boolean;
   displayName: string | null;
   avatar: string | null;
+  /** 模块七：认证组织徽标（未认证为 null） */
+  verifiedOrg: iGM_OrgBadgeDto | null;
+  /** 模块七增强：11 位全局唯一 UID */
+  uid: string;
   createdAt: string;
   totalPoints: number;
   postCount: number;

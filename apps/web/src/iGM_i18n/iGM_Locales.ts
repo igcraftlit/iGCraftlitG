@@ -24,6 +24,12 @@ export const iGM_LocaleCookieName = "iGM_LOCALE";
 /** Cookie 有效期（一年） */
 export const iGM_LocaleCookieMaxAge = 60 * 60 * 24 * 365;
 
+/**
+ * 全局默认时区（IANA）：纯静态导出需要在各语言/各环境间保持日期渲染一致，
+ * 避免 next-intl 因环境时区差异抛出 ENVIRONMENT_FALLBACK
+ */
+export const iGM_DefaultTimeZone = "Asia/Shanghai";
+
 /** 判断未知字符串是否为受支持的语言 */
 export function iGM_IsLocale(value: string | null | undefined): value is iGM_Locale {
   return iGM_Locales.includes(value as iGM_Locale);

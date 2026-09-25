@@ -162,6 +162,57 @@
   cursor: not-allowed;
 }
 
+/* 危险操作按钮（删除账号等不可逆操作） */
+.dangerButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: var(--igm-radius);
+  background: var(--igm-danger);
+  color: #fff;
+  border: 1px solid var(--igm-danger);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.15s ease;
+}
+
+.dangerButton:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.dangerButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 危险操作次级按钮：仅描边警示色 */
+.dangerGhostButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: var(--igm-radius);
+  background: transparent;
+  color: var(--igm-danger);
+  border: 1px solid var(--igm-danger);
+  font-size: 13.5px;
+  transition: background-color 0.15s ease;
+}
+
+.dangerGhostButton:hover:not(:disabled) {
+  background: var(--igm-danger-soft);
+}
+
+.dangerGhostButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* 加载小圈：纯 CSS 旋转无图片依赖 */
 .spinner {
   width: 15px;
@@ -236,11 +287,11 @@
   justify-content: center;
 }
 
-/* 验证码输入：数字居中、大字距 */
+/* 验证码输入：数字居中、大字距、等宽数字 */
 .codeInput {
   text-align: center;
   letter-spacing: 12px;
-  font-size: 20px;
+  font-size: 22px;
   font-variant-numeric: tabular-nums;
   padding-left: 12px;
 }

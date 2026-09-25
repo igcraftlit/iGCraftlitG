@@ -5,7 +5,8 @@
  * 模块：iGM_AppShell
  * 作用：控制台页面布局骨架，组合侧边导航栏、顶部栏、内容区与页脚
  * 响应式：桌面端侧边栏常驻，平板端图标栏，移动端抽屉加遮罩关闭
- * 内容：根路径 / 为独立门户落地页（自带导航页脚），豁免控制台外壳；
+ * 内容：门户落地页（/、/{locale}）与全屏登录/注册页
+ *       （/G_Auth/login、/G_Auth/register）豁免控制台外壳；
  *       其余路由渲染抽屉开关状态、遮罩层、主内容列布局
  */
 
@@ -15,7 +16,7 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { iGM_IsLandingPath } from "../iGM_i18n/iGM_LocalePath";
+import { iGM_IsShellExemptPath } from "../iGM_i18n/iGM_LocalePath";
 import { iGM_Sidebar as IGM_Sidebar } from "./iGM_Sidebar/iGM_Sidebar";
 import { iGM_TopBar as IGM_TopBar } from "./iGM_TopBar/iGM_TopBar";
 import { iGM_Footer as IGM_Footer } from "../iGM_Components/iGM_Footer/iGM_Footer";
@@ -64,12 +65,15 @@ const IGM_ConsoleShell = function iGM_ConsoleShell({
   );
 };
 
-/** 应用骨架：门户落地页（/ 与 /{locale}）豁免控制台外壳，其余路由挂载控制台骨架 */
+/**
+ * 应用骨架：门户落地页（/ 与 /{locale}）及全屏登录/注册页
+ * （/G_Auth/login、/G_Auth/register）豁免控制台外壳，其余路由挂载控制台骨架
+ */
 export function iGM_AppShell({ children }: iGM_AppShellProps) {
   const pathname = usePathname();
 
-  // 落地页是控制台之前的门户页，自带导航与页脚，不挂载控制台骨架
-  if (iGM_IsLandingPath(pathname)) {
+  // 落地页与全屏认证页自带布局，不挂载控制台骨架（无侧边导航/顶栏/页脚）
+  if (iGM_IsShellExemptPath(pathname)) {
     return <>{children}</>;
   }
 

@@ -19,7 +19,11 @@
 export type iGM_MailLocale = "zh-CN" | "zh-TW" | "en" | "ja" | "ru";
 
 /** 验证码邮件场景 */
-export type iGM_CodeMailScenario = "register" | "passwordChange";
+export type iGM_CodeMailScenario =
+  | "register"
+  | "passwordChange"
+  // 模块七第三轮：自助注销账号
+  | "accountDelete";
 
 /** 单语言验证码邮件模板 */
 export interface iGM_CodeMailTemplate {
@@ -35,6 +39,8 @@ export interface iGM_CodeMailTemplate {
   scenarioRegister: string;
   /** 修改密码场景行 */
   scenarioPasswordChange: string;
+  /** 注销账号场景行（模块七第三轮） */
+  scenarioAccountDelete: string;
   /** 纯文本验证码行（您的验证码是：{code}） */
   codeLabel: string;
   /** HTML 验证码方框内上方小字 */
@@ -68,6 +74,8 @@ const iGM_CodeMailTemplates: Record<iGM_MailLocale, iGM_CodeMailTemplate> = {
       "在这里，每一位探星者都是社区的建造者。我们相信，每一次探索都在拓展认知的边界，每一次创新都在点亮未知的星图。愿你在 iGCraftLit 找到属于自己的轨道，与我们一起，向着更远的星辰出发。",
     scenarioRegister: "您正在验证注册邮箱，请使用以下验证码完成确认：",
     scenarioPasswordChange: "您正在修改账户密码，请使用以下验证码确认身份：",
+    scenarioAccountDelete:
+      "您正在申请永久注销账户。验证通过后，您的账号及其帖子、评论等全部数据将被删除且无法恢复，请使用以下验证码确认本人操作：",
     codeLabel: "您的验证码是：{code}",
     codeBoxLabel: "您的验证码",
     validity:
@@ -85,6 +93,8 @@ const iGM_CodeMailTemplates: Record<iGM_MailLocale, iGM_CodeMailTemplate> = {
       "在這裡，每一位探星者都是社區的建造者。我們相信，每一次探索都在拓展認知的邊界，每一次創新都在點亮未知的星圖。願你在 iGCraftLit 找到屬於自己的軌道，與我們一起，向著更遠的星辰出發。",
     scenarioRegister: "您正在驗證註冊信箱，請使用以下驗證碼完成確認：",
     scenarioPasswordChange: "您正在修改帳戶密碼，請使用以下驗證碼確認身分：",
+    scenarioAccountDelete:
+      "您正在申請永久註銷帳戶。驗證通過後，您的帳號及其貼文、留言等全部資料將被刪除且無法復原，請使用以下驗證碼確認本人操作：",
     codeLabel: "您的驗證碼是：{code}",
     codeBoxLabel: "您的驗證碼",
     validity:
@@ -102,6 +112,8 @@ const iGM_CodeMailTemplates: Record<iGM_MailLocale, iGM_CodeMailTemplate> = {
       "Here, every Starchaser is a builder of the community. We believe every exploration expands the boundaries of knowledge, and every innovation lights up the uncharted star map. May you find your own orbit at iGCraftLit and set out with us toward more distant stars.",
     scenarioRegister: "You are verifying your registration email. Use the code below to confirm:",
     scenarioPasswordChange: "You are changing your account password. Use the code below to verify your identity:",
+    scenarioAccountDelete:
+      "You are requesting permanent account deletion. Once confirmed, your account and all related data such as posts and comments will be deleted and cannot be restored. Use the code below to confirm it is you:",
     codeLabel: "Your verification code is: {code}",
     codeBoxLabel: "Your verification code",
     validity:
@@ -119,6 +131,8 @@ const iGM_CodeMailTemplates: Record<iGM_MailLocale, iGM_CodeMailTemplate> = {
       "ここでは、すべてのスターチェイサーがコミュニティの建造者です。すべての探求が認識の境界を広げ、すべてのイノベーションが未知の星図を照らすと信じています。iGCraftLit であなた自身の軌道を見つけ、私たちとともに、より遠い星々へ向かって出発してください。",
     scenarioRegister: "登録メールアドレスの認証を行っています。以下のコードで確認を完了してください：",
     scenarioPasswordChange: "アカウントのパスワードを変更しています。以下のコードで本人確認を行ってください：",
+    scenarioAccountDelete:
+      "アカウントの永久削除を申請しています。認証が完了すると、アカウントと投稿・コメントなどのすべてのデータが削除され、復元できません。ご本人の操作であることを確認するため、以下のコードを入力してください：",
     codeLabel: "認証コード：{code}",
     codeBoxLabel: "認証コード",
     validity:
@@ -136,6 +150,8 @@ const iGM_CodeMailTemplates: Record<iGM_MailLocale, iGM_CodeMailTemplate> = {
       "Здесь каждый Звёздный странник — созидатель сообщества. Мы верим, что каждое исследование расширяет границы познания, а каждая инновация зажигает новые созвездия на карте неизведанного. Пусть в iGCraftLit вы найдёте свою орбиту и вместе с нами отправитесь к более далёким звёздам.",
     scenarioRegister: "Вы подтверждаете почту при регистрации. Используйте код ниже:",
     scenarioPasswordChange: "Вы меняете пароль своей учётной записи. Используйте код ниже для подтверждения личности:",
+    scenarioAccountDelete:
+      "Вы запрашиваете окончательное удаление учётной записи. После подтверждения ваш аккаунт и все связанные данные, включая записи и комментарии, будут удалены без возможности восстановления. Используйте код ниже, чтобы подтвердить, что это вы:",
     codeLabel: "Ваш код подтверждения: {code}",
     codeBoxLabel: "Ваш код подтверждения",
     validity:
@@ -173,7 +189,8 @@ function iGM_CodeBoxHtml(code: string, boxLabel: string): string {
     `font-size:10px;font-weight:600;letter-spacing:2px;color:#8ea2ff;` +
     `text-transform:uppercase;margin:0 0 18px;">iGCraftLit Community</div>` +
     `<div style="font-size:12px;color:#aab4d0;text-align:center;margin:0 0 10px;">${boxLabel}</div>` +
-    `<div style="font-family:'Orbitron','Michroma','Segoe UI',Arial,sans-serif;` +
+    // 验证码数字：楷体（KaiTi/STKaiti/Kaiti SC 跨平台回退，衬线兜底）
+    `<div style="font-family:'KaiTi','STKaiti','Kaiti SC','KaiTi_GB2312','楷体',serif;` +
     `font-size:36px;line-height:1.2;font-weight:700;color:#6d8eff;` +
     `letter-spacing:8px;text-align:center;">${code}</div>` +
     `</div>`
@@ -192,6 +209,16 @@ function iGM_MailFooterHtml(t: iGM_CodeMailTemplate): string {
   );
 }
 
+/** 场景 → 模板场景行映射 */
+function iGM_ResolveScenarioLine(
+  t: iGM_CodeMailTemplate,
+  scenario: iGM_CodeMailScenario,
+): string {
+  if (scenario === "register") return t.scenarioRegister;
+  if (scenario === "accountDelete") return t.scenarioAccountDelete;
+  return t.scenarioPasswordChange;
+}
+
 /** 构建验证码邮件 HTML（科幻终端风格） */
 export function iGM_CodeMailHtml(
   t: iGM_CodeMailTemplate,
@@ -199,8 +226,7 @@ export function iGM_CodeMailHtml(
   values: iGM_CodeMailValues,
 ): string {
   const greet = iGM_FillPlaceholders(t.greet, values);
-  const scenarioLine =
-    scenario === "register" ? t.scenarioRegister : t.scenarioPasswordChange;
+  const scenarioLine = iGM_ResolveScenarioLine(t, scenario);
   const validity = iGM_FillPlaceholders(t.validity, values);
 
   return `<!doctype html>
@@ -234,8 +260,7 @@ export function iGM_CodeMailText(
   values: iGM_CodeMailValues,
 ): string {
   const greet = iGM_FillPlaceholders(t.greet, values);
-  const scenarioLine =
-    scenario === "register" ? t.scenarioRegister : t.scenarioPasswordChange;
+  const scenarioLine = iGM_ResolveScenarioLine(t, scenario);
   const validity = iGM_FillPlaceholders(t.validity, values);
   const codeLine = iGM_FillPlaceholders(t.codeLabel, values);
 

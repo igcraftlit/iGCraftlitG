@@ -13,6 +13,7 @@ import { iGM_Config } from "../iGM_Config/iGM_Config";
 import {
   iGM_CreateUser,
   iGM_FindUserByEmail,
+  iGM_GenerateUniqueUid,
 } from "../iGM_Repositories/iGM_UserRepository";
 import { iGM_HashPassword, iGM_RandomUuid } from "../iGM_Services/iGM_SecurityService";
 
@@ -52,6 +53,7 @@ async function iGM_SeedAuthUsers(): Promise<void> {
     }
     const user = iGM_CreateUser({
       id: iGM_RandomUuid(),
+      uid: iGM_GenerateUniqueUid(),
       username: seed.username,
       email: seed.email,
       passwordHash: await iGM_HashPassword(seed.password),

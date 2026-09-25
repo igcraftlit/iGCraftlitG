@@ -19,7 +19,9 @@ import { iGM_ContentError } from "./iGM_Services/iGM_ContentService";
 import { iGM_StorageError, iGM_EnsureUploadRoot } from "./iGM_Services/iGM_StorageService";
 import { iGM_PointsError } from "./iGM_Services/iGM_PointsService";
 import { iGM_AdminError } from "./iGM_Services/iGM_AdminService";
+import { iGM_OrgVerifyError } from "./iGM_Services/iGM_OrgVerifyService";
 import { G_Health } from "./iGM_Routes/G_Health";
+import { G_Api } from "./iGM_Routes/G_Api";
 import { G_Auth } from "./iGM_Routes/G_Auth";
 import { G_Community } from "./iGM_Routes/G_Community";
 import { G_Post } from "./iGM_Routes/G_Post";
@@ -30,6 +32,7 @@ import { G_Resource } from "./iGM_Routes/G_Resource";
 import { G_Points } from "./iGM_Routes/G_Points";
 import { G_Admin } from "./iGM_Routes/G_Admin";
 import { G_Seo } from "./iGM_Routes/G_Seo";
+import { G_OrgVerify } from "./iGM_Routes/G_OrgVerify";
 
 // 类型定义 //
 // （本入口无额外类型，统一响应类型见 iGM_Types/iGM_Response.ts）
@@ -76,6 +79,11 @@ const iGM_Server = new Elysia()
       set.status = error.status;
       return iGM_Fail(error.status, error.message);
     }
+    // 模块七组织认证业务错误：重复申请/越权审核等
+    if (error instanceof iGM_OrgVerifyError) {
+      set.status = error.status;
+      return iGM_Fail(error.status, error.message);
+    }
     // 请求体解析失败等客户端错误（沿用模块二通用文案键）
     if (code === "PARSE" || code === "VALIDATION") {
       set.status = 400;
@@ -87,6 +95,8 @@ const iGM_Server = new Elysia()
   })
   // 健康检查
   .use(G_Health)
+  // 模块八：公共客户端信息（IP 检测，纯自研解析）
+  .use(G_Api)
   // 模块二：用户认证与账户体系
   .use(G_Auth)
   // 模块三：社区帖子评论系统与用户个人中心
@@ -101,6 +111,8 @@ const iGM_Server = new Elysia()
   .use(G_Points)
   .use(G_Admin)
   .use(G_Seo)
+  // 模块七：组织认证
+  .use(G_OrgVerify)
   // 根路径占位
   .get("/", () => ({
     success: true,

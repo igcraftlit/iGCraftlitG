@@ -5,7 +5,8 @@
  * 模块：iGM_AuthService
  * 作用：用户认证与账户体系的核心业务逻辑
  * 内容：注册、登录、登出、会话解析、邮箱验证码签发与校验、
- *       密码重置令牌签发与消费、修改密码、输入校验
+ *       密码重置令牌签发与消费、修改密码、输入校验、
+ *       模块七第三轮：自助注销账号（邮箱验证码二次确认）
  * 安全：bcrypt 密码哈希、随机一次性令牌、时效控制、登录限流、
  *       重置密码后使全部旧会话失效
  */
@@ -14,9 +15,11 @@
 import { iGM_Config } from "../iGM_Config/iGM_Config";
 import {
   iGM_CreateUser,
+  iGM_DeleteUser,
   iGM_FindUserByEmail,
   iGM_FindUserById,
   iGM_FindUserByUsername,
+  iGM_GenerateUniqueUid,
   iGM_MarkEmailVerified,
   iGM_UpdatePassword,
 } from "../iGM_Repositories/iGM_UserRepository";
@@ -46,6 +49,7 @@ import {
   iGM_VerifyPassword,
 } from "./iGM_SecurityService";
 import {
+  iGM_SendAccountDeleteMail,
   iGM_SendPasswordChangeMail,
   iGM_SendResetPasswordMail,
   iGM_SendVerificationMail,
@@ -56,6 +60,7 @@ import {
   type iGM_UserDto,
   type iGM_UserRow,
 } from "../iGM_Types/iGM_Auth";
+import { iGM_FindOwnerOrgByEmail } from "../iGM_Types/iGM_OrgVerify";
 
 // 类型定义 //
 /** 业务错误：message 为前端 i18n 文案键，status 为 HTTP 状态码 */
@@ -192,12 +197,20 @@ export async function iGM_Register(
 
   const now = new Date().toISOString();
   const passwordHash = await iGM_HashPassword(input.password);
+  // 模块七：负责人邮箱账号注册即自动获得对应组织认证（无需申请）；
+  // 模块七第三轮起：负责人不再授予全局 admin，统一为普通用户角色，
+  // 仅保留对所属组织认证审核内容的管理能力（按 iGM_OwnerEmail 判定）。
+  const ownerOrg = iGM_FindOwnerOrgByEmail(email);
   const user = iGM_CreateUser({
     id: iGM_RandomUuid(),
+    uid: iGM_GenerateUniqueUid(),
     username,
     email,
     passwordHash,
     role: "user",
+    verifiedOrgId: ownerOrg ? ownerOrg.orgId : null,
+    // 模块八：注册前已在独立规定页阅读并同意，记录同意时的客户端 IP 与时间
+    rulesAcceptedIp: context.ip,
     now,
   });
 
@@ -494,6 +507,86 @@ export async function iGM_ChangePassword(
   iGM_DeleteSessionsByUser(user.iGM_Id, currentSessionIdHash ?? undefined);
 }
 
+/**
+ * 模块七第三轮：签发注销账号邮箱验证码。
+ * purpose=account_delete，与注册/改密验证码隔离；旧码签发新码时自动作废。
+ */
+async function iGM_IssueAccountDeleteCode(
+  user: iGM_UserRow,
+  locale: string,
+): Promise<void> {
+  const now = Date.now();
+  const code = iGM_GenerateVerifyCode();
+  iGM_RevokeActiveTokens(
+    user.iGM_Id,
+    "account_delete",
+    new Date(now).toISOString(),
+  );
+  iGM_CreateToken({
+    id: iGM_RandomUuid(),
+    userId: user.iGM_Id,
+    purpose: "account_delete",
+    secretHash: await iGM_HashPassword(code),
+    createdAt: new Date(now).toISOString(),
+    expiresAt: new Date(now + iGM_Config.auth.verifyCodeTtlMs).toISOString(),
+  });
+
+  await iGM_SendAccountDeleteMail({
+    to: user.iGM_Email,
+    username: user.iGM_Username,
+    code,
+    ttlMinutes: Math.round(iGM_Config.auth.verifyCodeTtlMs / 60000),
+    locale,
+  });
+}
+
+/** 发送注销账号验证码（需登录），供路由在限流后调用 */
+export async function iGM_SendAccountDeleteCode(
+  user: iGM_UserRow,
+  locale: string,
+): Promise<void> {
+  await iGM_IssueAccountDeleteCode(user, locale);
+}
+
+/**
+ * 自助注销账号（需登录）：
+ * 校验发送至本人邮箱的 6 位一次性验证码，通过后物理删除用户。
+ * 外键级联自动清理会话、令牌、帖子、评论、通知、积分、认证申请等全部关联数据；
+ * 路由负责清除当前会话 Cookie（会话行已随级联删除失效）。
+ */
+export async function iGM_DeleteAccount(
+  user: iGM_UserRow,
+  code: string,
+): Promise<void> {
+  const trimmed = code.trim();
+  if (!/^\d{6}$/.test(trimmed)) {
+    throw new iGM_AuthError("auth.errors.codeInvalid", 422);
+  }
+
+  const nowIso = new Date().toISOString();
+  const token = iGM_FindLatestToken(user.iGM_Id, "account_delete", nowIso);
+  if (!token) {
+    throw new iGM_AuthError("auth.errors.codeExpired", 400);
+  }
+  if (token.iGM_Attempts >= iGM_Config.auth.maxVerifyAttempts) {
+    throw new iGM_AuthError("auth.errors.codeLocked", 429);
+  }
+
+  const matched = await iGM_VerifyPassword(trimmed, token.iGM_SecretHash);
+  if (!matched) {
+    iGM_IncrementTokenAttempts(token.iGM_Id);
+    throw new iGM_AuthError("auth.errors.codeMismatch", 400);
+  }
+  // 一次性消费：验证通过即作废该验证码，防止删除失败后重放
+  if (!iGM_ConsumeToken(token.iGM_Id, nowIso)) {
+    throw new iGM_AuthError("auth.errors.codeExpired", 400);
+  }
+
+  // 先显式作废全部会话，再删除用户（其余关联数据由外键级联清理）
+  iGM_DeleteSessionsByUser(user.iGM_Id);
+  iGM_DeleteUser(user.iGM_Id);
+}
+
 // 导出 //
 export default {
   iGM_Register,
@@ -507,4 +600,6 @@ export default {
   iGM_CheckResetToken,
   iGM_ResetPassword,
   iGM_ChangePassword,
+  iGM_SendAccountDeleteCode,
+  iGM_DeleteAccount,
 };

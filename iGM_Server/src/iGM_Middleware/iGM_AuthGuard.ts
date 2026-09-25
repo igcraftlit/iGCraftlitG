@@ -67,19 +67,24 @@ export function iGM_ResolveRequestUser(request: Request): iGM_UserRow | null {
 
 /**
  * 解析客户端 IP：优先 Elysia/Bun 原生连接信息，
- * 其次反向代理 x-forwarded-for，本地直连回退 127.0.0.1
+ * 其次反向代理 x-forwarded-for，本地直连回退 127.0.0.1。
+ * 纯自研解析，不调用任何第三方 IP 库
  */
 export function iGM_GetClientIp(
   request: Request,
   server: iGM_NetworkServer | null,
 ): string {
   const direct = server?.requestIP(request)?.address;
-  if (direct) return direct;
+  let ip = direct;
+  if (!ip) {
+    const forwarded = request.headers.get("x-forwarded-for");
+    ip = forwarded ? forwarded.split(",")[0].trim() : "127.0.0.1";
+  }
 
-  const forwarded = request.headers.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0].trim();
-
-  return "127.0.0.1";
+  // 规范化显示：去除 IPv4-mapped IPv6 前缀，IPv6 回环统一为 IPv4 回环
+  if (ip.startsWith("::ffff:")) ip = ip.slice("::ffff:".length);
+  if (ip === "::1") ip = "127.0.0.1";
+  return ip;
 }
 
 // 导出 //

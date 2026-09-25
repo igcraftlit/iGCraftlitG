@@ -107,27 +107,108 @@
   background: var(--igm-accent-hover);
 }
 
-/* 已登录用户徽标：点击进入账户设置 */
+/* 已登录用户区：头像 + 用户名 + 认证标识 + 下拉箭头（按钮形态） */
+.userMenu {
+  position: relative;
+  margin-right: 4px;
+}
+
 .userChip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   height: 32px;
   padding: 0 10px;
-  margin-right: 4px;
   border-radius: var(--igm-radius);
   border: 1px solid var(--igm-border-strong);
+  background: transparent;
   color: var(--igm-text-muted);
   font-size: 13px;
   white-space: nowrap;
+  cursor: pointer;
   transition: color 0.15s ease, border-color 0.15s ease,
     background-color 0.15s ease;
 }
 
-.userChip:hover {
+.userChip:hover,
+.userChipActive {
   color: var(--igm-text);
   border-color: var(--igm-accent);
   background: var(--igm-accent-soft);
+}
+
+.chevron {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+/* 用户下拉菜单 */
+.dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 200px;
+  padding: 6px;
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-border-strong);
+  background: var(--igm-surface);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  z-index: 40;
+}
+
+.dropdownHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--igm-border);
+  margin-bottom: 6px;
+}
+
+.dropdownName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.dropdownMeta {
+  font-size: 12px;
+  color: var(--igm-text-muted);
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: calc(var(--igm-radius) - 2px);
+  border: none;
+  background: transparent;
+  color: var(--igm-text);
+  font-size: 13px;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.menuItem:hover {
+  background: var(--igm-surface-subtle);
+}
+
+.menuItemDanger {
+  color: var(--igm-danger);
+}
+
+.menuItemDanger:hover {
+  background: var(--igm-danger-soft, rgba(220, 38, 38, 0.08));
+}
+
+.menuDivider {
+  height: 1px;
+  margin: 6px 4px;
+  background: var(--igm-border);
 }
 
 .userName {
@@ -149,11 +230,5 @@
   .userName,
   .loginLink {
     display: none;
-  }
-
-  .userChip {
-    width: 32px;
-    padding: 0;
-    justify-content: center;
   }
 }

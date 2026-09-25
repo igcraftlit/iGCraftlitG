@@ -1,21 +1,56 @@
 /*
  * 文件路径：apps/web/src/iGM_Components/iGM_PageTransition/iGM_PageTransition.module.css
  * 所属层：前端 / 通用组件样式
- * 路由：全局（由 app/template.tsx 挂载）
+ * 路由：全局（由 app/[locale]/template.tsx 挂载）
  * 模块：iGM_PageTransition
- * 作用：页面切换后的内容入场动画（淡入 + 轻微上移归位）
- * 内容：单次 keyframes、缓动曲线、降低动态偏好的无障碍降级
+ * 作用：页面切换入场动画与内容模块交错渐显（梦想、创造、探索、创新、求真）
+ * 内容：
+ *   探索 —— 入场带 12px 纵向位移与 4px 模糊消散，从未知到清晰
+ *   创新 —— 叠加 0.992 微缩放，以极轻微纵深打破生硬切换
+ *   求真 —— 320ms ease-out 一次收敛，无拖影、无回弹、无粒子
+ *   创造 —— 页面根节点的直接子模块按 40ms 步距阶梯渐显（最多 8 个）
+ * 降级：prefers-reduced-motion 时全部动画关闭，内容直接呈现
+ * 交互：动画仅作用于 opacity / transform / filter，不改变 pointer-events，
+ *       动画期间点击不被阻塞
  */
 
+/* ===== 全局页面切换入场 ===== */
 .pageEnter {
-  animation: iGMPageEnter 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
-  will-change: opacity, transform;
+  /* perspective 为微缩放提供细腻的空间参照，创新点但保持克制 */
+  perspective: 1200px;
+  animation: iGMPageEnter var(--igm-motion-page) var(--igm-motion-ease)
+    both;
+  will-change: opacity, transform, filter;
 }
 
+/* 从“模糊、下沉、微缩”到“清晰、归位、完整”——探索求真的视觉隐喻 */
 @keyframes iGMPageEnter {
   from {
     opacity: 0;
-    transform: translate3d(0, 12px, 0);
+    transform: translate3d(0, 12px, 0) scale(0.992);
+    filter: blur(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* ===== 内容模块交错渐显（Staggered Reveal） =====
+   仅作用于页面根节点的直接子模块（标题区 / 卡片区 / 面板 / 表单等）；
+   页面根节点声明 data-igm-motion="off" 可整体豁免
+   （落地页自带滚动编排，不重复播放）。 */
+.pageEnter > :not([data-igm-motion="off"]) > * {
+  animation: iGMStaggerReveal var(--igm-motion-item) var(--igm-motion-ease)
+    both;
+}
+
+@keyframes iGMStaggerReveal {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
   }
 
   to {
@@ -24,9 +59,48 @@
   }
 }
 
-/* 无障碍：系统偏好减少动态时直接呈现 */
+/* 40ms 步距阶梯延迟：70 / 110 / 150 / ... / 350ms，
+   模拟内容被依次“建造”的过程；第 9 个及以后立即呈现，长列表不等待 */
+.pageEnter > :not([data-igm-motion="off"]) > :nth-child(1) {
+  animation-delay: 70ms;
+}
+
+.pageEnter > :not([data-igm-motion="off"]) > :nth-child(2) {
+  animation-delay: 110ms;
+}
+
+.pageEnter > :not([data-igm-motion="off"]) > :nth-child(3) {
+  animation-delay: 150ms;
+}
+
+.pageEnter > :not([data-igm-motion="off"]) > :nth-child(4) {
+  animation-delay: 190ms;
+}
+
+.pageEnter > :not([data-igm-motion="off"]) > :nth-child(5) {
+  animation-delay: 230ms;
+}
+
+.pageEnter > :not([data-igm-motion="off"]) > :nth-child(6) {
+  animation-delay: 270ms;
+}
+
+.pageEnter > :not([data-igm-motion="off"]) > :nth-child(7) {
+  animation-delay: 310ms;
+}
+
+.pageEnter > :not([data-igm-motion="off"]) > :nth-child(8) {
+  animation-delay: 350ms;
+}
+
+/* ===== 无障碍降级：减少动态偏好下纯透明切换 ===== */
 @media (prefers-reduced-motion: reduce) {
-  .pageEnter {
-    animation: none;
+  .pageEnter,
+  .pageEnter > :not([data-igm-motion="off"]) > * {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    will-change: auto;
   }
 }

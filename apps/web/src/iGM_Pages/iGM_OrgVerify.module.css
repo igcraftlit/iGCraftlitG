@@ -1,0 +1,103 @@
+/* 文件路径：apps/web/src/iGM_Pages/iGM_OrgVerify.module.css
+   所属层：前端 / 页面样式（CSS Modules）
+   路由：G_OrgVerify、G_OrgVerifyStatus、G_AdminOrgVerify
+   模块：iGM_OrgVerify.module.css
+   作用：模块七组织认证三页面的专用样式
+   内容：组织卡片栅格与选中态、申请记录行、审核表单
+   说明：通用卡片/按钮/表单/提示复用 iGM_Module4.module.css 与
+         iGM_Points.module.css（recordRow、form、alert 等） */
+
+/* ===== 组织卡片栅格 ===== */
+.orgGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.orgCard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-border-strong);
+  background: var(--igm-surface);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.orgCard:hover:not(:disabled) {
+  background: var(--igm-surface-subtle);
+}
+
+.orgCard:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.orgCardActive {
+  border-color: var(--igm-accent);
+  background: var(--igm-accent-soft);
+}
+
+.orgName {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.orgDesc {
+  font-size: 12px;
+  color: var(--igm-text-muted);
+  line-height: 1.6;
+}
+
+/* ===== 申请记录/审核行的补充 ===== */
+.proofLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--igm-accent);
+  text-decoration: none;
+}
+
+.proofLink:hover {
+  text-decoration: underline;
+}
+
+/* 审核意见输入框：行内紧凑 */
+.commentInput {
+  width: 220px;
+  padding: 5px 8px;
+  font-size: 12px;
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-border-strong);
+  background: var(--igm-surface);
+  color: var(--igm-text);
+}
+
+.commentInput:focus {
+  outline: none;
+  border-color: var(--igm-accent);
+}
+
+/* 用户管理行：头像与名称组合 */
+.userCell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.userNameRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}

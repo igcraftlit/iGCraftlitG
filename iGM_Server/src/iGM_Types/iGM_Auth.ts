@@ -8,7 +8,8 @@
  */
 
 // 导入依赖 //
-// （本文件仅包含类型定义与常量，无运行时依赖）
+import { iGM_ResolveUserOrgBadge } from "../iGM_Repositories/iGM_OrgVerifyRepository";
+import type { iGM_OrgBadgeDto } from "./iGM_OrgVerify";
 
 // 类型定义 //
 /** 用户角色：普通用户 / 协管员 / 管理员 */
@@ -18,7 +19,12 @@ export type iGM_UserRole = "user" | "moderator" | "admin";
 export type iGM_UserStatus = "active" | "suspended";
 
 /** 令牌用途 */
-export type iGM_TokenPurpose = "email_verify" | "password_reset" | "password_change";
+export type iGM_TokenPurpose =
+  | "email_verify"
+  | "password_reset"
+  | "password_change"
+  // 模块七第三轮：用户自助注销账号的邮箱验证码
+  | "account_delete";
 
 /** iGM_Users 表数据行（包含密码哈希，禁止对外返回） */
 export interface iGM_UserRow {
@@ -34,6 +40,13 @@ export interface iGM_UserRow {
   iGM_Avatar: string | null;
   iGM_Bio: string | null;
   iGM_Website: string | null;
+  // 模块七扩展：审核通过后的认证组织
+  iGM_VerifiedOrgId: string | null;
+  /** 模块七增强：注册时分配的 11 位全局唯一 UID（不可修改） */
+  iGM_Uid: string;
+  /** 模块八：同意《用户管理规定》时的客户端 IP 与时间（历史用户为 NULL） */
+  iGM_RulesAcceptedIp: string | null;
+  iGM_RulesAcceptedAt: string | null;
   iGM_CreatedAt: string;
   iGM_UpdatedAt: string;
 }
@@ -50,6 +63,10 @@ export interface iGM_UserDto {
   avatar: string | null;
   bio: string | null;
   website: string | null;
+  /** 模块七：认证组织徽标（未认证为 null） */
+  verifiedOrg: iGM_OrgBadgeDto | null;
+  /** 模块七增强：11 位全局唯一 UID */
+  uid: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -103,6 +120,13 @@ export function iGM_ToUserDto(row: iGM_UserRow): iGM_UserDto {
     avatar: row.iGM_Avatar,
     bio: row.iGM_Bio,
     website: row.iGM_Website,
+    // 模块七：组织认证徽标（组织数据静态种子，走内存缓存解析；
+    // 邮箱与组织负责人邮箱匹配时带 isOwner 金标）
+    verifiedOrg: iGM_ResolveUserOrgBadge(
+      row.iGM_VerifiedOrgId ?? null,
+      row.iGM_Email,
+    ),
+    uid: row.iGM_Uid,
     createdAt: row.iGM_CreatedAt,
     updatedAt: row.iGM_UpdatedAt,
   };

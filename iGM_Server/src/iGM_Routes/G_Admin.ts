@@ -4,16 +4,16 @@
  * 路由：/G_Admin/*
  * 模块：G_Admin
  * 作用：管理后台接口集合
- * 内容：数据概览、用户列表、封禁/解封、修改角色、内容列表、审核与删除、
+ * 内容：数据概览、用户列表、封禁/解封、修改角色、删除用户账号、内容列表、审核与删除、
  *       举报列表与处理、测试邮件、操作日志、系统信息
- * 权限：moderator 及以上可读与审核；用户封禁/角色/系统信息/测试邮件仅 admin；
+ * 权限：moderator 及以上可读与审核；用户封禁/角色/删除账号/系统信息/测试邮件仅 admin；
  *       全部写操作限流并写入 iGM_AdminLogs
  */
 
 // 导入依赖 //
 import { Elysia } from "elysia";
 import { iGM_Ok } from "../iGM_Types/iGM_Response";
-import { iGM_RequireRole } from "../iGM_Middleware/iGM_AuthGuard";
+import { iGM_RequireRole, iGM_RequireUser } from "../iGM_Middleware/iGM_AuthGuard";
 import {
   iGM_ClientIp,
   iGM_CurrentUser,
@@ -25,6 +25,7 @@ import {
 } from "./iGM_RouteSupport";
 import { iGM_AdminError } from "../iGM_Services/iGM_AdminService";
 import {
+  iGM_DeleteUserService,
   iGM_GetOverviewService,
   iGM_GetSettingsService,
   iGM_HandleReportService,
@@ -38,6 +39,13 @@ import {
   iGM_SetUserStatusService,
   type iGM_ReviewAction,
 } from "../iGM_Services/iGM_AdminService";
+import {
+  iGM_AdminGetVerificationService,
+  iGM_AdminListVerificationsService,
+  iGM_ReviewVerificationService,
+  iGM_OrgVerifyError,
+  type iGM_OrgReviewAction,
+} from "../iGM_Services/iGM_OrgVerifyService";
 
 // 类型定义 //
 // （路由层无额外类型，统一响应类型见 iGM_Types/iGM_Response.ts）
@@ -84,6 +92,18 @@ function iGM_HandleUserRole(ctx: iGM_RouteContext) {
   }
   iGM_SetUserRoleService(admin, userId, role);
   return iGM_Ok({ userId, role }, "admin.messages.roleUpdated");
+}
+
+/* ---------- 删除用户账号（模块七第三轮：管理员直接删除，无需验证码） ---------- */
+function iGM_HandleUserDelete(ctx: iGM_RouteContext) {
+  const admin = iGM_RequireRole(iGM_CurrentUser(ctx), "admin");
+  iGM_EnforceRateLimit(ctx, "adminWrite", `user:${admin.iGM_Id}:${iGM_ClientIp(ctx)}`);
+  const userId = iGM_Field(ctx.body, "userId").trim();
+  if (!userId) {
+    throw new iGM_AdminError("admin.errors.userNotFound", 404);
+  }
+  iGM_DeleteUserService(admin, userId, iGM_RequestLocale(ctx));
+  return iGM_Ok({ userId }, "admin.messages.userDeleted");
 }
 
 /* ---------- 内容列表 ---------- */
@@ -176,6 +196,59 @@ function iGM_HandleSettings(ctx: iGM_RouteContext) {
   return iGM_Ok(iGM_GetSettingsService());
 }
 
+/* ---------- 模块七：组织认证申请列表（admin 全部；负责人仅本组织） ---------- */
+function iGM_HandleOrgVerifications(ctx: iGM_RouteContext) {
+  // 权限在 service 内按 admin / 组织负责人判定，路由层仅要求登录
+  const reviewer = iGM_RequireUser(iGM_CurrentUser(ctx));
+  const page = Number(iGM_Query(ctx.query, "page", "1"));
+  const pageSize = Number(iGM_Query(ctx.query, "pageSize", "10"));
+  return iGM_Ok(
+    iGM_AdminListVerificationsService(
+      reviewer,
+      iGM_Query(ctx.query, "status") || null,
+      iGM_Query(ctx.query, "orgId") || null,
+      page,
+      pageSize,
+    ),
+  );
+}
+
+/* ---------- 模块七：组织认证申请详情（admin / 对应组织负责人） ---------- */
+function iGM_HandleOrgVerificationDetail(ctx: iGM_RouteContext) {
+  const reviewer = iGM_RequireUser(iGM_CurrentUser(ctx));
+  const id = iGM_Query(ctx.query, "id");
+  if (!id) throw new iGM_OrgVerifyError("orgVerify.errors.badRequest", 422);
+  return iGM_Ok({
+    verification: iGM_AdminGetVerificationService(reviewer, id),
+  });
+}
+
+/* ---------- 模块七：审核组织认证申请 ---------- */
+function iGM_HandleOrgVerificationReview(ctx: iGM_RouteContext) {
+  // 负责人可能是普通角色：仅要求登录，具体 admin/owner 权限由 service 判定
+  const reviewer = iGM_RequireUser(iGM_CurrentUser(ctx));
+  iGM_EnforceRateLimit(ctx, "adminWrite", `user:${reviewer.iGM_Id}:${iGM_ClientIp(ctx)}`);
+  const verificationId = iGM_Field(ctx.body, "verificationId").trim();
+  const action = iGM_Field(ctx.body, "action").trim() as iGM_OrgReviewAction;
+  const comment = iGM_Field(ctx.body, "comment").trim() || null;
+  if (!verificationId || (action !== "approve" && action !== "reject")) {
+    throw new iGM_OrgVerifyError("orgVerify.errors.badRequest", 422);
+  }
+  iGM_ReviewVerificationService(
+    reviewer,
+    verificationId,
+    action,
+    comment,
+    iGM_RequestLocale(ctx),
+  );
+  return iGM_Ok(
+    { verificationId, action },
+    action === "approve"
+      ? "orgVerify.messages.approved"
+      : "orgVerify.messages.rejected",
+  );
+}
+
 /**
  * G_Admin 管理后台路由集合
  * 业务错误统一抛 iGM_AdminError / iGM_AuthError，
@@ -186,13 +259,18 @@ export const G_Admin = new Elysia({ name: "G_Admin" })
   .get("/G_Admin/users", iGM_HandleUsers as never)
   .post("/G_Admin/users/status", iGM_HandleUserStatus as never)
   .post("/G_Admin/users/role", iGM_HandleUserRole as never)
+  .post("/G_Admin/users/delete", iGM_HandleUserDelete as never)
   .get("/G_Admin/contents", iGM_HandleContents as never)
   .post("/G_Admin/contents/review", iGM_HandleReview as never)
   .get("/G_Admin/reports", iGM_HandleReports as never)
   .post("/G_Admin/reports/handle", iGM_HandleReport as never)
   .post("/G_Admin/mails/test", iGM_HandleMailTest as never)
   .get("/G_Admin/logs", iGM_HandleLogs as never)
-  .get("/G_Admin/settings", iGM_HandleSettings as never);
+  .get("/G_Admin/settings", iGM_HandleSettings as never)
+  // 模块七：组织认证审核
+  .get("/G_Admin/org-verifications", iGM_HandleOrgVerifications as never)
+  .get("/G_Admin/org-verifications/detail", iGM_HandleOrgVerificationDetail as never)
+  .post("/G_Admin/org-verifications/review", iGM_HandleOrgVerificationReview as never);
 
 // 导出 //
 export default G_Admin;

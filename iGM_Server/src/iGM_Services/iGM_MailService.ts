@@ -4,7 +4,7 @@
  * 路由：G_Auth、G_Notification
  * 模块：iGM_MailService
  * 作用：全站统一邮件发送服务（163 邮箱 SMTP）
- * 内容：通用 send 方法、验证码邮件（注册验证、修改密码验证；科幻终端风格、
+ * 内容：通用 send 方法、验证码邮件（注册验证、修改密码验证、注销账号验证；科幻终端风格、
  *       五语言模板见 iGM_MailTemplates）、密码重置链接邮件、模块四业务通知邮件；
  *       验证码邮件主题统一 ◎ 前缀，落款与页脚含团队名称与双联系邮箱；
  *       本地调试可用控制台输出而不真正发信
@@ -62,6 +62,19 @@ export interface iGM_NotificationMailParams {
   content: string;
   /** 站内跳转链接（相对路径，拼接到站点地址） */
   link?: string | null;
+  locale: string;
+}
+
+/** 模块七：组织认证通知邮件参数 */
+export interface iGM_OrgVerifyMailParams {
+  to: string;
+  username: string;
+  /** 认证组织名称 */
+  orgName: string;
+  /** 邮件场景：申请提交确认 / 审核通过 / 审核拒绝 / 退出组织 */
+  kind: "submitted" | "approved" | "rejected" | "left";
+  /** 审核意见（拒绝时向申请人展示） */
+  comment?: string | null;
   locale: string;
 }
 
@@ -216,6 +229,28 @@ export async function iGM_SendPasswordChangeMail(
   });
 }
 
+/**
+ * 发送注销账号验证码邮件（模块七第三轮：自助注销的邮箱二次确认）
+ * 与注册验证共用科幻终端风格模板，仅场景行不同
+ */
+export async function iGM_SendAccountDeleteMail(
+  params: iGM_VerifyMailParams,
+): Promise<void> {
+  const template = iGM_ResolveCodeMailTemplate(params.locale);
+  const values = {
+    username: params.username,
+    code: params.code,
+    expireMinutes: params.ttlMinutes,
+  };
+
+  await iGM_SendMail({
+    to: params.to,
+    subject: template.subject,
+    html: iGM_CodeMailHtml(template, "accountDelete", values),
+    text: iGM_CodeMailText(template, "accountDelete", values),
+  });
+}
+
 /** 发送密码重置邮件（含一次性重置链接） */
 export async function iGM_SendResetPasswordMail(
   params: iGM_ResetMailParams,
@@ -330,11 +365,110 @@ export async function iGM_SendNotificationMail(
   await iGM_SendMail({ to: params.to, subject, html, text });
 }
 
+/**
+ * 发送模块七组织认证通知邮件（申请提交确认 / 审核通过 / 审核拒绝）
+ * 沿用模块四通知邮件的极简黑白排版，按用户控制台语言（zh/en）发送
+ */
+export async function iGM_SendOrgVerifyMail(
+  params: iGM_OrgVerifyMailParams,
+): Promise<void> {
+  const mailLocale = iGM_ResolveMailLocale(params.locale);
+  const webBaseUrl = iGM_Config.auth.webBaseUrl;
+  const statusUrl = `${webBaseUrl}/G_OrgVerifyStatus`;
+
+  const titles: Record<iGM_OrgVerifyMailParams["kind"], { zh: string; en: string }> = {
+    submitted: {
+      zh: `组织认证申请已提交（${params.orgName}）`,
+      en: `Organization verification submitted (${params.orgName})`,
+    },
+    approved: {
+      zh: `组织认证已通过（${params.orgName}）`,
+      en: `Organization verification approved (${params.orgName})`,
+    },
+    rejected: {
+      zh: `组织认证未通过（${params.orgName}）`,
+      en: `Organization verification rejected (${params.orgName})`,
+    },
+    left: {
+      zh: `已退出组织（${params.orgName}）`,
+      en: `You have left the organization (${params.orgName})`,
+    },
+  };
+  const bodies: Record<iGM_OrgVerifyMailParams["kind"], { zh: string; en: string }> = {
+    submitted: {
+      zh: `你向「${params.orgName}」提交的组织认证申请已收到，管理员将尽快审核。审核结果会通过邮件通知你，也可以随时在申请记录页查看最新状态。`,
+      en: `Your verification application for "${params.orgName}" has been received. Our moderators will review it shortly. You will be notified by email, and you can check the latest status on the application history page at any time.`,
+    },
+    approved: {
+      zh: `恭喜，你向「${params.orgName}」提交的组织认证申请已通过审核。认证标识现已显示在你的个人主页、帖子与评论中。`,
+      en: `Congratulations! Your verification application for "${params.orgName}" has been approved. The verification badge is now shown on your profile, posts and comments.`,
+    },
+    rejected: {
+      zh: `很遗憾，你向「${params.orgName}」提交的组织认证申请未通过审核。你可以完善材料后重新提交申请。`,
+      en: `Unfortunately, your verification application for "${params.orgName}" was not approved. You may refine your materials and submit a new application.`,
+    },
+    left: {
+      zh: `你已退出「${params.orgName}」，该组织的认证标识已从你的个人主页、帖子与评论中移除。如改变主意，可以随时重新提交认证申请。`,
+      en: `You have left "${params.orgName}". The verification badge has been removed from your profile, posts and comments. You are welcome to submit a new verification application at any time.`,
+    },
+  };
+
+  const title = mailLocale === "zh" ? titles[params.kind].zh : titles[params.kind].en;
+  const body = mailLocale === "zh" ? bodies[params.kind].zh : bodies[params.kind].en;
+  const commentText = params.comment?.trim() || "";
+  // 附加说明：审核类邮件展示“审核意见”，退出组织展示“退出理由”
+  const commentLabel =
+    params.kind === "left"
+      ? mailLocale === "zh"
+        ? "退出理由"
+        : "Reason for leaving"
+      : mailLocale === "zh"
+        ? "审核意见"
+        : "Review comment";
+  const commentBlock =
+    params.kind !== "submitted" && commentText
+      ? mailLocale === "zh"
+        ? `\n${commentLabel}：${commentText}\n`
+        : `\n${commentLabel}: ${commentText}\n`
+      : "";
+
+  const subject =
+    mailLocale === "zh" ? `【iGCraftLit】${title}` : `[iGCraftLit] ${title}`;
+
+  const text =
+    mailLocale === "zh"
+      ? `你好 ${params.username}，\n\n${body}\n${commentBlock}\n查看申请记录：${statusUrl}\n\n` +
+        `iGCraftLit Community 团队\n如有问题请联系：igcraftlit@outlook.com`
+      : `Hello ${params.username},\n\n${body}\n${commentBlock}\nView your applications: ${statusUrl}\n\n` +
+        `The iGCraftLit Community Team\nIf you have any questions, please contact: igcraftlit@outlook.com`;
+
+  const html = iGM_WrapHtml(
+    title,
+    `<p style="font-size:14px;color:#52525b;margin:0 0 16px;">` +
+      (mailLocale === "zh" ? `你好 ${params.username}，` : `Hello ${params.username},`) +
+      `</p>` +
+      `<p style="font-size:14px;color:#3f3f46;line-height:1.7;margin:0 0 16px;">${body}</p>` +
+      (commentBlock
+        ? `<p style="font-size:13px;color:#52525b;border-left:3px solid #d4d4d8;padding:4px 12px;margin:0 0 16px;">` +
+          `${commentLabel}: ${commentText}</p>`
+        : "") +
+      `<a href="${statusUrl}" style="display:inline-block;background:#2563eb;color:#ffffff;` +
+      `text-decoration:none;font-size:14px;font-weight:500;border-radius:8px;padding:11px 22px;margin:0 0 16px;">` +
+      (mailLocale === "zh" ? "查看申请记录" : "View my applications") +
+      `</a>`,
+    mailLocale,
+  );
+
+  await iGM_SendMail({ to: params.to, subject, html, text });
+}
+
 // 导出 //
 export default {
   iGM_SendMail,
   iGM_SendVerificationMail,
   iGM_SendPasswordChangeMail,
+  iGM_SendAccountDeleteMail,
   iGM_SendResetPasswordMail,
   iGM_SendNotificationMail,
+  iGM_SendOrgVerifyMail,
 };

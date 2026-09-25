@@ -48,7 +48,18 @@ function iGM_BranchActive(pathname: string, item: iGM_NavItem): boolean {
   );
 }
 
-/** 按角色递归过滤导航项；子项被全部过滤时父节点退化为普通叶子 */
+/** 单个导航项对当前用户是否可见：角色与组织负责人身份同时满足 */
+function iGM_CanSeeItem(item: iGM_NavItem, user: iGM_User | null): boolean {
+  if (item.roles && (user === null || !item.roles.includes(user.role))) {
+    return false;
+  }
+  if (item.orgOwnerOnly && user?.verifiedOrg?.isOwner !== true) {
+    return false;
+  }
+  return true;
+}
+
+/** 按角色/负责人身份递归过滤导航项；子项被全部过滤时父节点退化为普通叶子 */
 function iGM_FilterItems(
   items: iGM_NavItem[],
   user: iGM_User | null,
@@ -59,10 +70,7 @@ function iGM_FilterItems(
       const children = iGM_FilterItems(item.children, user);
       return { ...item, children: children.length > 0 ? children : undefined };
     })
-    .filter(
-      (item) =>
-        !item.roles || (user !== null && item.roles.includes(user.role)),
-    );
+    .filter((item) => iGM_CanSeeItem(item, user));
 }
 
 /** 侧边导航栏 */

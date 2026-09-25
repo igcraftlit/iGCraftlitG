@@ -31,6 +31,7 @@ import { iGM_AwardPoints } from "./iGM_PointsService";
 import { iGM_ListActivityResourcesService } from "./iGM_ResourceService";
 import type { iGM_AuthorDto } from "../iGM_Types/iGM_Community";
 import type { iGM_UserRow } from "../iGM_Types/iGM_Auth";
+import { iGM_ResolveUserOrgBadge } from "../iGM_Repositories/iGM_OrgVerifyRepository";
 import {
   iGM_IsActivityStatus,
   type iGM_ActivityDetailDto,
@@ -76,6 +77,11 @@ function iGM_ToAuthorDto(user: iGM_UserRow): iGM_AuthorDto {
     displayName: user.iGM_DisplayName,
     avatar: user.iGM_Avatar,
     role: user.iGM_Role,
+    // 模块七：认证组织徽标（负责人邮箱匹配时带 isOwner 金标）
+    verifiedOrg: iGM_ResolveUserOrgBadge(
+      user.iGM_VerifiedOrgId ?? null,
+      user.iGM_Email,
+    ),
   };
 }
 
@@ -87,6 +93,7 @@ function iGM_DeletedAuthorPlaceholder(authorId: string): iGM_AuthorDto {
     displayName: null,
     avatar: null,
     role: "user",
+    verifiedOrg: null,
   };
 }
 

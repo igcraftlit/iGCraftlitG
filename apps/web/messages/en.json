@@ -34,12 +34,17 @@
     "adminContents": "Content Review",
     "adminReports": "Reports",
     "adminSettings": "System Info",
-    "adminMails": "Mail Test"
+    "adminMails": "Mail Test",
+    "orgVerify": "Org Verification",
+    "orgVerifyStatus": "My Applications",
+    "adminOrgVerify": "Org Review",
+    "orgDetails": "Organization"
   },
   "topbar": {
     "menu": "Menu",
     "theme": "Theme",
-    "language": "Language"
+    "language": "Language",
+    "login": "Log in"
   },
   "theme": {
     "light": "Light",
@@ -70,7 +75,8 @@
       "home": "Home",
       "community": "Community",
       "join": "Join Us",
-      "console": "Console"
+      "console": "Console",
+      "auth": "Log in / Sign up"
     },
     "hero": {
       "slogan": "\"In the name of blocks, open to the world.\"",
@@ -256,6 +262,26 @@
     "apiHealth": {
       "title": "Service Status",
       "description": "Frontend and backend health checks"
+    },
+    "orgVerify": {
+      "title": "Organization Verification",
+      "description": "Apply to join a trusted organization and show a verified badge"
+    },
+    "orgVerifyStatus": {
+      "title": "My Applications",
+      "description": "Track the status and history of your organization verification applications"
+    },
+    "adminOrgVerify": {
+      "title": "Organization Review",
+      "description": "Review organization verification applications with comments"
+    },
+    "orgDetails": {
+      "title": "Organization",
+      "description": "View trusted organization information and about content"
+    },
+    "userRules": {
+      "title": "User Rules",
+      "description": "The full iGCraftLit Community User Rules: global coexistence, account management, conduct standards, intellectual property and quantified penalties"
     }
   },
   "placeholder": {
@@ -361,7 +387,9 @@
       "emailVerified": "Email verified successfully",
       "resetMailSent": "Reset email sent",
       "passwordReset": "Password reset. Please sign in with the new password",
-      "passwordChanged": "Password changed successfully"
+      "passwordChanged": "Password changed successfully",
+      "deleteCodeSent": "An account deletion code has been sent to your email and is valid for 10 minutes",
+      "accountDeleted": "Account deleted"
     },
     "state": {
       "checking": "Checking your session…",
@@ -379,7 +407,17 @@
     "register": {
       "title": "Sign up",
       "description": "Create your iGCraftLit Community account",
-      "hasAccount": "Already have an account?"
+      "hasAccount": "Already have an account?",
+      "agreementPrefix": "I have read and agree to the ",
+      "agreementRules": "iGCraftLit User Rules",
+      "agreementSuffix": "",
+      "agreementRequired": "Please read and agree to the iGCraftLit User Rules first",
+      "rulesModal": {
+        "title": "iGCraftLit User Rules",
+        "scrollHint": "Please scroll to the bottom before confirming",
+        "finish": "Finished reading — I accept the rules",
+        "cancel": "Not now"
+      }
     },
     "forgot": {
       "title": "Forgot password",
@@ -412,7 +450,42 @@
       "emailCodeHint": "Required only when the current password is empty",
       "sendChangeCode": "Send code",
       "changeCodeSent": "Code sent to {email}, valid for 10 minutes",
-      "refreshSession": "Refresh session"
+      "refreshSession": "Refresh session",
+      "uid": "iGMUid",
+      "deleteAccount": {
+        "title": "Delete account",
+        "description": "Permanently delete your iGCraftLit Community account.",
+        "warning": "After deletion, all your data — including posts, comments, favorites, points and organization verification — will be permanently removed and cannot be restored.",
+        "sendCode": "Send code to email",
+        "resend": "Resend",
+        "codeSent": "A verification code has been sent to your email. You can resend it shortly if it does not arrive.",
+        "codeLabel": "Email code",
+        "codePlaceholder": "Enter the 6-digit code",
+        "confirmButton": "Confirm deletion",
+        "confirming": "Deleting…",
+        "confirmPrompt": "This action cannot be undone. Are you sure you want to permanently delete your account?",
+        "cancel": "Cancel"
+      }
+    },
+    "wizard": {
+      "stepSubtitle1": "Choose a username",
+      "stepSubtitle2": "Enter your email",
+      "stepSubtitle3": "Set a password",
+      "stepSubtitle4": "Read and accept the User Rules",
+      "stepSubtitle5": "Verify your email",
+      "next": "Next",
+      "back": "Back",
+      "agreeAndContinue": "Finished reading — agree and continue",
+      "rulesFullPage": "View the full rules page",
+      "codeSentTo": "We have sent a verification code to {email}. Please enter the 6-digit code from the email",
+      "codePlaceholder": "Enter the 6-digit code",
+      "verify": "Verify",
+      "backToEdit": "Edit details",
+      "welcomeBack": "Welcome back, {name}",
+      "stepLabel": "Step {current} of {total}",
+      "step4Intro": "Before signing up, please read the iGCraftLit User Rules. Click the button below to view the full text on a separate page, then accept and return to this wizard.",
+      "viewRules": "Read the User Rules",
+      "acceptedInfo": "Rules read and accepted · IP: {ip} · {time}"
     }
   },
   "community": {
@@ -535,7 +608,8 @@
       "emptyPostsTitle": "No posts yet",
       "emptyPostsDesc": "They have not published any posts yet",
       "emptyCommentsTitle": "No comments yet",
-      "emptyCommentsDesc": "They have not posted any comments yet"
+      "emptyCommentsDesc": "They have not posted any comments yet",
+      "uidLabel": "iGMUid"
     },
     "myPosts": {
       "title": "My posts",
@@ -940,13 +1014,16 @@
       "suspended": "Suspended"
     },
     "users": {
-      "searchPlaceholder": "Search username or email",
+      "searchPlaceholder": "Search by username, email or iGMUid",
       "search": "Search",
       "empty": "No matching users",
       "meta": "Points {points} · Posts {posts} · Comments {comments} · Joined {date}",
       "roleLabel": "Change role",
       "ban": "Ban",
-      "unban": "Unban"
+      "unban": "Unban",
+      "uid": "iGMUid",
+      "delete": "Delete",
+      "deleteConfirm": "Are you sure you want to delete user {name}? All of their data will be permanently removed and cannot be restored."
     },
     "contents": {
       "typePost": "Posts",
@@ -996,7 +1073,8 @@
       "roleUpdated": "Role updated",
       "contentReviewed": "Content updated",
       "reportHandled": "Report handled",
-      "mailTestSent": "Test email sent"
+      "mailTestSent": "Test email sent",
+      "userDeleted": "User deleted"
     },
     "errors": {
       "loadFailed": "Failed to load admin data",
@@ -1008,7 +1086,237 @@
       "reportNotFound": "Report not found",
       "reportAlreadyHandled": "This report has already been handled",
       "invalidEmail": "Invalid email address",
-      "mailSendFailed": "Failed to send email, please check SMTP settings"
+      "mailSendFailed": "Failed to send email, please check SMTP settings",
+      "cannotDeleteSelf": "You cannot delete your own account"
     }
+  },
+  "orgVerify": {
+    "apply": {
+      "chooseOrg": "Choose a trusted organization",
+      "reason": "Reason",
+      "reasonPlaceholder": "Explain your relationship with the organization and why you are applying…",
+      "reasonHint": "Required, up to 1000 characters",
+      "proof": "Proof (optional)",
+      "proofHint": "Upload one supporting file (image or document, max 20MB)",
+      "proofUpload": "Upload file",
+      "proofUploading": "Uploading…",
+      "proofUploaded": "File uploaded",
+      "proofRemove": "Remove file",
+      "submit": "Submit application",
+      "submitting": "Submitting…",
+      "pendingTip": "You already have a pending application. View it in My Applications, or cancel it to apply again.",
+      "viewStatus": "View my applications"
+    },
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled",
+      "left": "Left"
+    },
+    "list": {
+      "empty": "No applications yet",
+      "cancel": "Cancel application",
+      "reason": "Reason",
+      "proof": "Proof",
+      "proofView": "View file",
+      "reviewComment": "Review comment",
+      "reviewer": "Reviewer",
+      "submittedAt": "Submitted {time}",
+      "updatedAt": "Updated {time}",
+      "applyNow": "Apply for organization verification"
+    },
+    "admin": {
+      "filterPending": "Pending",
+      "filterApproved": "Approved",
+      "filterRejected": "Rejected",
+      "filterCancelled": "Cancelled",
+      "filterAll": "All",
+      "empty": "No matching applications",
+      "applicant": "Applicant",
+      "approve": "Approve",
+      "reject": "Reject",
+      "commentPlaceholder": "Review comment (optional, up to 500 characters)",
+      "selfTip": "You cannot review your own application",
+      "filterOrg": "Filter by organization",
+      "filterOrgAll": "All organizations"
+    },
+    "messages": {
+      "submitted": "Application submitted. Please wait for review.",
+      "cancelled": "Application cancelled",
+      "approved": "Application approved",
+      "rejected": "Application rejected",
+      "left": "You have left the organization and your badge has been removed",
+      "aboutUpdated": "Organization about content updated"
+    },
+    "errors": {
+      "badRequest": "Invalid request parameters",
+      "reasonTooLong": "Reason must be at most 1000 characters",
+      "proofTooLong": "Proof value is too long",
+      "commentTooLong": "Review comment must be at most 500 characters",
+      "orgNotFound": "Organization not found or not open for verification",
+      "pendingExists": "You already have a pending application",
+      "notFound": "Application not found",
+      "notPending": "This application is no longer pending",
+      "cannotReviewOwn": "You cannot review your own application",
+      "loadFailed": "Failed to load. Please try again later.",
+      "alreadyVerified": "You are already verified. Leave the organization first to reapply",
+      "notOrgMember": "You are not a member of any trusted organization",
+      "forbidden": "You do not have permission to perform this action",
+      "aboutTooLong": "About content must be at most 5000 characters",
+      "ownerCannotLeave": "The organization owner cannot leave their own organization"
+    },
+    "badge": "Verified: {name}",
+    "details": {
+      "title": "My verified organization",
+      "ownerTag": "Organization owner",
+      "about": "About",
+      "aboutEmpty": "This organization has not provided an introduction yet.",
+      "editAbout": "Edit about",
+      "aboutPlaceholder": "Introduce the organization: mission, vision, contact, website, etc. (up to 5000 characters)",
+      "save": "Save",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "leave": "Leave organization",
+      "leaveConfirm": "Are you sure you want to leave this organization? Your badge will be removed and you can reapply at any time.",
+      "leaveReason": "Reason for leaving (optional)",
+      "leaveReasonPlaceholder": "You may briefly explain why you are leaving…",
+      "viewDetails": "View organization page",
+      "ownerCannotLeave": "You are the owner of this organization and cannot leave it."
+    },
+    "ownerBadge": "Owner",
+    "badgeOwner": "{name} organization owner"
+  },
+  "userRules": {
+    "title": "iGCraftLit User Rules",
+    "tocTitle": "ON THIS PAGE",
+    "chapters": [
+      {
+        "id": "chapter-1",
+        "title": "Chapter 1 General Provisions",
+        "paragraphs": [
+          "iGCraftLit Community is an open community for all Stargazers. United by our dreams and strengthened through creativity, we advance in exploration and break through in innovation, building this community together with a truth-seeking spirit.",
+          "Rooted in an international outlook and open to users worldwide, this community is committed to being a global space that crosses borders, embraces diversity and enables equal exchange. These Rules are enacted to safeguard community order and protect the rights and interests of all users worldwide."
+        ]
+      },
+      {
+        "id": "chapter-2",
+        "title": "Chapter 2 Principles of Global Coexistence",
+        "items": [
+          "This community advocates global coexistence, pluralism, inclusiveness and mutual respect. Stargazers of every country, region, ethnicity and cultural background may exchange here on equal terms.",
+          "Users shall respect different cultures, religious beliefs and customs, and must not discriminate against, attack or insult others on grounds of nationality, race, gender, religion, region or other differences.",
+          "This community is not affiliated with any state or political entity. Users shall independently comply with the laws of their location and with internationally recognized norms.",
+          "When navigating cultural differences, rationality, restraint and friendliness are the baseline of exchange; together we maintain a positive atmosphere across the global community."
+        ]
+      },
+      {
+        "id": "chapter-3",
+        "title": "Chapter 3 Account Management",
+        "items": [
+          "Users must provide a genuine, working email address when registering.",
+          "Accounts are owned by iGCraftLit; users hold the right to use them. Transferring, renting out or selling accounts is prohibited.",
+          "Users shall keep their passwords secure. Losses caused by password disclosure are borne by the users themselves.",
+          "After successful registration the system automatically assigns an 11-digit iGMUid as the user's unique identifier in the community."
+        ]
+      },
+      {
+        "id": "chapter-4",
+        "title": "Chapter 4 Community Conduct and Legal Baselines",
+        "items": [
+          "Users shall comply with the laws and regulations of their location and with internationally recognized legal standards, and must not use this community for any unlawful activity.",
+          "Publishing, disseminating or storing the following content is strictly prohibited, including but not limited to: pornography, obscenity, vulgarity or sexually suggestive content; violence, gore, terror, cruelty, suicide or self-harm content; incitement of hatred, discrimination, ethnic antagonism or religious conflict; false information, rumors, fraud, pyramid schemes or illegal advertising; infringement of others' privacy, portrait rights, reputation rights or intellectual property rights; viruses, trojans, game cheats, malicious code or cyber-attack tools; and violations concerning the protection of minors.",
+          "Spam flooding, malicious bumping, malicious reporting and other acts that disrupt community order are prohibited.",
+          "Respect others and discuss rationally; personal attacks, defamation, insults and threats against others are not allowed.",
+          "Engaging in any unauthorized commercial or political activity in the name of iGCraftLit is prohibited."
+        ]
+      },
+      {
+        "id": "chapter-5",
+        "title": "Chapter 5 Intellectual Property",
+        "items": [
+          "The copyright of content users publish in the community belongs to the users.",
+          "Users authorize iGCraftLit to display, disseminate and store that content within the community.",
+          "Unauthorized reposting or plagiarism of others' original content is prohibited; offenders bear corresponding legal responsibility.",
+          "Users shall ensure their published content does not infringe any third party's intellectual property rights. Should a dispute arise, the publisher bears full responsibility."
+        ]
+      },
+      {
+        "id": "chapter-6",
+        "title": "Chapter 6 Violations and Quantified Penalties",
+        "intro": "If a user's violations within the community are discovered by an administrator, they shall be handled in accordance with the relevant laws and regulations of the People's Republic of China and these Rules, and the following quantified penalties shall be applied to the violating account:",
+        "penalties": [
+          {
+            "id": "rule-6-1",
+            "title": "First minor violation",
+            "detail": "A warning, or a 1-day mute."
+          },
+          {
+            "id": "rule-6-2",
+            "title": "General violation",
+            "detail": "A 3-day mute."
+          },
+          {
+            "id": "rule-6-3",
+            "title": "Relatively serious violation",
+            "detail": "A 7-day mute."
+          },
+          {
+            "id": "rule-6-4",
+            "title": "Serious violation",
+            "detail": "A 30-day ban."
+          },
+          {
+            "id": "rule-6-5",
+            "title": "Particularly serious cases",
+            "detail": "Particularly serious cases, violations of law, or repeated refusal to correct: a permanent ban, up to account deletion; the right to cooperate with law-enforcement investigations is reserved."
+          },
+          {
+            "id": "rule-6-6",
+            "title": "Compensation for losses",
+            "detail": "Users who cause losses to the community or to third parties through violations shall bear corresponding liability for compensation."
+          }
+        ]
+      },
+      {
+        "id": "chapter-7",
+        "title": "Chapter 7 Supplementary Provisions",
+        "items": [
+          "The right of interpretation of these Rules belongs to iGCraftLit Community.",
+          "These Rules take effect on the date of registration. Continued use of community services constitutes agreement to these Rules.",
+          "These Rules may be updated in line with legal requirements or community development. Updates will be published in community announcements, and continued use constitutes acceptance of the updated Rules."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "FAQ",
+      "items": [
+        {
+          "id": "faq-q1",
+          "q": "Q1: What penalties follow a violation?",
+          "a": "Based on severity, administrators apply the quantified penalties in Chapter 6: a warning, 1/3/7-day mutes, a 30-day ban, a permanent ban, and ultimately account deletion. Where the law is broken, we cooperate with law-enforcement investigations."
+        },
+        {
+          "id": "faq-q2",
+          "q": "Q2: Can I transfer or sell my account?",
+          "a": "No. Accounts are owned by iGCraftLit and users only hold usage rights. Transferring, renting out or selling accounts is prohibited."
+        },
+        {
+          "id": "faq-q3",
+          "q": "Q3: What if I disagree with a penalty?",
+          "a": "If you object to a penalty, contact the administrators through community notifications or via igcraftlit@outlook.com to request a review. We will verify the circumstances and reply."
+        },
+        {
+          "id": "faq-q4",
+          "q": "Q4: How do Rule updates take effect?",
+          "a": "Updates will be published in community announcements. Your continued use of community services means you accept the updated Rules."
+        }
+      ]
+    },
+    "ipDetecting": "Detecting your IP address…",
+    "ipNotice": "Your IP address: {ip}. When you register and accept these rules, this IP and the timestamp will be recorded for violation handling and law-enforcement cooperation.",
+    "ipDetectFailed": "Unable to detect the IP address right now. Please make sure the local backend is running.",
+    "registerHint": "You are creating a new account. Please read these rules in full — scroll to the bottom of the page to accept and return to registration.",
+    "scrollToAccept": "Keep scrolling to the bottom to finish reading and accept",
+    "acceptAndReturn": "I have finished reading — accept and return to sign up"
   }
 }

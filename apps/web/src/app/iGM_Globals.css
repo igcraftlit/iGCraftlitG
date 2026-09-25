@@ -45,6 +45,14 @@ html[data-theme="light"] {
   --igm-sidebar-width: 256px;
   --igm-sidebar-width-rail: 72px;
   --igm-topbar-height: 60px;
+
+  /* 动效令牌：与 iGM_TransitionVariants.ts 数值保持一致
+     统一 ease-out 曲线，时长收敛在 200–400ms，干净无拖影 */
+  --igm-motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --igm-motion-page: 320ms; /* 全局页面切换入场 */
+  --igm-motion-item: 280ms; /* 页面内部模块交错渐显 */
+  --igm-motion-nav: 200ms; /* 侧边导航高亮等微交互 */
+  --igm-motion-theme: 200ms; /* 明暗主题切换短淡入 */
 }
 
 /* 深色主题变量 */
@@ -91,7 +99,8 @@ body {
   font-size: 14px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color var(--igm-motion-nav) var(--igm-motion-ease),
+    color var(--igm-motion-nav) var(--igm-motion-ease);
 }
 
 a {
@@ -133,5 +142,35 @@ ol {
 @keyframes igmGlobalSpin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* ===== 主题切换短淡入 =====
+   明暗切换时 ThemeProvider 在 <html> 临时写入
+   data-igm-theme-anim="active"，以一次极短淡入遮盖色彩变量瞬间置换，
+   避免明暗闪烁；仅动 opacity，不位移、不阻塞交互 */
+html[data-igm-theme-anim="active"] body {
+  animation: igmThemeFade var(--igm-motion-theme) var(--igm-motion-ease)
+    both;
+}
+
+@keyframes igmThemeFade {
+  from {
+    opacity: 0.7;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* 无障碍：系统偏好减少动态时，禁用主题淡入与页面过渡 */
+@media (prefers-reduced-motion: reduce) {
+  html[data-igm-theme-anim="active"] body {
+    animation: none;
+  }
+
+  body {
+    transition: none;
   }
 }

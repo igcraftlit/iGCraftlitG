@@ -48,6 +48,25 @@ export function iGM_IsLandingPath(pathname: string): boolean {
   return /^\/?(zh-CN|zh-TW|en|ja|ru)?\/?$/.test(pathname);
 }
 
+/**
+ * 判断路径是否为全屏认证页（登录 / 注册）：
+ * /G_Auth/login、/G_Auth/register（含语言前缀）不挂载控制台外壳，
+ * 无左侧导航与顶部栏，界面居中全屏呈现
+ */
+export function iGM_IsAuthFullscreenPath(pathname: string): boolean {
+  const stripped = iGM_StripLocalePrefix(pathname);
+  return /^\/G_Auth\/(login|register)\/?$/.test(stripped);
+}
+
+/** 判断路径是否豁免控制台外壳：门户落地页、全屏登录/注册页、规定独立页 */
+export function iGM_IsShellExemptPath(pathname: string): boolean {
+  if (iGM_IsLandingPath(pathname) || iGM_IsAuthFullscreenPath(pathname)) {
+    return true;
+  }
+  // 《用户管理规定》为独立阅读界面：无左侧控制台导航，仅保留右侧目录
+  return /^\/G_UserRules\/?$/.test(iGM_StripLocalePrefix(pathname));
+}
+
 /** 从 Cookie 读取持久化语言（服务端渲染安全：无 document 时返回 null） */
 export function iGM_ReadLocaleCookieValue(): string | null {
   if (typeof document === "undefined") return null;

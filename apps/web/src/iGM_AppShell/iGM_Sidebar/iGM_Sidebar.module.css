@@ -17,7 +17,7 @@
   background: var(--igm-surface);
   border-right: 1px solid var(--igm-border);
   transform: translateX(-100%);
-  transition: transform 0.2s ease;
+  transition: transform var(--igm-motion-nav) var(--igm-motion-ease);
   z-index: 50;
   overflow-y: auto;
 }
@@ -87,7 +87,10 @@
   padding: 8px 12px;
   border-radius: var(--igm-radius);
   color: var(--igm-text-muted);
-  transition: background-color 0.15s ease, color 0.15s ease;
+  /* 当前路由高亮随页面切换平滑滑移，无跳变（侧边导航联动） */
+  transition:
+    background-color var(--igm-motion-nav) var(--igm-motion-ease),
+    color var(--igm-motion-nav) var(--igm-motion-ease);
 }
 
 .navLink:hover {
@@ -156,7 +159,9 @@
   background: transparent;
   color: var(--igm-text-subtle);
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color var(--igm-motion-nav) var(--igm-motion-ease),
+    color var(--igm-motion-nav) var(--igm-motion-ease);
 }
 
 .navToggle:hover {
@@ -167,7 +172,7 @@
 /* 箭头：折叠朝右，展开旋转 90 度朝下 */
 .chevron,
 .chevronOpen {
-  transition: transform 0.15s ease;
+  transition: transform var(--igm-motion-nav) var(--igm-motion-ease);
 }
 
 .chevronOpen {
@@ -214,5 +219,16 @@
 
   .itemRow .navLink {
     flex: 0 0 auto;
+  }
+}
+
+/* 无障碍：系统偏好减少动态时，高亮与抽屉即时切换，不做过渡 */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .navLink,
+  .navToggle,
+  .chevron,
+  .chevronOpen {
+    transition: none;
   }
 }

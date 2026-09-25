@@ -5,13 +5,15 @@
  * 模块：iGM_AuthClient
  * 作用：认证相关后端接口的唯一前端调用出口
  * 内容：用户类型定义、注册、登录、登出、当前用户、邮箱验证、修改密码验证码、
- *       忘记密码、重置令牌预检、重置密码、修改密码
+ *       忘记密码、重置令牌预检、重置密码、修改密码、
+ *       模块七第三轮：自助注销账号（发送验证码 + 验证码确认删除）
  * 约束：只经 iGM_Request 发请求；前端不保存明文密码以外的任何敏感凭据，
  *       会话由后端 HttpOnly Cookie 承载
  */
 
 // 导入依赖 //
 import { iGM_Get, iGM_Post, type iGM_ApiResponse } from "./iGM_Request";
+import type { iGM_OrgBadge } from "./iGM_OrgVerifyClient";
 
 // 类型定义 //
 /** 用户角色，与后端 iGM_Types/iGM_Auth.ts 保持一致 */
@@ -20,6 +22,8 @@ export type iGM_UserRole = "user" | "moderator" | "admin";
 /** 对外用户信息（绝不含密码哈希） */
 export interface iGM_User {
   id: string;
+  /** 模块七增强：11 位全局唯一 iGMUid（注册时分配，不可修改） */
+  uid: string;
   username: string;
   email: string;
   role: iGM_UserRole;
@@ -30,6 +34,8 @@ export interface iGM_User {
   avatar: string | null;
   bio: string | null;
   website: string | null;
+  // 模块七：认证组织徽标（未认证为 null）
+  verifiedOrg: iGM_OrgBadge | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -127,6 +133,20 @@ export function iGM_ApiChangePassword(input: {
   return iGM_Post("/G_Auth/change-password", input);
 }
 
+/** 模块七第三轮：发送注销账号邮箱验证码（需登录，发送至本人邮箱） */
+export function iGM_ApiSendDeleteCode(): Promise<
+  iGM_ApiResponse<{ sent: boolean }>
+> {
+  return iGM_Post("/G_Auth/send-delete-code", undefined, 15000);
+}
+
+/** 模块七第三轮：凭邮箱验证码永久注销当前账号（成功后会话失效） */
+export function iGM_ApiDeleteAccount(
+  code: string,
+): Promise<iGM_ApiResponse<{ deleted: boolean }>> {
+  return iGM_Post("/G_Auth/delete-account", { code }, 15000);
+}
+
 // 导出 //
 export default {
   iGM_ApiRegister,
@@ -140,4 +160,6 @@ export default {
   iGM_ApiCheckResetToken,
   iGM_ApiResetPassword,
   iGM_ApiChangePassword,
+  iGM_ApiSendDeleteCode,
+  iGM_ApiDeleteAccount,
 };
