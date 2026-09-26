@@ -17,15 +17,20 @@ import { iGM_Link as Link } from "../../iGM_Components/iGM_Link/iGM_Link";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
+  Ban,
   FileText,
   Globe,
   LoaderCircle,
+  MessageCircle,
   MessageSquare,
   MessageSquareText,
   PencilLine,
   Settings2,
   ShieldCheck,
+  UserCheck,
+  UserPlus,
   UserRound,
+  Users,
 } from "lucide-react";
 import {
   iGM_ApiGetProfile,
@@ -36,6 +41,16 @@ import {
   type iGM_CommentPageData,
   type iGM_PublicProfile,
 } from "../../iGM_Services/iGM_CommunityClient";
+import {
+  iGM_ApiBlock,
+  iGM_ApiFollow,
+  iGM_ApiGetRelationState,
+  iGM_ApiListFollowing,
+  iGM_ApiSendFriendRequest,
+  iGM_ApiUnblock,
+  iGM_ApiUnfollow,
+  type iGM_RelationState,
+} from "../../iGM_Services/iGM_SocialClient";
 import { iGM_UseAuth } from "../../iGM_Providers/iGM_AuthProvider";
 import { iGM_UseLocale } from "../../iGM_Providers/iGM_LocaleProvider";
 import { iGM_ResolveErrorText } from "../../iGM_Components/iGM_AuthUI/iGM_AuthUI";
@@ -75,6 +90,14 @@ export function iGM_UserProfilePage() {
   const [commentsData, setCommentsData] = useState<iGM_CommentPageData | null>(null);
   const [listLoading, setListLoading] = useState(false);
 
+  /** 模块十：与目标用户的关系状态 */
+  const [relation, setRelation] = useState<iGM_RelationState | null>(null);
+  const [relationBusy, setRelationBusy] = useState(false);
+  const [relationError, setRelationError] = useState<string | null>(null);
+  /** 关注/粉丝计数（来自关系名单接口） */
+  const [followingCount, setFollowingCount] = useState(0);
+  const [followerCount, setFollowerCount] = useState(0);
+
   /** 加载公开资料 */
   useEffect(() => {
     if (!targetUserId) {
@@ -100,6 +123,128 @@ export function iGM_UserProfilePage() {
       cancelled = true;
     };
   }, [targetUserId, t]);
+
+  /** 模块十：非本人且已登录时加载关系状态 */
+  useEffect(() => {
+    if (!targetUserId || isSelf || status !== "authenticated") {
+      setRelation(null);
+      return;
+    }
+    let cancelled = false;
+    iGM_ApiGetRelationState(targetUserId)
+      .then((response) => {
+        if (!cancelled) setRelation(response.data?.state ?? null);
+      })
+      .catch(() => {
+        // 关系读取失败时不显示操作区
+        if (!cancelled) setRelation(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [targetUserId, isSelf, status]);
+
+  /** 加载目标用户的关注/粉丝计数 */
+  useEffect(() => {
+    if (!targetUserId) {
+      setFollowingCount(0);
+      setFollowerCount(0);
+      return;
+    }
+    let cancelled = false;
+    iGM_ApiListFollowing(targetUserId, 1)
+      .then((response) => {
+        if (cancelled) return;
+        const data = response.data?.data;
+        setFollowingCount(data?.followingCount ?? 0);
+        setFollowerCount(data?.followerCount ?? 0);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [targetUserId]);
+
+  /** 重新拉取关注/粉丝计数 */
+  async function iGM_RefreshCounts(): Promise<void> {
+    if (!targetUserId) return;
+    try {
+      const response = await iGM_ApiListFollowing(targetUserId, 1);
+      const data = response.data?.data;
+      setFollowingCount(data?.followingCount ?? 0);
+      setFollowerCount(data?.followerCount ?? 0);
+    } catch {
+      // 计数刷新失败不提示
+    }
+  }
+
+  /** 统一执行关系操作并回写最新状态 */
+  async function iGM_RunRelation(
+    action: () => Promise<{
+      data?: { state?: iGM_RelationState; blocked?: boolean } | null;
+    }>,
+  ): Promise<void> {
+    if (relationBusy) return;
+    setRelationBusy(true);
+    setRelationError(null);
+    try {
+      const response = await action();
+      if (response.data?.state) setRelation(response.data.state);
+      await iGM_RefreshCounts();
+    } catch (error) {
+      setRelationError(iGM_ResolveErrorText(t, error));
+    } finally {
+      setRelationBusy(false);
+    }
+  }
+
+  /** 关注/取消关注 */
+  function iGM_HandleToggleFollow(): void {
+    if (!targetUserId) return;
+    void iGM_RunRelation(() =>
+      relation?.following
+        ? iGM_ApiUnfollow(targetUserId)
+        : iGM_ApiFollow(targetUserId),
+    );
+  }
+
+  /** 发起好友申请 */
+  async function iGM_HandleFriendRequest(): Promise<void> {
+    if (!targetUserId || relationBusy) return;
+    setRelationBusy(true);
+    setRelationError(null);
+    try {
+      await iGM_ApiSendFriendRequest(targetUserId);
+      const response = await iGM_ApiGetRelationState(targetUserId);
+      setRelation(response.data?.state ?? null);
+      await iGM_RefreshCounts();
+    } catch (error) {
+      setRelationError(iGM_ResolveErrorText(t, error));
+    } finally {
+      setRelationBusy(false);
+    }
+  }
+
+  /** 拉黑/取消拉黑 */
+  async function iGM_HandleToggleBlock(): Promise<void> {
+    if (!targetUserId || relationBusy) return;
+    setRelationBusy(true);
+    setRelationError(null);
+    try {
+      if (relation?.blocked) {
+        await iGM_ApiUnblock(targetUserId);
+      } else {
+        await iGM_ApiBlock(targetUserId);
+      }
+      const response = await iGM_ApiGetRelationState(targetUserId);
+      setRelation(response.data?.state ?? null);
+      await iGM_RefreshCounts();
+    } catch (error) {
+      setRelationError(iGM_ResolveErrorText(t, error));
+    } finally {
+      setRelationBusy(false);
+    }
+  }
 
   /** 加载当前标签页数据 */
   const iGM_LoadList = useCallback(async () => {
@@ -233,6 +378,18 @@ export function iGM_UserProfilePage() {
             )}
           </div>
           <div className={styles.profileStats}>
+            <Link
+              href={`/G_UserRelations?userId=${encodeURIComponent(targetUserId)}&tab=following`}
+            >
+              <UserPlus size={14} strokeWidth={1.8} />
+              {t("community.profile.followingCountValue", { count: followingCount })}
+            </Link>
+            <Link
+              href={`/G_UserRelations?userId=${encodeURIComponent(targetUserId)}&tab=followers`}
+            >
+              <Users size={14} strokeWidth={1.8} />
+              {t("community.profile.followersCountValue", { count: followerCount })}
+            </Link>
             <span>
               <FileText size={14} strokeWidth={1.8} />
               {t("community.profile.postCount", { count: profile.postCount })}
@@ -259,6 +416,113 @@ export function iGM_UserProfilePage() {
               <Settings2 size={14} strokeWidth={1.8} />
               {t("community.profile.editProfile")}
             </Link>
+          </div>
+        )}
+
+        {/* 模块十：非本人操作区——关注/好友/私信/拉黑 */}
+        {!isSelf && status === "authenticated" && relation && (
+          <div className={styles.profileSelfActions}>
+            {relationError && (
+              <span className={styles.fieldError}>{relationError}</span>
+            )}
+
+            {/* 拉黑状态下仅显示取消拉黑；其余关系操作隐藏 */}
+            {relation.blocked ? (
+              <>
+                <span className={styles.badge}>
+                  <Ban size={12} strokeWidth={1.8} />
+                  {t("social.blockedBadge")}
+                </span>
+                <button
+                  type="button"
+                  className={styles.ghostButton}
+                  disabled={relationBusy}
+                  onClick={() => void iGM_HandleToggleBlock()}
+                >
+                  {relationBusy ? (
+                    <LoaderCircle size={14} className="igm-spin" />
+                  ) : (
+                    <Ban size={14} strokeWidth={1.8} />
+                  )}
+                  {t("social.unblock")}
+                </button>
+              </>
+            ) : (
+              <>
+                {/* 关注/取消关注 */}
+                <button
+                  type="button"
+                  className={
+                    relation.following
+                      ? styles.ghostButton
+                      : styles.primaryButton
+                  }
+                  disabled={relationBusy}
+                  onClick={iGM_HandleToggleFollow}
+                >
+                  {relation.following ? (
+                    <UserCheck size={14} strokeWidth={1.8} />
+                  ) : (
+                    <UserPlus size={14} strokeWidth={1.8} />
+                  )}
+                  {relation.following
+                    ? t("social.following")
+                    : t("social.follow")}
+                </button>
+
+                {/* 好友状态按钮 */}
+                {relation.friendState === "accepted" ? (
+                  <span className={styles.badge}>
+                    <Users size={12} strokeWidth={1.8} />
+                    {t("social.friendsBadge")}
+                  </span>
+                ) : relation.friendState === "pending_outgoing" ? (
+                  <button
+                    type="button"
+                    className={styles.ghostButton}
+                    disabled
+                  >
+                    <LoaderCircle size={14} className="igm-spin" />
+                    {t("social.requestSent")}
+                  </button>
+                ) : relation.friendState === "pending_incoming" ? (
+                  <Link href="/G_Friends" className={styles.ghostButton}>
+                    <UserPlus size={14} strokeWidth={1.8} />
+                    {t("social.respondRequest")}
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    className={styles.ghostButton}
+                    disabled={relationBusy}
+                    onClick={() => void iGM_HandleFriendRequest()}
+                  >
+                    <UserPlus size={14} strokeWidth={1.8} />
+                    {t("social.addFriend")}
+                  </button>
+                )}
+
+                {/* 私信 */}
+                <Link
+                  href={`/G_MessageDetail?peerId=${encodeURIComponent(targetUserId)}`}
+                  className={styles.ghostButton}
+                >
+                  <MessageCircle size={14} strokeWidth={1.8} />
+                  {t("social.sendMessage")}
+                </Link>
+
+                {/* 拉黑 */}
+                <button
+                  type="button"
+                  className={styles.iconAction}
+                  disabled={relationBusy}
+                  title={t("social.block")}
+                  onClick={() => void iGM_HandleToggleBlock()}
+                >
+                  <Ban size={15} strokeWidth={1.8} />
+                </button>
+              </>
+            )}
           </div>
         )}
       </section>

@@ -71,6 +71,9 @@ function iGM_HandleEditPost(ctx: iGM_RouteContext) {
     content: iGM_Field(ctx.body, "content"),
     categoryId: categoryId.length > 0 ? categoryId : null,
     tags: iGM_Field(ctx.body, "tags"),
+    images: Array.isArray((ctx.body as Record<string, unknown> | null)?.images)
+      ? ((ctx.body as Record<string, unknown>).images as string[])
+      : undefined,
   });
   return iGM_Ok({ post }, "community.messages.postUpdated");
 }

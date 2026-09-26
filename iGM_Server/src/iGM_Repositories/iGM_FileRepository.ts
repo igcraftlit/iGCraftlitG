@@ -122,10 +122,11 @@ export function iGM_CountFileReferences(fileId: string): number {
       `SELECT
          (SELECT COUNT(*) FROM iGM_Resources
            WHERE iGM_FileId = ? OR iGM_CoverFileId = ?) +
-         (SELECT COUNT(*) FROM iGM_Activities WHERE iGM_CoverFileId = ?)
+         (SELECT COUNT(*) FROM iGM_Activities WHERE iGM_CoverFileId = ?) +
+         (SELECT COUNT(*) FROM iGM_PostImages WHERE iGM_FileId = ?)
          AS iGM_Count`,
     )
-    .get(fileId, fileId, fileId) as { iGM_Count: number };
+    .get(fileId, fileId, fileId, fileId) as { iGM_Count: number };
   return row.iGM_Count;
 }
 

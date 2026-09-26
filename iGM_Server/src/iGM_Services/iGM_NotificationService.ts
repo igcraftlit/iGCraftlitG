@@ -26,6 +26,8 @@ import {
 import { iGM_FindUserById } from "../iGM_Repositories/iGM_UserRepository";
 import { iGM_SendNotificationMail } from "./iGM_MailService";
 import { iGM_ContentError } from "./iGM_ContentService";
+// 模块九：站内通知写库成功后经 WebSocket 实时推送（单向依赖，无循环引用）
+import { iGM_PushNotificationToUser } from "./iGM_RealtimeService";
 import {
   iGM_ToNotificationDto,
   iGM_ToNotificationPreferenceDto,
@@ -194,6 +196,8 @@ export function iGM_Notify(input: iGM_NotifyInput): iGM_NotificationDto | null {
       now,
     });
     created = iGM_ToNotificationDto(row);
+    // 模块九：实时推送给该用户的在线连接（接收者不在线时自动跳过）
+    iGM_PushNotificationToUser(input.userId, created);
   }
 
   // 邮件通知：异步投递，失败不影响主流程

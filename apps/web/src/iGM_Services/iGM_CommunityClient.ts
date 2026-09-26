@@ -65,9 +65,18 @@ export interface iGM_PostListItem {
   updatedAt: string;
 }
 
+/** 帖子配图（按 sortOrder 升序） */
+export interface iGM_PostImage {
+  id: string;
+  fileId: string;
+  sortOrder: number;
+}
+
 /** 帖子详情 */
 export interface iGM_PostDetail extends Omit<iGM_PostListItem, "excerpt"> {
   content: string;
+  /** 模块十：配图列表（最多 9 张） */
+  images: iGM_PostImage[];
 }
 
 /** 分页数据 */
@@ -141,6 +150,8 @@ export interface iGM_PostPayload {
   categoryId: string | null;
   /** 标签原始字符串，后端解析 */
   tags: string;
+  /** 模块十：配图文件 ID 有序数组 */
+  images: string[];
 }
 
 /** 资料编辑提交载荷 */

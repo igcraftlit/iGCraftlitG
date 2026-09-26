@@ -31,6 +31,13 @@ export function iGM_FormatDateTime(locale: string, iso: string): string {
   }).format(date);
 }
 
+/** 按界面语言仅格式化为时间（如 14:30） */
+export function iGM_FormatTime(locale: string, iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat(locale, { timeStyle: "short" }).format(date);
+}
+
 /**
  * 相对时间：返回“刚刚 / n 分钟前 / n 小时前 / n 天前”，超过 7 天回退绝对日期。
  * 各语言文案由调用方通过 rtf 回调或直接使用 Intl.RelativeTimeFormat

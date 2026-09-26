@@ -38,7 +38,17 @@
     "orgVerify": "Org Verification",
     "orgVerifyStatus": "My Applications",
     "adminOrgVerify": "Org Review",
-    "orgDetails": "Organization"
+    "orgDetails": "Organization",
+    "realtime": "Realtime",
+    "dashboard": "Dashboard",
+    "statsDetail": "Stats Detail",
+    "minecraft": "Minecraft Resources",
+    "minecraftUpload": "Upload MC Resource",
+    "feed": "Feed",
+    "friends": "Friends",
+    "userRelations": "Following & Followers",
+    "messages": "Messages",
+    "messageSettings": "Message Privacy"
   },
   "topbar": {
     "menu": "Menu",
@@ -282,6 +292,54 @@
     "userRules": {
       "title": "User Rules",
       "description": "The full iGCraftLit Community User Rules: global coexistence, account management, conduct standards, intellectual property and quantified penalties"
+    },
+    "realtime": {
+      "title": "Realtime",
+      "description": "Current online users and real-time notification stream"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "description": "Core metrics overview and trend charts"
+    },
+    "statsDetail": {
+      "title": "Stats Detail",
+      "description": "View growth trends, rankings and activity stats by time range"
+    },
+    "userRelations": {
+      "title": "Following & Followers",
+      "description": "View the users this member follows and their followers"
+    },
+    "friends": {
+      "title": "Friends",
+      "description": "Manage your friends and incoming and outgoing requests"
+    },
+    "feed": {
+      "title": "Feed",
+      "description": "Latest activity from the users and friends you follow"
+    },
+    "messages": {
+      "title": "Messages",
+      "description": "Your private message conversations"
+    },
+    "messageDetail": {
+      "title": "Conversation",
+      "description": "A one-to-one private conversation with another member"
+    },
+    "messageSettings": {
+      "title": "Message Privacy",
+      "description": "Choose who is allowed to send you private messages"
+    },
+    "minecraft": {
+      "title": "Minecraft Resources",
+      "description": "Browse and download Minecraft mods, texture packs, maps and skins, filtered by version and loader"
+    },
+    "minecraftUpload": {
+      "title": "Upload Minecraft Resource",
+      "description": "Publish a Minecraft resource with versions, loaders, platforms and license details"
+    },
+    "minecraftDetail": {
+      "title": "Minecraft Resource Detail",
+      "description": "Read the description, compatibility notes and changelog, then download"
     }
   },
   "placeholder": {
@@ -589,7 +647,10 @@
       "contentPlaceholder": "Write your post content…",
       "save": "Save changes",
       "publish": "Publish",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "imagesLabel": "Images",
+      "addImages": "Add images",
+      "imagesHint": "{count} / {max} images added — up to 5MB each, drag to reorder"
     },
     "profile": {
       "noSelectionTitle": "No user selected",
@@ -609,7 +670,9 @@
       "emptyPostsDesc": "They have not published any posts yet",
       "emptyCommentsTitle": "No comments yet",
       "emptyCommentsDesc": "They have not posted any comments yet",
-      "uidLabel": "iGMUid"
+      "uidLabel": "iGMUid",
+      "followingCountValue": "{count} following",
+      "followersCountValue": "{count} followers"
     },
     "myPosts": {
       "title": "My posts",
@@ -659,7 +722,10 @@
       "websiteInvalid": "Website URL format is invalid",
       "avatarInvalid": "Avatar URL format is invalid",
       "unauthorized": "Please sign in first",
-      "forbidden": "You do not have permission to perform this action"
+      "forbidden": "You do not have permission to perform this action",
+      "imagesInvalid": "Image validation failed; check the file type and size",
+      "tooManyImages": "You can upload at most {max} images",
+      "imageInvalid": "Invalid image: image formats only, up to 5MB per file"
     },
     "messages": {
       "postCreated": "Post published",
@@ -669,7 +735,11 @@
       "commentUpdated": "Comment updated",
       "commentDeleted": "Comment deleted",
       "profileUpdated": "Profile updated"
-    }
+    },
+    "galleryImageAlt": "Post image {index}",
+    "lightboxClose": "Close",
+    "lightboxPrev": "Previous image",
+    "lightboxNext": "Next image"
   },
   "notification": {
     "title": "Notification Center",
@@ -1318,5 +1388,277 @@
     "registerHint": "You are creating a new account. Please read these rules in full — scroll to the bottom of the page to accept and return to registration.",
     "scrollToAccept": "Keep scrolling to the bottom to finish reading and accept",
     "acceptAndReturn": "I have finished reading — accept and return to sign up"
+  },
+  "realtime": {
+    "status": {
+      "connected": "Connected",
+      "disconnected": "Disconnected"
+    },
+    "onlineCount": "{count} online",
+    "onlineUsers": "Online Users",
+    "noOnline": "No users currently online",
+    "you": "You",
+    "owner": "Owner",
+    "notificationStream": "Notification Stream",
+    "noNotifications": "No new notifications",
+    "viewDetail": "View detail",
+    "alert": {
+      "disconnected": "Real-time connection lost. Notifications will no longer be pushed automatically."
+    }
+  },
+  "dashboard": {
+    "metrics": {
+      "totalUsers": "Total Users",
+      "newUsersToday": "New Users Today",
+      "activeUsersDaily": "DAU",
+      "activeUsersWeekly": "WAU",
+      "activeUsersMonthly": "MAU",
+      "totalPosts": "Total Posts",
+      "postsToday": "Posts Today",
+      "totalComments": "Total Comments",
+      "commentsToday": "Comments Today",
+      "totalLikes": "Total Likes",
+      "totalResources": "Total Resources",
+      "totalActivities": "Total Activities",
+      "totalActivityRegistrations": "Total Registrations",
+      "totalResourceDownloads": "Total Downloads",
+      "onlineUsers": "Online Now"
+    },
+    "charts": {
+      "userGrowth": "User Growth",
+      "postVolume": "Post Volume",
+      "commentVolume": "Comment Volume",
+      "newUsers": "New Users",
+      "posts": "Posts",
+      "comments": "Comments"
+    },
+    "leaderboards": {
+      "hotPosts": "Hot Posts",
+      "hotResources": "Hot Resources",
+      "activeUsers": "Active Users",
+      "likes": "Likes",
+      "comments": "Comments"
+    },
+    "noData": "No data"
+  },
+  "stats": {
+    "ranges": {
+      "7d": "Last 7 days",
+      "30d": "Last 30 days",
+      "90d": "Last 90 days"
+    },
+    "sections": {
+      "userGrowth": "User Growth",
+      "postVolume": "Post Volume",
+      "commentVolume": "Comment Volume",
+      "activity": "Activity Trend"
+    },
+    "charts": {
+      "users": "Users",
+      "posts": "Posts",
+      "comments": "Comments",
+      "activity": "Active"
+    },
+    "activities": {
+      "title": "Activity Stats",
+      "totalActivities": "Total Activities",
+      "totalRegistrations": "Total Registrations",
+      "colTitle": "Title",
+      "colStatus": "Status",
+      "colStartTime": "Start Time",
+      "colRegistrations": "Registrations"
+    }
+  },
+  "social": {
+    "relationsTitle": "Following & Followers",
+    "relationsTitleWithName": "Following & Followers of {name}",
+    "following": "Following",
+    "followers": "Followers",
+    "follow": "Follow",
+    "unblock": "Unblock",
+    "block": "Block",
+    "blockedBadge": "Blocked",
+    "friendsBadge": "Friends",
+    "requestSent": "Request sent",
+    "respondRequest": "Respond",
+    "addFriend": "Add friend",
+    "backToProfile": "Back to profile",
+    "sendMessage": "Message",
+    "followedAt": "Followed on {date}",
+    "stateLoading": "Loading…",
+    "emptyFollowing": "Not following anyone yet",
+    "emptyFollowers": "No followers yet",
+    "friendsTitle": "Friends",
+    "friendsDescription": "Manage your friends and friend requests",
+    "tabFriends": "Friends",
+    "tabIncoming": "Incoming requests",
+    "tabOutgoing": "Outgoing requests",
+    "friendsSince": "Friends since {date}",
+    "removeFriend": "Remove friend",
+    "emptyFriends": "No friends yet",
+    "emptyFriendsDescription": "Explore the community and meet like-minded Stargazers",
+    "requestAt": "Requested on {date}",
+    "accept": "Accept",
+    "reject": "Decline",
+    "cancelRequest": "Cancel request",
+    "emptyIncoming": "No incoming friend requests",
+    "emptyOutgoing": "No outgoing friend requests",
+    "feedTitle": "Feed",
+    "feedDescription": "Latest posts and comments from the users and friends you follow",
+    "actionPosted": "posted",
+    "actionCommented": "commented",
+    "emptyFeed": "Your feed is empty",
+    "emptyFeedDescription": "Follow more users and their latest activity will appear here",
+    "exploreCommunity": "Explore the community",
+    "errors": {
+      "userMissing": "No target user specified",
+      "userNotFound": "The target user does not exist",
+      "cannotSelf": "You cannot perform this action on yourself",
+      "blocked": "Action denied: a block exists between you and the other user",
+      "alreadyFriend": "You are already friends",
+      "alreadyRequested": "A friend request already exists; do not send it again",
+      "requestNotFound": "The friend request does not exist or has already been handled",
+      "friendNotFound": "The friendship does not exist"
+    }
+  },
+  "message": {
+    "listTitle": "Messages",
+    "privacySettings": "Privacy settings",
+    "stateLoading": "Loading…",
+    "recalledInline": "This message was recalled",
+    "noMessages": "No messages yet",
+    "emptyConversations": "No conversations yet",
+    "emptyConversationsDescription": "Start your first conversation from a member's profile",
+    "backToList": "Back to conversations",
+    "deleteConversation": "Delete conversation",
+    "confirmDelete": "Delete this conversation? This action cannot be undone.",
+    "settingsTitle": "Message privacy",
+    "settingsDescription": "Choose who can start a conversation with you",
+    "settingsSaved": "Settings saved",
+    "saveSettings": "Save settings",
+    "composerPlaceholder": "Type a message — Enter to send, Shift+Enter for a new line",
+    "send": "Send",
+    "recall": "Recall",
+    "allowFrom": {
+      "everyone": {
+        "title": "Everyone",
+        "description": "Any signed-in user can send you messages"
+      },
+      "friends": {
+        "title": "Friends only",
+        "description": "Only friends you mutually follow can send you messages"
+      },
+      "none": {
+        "title": "No messages",
+        "description": "No one can start a new conversation with you"
+      }
+    },
+    "errors": {
+      "conversationNotFound": "Conversation not found",
+      "closed": "The other user has disabled messages; it could not be sent",
+      "friendsOnly": "The other user accepts messages from friends only",
+      "contentRequired": "Message content cannot be empty",
+      "contentTooLong": "Message content is too long",
+      "notFound": "Conversation not found or you have no access to it",
+      "targetRequired": "Please choose a recipient",
+      "messageNotFound": "Message not found",
+      "alreadyRecalled": "This message has already been recalled",
+      "recallExpired": "The recall time window has passed; the message cannot be recalled",
+      "allowFromInvalid": "Invalid privacy option"
+    }
+  },
+  "minecraft": {
+    "title": "Minecraft Resources",
+    "description": "Mods, texture packs, maps, skins and more — all in one place",
+    "upload": "Upload",
+    "editTitle": "Edit resource",
+    "backToList": "Back to resources",
+    "all": "All",
+    "filterType": "Type",
+    "filterVersion": "MC version",
+    "filterLoader": "Loader",
+    "filterPlatform": "Platform",
+    "searchPlaceholder": "Search resource names or tags…",
+    "stateLoading": "Loading…",
+    "downloadCount": "{count} downloads",
+    "empty": "No resources match your filters",
+    "emptyDescription": "Try adjusting the filters or your search terms",
+    "notFound": "The resource does not exist or has been removed",
+    "confirmDelete": "Delete this resource? This cannot be undone.",
+    "download": "Download",
+    "fileName": "File name",
+    "fileSize": "File size",
+    "fileInfo": "File information",
+    "uploadedBy": "Uploaded by {name}",
+    "compatVersions": "Versions",
+    "compatLoaders": "Loaders",
+    "compatPlatforms": "Platforms",
+    "descriptionLabel": "Description",
+    "creditTitle": "Credit & license",
+    "license": "License",
+    "originalAuthor": "Original author",
+    "originalUrl": "Original post URL",
+    "unspecified": "Not specified",
+    "changelogLabel": "Changelog",
+    "edit": "Edit",
+    "delete": "Delete",
+    "sectionBasic": "Basic information",
+    "sectionFiles": "Files & tags",
+    "sectionCredit": "License & credit",
+    "resourceTypes": {
+      "mod": "Mod",
+      "texture_pack": "Texture Pack",
+      "map": "Map",
+      "skin": "Skin",
+      "plugin": "Plugin",
+      "modpack": "Modpack",
+      "datapack": "Data Pack",
+      "other": "Other"
+    },
+    "form": {
+      "title": "Title",
+      "titlePlaceholder": "Enter the resource title",
+      "resourceType": "Resource type",
+      "mcVersions": "Supported MC versions (multi-select)",
+      "versionHint": "{selected} / {max} versions selected",
+      "loaders": "Loaders (multi-select)",
+      "platforms": "Platforms (multi-select)",
+      "file": "Resource file",
+      "uploadFile": "Upload resource file",
+      "fileHint": "Only whitelisted resource file types are allowed, up to 20MB each",
+      "cover": "Cover image",
+      "tags": "Tags",
+      "tagsPlaceholder": "Separate tags with commas",
+      "license": "License",
+      "licensePlaceholder": "e.g. MIT, All Rights Reserved",
+      "originalAuthor": "Original author",
+      "originalAuthorPlaceholder": "Credit the original author for reposts",
+      "originalUrl": "Original post URL",
+      "originalUrlPlaceholder": "https://…",
+      "description": "Description",
+      "descriptionPlaceholder": "Describe features, usage and anything else to know",
+      "changelog": "Changelog",
+      "changelogPlaceholder": "What changed in this version",
+      "submitCreate": "Publish",
+      "submitEdit": "Save changes",
+      "cancel": "Cancel"
+    },
+    "errors": {
+      "titleInvalid": "Title must be 1–100 characters",
+      "typeRequired": "Please choose a resource type",
+      "versionRequired": "Please select at least one MC version",
+      "platformRequired": "Please select at least one platform",
+      "descriptionInvalid": "Description must be 1–5000 characters",
+      "fileRequired": "Please upload the resource file",
+      "licenseInvalid": "License must not exceed 100 characters",
+      "originalAuthorInvalid": "Original author name must not exceed 50 characters",
+      "originalUrlInvalid": "Original post URL must be a valid http(s) link",
+      "changelogInvalid": "Changelog must not exceed 5000 characters",
+      "resourceTypeInvalid": "Invalid resource type",
+      "tooManyVersions": "You can select at most {max} versions",
+      "versionInvalid": "An invalid MC version was provided",
+      "loaderInvalid": "An invalid loader was provided",
+      "platformInvalid": "An invalid platform was provided"
+    }
   }
 }

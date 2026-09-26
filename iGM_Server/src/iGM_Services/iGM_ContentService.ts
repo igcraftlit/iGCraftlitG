@@ -47,6 +47,11 @@ import {
   iGM_ListCategories,
   iGM_ReplacePostTags,
 } from "../iGM_Repositories/iGM_TaxonomyRepository";
+import { iGM_FindFilesByIds } from "../iGM_Repositories/iGM_FileRepository";
+import {
+  iGM_ListPostImages,
+  iGM_ReplacePostImages,
+} from "../iGM_Repositories/iGM_PostImageRepository";
 import {
   iGM_AddFavorite,
   iGM_AddLike,
@@ -77,6 +82,7 @@ import {
   type iGM_LikeTargetType,
   type iGM_MyCommentItemDto,
   type iGM_PostDetailDto,
+  type iGM_PostImageDto,
   type iGM_PostListItemDto,
   type iGM_PostListData,
   type iGM_PublicProfileDto,
@@ -101,6 +107,8 @@ export interface iGM_PostInput {
   categoryId?: string | null;
   /** 标签原始字符串：逗号/顿号/分号/空白分隔，服务端解析 */
   tags?: string;
+  /** 模块十：配图文件 ID 有序数组（下标即展示顺序），最多 9 张 */
+  images?: string[];
 }
 
 /** 帖子列表查询输入 */
@@ -136,6 +144,8 @@ const iGM_AvatarMaxLength = 500;
 const iGM_ExcerptLength = 160;
 const iGM_MaxTags = 5;
 const iGM_TagNameMaxLength = 20;
+/** 模块十：单帖配图上限 9 张（前端编辑器同步约束） */
+const iGM_MaxPostImages = 9;
 const iGM_DefaultPageSize = 10;
 const iGM_MaxPageSize = 50;
 
@@ -250,6 +260,58 @@ function iGM_ValidatePostInput(input: iGM_PostInput): {
     throw new iGM_ContentError("community.errors.contentInvalid", 422);
   }
   return { title, content, tags: iGM_ParseTags(input.tags) };
+}
+
+/**
+ * 模块十：校验帖子配图文件 ID 列表
+ * 1. 非数组或含非字符串值直接拒绝；
+ * 2. 去重后数量不得超过 9 张；
+ * 3. 每个文件必须存在、为图片类型，且由本人上传，
+ *    防止引用他人或非图片文件。
+ * 返回去重后的有序文件 ID。
+ */
+function iGM_ValidatePostImages(
+  user: iGM_UserRow,
+  raw: unknown,
+): string[] {
+  if (raw === undefined || raw === null) return [];
+  if (!Array.isArray(raw)) {
+    throw new iGM_ContentError("community.errors.imagesInvalid", 422);
+  }
+  const ids: string[] = [];
+  for (const item of raw) {
+    if (typeof item !== "string" || item.trim().length === 0) {
+      throw new iGM_ContentError("community.errors.imagesInvalid", 422);
+    }
+    const id = item.trim();
+    if (!ids.includes(id)) ids.push(id);
+  }
+  if (ids.length > iGM_MaxPostImages) {
+    throw new iGM_ContentError("community.errors.tooManyImages", 422);
+  }
+  if (ids.length === 0) return [];
+  const files = iGM_FindFilesByIds(ids);
+  const fileMap = new Map(files.map((file) => [file.iGM_Id, file]));
+  for (const id of ids) {
+    const file = fileMap.get(id);
+    if (
+      !file ||
+      file.iGM_UploaderId !== user.iGM_Id ||
+      !file.iGM_MimeType.startsWith("image/")
+    ) {
+      throw new iGM_ContentError("community.errors.imageInvalid", 422);
+    }
+  }
+  return ids;
+}
+
+/** 读取帖子配图 DTO（按顺序） */
+function iGM_BuildPostImageDtos(postId: string): iGM_PostImageDto[] {
+  return iGM_ListPostImages(postId).map((row) => ({
+    id: row.iGM_Id,
+    fileId: row.iGM_FileId,
+    sortOrder: row.iGM_SortOrder,
+  }));
 }
 
 /** 校验并净化评论内容 */
@@ -459,6 +521,8 @@ export function iGM_CreatePostService(
   input: iGM_PostInput,
 ): iGM_PostDetailDto {
   const { title, content, tags } = iGM_ValidatePostInput(input);
+  // 模块十：配图校验（数量、归属、类型）
+  const imageIds = iGM_ValidatePostImages(user, input.images);
 
   let categoryId: string | null = null;
   if (input.categoryId) {
@@ -485,6 +549,10 @@ export function iGM_CreatePostService(
         tagRows.map((tag) => tag.iGM_Id),
       );
     }
+    // 模块十：事务内写入配图关联，保证帖子与图片一致
+    if (imageIds.length > 0) {
+      iGM_ReplacePostImages(created.iGM_Id, imageIds, now);
+    }
     return created;
   })();
 
@@ -508,6 +576,8 @@ export function iGM_UpdatePostService(
   }
 
   const { title, content, tags } = iGM_ValidatePostInput(input);
+  // 模块十：配图校验；编辑页始终提交完整列表，空数组即清空
+  const imageIds = iGM_ValidatePostImages(user, input.images);
 
   let categoryId: string | null = null;
   if (input.categoryId) {
@@ -526,6 +596,8 @@ export function iGM_UpdatePostService(
       postId,
       tagRows.map((tag) => tag.iGM_Id),
     );
+    // 模块十：整组替换配图（含清空）
+    iGM_ReplacePostImages(postId, imageIds, now);
   })();
 
   const detail = iGM_GetPostDetail(user, postId);
@@ -587,7 +659,12 @@ export function iGM_GetPostDetail(
   const [item] = iGM_AssemblePostList([post], currentUser?.iGM_Id ?? null);
   if (!item) return null;
   const { excerpt: _excerpt, ...rest } = item;
-  return { ...rest, content: post.iGM_Content };
+  // 模块十：附带有序配图 DTO
+  return {
+    ...rest,
+    content: post.iGM_Content,
+    images: iGM_BuildPostImageDtos(postId),
+  };
 }
 
 /** 社区广场帖子列表：公开访问，仅返回已发布帖子 */

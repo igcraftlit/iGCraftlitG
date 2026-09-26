@@ -1,0 +1,147 @@
+/*
+ * 文件路径：apps/web/src/iGM_Components/iGM_PostImageUploader/iGM_PostImageUploader.module.css
+ * 所属层：前端 / 通用组件样式
+ * 路由：被 G_PostEdit 发帖/编辑页使用
+ * 模块：iGM_PostImageUploader
+ * 作用：帖子多图上传组件的网格、图块、拖拽手柄、删除按钮与提示样式
+ */
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* 单个图块 */
+.tile {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--igm-radius);
+  overflow: hidden;
+  border: 1px solid var(--igm-border);
+  background: var(--igm-surface-subtle);
+  cursor: grab;
+}
+
+.tile:active {
+  cursor: grabbing;
+}
+
+.tileImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+/* 排序拖拽手柄 */
+.dragHandle {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 4px;
+  background: color-mix(in srgb, #000 45%, transparent);
+  color: #fff;
+}
+
+/* 序号角标 */
+.orderBadge {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, #000 50%, transparent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* 删除按钮 */
+.removeButton {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 999px;
+  background: color-mix(in srgb, #000 55%, transparent);
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.removeButton:hover {
+  background: var(--igm-danger);
+}
+
+/* 上传中遮罩 */
+.uploadingOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--igm-surface) 55%, transparent);
+  color: var(--igm-accent);
+}
+
+/* 添加入口图块 */
+.addTile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  aspect-ratio: 1 / 1;
+  border: 1px dashed var(--igm-border-strong);
+  border-radius: var(--igm-radius);
+  background: transparent;
+  color: var(--igm-text-subtle);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.addTile:hover {
+  border-color: var(--igm-accent);
+  color: var(--igm-accent);
+  background: var(--igm-surface-subtle);
+}
+
+.addText {
+  font-size: 12px;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+.errorText {
+  font-size: 12px;
+  color: var(--igm-danger);
+}

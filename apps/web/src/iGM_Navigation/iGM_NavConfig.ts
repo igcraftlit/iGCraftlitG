@@ -13,9 +13,12 @@ import {
   BadgeCheck,
   Bell,
   BellRing,
+  Blocks,
   CalendarCheck,
   CalendarDays,
   CalendarPlus,
+  ChartColumn,
+  ChartLine,
   ClipboardList,
   FileText,
   Flag,
@@ -23,9 +26,13 @@ import {
   Home,
   Library,
   Mail,
+  MessageSquare,
   MessageSquareText,
+  MessagesSquare,
+  Newspaper,
   NotebookPen,
   PenSquare,
+  Radio,
   Settings,
   Shield,
   ShieldCheck,
@@ -72,6 +79,13 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
     items: [
       { href: "/G_Home", icon: Home, labelKey: "nav.home" },
       { href: "/G_Notification", icon: Bell, labelKey: "nav.notifications" },
+      {
+        // 模块九：实时在线状态（登录用户可见，页面另有 RequireAuth 校验）
+        href: "/G_Realtime",
+        icon: Radio,
+        labelKey: "nav.realtime",
+        roles: ["user", "moderator", "admin"],
+      },
     ],
   },
   {
@@ -107,7 +121,27 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
             icon: Upload,
             labelKey: "nav.uploadResource",
           },
+          {
+            // 模块十：Minecraft 资源分区，归入资源库，避免顶级重复
+            href: "/G_Minecraft",
+            icon: Blocks,
+            labelKey: "nav.minecraft",
+            children: [
+              {
+                href: "/G_MinecraftUpload",
+                icon: Upload,
+                labelKey: "nav.minecraftUpload",
+              },
+            ],
+          },
         ],
+      },
+      {
+        // 模块十：动态流（登录用户）
+        href: "/G_Feed",
+        icon: Newspaper,
+        labelKey: "nav.feed",
+        roles: ["user", "moderator", "admin"],
       },
     ],
   },
@@ -152,6 +186,34 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
         href: "/G_FileManager",
         icon: FolderOpen,
         labelKey: "nav.myFiles",
+      },
+      {
+        // 模块十：好友管理（登录用户）
+        href: "/G_Friends",
+        icon: Users,
+        labelKey: "nav.friends",
+        roles: ["user", "moderator", "admin"],
+        children: [
+          {
+            href: "/G_UserRelations",
+            icon: MessageSquare,
+            labelKey: "nav.userRelations",
+          },
+        ],
+      },
+      {
+        // 模块十：私信（登录用户）
+        href: "/G_Messages",
+        icon: MessagesSquare,
+        labelKey: "nav.messages",
+        roles: ["user", "moderator", "admin"],
+        children: [
+          {
+            href: "/G_MessageSettings",
+            icon: BellRing,
+            labelKey: "nav.messageSettings",
+          },
+        ],
       },
       // 模块七：组织认证（申请 + 我的申请记录）
       {
@@ -206,6 +268,18 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
             href: "/G_AdminUsers",
             icon: Users,
             labelKey: "nav.adminUsers",
+          },
+          {
+            // 模块九：运营看板（moderator 及以上，继承父节点角色）
+            href: "/G_Dashboard",
+            icon: ChartColumn,
+            labelKey: "nav.dashboard",
+          },
+          {
+            // 模块九：数据详情（moderator 及以上，继承父节点角色）
+            href: "/G_StatsDetail",
+            icon: ChartLine,
+            labelKey: "nav.statsDetail",
           },
           {
             href: "/G_AdminContents",

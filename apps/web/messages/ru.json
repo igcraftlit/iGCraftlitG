@@ -38,7 +38,17 @@
     "orgVerify": "Верификация организации",
     "orgVerifyStatus": "Мои заявки",
     "adminOrgVerify": "Проверка заявок",
-    "orgDetails": "Об организации"
+    "orgDetails": "Об организации",
+    "realtime": "Онлайн",
+    "dashboard": "Панель управления",
+    "statsDetail": "Детали статистики",
+    "minecraft": "Ресурсы Minecraft",
+    "minecraftUpload": "Загрузить ресурс MC",
+    "feed": "Лента",
+    "friends": "Друзья",
+    "userRelations": "Подписки и подписчики",
+    "messages": "Сообщения",
+    "messageSettings": "Приватность сообщений"
   },
   "topbar": {
     "menu": "Меню",
@@ -282,6 +292,54 @@
     "userRules": {
       "title": "Правила пользователей",
       "description": "Полный текст Правил пользователей iGCraftLit Community: глобальное сосуществование, управление аккаунтами, нормы поведения, интеллектуальная собственность и количественные санкции"
+    },
+    "realtime": {
+      "title": "Онлайн",
+      "description": "Текущие онлайн-пользователи и поток уведомлений в реальном времени"
+    },
+    "dashboard": {
+      "title": "Панель управления",
+      "description": "Обзор ключевых метрик и графики тенденций"
+    },
+    "statsDetail": {
+      "title": "Детали статистики",
+      "description": "Просмотр тенденций роста, рейтингов и статистики активности по периодам"
+    },
+    "userRelations": {
+      "title": "Подписки и подписчики",
+      "description": "Список пользователей, на которых подписан участник, и его подписчиков"
+    },
+    "friends": {
+      "title": "Друзья",
+      "description": "Управление друзьями, входящими и исходящими заявками"
+    },
+    "feed": {
+      "title": "Лента",
+      "description": "Свежие события пользователей и друзей, на которых вы подписаны"
+    },
+    "messages": {
+      "title": "Сообщения",
+      "description": "Ваши личные переписки"
+    },
+    "messageDetail": {
+      "title": "Переписка",
+      "description": "Личная переписка один на один с другим участником"
+    },
+    "messageSettings": {
+      "title": "Приватность сообщений",
+      "description": "Выберите, кто может отправлять вам личные сообщения"
+    },
+    "minecraft": {
+      "title": "Ресурсы Minecraft",
+      "description": "Моды, текстурпаки, карты и скины с фильтрами по версии и загрузчику"
+    },
+    "minecraftUpload": {
+      "title": "Загрузка ресурса Minecraft",
+      "description": "Опубликуйте ресурс с указанием версий, загрузчиков, платформ и лицензии"
+    },
+    "minecraftDetail": {
+      "title": "Ресурс Minecraft — подробности",
+      "description": "Описание, совместимость и список изменений, а затем загрузка"
     }
   },
   "placeholder": {
@@ -589,7 +647,10 @@
       "contentPlaceholder": "Введите текст поста…",
       "save": "Сохранить изменения",
       "publish": "Опубликовать",
-      "cancel": "Отмена"
+      "cancel": "Отмена",
+      "imagesLabel": "Изображения",
+      "addImages": "Добавить изображения",
+      "imagesHint": "Добавлено {count} / {max} — до 5МБ каждое, перетащите для сортировки"
     },
     "profile": {
       "noSelectionTitle": "Пользователь не выбран",
@@ -609,7 +670,9 @@
       "emptyPostsDesc": "Пользователь ещё не публиковал посты",
       "emptyCommentsTitle": "Комментариев пока нет",
       "emptyCommentsDesc": "Пользователь ещё не оставлял комментарии",
-      "uidLabel": "iGMUid"
+      "uidLabel": "iGMUid",
+      "followingCountValue": "{count} подписок",
+      "followersCountValue": "{count} подписчиков"
     },
     "myPosts": {
       "title": "Мои посты",
@@ -659,7 +722,10 @@
       "websiteInvalid": "Некорректный URL сайта",
       "avatarInvalid": "Некорректный URL аватара",
       "unauthorized": "Сначала войдите",
-      "forbidden": "У вас нет прав на это действие"
+      "forbidden": "У вас нет прав на это действие",
+      "imagesInvalid": "Проверка изображений не пройдена; проверьте тип и размер файла",
+      "tooManyImages": "Можно загрузить не более {max} изображений",
+      "imageInvalid": "Недопустимое изображение: только графические форматы, до 5МБ"
     },
     "messages": {
       "postCreated": "Пост опубликован",
@@ -669,7 +735,11 @@
       "commentUpdated": "Комментарий обновлён",
       "commentDeleted": "Комментарий удалён",
       "profileUpdated": "Профиль обновлён"
-    }
+    },
+    "galleryImageAlt": "Изображение поста {index}",
+    "lightboxClose": "Закрыть",
+    "lightboxPrev": "Предыдущее изображение",
+    "lightboxNext": "Следующее изображение"
   },
   "notification": {
     "title": "Центр уведомлений",
@@ -1318,5 +1388,277 @@
     "registerHint": "Вы создаёте новый аккаунт. Пожалуйста, полностью прочитайте правила — прокрутите страницу до конца, чтобы принять их и вернуться к регистрации.",
     "scrollToAccept": "Прокрутите до конца страницы, чтобы дочитать правила и принять их",
     "acceptAndReturn": "Я дочитал(а) — принять и вернуться к регистрации"
+  },
+  "realtime": {
+    "status": {
+      "connected": "Подключено",
+      "disconnected": "Отключено"
+    },
+    "onlineCount": "Онлайн: {count}",
+    "onlineUsers": "Пользователи онлайн",
+    "noOnline": "Сейчас нет пользователей онлайн",
+    "you": "Вы",
+    "owner": "Владелец",
+    "notificationStream": "Поток уведомлений",
+    "noNotifications": "Нет новых уведомлений",
+    "viewDetail": "Подробнее",
+    "alert": {
+      "disconnected": "Соединение в реальном времени разорвано. Уведомления больше не будут приходить автоматически."
+    }
+  },
+  "dashboard": {
+    "metrics": {
+      "totalUsers": "Всего пользователей",
+      "newUsersToday": "Новых сегодня",
+      "activeUsersDaily": "DAU",
+      "activeUsersWeekly": "WAU",
+      "activeUsersMonthly": "MAU",
+      "totalPosts": "Всего постов",
+      "postsToday": "Постов сегодня",
+      "totalComments": "Всего комментариев",
+      "commentsToday": "Комментариев сегодня",
+      "totalLikes": "Всего лайков",
+      "totalResources": "Всего ресурсов",
+      "totalActivities": "Всего мероприятий",
+      "totalActivityRegistrations": "Всего регистраций",
+      "totalResourceDownloads": "Всего скачиваний",
+      "onlineUsers": "Сейчас онлайн"
+    },
+    "charts": {
+      "userGrowth": "Рост пользователей",
+      "postVolume": "Объём постов",
+      "commentVolume": "Объём комментариев",
+      "newUsers": "Новые пользователи",
+      "posts": "Посты",
+      "comments": "Комментарии"
+    },
+    "leaderboards": {
+      "hotPosts": "Популярные посты",
+      "hotResources": "Популярные ресурсы",
+      "activeUsers": "Активные пользователи",
+      "likes": "Лайки",
+      "comments": "Комментарии"
+    },
+    "noData": "Нет данных"
+  },
+  "stats": {
+    "ranges": {
+      "7d": "7 дней",
+      "30d": "30 дней",
+      "90d": "90 дней"
+    },
+    "sections": {
+      "userGrowth": "Тенденция роста",
+      "postVolume": "Тенденция постов",
+      "commentVolume": "Тенденция комментариев",
+      "activity": "Тенденция активности"
+    },
+    "charts": {
+      "users": "Пользователи",
+      "posts": "Посты",
+      "comments": "Комментарии",
+      "activity": "Активность"
+    },
+    "activities": {
+      "title": "Статистика мероприятий",
+      "totalActivities": "Всего мероприятий",
+      "totalRegistrations": "Всего регистраций",
+      "colTitle": "Название",
+      "colStatus": "Статус",
+      "colStartTime": "Время начала",
+      "colRegistrations": "Регистрации"
+    }
+  },
+  "social": {
+    "relationsTitle": "Подписки и подписчики",
+    "relationsTitleWithName": "Подписки и подписчики: {name}",
+    "following": "Подписки",
+    "followers": "Подписчики",
+    "follow": "Подписаться",
+    "unblock": "Разблокировать",
+    "block": "Заблокировать",
+    "blockedBadge": "Заблокировано",
+    "friendsBadge": "Друзья",
+    "requestSent": "Заявка отправлена",
+    "respondRequest": "Ответить",
+    "addFriend": "Добавить в друзья",
+    "backToProfile": "Назад в профиль",
+    "sendMessage": "Написать",
+    "followedAt": "Подписка от {date}",
+    "stateLoading": "Загрузка…",
+    "emptyFollowing": "Вы пока ни на кого не подписаны",
+    "emptyFollowers": "Подписчиков пока нет",
+    "friendsTitle": "Друзья",
+    "friendsDescription": "Управляйте друзьями и заявками в друзья",
+    "tabFriends": "Друзья",
+    "tabIncoming": "Входящие заявки",
+    "tabOutgoing": "Исходящие заявки",
+    "friendsSince": "Друзья с {date}",
+    "removeFriend": "Удалить из друзей",
+    "emptyFriends": "Друзей пока нет",
+    "emptyFriendsDescription": "Загляните в сообщество и найдите единомышленников",
+    "requestAt": "Заявка от {date}",
+    "accept": "Принять",
+    "reject": "Отклонить",
+    "cancelRequest": "Отменить заявку",
+    "emptyIncoming": "Нет входящих заявок в друзья",
+    "emptyOutgoing": "Нет исходящих заявок в друзья",
+    "feedTitle": "Лента",
+    "feedDescription": "Свежие посты и комментарии пользователей и друзей, на которых вы подписаны",
+    "actionPosted": "опубликовал(а)",
+    "actionCommented": "оставил(а) комментарий",
+    "emptyFeed": "Ваша лента пуста",
+    "emptyFeedDescription": "Подпишитесь на других пользователей — и их события появятся здесь",
+    "exploreCommunity": "Перейти в сообщество",
+    "errors": {
+      "userMissing": "Целевой пользователь не указан",
+      "userNotFound": "Целевой пользователь не существует",
+      "cannotSelf": "Нельзя выполнить это действие в отношении себя",
+      "blocked": "Действие отклонено: между вами и этим пользователем есть блокировка",
+      "alreadyFriend": "Вы уже друзья",
+      "alreadyRequested": "Заявка в друзья уже существует, не отправляйте её повторно",
+      "requestNotFound": "Заявка не существует или уже обработана",
+      "friendNotFound": "Дружба не существует"
+    }
+  },
+  "message": {
+    "listTitle": "Сообщения",
+    "privacySettings": "Настройки приватности",
+    "stateLoading": "Загрузка…",
+    "recalledInline": "Сообщение отозвано",
+    "noMessages": "Сообщений пока нет",
+    "emptyConversations": "Пока нет переписок",
+    "emptyConversationsDescription": "Начните первую переписку из профиля участника",
+    "backToList": "К списку переписок",
+    "deleteConversation": "Удалить переписку",
+    "confirmDelete": "Удалить эту переписку? Действие нельзя отменить.",
+    "settingsTitle": "Приватность сообщений",
+    "settingsDescription": "Выберите, кто может начинать с вами переписку",
+    "settingsSaved": "Настройки сохранены",
+    "saveSettings": "Сохранить настройки",
+    "composerPlaceholder": "Введите сообщение — Enter для отправки, Shift+Enter для новой строки",
+    "send": "Отправить",
+    "recall": "Отозвать",
+    "allowFrom": {
+      "everyone": {
+        "title": "Все",
+        "description": "Любой авторизованный пользователь может писать вам"
+      },
+      "friends": {
+        "title": "Только друзья",
+        "description": "Писать вам могут только друзья, на которых вы взаимно подписаны"
+      },
+      "none": {
+        "title": "Не принимать сообщения",
+        "description": "Никто не сможет начать с вами новую переписку"
+      }
+    },
+    "errors": {
+      "conversationNotFound": "Переписка не найдена",
+      "closed": "Собеседник отключил сообщения, отправка не удалась",
+      "friendsOnly": "Собеседник принимает сообщения только от друзей",
+      "contentRequired": "Введите текст сообщения",
+      "contentTooLong": "Сообщение слишком длинное",
+      "notFound": "Переписка не существует или у вас нет к ней доступа",
+      "targetRequired": "Укажите получателя",
+      "messageNotFound": "Сообщение не найдено",
+      "alreadyRecalled": "Это сообщение уже отозвано",
+      "recallExpired": "Время для отзыва истекло, сообщение нельзя отозвать",
+      "allowFromInvalid": "Недопустимый вариант приватности"
+    }
+  },
+  "minecraft": {
+    "title": "Ресурсы Minecraft",
+    "description": "Моды, текстурпаки, карты, скины и многое другое — в одном месте",
+    "upload": "Загрузить",
+    "editTitle": "Изменить ресурс",
+    "backToList": "Назад к ресурсам",
+    "all": "Все",
+    "filterType": "Тип",
+    "filterVersion": "Версия MC",
+    "filterLoader": "Загрузчик",
+    "filterPlatform": "Платформа",
+    "searchPlaceholder": "Поиск по названиям ресурсов или тегам…",
+    "stateLoading": "Загрузка…",
+    "downloadCount": "{count} загрузок",
+    "empty": "Нет ресурсов, подходящих под фильтры",
+    "emptyDescription": "Попробуйте изменить фильтры или поисковый запрос",
+    "notFound": "Ресурс не существует или был удалён",
+    "confirmDelete": "Удалить этот ресурс? Действие нельзя отменить.",
+    "download": "Скачать",
+    "fileName": "Имя файла",
+    "fileSize": "Размер файла",
+    "fileInfo": "Сведения о файле",
+    "uploadedBy": "Загрузил(а): {name}",
+    "compatVersions": "Версии",
+    "compatLoaders": "Загрузчики",
+    "compatPlatforms": "Платформы",
+    "descriptionLabel": "Описание",
+    "creditTitle": "Авторство и лицензия",
+    "license": "Лицензия",
+    "originalAuthor": "Оригинальный автор",
+    "originalUrl": "Ссылка на оригинальный пост",
+    "unspecified": "Не указано",
+    "changelogLabel": "Список изменений",
+    "edit": "Изменить",
+    "delete": "Удалить",
+    "sectionBasic": "Основные сведения",
+    "sectionFiles": "Файлы и теги",
+    "sectionCredit": "Лицензия и авторство",
+    "resourceTypes": {
+      "mod": "Mod",
+      "texture_pack": "Texture Pack",
+      "map": "Map",
+      "skin": "Skin",
+      "plugin": "Plugin",
+      "modpack": "Modpack",
+      "datapack": "Data Pack",
+      "other": "Other"
+    },
+    "form": {
+      "title": "Название",
+      "titlePlaceholder": "Введите название ресурса",
+      "resourceType": "Тип ресурса",
+      "mcVersions": "Поддерживаемые версии MC (мультивыбор)",
+      "versionHint": "Выбрано версий: {selected} / {max}",
+      "loaders": "Загрузчики (мультивыбор)",
+      "platforms": "Платформы (мультивыбор)",
+      "file": "Файл ресурса",
+      "uploadFile": "Загрузить файл ресурса",
+      "fileHint": "Разрешены только типы файлов из белого списка, до 20МБ",
+      "cover": "Обложка",
+      "tags": "Теги",
+      "tagsPlaceholder": "Разделяйте теги запятыми",
+      "license": "Лицензия",
+      "licensePlaceholder": "например, MIT, All Rights Reserved",
+      "originalAuthor": "Оригинальный автор",
+      "originalAuthorPlaceholder": "Укажите оригинального автора при перепубликации",
+      "originalUrl": "Ссылка на оригинальный пост",
+      "originalUrlPlaceholder": "https://…",
+      "description": "Описание",
+      "descriptionPlaceholder": "Опишите возможности, использование и важные детали",
+      "changelog": "Список изменений",
+      "changelogPlaceholder": "Что изменилось в этой версии",
+      "submitCreate": "Опубликовать",
+      "submitEdit": "Сохранить изменения",
+      "cancel": "Отмена"
+    },
+    "errors": {
+      "titleInvalid": "Название должно содержать 1–100 символов",
+      "typeRequired": "Выберите тип ресурса",
+      "versionRequired": "Выберите хотя бы одну версию MC",
+      "platformRequired": "Выберите хотя бы одну платформу",
+      "descriptionInvalid": "Описание должно содержать 1–5000 символов",
+      "fileRequired": "Загрузите файл ресурса",
+      "licenseInvalid": "Лицензия не должна превышать 100 символов",
+      "originalAuthorInvalid": "Имя оригинального автора — не более 50 символов",
+      "originalUrlInvalid": "Ссылка на оригинальный пост должна быть действительной http(s)-ссылкой",
+      "changelogInvalid": "Список изменений не должен превышать 5000 символов",
+      "resourceTypeInvalid": "Недопустимый тип ресурса",
+      "tooManyVersions": "Можно выбрать не более {max} версий",
+      "versionInvalid": "Указана недопустимая версия MC",
+      "loaderInvalid": "Указан недопустимый загрузчик",
+      "platformInvalid": "Указана недопустимая платформа"
+    }
   }
 }

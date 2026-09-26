@@ -60,13 +60,17 @@ interface iGM_RootAuthPageProps {
 }
 
 // 核心逻辑 //
-/** 安全回跳地址：剥离可选语言前缀后仅接受站内 /G_ 开头路径 */
+/**
+ * 登录成功后的落地地址：
+ * 有合法回跳参数（站内 /G_ 开头）时回跳；否则统一回到首页，
+ * 保证“退出登录 → 重新登录”后落在首页而非设置页
+ */
 function iGM_SafeRedirect(raw: string | null): string {
   if (raw) {
     const stripped = iGM_StripLocalePrefix(raw);
     if (stripped.startsWith("/G_")) return stripped;
   }
-  return "/G_Settings";
+  return "/G_Home";
 }
 
 /** 步骤圆点指示：已完成实心、当前放大深色（与设计稿一致）、未到为灰点 */

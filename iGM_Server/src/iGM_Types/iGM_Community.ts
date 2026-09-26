@@ -58,6 +58,15 @@ export interface iGM_CommentRow {
   iGM_UpdatedAt: string;
 }
 
+/** 帖子配图关联行：sortOrder 决定展示顺序 */
+export interface iGM_PostImageRow {
+  iGM_Id: string;
+  iGM_PostId: string;
+  iGM_FileId: string;
+  iGM_SortOrder: number;
+  iGM_CreatedAt: string;
+}
+
 /* ---------- 对外 DTO ---------- */
 
 /** 分类 DTO */
@@ -120,9 +129,17 @@ export interface iGM_PostListItemDto {
   updatedAt: string;
 }
 
-/** 帖子详情 DTO：包含完整正文 */
+/** 帖子配图 DTO：前端按 fileId 经文件预览接口展示 */
+export interface iGM_PostImageDto {
+  id: string;
+  fileId: string;
+  sortOrder: number;
+}
+
+/** 帖子详情 DTO：包含完整正文与配图（按 sortOrder 升序） */
 export interface iGM_PostDetailDto extends Omit<iGM_PostListItemDto, "excerpt"> {
   content: string;
+  images: iGM_PostImageDto[];
 }
 
 /** 分页帖子列表数据 */

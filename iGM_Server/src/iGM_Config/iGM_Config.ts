@@ -153,6 +153,16 @@ export const iGM_Config: iGM_AppConfig = {
     mailTest: { windowMs: 10 * 60 * 1000, max: 3 },
     // 模块七：组织认证申请提交/取消——10 分钟内最多 5 次
     orgVerifyWrite: { windowMs: 10 * 60 * 1000, max: 5 },
+    // 模块九：WebSocket 连接——60 秒内最多 10 次（按客户端 IP）
+    wsConnect: { windowMs: 60 * 1000, max: 10 },
+    // 模块九：统计查询——60 秒内最多 60 次（按用户 ID）
+    statsQuery: { windowMs: 60 * 1000, max: 60 },
+    // 模块十：社交写操作（关注/好友/黑名单）——1 分钟内最多 30 次
+    socialWrite: { windowMs: 60 * 1000, max: 30 },
+    // 模块十：私信发送/撤回——1 分钟内最多 30 条
+    messageWrite: { windowMs: 60 * 1000, max: 30 },
+    // 模块十：Minecraft 资源写操作——10 分钟内最多 20 次
+    mcWrite: { windowMs: 10 * 60 * 1000, max: 20 },
   },
   mail: {
     // 163 邮箱 SMTP：465 端口隐式 SSL；密码使用客户端授权码（非登录密码），

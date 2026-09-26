@@ -38,7 +38,17 @@
     "orgVerify": "組織認證",
     "orgVerifyStatus": "申請記錄",
     "adminOrgVerify": "認證審核",
-    "orgDetails": "組織詳情"
+    "orgDetails": "組織詳情",
+    "realtime": "即時狀態",
+    "dashboard": "營運看板",
+    "statsDetail": "資料詳情",
+    "minecraft": "Minecraft 資源",
+    "minecraftUpload": "發布 MC 資源",
+    "feed": "動態",
+    "friends": "好友",
+    "userRelations": "關注與粉絲",
+    "messages": "私訊",
+    "messageSettings": "私訊隱私"
   },
   "topbar": {
     "menu": "選單",
@@ -282,6 +292,54 @@
     "userRules": {
       "title": "使用者管理規定",
       "description": "iGCraftLit Community 使用者管理規定全文：全球共處、帳號管理、行為規範、智慧財產權與量化處罰"
+    },
+    "realtime": {
+      "title": "即時狀態",
+      "description": "當前線上使用者與即時通知流"
+    },
+    "dashboard": {
+      "title": "營運看板",
+      "description": "核心資料指標與趨勢概覽"
+    },
+    "statsDetail": {
+      "title": "資料詳情",
+      "description": "按時間範圍檢視成長趨勢、排行與活動統計"
+    },
+    "userRelations": {
+      "title": "關注與粉絲",
+      "description": "查看該使用者關注的對象與粉絲列表"
+    },
+    "friends": {
+      "title": "好友",
+      "description": "管理好友、收到的與發出的好友申請"
+    },
+    "feed": {
+      "title": "動態",
+      "description": "你關注的使用者與好友的最新動態"
+    },
+    "messages": {
+      "title": "私訊",
+      "description": "你的私訊會話列表"
+    },
+    "messageDetail": {
+      "title": "私訊對話",
+      "description": "與另一位使用者的一對一私訊對話"
+    },
+    "messageSettings": {
+      "title": "私訊隱私設定",
+      "description": "設定誰可以向你發送私訊"
+    },
+    "minecraft": {
+      "title": "Minecraft 資源分區",
+      "description": "瀏覽與下載 Minecraft 模組、材質包、地圖、皮膚等資源，支援版本與載入器篩選"
+    },
+    "minecraftUpload": {
+      "title": "發布 Minecraft 資源",
+      "description": "上傳 Minecraft 資源並填寫版本、載入器、平台與授權資訊"
+    },
+    "minecraftDetail": {
+      "title": "Minecraft 資源詳情",
+      "description": "查看資源介紹、相容性、更新日誌並下載檔案"
     }
   },
   "placeholder": {
@@ -589,7 +647,10 @@
       "contentPlaceholder": "請輸入內文內容…",
       "save": "儲存修改",
       "publish": "發布貼文",
-      "cancel": "取消"
+      "cancel": "取消",
+      "imagesLabel": "配圖",
+      "addImages": "添加圖片",
+      "imagesHint": "已添加 {count} / {max} 張，單張不超過 5MB，可拖曳排序"
     },
     "profile": {
       "noSelectionTitle": "未指定使用者",
@@ -609,7 +670,9 @@
       "emptyPostsDesc": "TA 還沒有公開發布的貼文",
       "emptyCommentsTitle": "還沒有留言",
       "emptyCommentsDesc": "TA 還沒有公開發表的留言",
-      "uidLabel": "iGMUid"
+      "uidLabel": "iGMUid",
+      "followingCountValue": "關注 {count}",
+      "followersCountValue": "粉絲 {count}"
     },
     "myPosts": {
       "title": "我的貼文",
@@ -659,7 +722,10 @@
       "websiteInvalid": "網站位址格式不正確",
       "avatarInvalid": "頭像位址格式不正確",
       "unauthorized": "請先登入",
-      "forbidden": "你沒有權限執行此操作"
+      "forbidden": "你沒有權限執行此操作",
+      "imagesInvalid": "圖片驗證未通過，請檢查檔案類型與大小",
+      "tooManyImages": "最多只能上傳 {max} 張圖片",
+      "imageInvalid": "圖片不合法：僅支援圖片格式且單張不超過 5MB"
     },
     "messages": {
       "postCreated": "貼文發布成功",
@@ -669,7 +735,11 @@
       "commentUpdated": "留言已更新",
       "commentDeleted": "留言已刪除",
       "profileUpdated": "資料已更新"
-    }
+    },
+    "galleryImageAlt": "貼文配圖 {index}",
+    "lightboxClose": "關閉",
+    "lightboxPrev": "上一張",
+    "lightboxNext": "下一張"
   },
   "notification": {
     "title": "通知中心",
@@ -1318,5 +1388,277 @@
     "registerHint": "你正在註冊新帳號。請完整閱讀本規定，捲動到頁面底部後即可同意並返回註冊精靈。",
     "scrollToAccept": "請繼續向下捲動，閱讀完規定全文後即可同意",
     "acceptAndReturn": "我已閱讀完畢，同意並返回註冊"
+  },
+  "realtime": {
+    "status": {
+      "connected": "已連線",
+      "disconnected": "未連線"
+    },
+    "onlineCount": "線上 {count} 人",
+    "onlineUsers": "線上使用者",
+    "noOnline": "目前沒有線上使用者",
+    "you": "你",
+    "owner": "負責人",
+    "notificationStream": "即時通知流",
+    "noNotifications": "暫無新通知",
+    "viewDetail": "檢視詳情",
+    "alert": {
+      "disconnected": "即時連線已中斷，通知將不再自動推送。"
+    }
+  },
+  "dashboard": {
+    "metrics": {
+      "totalUsers": "總使用者數",
+      "newUsersToday": "今日新增使用者",
+      "activeUsersDaily": "日活躍使用者",
+      "activeUsersWeekly": "週活躍使用者",
+      "activeUsersMonthly": "月活躍使用者",
+      "totalPosts": "總貼文數",
+      "postsToday": "今日發文數",
+      "totalComments": "總留言數",
+      "commentsToday": "今日留言數",
+      "totalLikes": "總按讚數",
+      "totalResources": "總資源數",
+      "totalActivities": "總活動數",
+      "totalActivityRegistrations": "活動報名總數",
+      "totalResourceDownloads": "資源下載總數",
+      "onlineUsers": "目前線上人數"
+    },
+    "charts": {
+      "userGrowth": "使用者成長",
+      "postVolume": "發文量",
+      "commentVolume": "留言量",
+      "newUsers": "新增使用者",
+      "posts": "貼文",
+      "comments": "留言"
+    },
+    "leaderboards": {
+      "hotPosts": "熱門貼文",
+      "hotResources": "熱門資源",
+      "activeUsers": "活躍使用者",
+      "likes": "按讚",
+      "comments": "留言"
+    },
+    "noData": "暫無資料"
+  },
+  "stats": {
+    "ranges": {
+      "7d": "近7天",
+      "30d": "近30天",
+      "90d": "近90天"
+    },
+    "sections": {
+      "userGrowth": "使用者成長趨勢",
+      "postVolume": "發文量趨勢",
+      "commentVolume": "留言量趨勢",
+      "activity": "活躍度趨勢"
+    },
+    "charts": {
+      "users": "使用者數",
+      "posts": "貼文數",
+      "comments": "留言數",
+      "activity": "活躍數"
+    },
+    "activities": {
+      "title": "活動參與統計",
+      "totalActivities": "活動總數",
+      "totalRegistrations": "報名總數",
+      "colTitle": "活動標題",
+      "colStatus": "狀態",
+      "colStartTime": "開始時間",
+      "colRegistrations": "報名人數"
+    }
+  },
+  "social": {
+    "relationsTitle": "關注與粉絲",
+    "relationsTitleWithName": "{name} 的關注與粉絲",
+    "following": "關注中",
+    "followers": "粉絲",
+    "follow": "關注",
+    "unblock": "取消封鎖",
+    "block": "封鎖",
+    "blockedBadge": "已封鎖",
+    "friendsBadge": "已為好友",
+    "requestSent": "申請已發送",
+    "respondRequest": "回應申請",
+    "addFriend": "加好友",
+    "backToProfile": "返回使用者主頁",
+    "sendMessage": "發私訊",
+    "followedAt": "關注於 {date}",
+    "stateLoading": "正在載入…",
+    "emptyFollowing": "還沒有關注的使用者",
+    "emptyFollowers": "還沒有粉絲",
+    "friendsTitle": "好友",
+    "friendsDescription": "管理你的好友與好友申請",
+    "tabFriends": "好友",
+    "tabIncoming": "收到的申請",
+    "tabOutgoing": "發出的申請",
+    "friendsSince": "成為好友於 {date}",
+    "removeFriend": "刪除好友",
+    "emptyFriends": "還沒有好友",
+    "emptyFriendsDescription": "去社群發現志同道合的探星者吧",
+    "requestAt": "申請於 {date}",
+    "accept": "接受",
+    "reject": "拒絕",
+    "cancelRequest": "撤回申請",
+    "emptyIncoming": "沒有收到的好友申請",
+    "emptyOutgoing": "沒有發出的好友申請",
+    "feedTitle": "動態",
+    "feedDescription": "你關注的使用者與好友的最新貼文和評論",
+    "actionPosted": "發布了貼文",
+    "actionCommented": "發表了評論",
+    "emptyFeed": "動態還是空的",
+    "emptyFeedDescription": "關注更多使用者後，這裡會展示他們的最新動態",
+    "exploreCommunity": "去社群逛逛",
+    "errors": {
+      "userMissing": "未指定目標使用者",
+      "userNotFound": "目標使用者不存在",
+      "cannotSelf": "不能對自己執行此操作",
+      "blocked": "操作被拒絕：你與對方存在封鎖關係",
+      "alreadyFriend": "你們已經是好友",
+      "alreadyRequested": "好友申請已存在，請勿重複發送",
+      "requestNotFound": "好友申請不存在或已處理",
+      "friendNotFound": "好友關係不存在"
+    }
+  },
+  "message": {
+    "listTitle": "私訊",
+    "privacySettings": "隱私設定",
+    "stateLoading": "正在載入…",
+    "recalledInline": "此訊息已被撤回",
+    "noMessages": "暫無私訊內容",
+    "emptyConversations": "還沒有會話",
+    "emptyConversationsDescription": "從使用者主頁發起你的第一封私訊吧",
+    "backToList": "返回會話列表",
+    "deleteConversation": "刪除會話",
+    "confirmDelete": "確定刪除這個會話嗎？刪除後將無法恢復。",
+    "settingsTitle": "私訊隱私設定",
+    "settingsDescription": "選擇誰可以向你發起私訊",
+    "settingsSaved": "設定已儲存",
+    "saveSettings": "儲存設定",
+    "composerPlaceholder": "輸入訊息，Enter 傳送，Shift+Enter 換行",
+    "send": "傳送",
+    "recall": "撤回",
+    "allowFrom": {
+      "everyone": {
+        "title": "所有人",
+        "description": "任何登入使用者都可以向你發送私訊"
+      },
+      "friends": {
+        "title": "僅好友",
+        "description": "只有與你互相關注的好友可以向你發送私訊"
+      },
+      "none": {
+        "title": "不接受私訊",
+        "description": "任何人都無法向你發起新的私訊"
+      }
+    },
+    "errors": {
+      "conversationNotFound": "會話不存在",
+      "closed": "對方已關閉私訊權限，訊息無法傳送",
+      "friendsOnly": "對方僅接受好友的私訊",
+      "contentRequired": "訊息內容不能為空",
+      "contentTooLong": "訊息內容過長",
+      "notFound": "會話不存在或你無權存取",
+      "targetRequired": "請指定私訊對象",
+      "messageNotFound": "訊息不存在",
+      "alreadyRecalled": "該訊息已被撤回",
+      "recallExpired": "已超過可撤回時限，無法撤回",
+      "allowFromInvalid": "隱私選項不合法"
+    }
+  },
+  "minecraft": {
+    "title": "Minecraft 資源分區",
+    "description": "模組、材質包、地圖、皮膚等 Minecraft 資源一站下載",
+    "upload": "發布資源",
+    "editTitle": "編輯資源",
+    "backToList": "返回資源分區",
+    "all": "全部",
+    "filterType": "資源類型",
+    "filterVersion": "MC 版本",
+    "filterLoader": "載入器",
+    "filterPlatform": "平台",
+    "searchPlaceholder": "搜尋資源名稱、標籤…",
+    "stateLoading": "正在載入…",
+    "downloadCount": "{count} 次下載",
+    "empty": "沒有符合條件的資源",
+    "emptyDescription": "試試調整篩選條件或更換關鍵字",
+    "notFound": "資源不存在或已被刪除",
+    "confirmDelete": "確定刪除這個資源嗎？此操作無法復原。",
+    "download": "下載檔案",
+    "fileName": "檔案名稱",
+    "fileSize": "檔案大小",
+    "fileInfo": "檔案資訊",
+    "uploadedBy": "上傳者：{name}",
+    "compatVersions": "適用版本",
+    "compatLoaders": "載入器",
+    "compatPlatforms": "適用平台",
+    "descriptionLabel": "資源介紹",
+    "creditTitle": "歸屬與授權",
+    "license": "授權協議",
+    "originalAuthor": "原作者",
+    "originalUrl": "原帖連結",
+    "unspecified": "未填寫",
+    "changelogLabel": "更新日誌",
+    "edit": "編輯",
+    "delete": "刪除",
+    "sectionBasic": "基本資訊",
+    "sectionFiles": "檔案與標籤",
+    "sectionCredit": "授權與歸屬",
+    "resourceTypes": {
+      "mod": "模組 Mod",
+      "texture_pack": "材質包 Texture Pack",
+      "map": "地圖 Map",
+      "skin": "皮膚 Skin",
+      "plugin": "插件 Plugin",
+      "modpack": "模組包 Modpack",
+      "datapack": "資料包 Data Pack",
+      "other": "其他 Other"
+    },
+    "form": {
+      "title": "資源標題",
+      "titlePlaceholder": "請輸入資源標題",
+      "resourceType": "資源類型",
+      "mcVersions": "適用 MC 版本（可多選）",
+      "versionHint": "已選擇 {selected} / {max} 個版本",
+      "loaders": "載入器（可多選）",
+      "platforms": "適用平台（可多選）",
+      "file": "資源檔案",
+      "uploadFile": "上傳資源檔案",
+      "fileHint": "僅允許白名單內的資源檔案類型，單一檔案不超過 20MB",
+      "cover": "封面圖片",
+      "tags": "標籤",
+      "tagsPlaceholder": "多個標籤以逗號分隔",
+      "license": "授權協議",
+      "licensePlaceholder": "例如 MIT、All Rights Reserved",
+      "originalAuthor": "原作者",
+      "originalAuthorPlaceholder": "轉載請填寫原作者名稱",
+      "originalUrl": "原帖連結",
+      "originalUrlPlaceholder": "https://…",
+      "description": "資源介紹",
+      "descriptionPlaceholder": "詳細介紹資源的功能、用法與注意事項",
+      "changelog": "更新日誌",
+      "changelogPlaceholder": "記錄本次版本的變更內容",
+      "submitCreate": "發布資源",
+      "submitEdit": "儲存修改",
+      "cancel": "取消"
+    },
+    "errors": {
+      "titleInvalid": "標題長度需在 1-100 個字元之間",
+      "typeRequired": "請選擇資源類型",
+      "versionRequired": "請至少選擇一個 MC 版本",
+      "platformRequired": "請至少選擇一個適用平台",
+      "descriptionInvalid": "資源介紹長度需在 1-5000 個字元之間",
+      "fileRequired": "請上傳資源檔案",
+      "licenseInvalid": "授權協議長度不能超過 100 個字元",
+      "originalAuthorInvalid": "原作者名稱長度不能超過 50 個字元",
+      "originalUrlInvalid": "原帖連結需為合法的 http(s) 連結",
+      "changelogInvalid": "更新日誌長度不能超過 5000 個字元",
+      "resourceTypeInvalid": "資源類型不合法",
+      "tooManyVersions": "最多只能選擇 {max} 個版本",
+      "versionInvalid": "存在不合法的 MC 版本",
+      "loaderInvalid": "存在不合法的載入器",
+      "platformInvalid": "存在不合法的平台"
+    }
   }
 }

@@ -29,6 +29,13 @@ export interface iGM_ResourceListParams {
   uploaderId: string | null;
   activityId: string | null;
   search: string | null;
+  /** 模块十：仅返回 Minecraft 分区资源（resourceType 非空） */
+  minecraftOnly?: boolean;
+  /** 模块十：Minecraft 维度筛选 */
+  mcResourceType?: string | null;
+  mcVersion?: string | null;
+  mcLoader?: string | null;
+  mcPlatform?: string | null;
   page: number;
   pageSize: number;
 }
@@ -39,7 +46,7 @@ export interface iGM_ResourceListResult {
   total: number;
 }
 
-/** 资源创建入参 */
+/** 资源创建入参（MC 字段可空，普通资源不提供） */
 export interface iGM_CreateResourceInput {
   uploaderId: string;
   title: string;
@@ -49,6 +56,15 @@ export interface iGM_CreateResourceInput {
   coverFileId: string | null;
   activityId: string | null;
   status: iGM_ResourceStatus;
+  /** 模块十：Minecraft 扩展字段（JSON 文本已由服务层序列化） */
+  resourceType?: string | null;
+  mcVersionsJson?: string | null;
+  loadersJson?: string | null;
+  platformsJson?: string | null;
+  license?: string | null;
+  originalAuthor?: string | null;
+  originalUrl?: string | null;
+  changelog?: string | null;
   now: string;
 }
 
@@ -61,6 +77,15 @@ export interface iGM_UpdateResourceInput {
   coverFileId: string | null;
   activityId: string | null;
   status: iGM_ResourceStatus;
+  /** 模块十：Minecraft 扩展字段 */
+  resourceType?: string | null;
+  mcVersionsJson?: string | null;
+  loadersJson?: string | null;
+  platformsJson?: string | null;
+  license?: string | null;
+  originalAuthor?: string | null;
+  originalUrl?: string | null;
+  changelog?: string | null;
   now: string;
 }
 
@@ -109,6 +134,28 @@ function iGM_BuildFilters(params: iGM_ResourceListParams): {
       `(r.iGM_Title LIKE ? ESCAPE '\\' OR r.iGM_Description LIKE ? ESCAPE '\\')`,
     );
     bindings.push(keyword, keyword);
+  }
+
+  /* ---------- 模块十：Minecraft 维度 ---------- */
+  if (params.minecraftOnly) {
+    clauses.push(`r.iGM_ResourceType IS NOT NULL`);
+  }
+  if (params.mcResourceType) {
+    clauses.push(`r.iGM_ResourceType = ?`);
+    bindings.push(params.mcResourceType);
+  }
+  // 多值字段以 JSON 数组存储，按 "值" 子串匹配；版本/加载器/平台均为受控值
+  if (params.mcVersion) {
+    clauses.push(`r.iGM_McVersions LIKE ? ESCAPE '\\'`);
+    bindings.push(`%"${iGM_EscapeLike(params.mcVersion)}"%`);
+  }
+  if (params.mcLoader) {
+    clauses.push(`r.iGM_Loaders LIKE ? ESCAPE '\\'`);
+    bindings.push(`%"${iGM_EscapeLike(params.mcLoader)}"%`);
+  }
+  if (params.mcPlatform) {
+    clauses.push(`r.iGM_Platforms LIKE ? ESCAPE '\\'`);
+    bindings.push(`%"${iGM_EscapeLike(params.mcPlatform)}"%`);
   }
 
   return {
@@ -276,6 +323,14 @@ export function iGM_CreateResource(
     iGM_ActivityId: input.activityId,
     iGM_DownloadCount: 0,
     iGM_Status: input.status,
+    iGM_ResourceType: input.resourceType ?? null,
+    iGM_McVersions: input.mcVersionsJson ?? null,
+    iGM_Loaders: input.loadersJson ?? null,
+    iGM_Platforms: input.platformsJson ?? null,
+    iGM_License: input.license ?? null,
+    iGM_OriginalAuthor: input.originalAuthor ?? null,
+    iGM_OriginalUrl: input.originalUrl ?? null,
+    iGM_Changelog: input.changelog ?? null,
     iGM_CreatedAt: input.now,
     iGM_UpdatedAt: input.now,
   };
@@ -283,8 +338,10 @@ export function iGM_CreateResource(
     `INSERT INTO iGM_Resources
        (iGM_Id, iGM_UploaderId, iGM_Title, iGM_Description, iGM_CategoryId,
         iGM_FileId, iGM_CoverFileId, iGM_ActivityId, iGM_DownloadCount,
-        iGM_Status, iGM_CreatedAt, iGM_UpdatedAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        iGM_Status, iGM_ResourceType, iGM_McVersions, iGM_Loaders, iGM_Platforms,
+        iGM_License, iGM_OriginalAuthor, iGM_OriginalUrl, iGM_Changelog,
+        iGM_CreatedAt, iGM_UpdatedAt)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       row.iGM_Id,
       row.iGM_UploaderId,
@@ -296,6 +353,14 @@ export function iGM_CreateResource(
       row.iGM_ActivityId,
       row.iGM_DownloadCount,
       row.iGM_Status,
+      row.iGM_ResourceType,
+      row.iGM_McVersions,
+      row.iGM_Loaders,
+      row.iGM_Platforms,
+      row.iGM_License,
+      row.iGM_OriginalAuthor,
+      row.iGM_OriginalUrl,
+      row.iGM_Changelog,
       row.iGM_CreatedAt,
       row.iGM_UpdatedAt,
     ],
@@ -321,7 +386,10 @@ export function iGM_UpdateResource(
     `UPDATE iGM_Resources SET
        iGM_Title = ?, iGM_Description = ?, iGM_CategoryId = ?,
        iGM_FileId = ?, iGM_CoverFileId = ?, iGM_ActivityId = ?,
-       iGM_Status = ?, iGM_UpdatedAt = ?
+       iGM_Status = ?, iGM_ResourceType = ?,
+       iGM_McVersions = ?, iGM_Loaders = ?, iGM_Platforms = ?,
+       iGM_License = ?, iGM_OriginalAuthor = ?, iGM_OriginalUrl = ?,
+       iGM_Changelog = ?, iGM_UpdatedAt = ?
      WHERE iGM_Id = ?`,
     [
       input.title,
@@ -331,6 +399,14 @@ export function iGM_UpdateResource(
       input.coverFileId,
       input.activityId,
       input.status,
+      input.resourceType ?? null,
+      input.mcVersionsJson ?? null,
+      input.loadersJson ?? null,
+      input.platformsJson ?? null,
+      input.license ?? null,
+      input.originalAuthor ?? null,
+      input.originalUrl ?? null,
+      input.changelog ?? null,
       input.now,
       id,
     ],

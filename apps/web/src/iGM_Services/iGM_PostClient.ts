@@ -59,6 +59,8 @@ export function iGM_ApiUpdatePost(payload: {
   content: string;
   categoryId: string | null;
   tags: string;
+  /** 模块十：配图文件 ID 有序数组 */
+  images: string[];
 }): Promise<iGM_ApiResponse<{ post: iGM_PostDetail }>> {
   return iGM_Put("/G_Post/edit", payload);
 }

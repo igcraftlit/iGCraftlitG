@@ -20,6 +20,8 @@ import { useTranslations } from "next-intl";
 import {
   ArrowLeft,
   Bookmark,
+  ChevronLeft,
+  ChevronRight,
   EyeOff,
   FileText,
   LoaderCircle,
@@ -27,7 +29,9 @@ import {
   Pencil,
   ThumbsUp,
   Trash2,
+  X,
 } from "lucide-react";
+import { iGM_FilePreviewUrl } from "../../iGM_Services/iGM_FileClient";
 import {
   iGM_ApiGetPost,
   iGM_ApiListComments,
@@ -73,6 +77,8 @@ export function iGM_PostDetailPage() {
   const [loading, setLoading] = useState(true);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [actionBusy, setActionBusy] = useState(false);
+  /** 灯箱当前图片下标，null 表示关闭 */
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   // 评论撰写框状态
   const [composerText, setComposerText] = useState("");
@@ -117,6 +123,28 @@ export function iGM_PostDetailPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId]);
+
+  /** 灯箱键盘操作：Esc 关闭，方向键切换 */
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    function iGM_HandleKey(event: KeyboardEvent): void {
+      if (event.key === "Escape") {
+        setLightboxIndex(null);
+      } else if (event.key === "ArrowLeft") {
+        setLightboxIndex((current) =>
+          current !== null ? Math.max(0, current - 1) : current,
+        );
+      } else if (event.key === "ArrowRight") {
+        setLightboxIndex((current) =>
+          current !== null && post
+            ? Math.min(post.images.length - 1, current + 1)
+            : current,
+        );
+      }
+    }
+    window.addEventListener("keydown", iGM_HandleKey);
+    return () => window.removeEventListener("keydown", iGM_HandleKey);
+  }, [lightboxIndex, post]);
 
   /** 帖子点赞/取消（乐观更新，失败回滚并提示） */
   async function iGM_HandleTogglePostLike() {
@@ -405,6 +433,33 @@ export function iGM_PostDetailPage() {
 
         <div className={styles.detailContent}>{post.content}</div>
 
+        {/* 配图画廊：点击任意图片打开灯箱 */}
+        {post.images.length > 0 && (
+          <div
+            className={
+              post.images.length === 1
+                ? styles.gallerySingle
+                : styles.galleryGrid
+            }
+          >
+            {post.images.map((image, index) => (
+              <button
+                key={image.id}
+                type="button"
+                className={styles.galleryItem}
+                onClick={() => setLightboxIndex(index)}
+              >
+                <img
+                  src={iGM_FilePreviewUrl(image.fileId)}
+                  alt={t("community.galleryImageAlt", { index: index + 1 })}
+                  crossOrigin="anonymous"
+                  loading="lazy"
+                />
+              </button>
+            ))}
+          </div>
+        )}
+
         <hr className={styles.divider} />
 
         {/* 互动操作条 */}
@@ -545,6 +600,71 @@ export function iGM_PostDetailPage() {
           <p className={styles.hint}>{t("community.comments.empty")}</p>
         )}
       </section>
+
+      {/* 灯箱：放大查看，Esc 关闭，左右方向键切换 */}
+      {lightboxIndex !== null && post.images[lightboxIndex] && (
+        <div
+          className={styles.lightbox}
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setLightboxIndex(null)}
+        >
+          <button
+            type="button"
+            className={styles.lightboxClose}
+            onClick={() => setLightboxIndex(null)}
+            aria-label={t("community.lightboxClose")}
+          >
+            <X size={18} strokeWidth={2} />
+          </button>
+          {post.images.length > 1 && (
+            <>
+              <button
+                type="button"
+                className={styles.lightboxNav}
+                disabled={lightboxIndex === 0}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setLightboxIndex((current) =>
+                    current !== null ? Math.max(0, current - 1) : current,
+                  );
+                }}
+                aria-label={t("community.lightboxPrev")}
+              >
+                <ChevronLeft size={20} strokeWidth={2} />
+              </button>
+              <button
+                type="button"
+                className={`${styles.lightboxNav} ${styles.lightboxNavNext}`}
+                disabled={lightboxIndex === post.images.length - 1}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setLightboxIndex((current) =>
+                    current !== null
+                      ? Math.min(post.images.length - 1, current + 1)
+                      : current,
+                  );
+                }}
+                aria-label={t("community.lightboxNext")}
+              >
+                <ChevronRight size={20} strokeWidth={2} />
+              </button>
+            </>
+          )}
+          <img
+            src={iGM_FilePreviewUrl(post.images[lightboxIndex].fileId)}
+            alt={t("community.galleryImageAlt", { index: lightboxIndex + 1 })}
+            crossOrigin="anonymous"
+            onClick={(event) => event.stopPropagation()}
+          />
+          <span
+            className={styles.lightboxCounter}
+            onClick={(event) => event.stopPropagation()}
+          >
+            {lightboxIndex + 1} / {post.images.length}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

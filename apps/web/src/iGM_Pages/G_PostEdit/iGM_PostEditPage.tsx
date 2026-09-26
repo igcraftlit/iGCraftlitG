@@ -34,6 +34,7 @@ import {
   iGM_ApiUpdatePost,
 } from "../../iGM_Services/iGM_PostClient";
 import { iGM_ResolveErrorText } from "../../iGM_Components/iGM_AuthUI/iGM_AuthUI";
+import { iGM_PostImageUploader as IGM_PostImageUploader } from "../../iGM_Components/iGM_PostImageUploader/iGM_PostImageUploader";
 import pageStyles from "../iGM_Page.module.css";
 import styles from "../iGM_Community.module.css";
 
@@ -56,6 +57,8 @@ export function iGM_PostEditPage() {
   const [content, setContent] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [tags, setTags] = useState("");
+  const [images, setImages] = useState<string[]>([]);
+  const [imagesUploading, setImagesUploading] = useState(false);
   const [loading, setLoading] = useState(isEdit);
   const [submitting, setSubmitting] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
@@ -78,6 +81,7 @@ export function iGM_PostEditPage() {
       setContent(post.content);
       setCategoryId(post.category?.id ?? "");
       setTags(post.tags.map((tag) => tag.name).join(", "));
+      setImages(post.images.map((image) => image.fileId));
     } catch (error) {
       setErrorText(iGM_ResolveErrorText(t, error));
     } finally {
@@ -114,6 +118,7 @@ export function iGM_PostEditPage() {
         content: trimmedContent,
         categoryId: categoryId || null,
         tags,
+        images,
       };
       const response = isEdit
         ? await iGM_ApiUpdatePost({ postId: postId as string, ...payload })
@@ -223,6 +228,17 @@ export function iGM_PostEditPage() {
           <span className={styles.hint}>{t("community.editor.tagsHint")}</span>
         </div>
 
+        {/* 配图（最多 9 张，单张不超过 5MB，可拖拽排序） */}
+        <div className={styles.formRow}>
+          <span className={styles.label}>{t("community.editor.imagesLabel")}</span>
+          <IGM_PostImageUploader
+            value={images}
+            onChange={setImages}
+            disabled={submitting}
+            onUploadingChange={setImagesUploading}
+          />
+        </div>
+
         {/* 正文 */}
         <div className={styles.formRow}>
           <label className={styles.label} htmlFor="igm-post-content">
@@ -247,7 +263,12 @@ export function iGM_PostEditPage() {
           <button
             type="submit"
             className={styles.primaryButton}
-            disabled={submitting || !title.trim() || !content.trim()}
+            disabled={
+              submitting ||
+              imagesUploading ||
+              !title.trim() ||
+              !content.trim()
+            }
           >
             {submitting && <LoaderCircle size={14} className="igm-spin" />}
             {isEdit ? t("community.editor.save") : t("community.editor.publish")}

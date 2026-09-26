@@ -1,0 +1,495 @@
+/*
+ * 文件路径：apps/web/src/iGM_Pages/iGM_Minecraft.module.css
+ * 所属层：前端 / 页面样式
+ * 路由：G_Minecraft、G_MinecraftUpload、G_MinecraftDetail
+ * 模块：iGM_Minecraft
+ * 作用：Minecraft 资源分区三页面的专用样式（苦力怕论坛风格）
+ * 内容：分区横幅、分组筛选条、资源栅格卡片、多选胶囊组、详情封面与兼容性区
+ */
+
+/* ===== 分区横幅 ===== */
+.mcHero {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px 24px;
+  border-radius: var(--igm-radius-lg);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--igm-accent) 14%, var(--igm-surface)),
+    var(--igm-surface) 70%
+  );
+  border: 1px solid var(--igm-border);
+}
+
+.mcHeroTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.mcHeroIcon {
+  display: inline-flex;
+  color: var(--igm-accent);
+}
+
+.mcHeroDescription {
+  font-size: 13.5px;
+  color: var(--igm-text-muted);
+}
+
+/* ===== 筛选分组 ===== */
+.filterGroup {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.filterLabel {
+  flex-shrink: 0;
+  width: 64px;
+  padding-top: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--igm-text-muted);
+}
+
+.filterChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mcChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border: 1px solid var(--igm-border-strong);
+  border-radius: 999px;
+  background: var(--igm-surface);
+  font-size: 12.5px;
+  color: var(--igm-text-muted);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.mcChip:hover {
+  color: var(--igm-text);
+  border-color: var(--igm-text-muted);
+}
+
+.mcChipActive {
+  color: var(--igm-accent-contrast);
+  background: var(--igm-accent);
+  border-color: var(--igm-accent);
+  font-weight: 500;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 220px;
+  padding: 0 12px;
+  border: 1px solid var(--igm-border-strong);
+  border-radius: var(--igm-radius-lg);
+  background: var(--igm-surface);
+}
+
+.searchInput {
+  flex: 1;
+  height: 38px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--igm-text);
+  font-size: 13.5px;
+}
+
+/* ===== 资源栅格 ===== */
+.mcGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .mcGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .mcGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.mcCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: var(--igm-surface);
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  box-shadow: var(--igm-shadow);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.mcCard:hover {
+  transform: translateY(-2px);
+  border-color: var(--igm-border-strong);
+}
+
+.mcCardCover {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--igm-radius);
+  overflow: hidden;
+  background: var(--igm-surface-subtle);
+}
+
+.mcCardCover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mcCardCoverFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--igm-text-subtle);
+}
+
+.mcCardType {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, #000 55%, transparent);
+  color: #fff;
+  font-size: 11px;
+}
+
+/* 详情页内联使用时取消绝对定位 */
+.mcCardTypeStatic {
+  position: static;
+  background: var(--igm-surface-subtle);
+  color: var(--igm-accent);
+  border: 1px solid color-mix(in srgb, var(--igm-accent) 35%, transparent);
+}
+
+.mcCardTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--igm-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-decoration: none;
+}
+
+.mcCardTitle:hover {
+  color: var(--igm-accent);
+}
+
+.mcCardMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+.mcCardMetaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mcCardChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.mcCardChip {
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--igm-surface-subtle);
+  font-size: 11px;
+  color: var(--igm-text-muted);
+}
+
+/* ===== 上传表单 ===== */
+.formCard {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px;
+  background: var(--igm-surface);
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  box-shadow: var(--igm-shadow);
+}
+
+.formSectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--igm-text);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--igm-border);
+}
+
+.formRow {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.formColumns {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .formColumns {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--igm-text);
+}
+
+.input,
+.textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--igm-border-strong);
+  border-radius: var(--igm-radius);
+  background: var(--igm-surface);
+  color: var(--igm-text);
+  font-size: 13.5px;
+  font-family: inherit;
+}
+
+.textarea {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--igm-accent);
+}
+
+.counter {
+  align-self: flex-end;
+  font-size: 11.5px;
+  color: var(--igm-text-subtle);
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+.uploadRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.uploadedFile {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--igm-text);
+}
+
+.formActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+}
+
+/* ===== 详情页 ===== */
+.detailLayout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+@media (min-width: 960px) {
+  .detailLayout {
+    grid-template-columns: 340px 1fr;
+    align-items: start;
+  }
+}
+
+.detailCover {
+  border-radius: var(--igm-radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--igm-border);
+  background: var(--igm-surface);
+}
+
+.detailCover img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.detailCoverFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 16 / 9;
+  color: var(--igm-text-subtle);
+}
+
+.detailMain {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.detailTitle {
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.detailMetaRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+  color: var(--igm-text-muted);
+}
+
+.compatRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.compatGroup {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.compatLabel {
+  flex-shrink: 0;
+  width: 76px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--igm-text-muted);
+}
+
+.compatChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.compatChip {
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: var(--igm-surface-subtle);
+  border: 1px solid var(--igm-border);
+  font-size: 12px;
+  color: var(--igm-text);
+}
+
+.description {
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--igm-text);
+  white-space: pre-wrap;
+}
+
+.subTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+@media (min-width: 640px) {
+  .infoGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.infoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.infoLabel {
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+.infoValue {
+  font-size: 13px;
+  color: var(--igm-text);
+  word-break: break-word;
+}
+
+.externalLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: var(--igm-accent);
+  text-decoration: none;
+}
+
+.externalLink:hover {
+  text-decoration: underline;
+}

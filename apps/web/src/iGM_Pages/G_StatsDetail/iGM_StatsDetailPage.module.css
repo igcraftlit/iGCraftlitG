@@ -1,0 +1,72 @@
+/*
+ * 文件路径：apps/web/src/iGM_Pages/G_StatsDetail/iGM_StatsDetailPage.module.css
+ * 所属层：前端 / 页面样式（CSS Modules）
+ * 路由：G_StatsDetail
+ * 模块：iGM_StatsDetailPage.module.css
+ * 作用：数据详情页专用样式
+ * 内容：趋势图表栅格、活动统计表、活动摘要栏
+ */
+
+/* ===== 趋势图表栅格 ===== */
+.trendGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+/* ===== 活动统计摘要 ===== */
+.activitySummary {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 13px;
+  color: var(--igm-text-muted);
+}
+
+/* ===== 活动统计表 ===== */
+.activityTableWrap {
+  overflow-x: auto;
+}
+
+.activityTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  color: var(--igm-text);
+}
+
+.activityTable thead tr {
+  border-bottom: 1px solid var(--igm-border);
+}
+
+.activityTable th {
+  text-align: left;
+  padding: 10px 8px;
+  font-weight: 600;
+  color: var(--igm-text-muted);
+  white-space: nowrap;
+}
+
+.activityTable td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--igm-border);
+  vertical-align: middle;
+}
+
+.activityTitle {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activityTime {
+  white-space: nowrap;
+  color: var(--igm-text-muted);
+}
+
+.activityCount {
+  text-align: right;
+  font-weight: 600;
+  white-space: nowrap;
+}

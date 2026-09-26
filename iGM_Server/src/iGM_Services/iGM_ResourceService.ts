@@ -39,6 +39,10 @@ import type { iGM_AuthorDto } from "../iGM_Types/iGM_Community";
 import type { iGM_UserRow } from "../iGM_Types/iGM_Auth";
 import { iGM_ResolveUserOrgBadge } from "../iGM_Repositories/iGM_OrgVerifyRepository";
 import {
+  iGM_IsMcLoader,
+  iGM_IsMcPlatform,
+  iGM_IsMcResourceType,
+  iGM_ParseMultiValue,
   iGM_ToResourceCategoryDto,
   iGM_ToResourceTagDto,
   type iGM_ResourceCategoryDto,
@@ -200,6 +204,147 @@ function iGM_ResolveActivity(activityId?: string | null): string | null {
   return id;
 }
 
+/* ---------- 模块十：Minecraft 字段校验 ---------- */
+
+/** Minecraft 扩展字段（已校验，数组可直接 JSON 序列化） */
+interface iGM_McFields {
+  resourceType: string | null;
+  mcVersions: string[];
+  loaders: string[];
+  platforms: string[];
+  license: string | null;
+  originalAuthor: string | null;
+  originalUrl: string | null;
+  changelog: string | null;
+}
+
+/** 版本数量与文本长度上限 */
+const iGM_McMaxVersions = 10;
+const iGM_McVersionMaxLength = 20;
+const iGM_McLicenseMaxLength = 100;
+const iGM_McAuthorMaxLength = 50;
+const iGM_McChangelogMaxLength = 5000;
+
+/** 解析行内 JSON 数组文本；非法或空值返回空数组 */
+function iGM_ParseJsonArray(raw: string | null): string[] {
+  if (!raw) return [];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed)
+      ? parsed.filter((item): item is string => typeof item === "string")
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+/** 普通资源的空 Minecraft 字段（全部 null） */
+function iGM_EmptyMcFields(): iGM_McFields {
+  return {
+    resourceType: null,
+    mcVersions: [],
+    loaders: [],
+    platforms: [],
+    license: null,
+    originalAuthor: null,
+    originalUrl: null,
+    changelog: null,
+  };
+}
+
+/** 空数组序列化为 null（与历史普通资源一致），非空序列化为 JSON 文本 */
+function iGM_SerializeMcArray(values: string[]): string | null {
+  return values.length > 0 ? JSON.stringify(values) : null;
+}
+
+/** 由已有资源行提取 Minecraft 字段（普通资源编辑时保留原值） */
+function iGM_McFieldsFromRow(row: iGM_ResourceRow): iGM_McFields {
+  return {
+    resourceType: row.iGM_ResourceType,
+    mcVersions: iGM_ParseJsonArray(row.iGM_McVersions),
+    loaders: iGM_ParseJsonArray(row.iGM_Loaders),
+    platforms: iGM_ParseJsonArray(row.iGM_Platforms),
+    license: row.iGM_License,
+    originalAuthor: row.iGM_OriginalAuthor,
+    originalUrl: row.iGM_OriginalUrl,
+    changelog: row.iGM_Changelog,
+  };
+}
+
+/**
+ * 校验 Minecraft 上传/编辑表单：
+ * 资源类型必填且合法；版本去重限 10 个；加载器须为白名单值；
+ * 平台至少选择一个且合法；原帖链接须为 http(s)；
+ * 许可协议、原作者、更新日志做长度校验与净化。
+ */
+function iGM_ValidateMcFields(input: iGM_ResourceInput): iGM_McFields {
+  const resourceType =
+    typeof input.resourceType === "string" ? input.resourceType.trim() : "";
+  if (!iGM_IsMcResourceType(resourceType)) {
+    throw new iGM_ContentError("minecraft.errors.resourceTypeInvalid", 422);
+  }
+
+  const mcVersions = iGM_ParseMultiValue(input.mcVersions).map((version) =>
+    version.trim(),
+  );
+  if (mcVersions.length > iGM_McMaxVersions) {
+    throw new iGM_ContentError("minecraft.errors.tooManyVersions", 422);
+  }
+  if (mcVersions.some((version) => version.length > iGM_McVersionMaxLength)) {
+    throw new iGM_ContentError("minecraft.errors.versionInvalid", 422);
+  }
+
+  const loaders = iGM_ParseMultiValue(input.loaders);
+  if (loaders.some((loader) => !iGM_IsMcLoader(loader))) {
+    throw new iGM_ContentError("minecraft.errors.loaderInvalid", 422);
+  }
+
+  const platforms = iGM_ParseMultiValue(input.platforms);
+  if (platforms.length === 0) {
+    throw new iGM_ContentError("minecraft.errors.platformRequired", 422);
+  }
+  if (platforms.some((platform) => !iGM_IsMcPlatform(platform))) {
+    throw new iGM_ContentError("minecraft.errors.platformInvalid", 422);
+  }
+
+  const license =
+    iGM_SanitizeContent(String(input.license ?? "")).slice(
+      0,
+      iGM_McLicenseMaxLength,
+    ) || null;
+  const originalAuthor =
+    iGM_SanitizeContent(String(input.originalAuthor ?? "")).slice(
+      0,
+      iGM_McAuthorMaxLength,
+    ) || null;
+
+  const originalUrlRaw =
+    typeof input.originalUrl === "string" ? input.originalUrl.trim() : "";
+  let originalUrl: string | null = null;
+  if (originalUrlRaw) {
+    if (!/^https?:\/\/[^\s]+$/i.test(originalUrlRaw)) {
+      throw new iGM_ContentError("minecraft.errors.originalUrlInvalid", 422);
+    }
+    originalUrl = originalUrlRaw;
+  }
+
+  const changelog = iGM_SanitizeContent(String(input.changelog ?? ""));
+  if (changelog.length > iGM_McChangelogMaxLength) {
+    throw new iGM_ContentError("minecraft.errors.changelogInvalid", 422);
+  }
+
+  return {
+    resourceType,
+    mcVersions,
+    loaders,
+    platforms,
+    license,
+    originalAuthor,
+    originalUrl,
+    changelog: changelog || null,
+  };
+}
+
 /** 规范化分页参数 */
 function iGM_ResolvePagination(
   pageRaw?: number,
@@ -252,6 +397,15 @@ function iGM_AssembleResourceList(
       tags,
       activityId: row.iGM_ActivityId,
       downloadCount: row.iGM_DownloadCount,
+      // 模块十：Minecraft 扩展字段（JSON 文本解析为数组）
+      resourceType: row.iGM_ResourceType,
+      mcVersions: iGM_ParseJsonArray(row.iGM_McVersions),
+      loaders: iGM_ParseJsonArray(row.iGM_Loaders),
+      platforms: iGM_ParseJsonArray(row.iGM_Platforms),
+      license: row.iGM_License,
+      originalAuthor: row.iGM_OriginalAuthor,
+      originalUrl: row.iGM_OriginalUrl,
+      changelog: row.iGM_Changelog,
       uploader: uploaderRow
         ? iGM_ToAuthorDto(uploaderRow)
         : iGM_DeletedAuthorPlaceholder(row.iGM_UploaderId),
@@ -275,6 +429,8 @@ export function iGM_CreateResourceService(
   const coverFileId = iGM_ResolveCover(input.coverFileId);
   const categoryId = iGM_ResolveCategory(input.categoryId);
   const activityId = iGM_ResolveActivity(input.activityId);
+  // 模块十：仅 Minecraft 分区表单携带 minecraft 标记并做扩展校验
+  const mc = input.minecraft ? iGM_ValidateMcFields(input) : iGM_EmptyMcFields();
 
   const resource = iGM_Db.transaction(() => {
     const created = iGM_CreateResource({
@@ -286,6 +442,15 @@ export function iGM_CreateResourceService(
       coverFileId,
       activityId,
       status: "published",
+      // 模块十：Minecraft 扩展字段
+      resourceType: mc.resourceType,
+      mcVersionsJson: iGM_SerializeMcArray(mc.mcVersions),
+      loadersJson: iGM_SerializeMcArray(mc.loaders),
+      platformsJson: iGM_SerializeMcArray(mc.platforms),
+      license: mc.license,
+      originalAuthor: mc.originalAuthor,
+      originalUrl: mc.originalUrl,
+      changelog: mc.changelog,
       now: new Date().toISOString(),
     });
     if (tags.length > 0) {
@@ -328,6 +493,10 @@ export function iGM_UpdateResourceService(
     input.activityId === undefined
       ? resource.iGM_ActivityId
       : iGM_ResolveActivity(input.activityId);
+  // 模块十：Minecraft 表单按提交校验；普通表单保留资源原 MC 字段
+  const mc = input.minecraft
+    ? iGM_ValidateMcFields(input)
+    : iGM_McFieldsFromRow(resource);
 
   iGM_Db.transaction(() => {
     iGM_UpdateResource(resourceId, {
@@ -341,6 +510,15 @@ export function iGM_UpdateResourceService(
         input.status && (input.status === "published" || input.status === "hidden")
           ? input.status
           : resource.iGM_Status,
+      // 模块十：Minecraft 扩展字段
+      resourceType: mc.resourceType,
+      mcVersionsJson: iGM_SerializeMcArray(mc.mcVersions),
+      loadersJson: iGM_SerializeMcArray(mc.loaders),
+      platformsJson: iGM_SerializeMcArray(mc.platforms),
+      license: mc.license,
+      originalAuthor: mc.originalAuthor,
+      originalUrl: mc.originalUrl,
+      changelog: mc.changelog,
       now: new Date().toISOString(),
     });
     const tagRows = tags.length > 0 ? iGM_FindOrCreateResourceTags(tags) : [];
@@ -379,6 +557,8 @@ export function iGM_SetResourceStatusService(
   if (!iGM_IsUploader(user, resource.iGM_UploaderId) && !iGM_CanModerate(user)) {
     throw new iGM_ContentError("auth.errors.forbidden", 403);
   }
+  // 模块十：状态变更不触碰内容与 Minecraft 字段，原样回填
+  const mc = iGM_McFieldsFromRow(resource);
   iGM_UpdateResource(resourceId, {
     title: resource.iGM_Title,
     description: resource.iGM_Description,
@@ -387,6 +567,14 @@ export function iGM_SetResourceStatusService(
     coverFileId: resource.iGM_CoverFileId,
     activityId: resource.iGM_ActivityId,
     status,
+    resourceType: mc.resourceType,
+    mcVersionsJson: iGM_SerializeMcArray(mc.mcVersions),
+    loadersJson: iGM_SerializeMcArray(mc.loaders),
+    platformsJson: iGM_SerializeMcArray(mc.platforms),
+    license: mc.license,
+    originalAuthor: mc.originalAuthor,
+    originalUrl: mc.originalUrl,
+    changelog: mc.changelog,
     now: new Date().toISOString(),
   });
   const detail = iGM_GetResourceDetail(user, resourceId);
@@ -445,6 +633,47 @@ function iGM_EmptyPage(
   pageSize: number,
 ): iGM_ResourceListData {
   return { items: [], total: 0, page, pageSize, totalPages: 1 };
+}
+
+/* ---------- 模块十：Minecraft 分区列表 ---------- */
+
+/** Minecraft 分区列表：仅 Minecraft 资源，支持类型/版本/加载器/平台筛选与搜索 */
+export function iGM_ListMinecraftResourcesService(
+  currentUser: iGM_UserRow | null,
+  query: {
+    type?: string;
+    version?: string;
+    loader?: string;
+    platform?: string;
+    search?: string;
+    page?: number;
+    pageSize?: number;
+  },
+): iGM_ResourceListData {
+  const { page, pageSize } = iGM_ResolvePagination(query.page, query.pageSize);
+  const canModerate = currentUser ? iGM_CanModerate(currentUser) : false;
+  const { items, total } = iGM_ListResources({
+    statuses: canModerate ? ["published", "hidden"] : ["published"],
+    categoryId: null,
+    tagId: null,
+    uploaderId: null,
+    activityId: null,
+    search: query.search?.trim() ? query.search.trim() : null,
+    minecraftOnly: true,
+    mcResourceType: query.type?.trim() ?? null,
+    mcVersion: query.version?.trim() ?? null,
+    mcLoader: query.loader?.trim() ?? null,
+    mcPlatform: query.platform?.trim() ?? null,
+    page,
+    pageSize,
+  });
+  return {
+    items: iGM_AssembleResourceList(items),
+    total,
+    page,
+    pageSize,
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+  };
 }
 
 /** 活动详情用：列出关联到该活动的已发布资源（最多 20 条，按创建时间倒序） */

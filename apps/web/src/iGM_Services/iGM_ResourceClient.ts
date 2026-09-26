@@ -51,6 +51,17 @@ export interface iGM_ResourceListItem {
   /** 关联活动 ID，无关联时为 null */
   activityId: string | null;
   downloadCount: number;
+  /** 模块十：Minecraft 资源类型，非 Minecraft 资源为 null */
+  resourceType: string | null;
+  /** 模块十：适用版本/加载器/平台（无则空数组） */
+  mcVersions: string[];
+  loaders: string[];
+  platforms: string[];
+  /** 模块十：许可协议、原作者、原帖链接、更新日志 */
+  license: string | null;
+  originalAuthor: string | null;
+  originalUrl: string | null;
+  changelog: string | null;
   uploader: iGM_Author;
   file: iGM_FileItem;
   cover: iGM_FileItem | null;

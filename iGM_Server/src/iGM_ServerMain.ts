@@ -20,6 +20,9 @@ import { iGM_StorageError, iGM_EnsureUploadRoot } from "./iGM_Services/iGM_Stora
 import { iGM_PointsError } from "./iGM_Services/iGM_PointsService";
 import { iGM_AdminError } from "./iGM_Services/iGM_AdminService";
 import { iGM_OrgVerifyError } from "./iGM_Services/iGM_OrgVerifyService";
+// 模块十：社交关系与私信业务错误
+import { iGM_SocialError } from "./iGM_Services/iGM_SocialService";
+import { iGM_MessageError } from "./iGM_Services/iGM_MessageService";
 import { G_Health } from "./iGM_Routes/G_Health";
 import { G_Api } from "./iGM_Routes/G_Api";
 import { G_Auth } from "./iGM_Routes/G_Auth";
@@ -33,6 +36,12 @@ import { G_Points } from "./iGM_Routes/G_Points";
 import { G_Admin } from "./iGM_Routes/G_Admin";
 import { G_Seo } from "./iGM_Routes/G_Seo";
 import { G_OrgVerify } from "./iGM_Routes/G_OrgVerify";
+import { G_Realtime } from "./iGM_Routes/G_Realtime";
+import { G_Stats } from "./iGM_Routes/G_Stats";
+// 模块十：社交关系、私信、Minecraft 资源分区
+import { G_Social } from "./iGM_Routes/G_Social";
+import { G_Message } from "./iGM_Routes/G_Message";
+import { G_Minecraft } from "./iGM_Routes/G_Minecraft";
 
 // 类型定义 //
 // （本入口无额外类型，统一响应类型见 iGM_Types/iGM_Response.ts）
@@ -84,6 +93,16 @@ const iGM_Server = new Elysia()
       set.status = error.status;
       return iGM_Fail(error.status, error.message);
     }
+    // 模块十社交业务错误：黑名单/关系冲突等
+    if (error instanceof iGM_SocialError) {
+      set.status = error.status;
+      return iGM_Fail(error.status, error.message);
+    }
+    // 模块十私信业务错误：隐私设置/撤回时限等
+    if (error instanceof iGM_MessageError) {
+      set.status = error.status;
+      return iGM_Fail(error.status, error.message);
+    }
     // 请求体解析失败等客户端错误（沿用模块二通用文案键）
     if (code === "PARSE" || code === "VALIDATION") {
       set.status = 400;
@@ -113,6 +132,14 @@ const iGM_Server = new Elysia()
   .use(G_Seo)
   // 模块七：组织认证
   .use(G_OrgVerify)
+  // 模块九：实时通信与运营统计
+  .use(G_Realtime)
+  .use(G_Stats)
+  // 模块十：社交关系与私信系统
+  .use(G_Social)
+  .use(G_Message)
+  // 模块十：Minecraft 资源分区
+  .use(G_Minecraft)
   // 根路径占位
   .get("/", () => ({
     success: true,

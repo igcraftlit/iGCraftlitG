@@ -38,7 +38,17 @@
     "orgVerify": "组织认证",
     "orgVerifyStatus": "申请记录",
     "adminOrgVerify": "认证审核",
-    "orgDetails": "组织详情"
+    "orgDetails": "组织详情",
+    "realtime": "实时状态",
+    "dashboard": "运营看板",
+    "statsDetail": "数据详情",
+    "minecraft": "Minecraft 资源",
+    "minecraftUpload": "发布 MC 资源",
+    "feed": "动态",
+    "friends": "好友",
+    "userRelations": "关注与粉丝",
+    "messages": "私信",
+    "messageSettings": "私信隐私"
   },
   "topbar": {
     "menu": "菜单",
@@ -282,6 +292,54 @@
     "userRules": {
       "title": "用户管理规定",
       "description": "iGCraftLit Community 用户管理规定全文：全球共处、账号管理、行为规范、知识产权与量化处罚"
+    },
+    "realtime": {
+      "title": "实时状态",
+      "description": "当前在线用户与实时通知流"
+    },
+    "dashboard": {
+      "title": "运营看板",
+      "description": "核心数据指标与趋势概览"
+    },
+    "statsDetail": {
+      "title": "数据详情",
+      "description": "按时间范围查看增长趋势、排行与活动统计"
+    },
+    "userRelations": {
+      "title": "关注与粉丝",
+      "description": "查看该用户关注的对象与粉丝列表"
+    },
+    "friends": {
+      "title": "好友",
+      "description": "管理好友、收到的与发出的好友申请"
+    },
+    "feed": {
+      "title": "动态",
+      "description": "你关注的用户与好友的最新动态"
+    },
+    "messages": {
+      "title": "私信",
+      "description": "你的私信会话列表"
+    },
+    "messageDetail": {
+      "title": "私信对话",
+      "description": "与另一位用户的一对一私信对话"
+    },
+    "messageSettings": {
+      "title": "私信隐私设置",
+      "description": "设置谁可以向你发送私信"
+    },
+    "minecraft": {
+      "title": "Minecraft 资源分区",
+      "description": "浏览与下载 Minecraft 模组、材质包、地图、皮肤等资源，支持版本与加载器筛选"
+    },
+    "minecraftUpload": {
+      "title": "发布 Minecraft 资源",
+      "description": "上传 Minecraft 资源并填写版本、加载器、平台与授权信息"
+    },
+    "minecraftDetail": {
+      "title": "Minecraft 资源详情",
+      "description": "查看资源介绍、兼容性、更新日志并下载文件"
     }
   },
   "placeholder": {
@@ -589,7 +647,10 @@
       "contentPlaceholder": "请输入正文内容…",
       "save": "保存修改",
       "publish": "发布帖子",
-      "cancel": "取消"
+      "cancel": "取消",
+      "imagesLabel": "配图",
+      "addImages": "添加图片",
+      "imagesHint": "已添加 {count} / {max} 张，单张不超过 5MB，可拖拽排序"
     },
     "profile": {
       "noSelectionTitle": "未指定用户",
@@ -609,7 +670,9 @@
       "emptyPostsDesc": "TA 还没有公开发布的帖子",
       "emptyCommentsTitle": "还没有评论",
       "emptyCommentsDesc": "TA 还没有公开发表的评论",
-      "uidLabel": "iGMUid"
+      "uidLabel": "iGMUid",
+      "followingCountValue": "关注 {count}",
+      "followersCountValue": "粉丝 {count}"
     },
     "myPosts": {
       "title": "我的帖子",
@@ -659,7 +722,10 @@
       "websiteInvalid": "网站地址格式不正确",
       "avatarInvalid": "头像地址格式不正确",
       "unauthorized": "请先登录",
-      "forbidden": "你没有权限执行该操作"
+      "forbidden": "你没有权限执行该操作",
+      "imagesInvalid": "图片校验未通过，请检查文件类型与大小",
+      "tooManyImages": "最多只能上传 {max} 张图片",
+      "imageInvalid": "图片不合法：仅支持图片格式且单张不超过 5MB"
     },
     "messages": {
       "postCreated": "帖子发布成功",
@@ -669,7 +735,11 @@
       "commentUpdated": "评论已更新",
       "commentDeleted": "评论已删除",
       "profileUpdated": "资料已更新"
-    }
+    },
+    "galleryImageAlt": "帖子配图 {index}",
+    "lightboxClose": "关闭",
+    "lightboxPrev": "上一张",
+    "lightboxNext": "下一张"
   },
   "notification": {
     "title": "通知中心",
@@ -1318,5 +1388,277 @@
     "registerHint": "你正在注册新账号。请完整阅读本规定，滚动到页面底部后即可同意并返回注册向导。",
     "scrollToAccept": "请继续向下滚动，阅读完规定全文后即可同意",
     "acceptAndReturn": "我已阅读完毕，同意并返回注册"
+  },
+  "realtime": {
+    "status": {
+      "connected": "已连接",
+      "disconnected": "未连接"
+    },
+    "onlineCount": "在线 {count} 人",
+    "onlineUsers": "在线用户",
+    "noOnline": "当前没有在线用户",
+    "you": "你",
+    "owner": "负责人",
+    "notificationStream": "实时通知流",
+    "noNotifications": "暂无新通知",
+    "viewDetail": "查看详情",
+    "alert": {
+      "disconnected": "实时连接已断开，通知将不再自动推送。"
+    }
+  },
+  "dashboard": {
+    "metrics": {
+      "totalUsers": "总用户数",
+      "newUsersToday": "今日新增用户",
+      "activeUsersDaily": "日活跃用户",
+      "activeUsersWeekly": "周活跃用户",
+      "activeUsersMonthly": "月活跃用户",
+      "totalPosts": "总帖子数",
+      "postsToday": "今日发帖数",
+      "totalComments": "总评论数",
+      "commentsToday": "今日评论数",
+      "totalLikes": "总点赞数",
+      "totalResources": "总资源数",
+      "totalActivities": "总活动数",
+      "totalActivityRegistrations": "活动报名总数",
+      "totalResourceDownloads": "资源下载总数",
+      "onlineUsers": "当前在线人数"
+    },
+    "charts": {
+      "userGrowth": "用户增长",
+      "postVolume": "发帖量",
+      "commentVolume": "评论量",
+      "newUsers": "新增用户",
+      "posts": "帖子",
+      "comments": "评论"
+    },
+    "leaderboards": {
+      "hotPosts": "热门帖子",
+      "hotResources": "热门资源",
+      "activeUsers": "活跃用户",
+      "likes": "点赞",
+      "comments": "评论"
+    },
+    "noData": "暂无数据"
+  },
+  "stats": {
+    "ranges": {
+      "7d": "近7天",
+      "30d": "近30天",
+      "90d": "近90天"
+    },
+    "sections": {
+      "userGrowth": "用户增长趋势",
+      "postVolume": "发帖量趋势",
+      "commentVolume": "评论量趋势",
+      "activity": "活跃度趋势"
+    },
+    "charts": {
+      "users": "用户数",
+      "posts": "帖子数",
+      "comments": "评论数",
+      "activity": "活跃数"
+    },
+    "activities": {
+      "title": "活动参与统计",
+      "totalActivities": "活动总数",
+      "totalRegistrations": "报名总数",
+      "colTitle": "活动标题",
+      "colStatus": "状态",
+      "colStartTime": "开始时间",
+      "colRegistrations": "报名人数"
+    }
+  },
+  "social": {
+    "relationsTitle": "关注与粉丝",
+    "relationsTitleWithName": "{name} 的关注与粉丝",
+    "following": "关注",
+    "followers": "粉丝",
+    "follow": "关注",
+    "unblock": "取消拉黑",
+    "block": "拉黑",
+    "blockedBadge": "已拉黑",
+    "friendsBadge": "已为好友",
+    "requestSent": "申请已发送",
+    "respondRequest": "回应申请",
+    "addFriend": "加好友",
+    "backToProfile": "返回用户主页",
+    "sendMessage": "发私信",
+    "followedAt": "关注于 {date}",
+    "stateLoading": "正在加载…",
+    "emptyFollowing": "还没有关注的用户",
+    "emptyFollowers": "还没有粉丝",
+    "friendsTitle": "好友",
+    "friendsDescription": "管理你的好友与好友申请",
+    "tabFriends": "好友",
+    "tabIncoming": "收到的申请",
+    "tabOutgoing": "发出的申请",
+    "friendsSince": "成为好友于 {date}",
+    "removeFriend": "删除好友",
+    "emptyFriends": "还没有好友",
+    "emptyFriendsDescription": "去社区发现志同道合的探星者吧",
+    "requestAt": "申请于 {date}",
+    "accept": "接受",
+    "reject": "拒绝",
+    "cancelRequest": "撤回申请",
+    "emptyIncoming": "没有收到的好友申请",
+    "emptyOutgoing": "没有发出的好友申请",
+    "feedTitle": "动态",
+    "feedDescription": "你关注的用户与好友的最新帖子和评论",
+    "actionPosted": "发布了帖子",
+    "actionCommented": "发表了评论",
+    "emptyFeed": "动态还是空的",
+    "emptyFeedDescription": "关注更多用户后，这里会展示他们的最新动态",
+    "exploreCommunity": "去社区逛逛",
+    "errors": {
+      "userMissing": "未指定目标用户",
+      "userNotFound": "目标用户不存在",
+      "cannotSelf": "不能对自己执行此操作",
+      "blocked": "操作被拒绝：你与对方存在拉黑关系",
+      "alreadyFriend": "你们已经是好友",
+      "alreadyRequested": "好友申请已存在，请勿重复发送",
+      "requestNotFound": "好友申请不存在或已处理",
+      "friendNotFound": "好友关系不存在"
+    }
+  },
+  "message": {
+    "listTitle": "私信",
+    "privacySettings": "隐私设置",
+    "stateLoading": "正在加载…",
+    "recalledInline": "此消息已被撤回",
+    "noMessages": "暂无私信内容",
+    "emptyConversations": "还没有会话",
+    "emptyConversationsDescription": "从用户主页发起你的第一封私信吧",
+    "backToList": "返回会话列表",
+    "deleteConversation": "删除会话",
+    "confirmDelete": "确定删除这个会话吗？删除后将无法恢复。",
+    "settingsTitle": "私信隐私设置",
+    "settingsDescription": "选择谁可以向你发起私信",
+    "settingsSaved": "设置已保存",
+    "saveSettings": "保存设置",
+    "composerPlaceholder": "输入消息，Enter 发送，Shift+Enter 换行",
+    "send": "发送",
+    "recall": "撤回",
+    "allowFrom": {
+      "everyone": {
+        "title": "所有人",
+        "description": "任何登录用户都可以向你发送私信"
+      },
+      "friends": {
+        "title": "仅好友",
+        "description": "只有与你互相关注的好友可以向你发送私信"
+      },
+      "none": {
+        "title": "不接受私信",
+        "description": "任何人都无法向你发起新的私信"
+      }
+    },
+    "errors": {
+      "conversationNotFound": "会话不存在",
+      "closed": "对方已关闭私信权限，消息无法发送",
+      "friendsOnly": "对方仅接受好友的私信",
+      "contentRequired": "消息内容不能为空",
+      "contentTooLong": "消息内容过长",
+      "notFound": "会话不存在或你无权访问",
+      "targetRequired": "请指定私信对象",
+      "messageNotFound": "消息不存在",
+      "alreadyRecalled": "该消息已被撤回",
+      "recallExpired": "已超过可撤回时限，无法撤回",
+      "allowFromInvalid": "隐私选项不合法"
+    }
+  },
+  "minecraft": {
+    "title": "Minecraft 资源分区",
+    "description": "模组、材质包、地图、皮肤等 Minecraft 资源一站下载",
+    "upload": "发布资源",
+    "editTitle": "编辑资源",
+    "backToList": "返回资源分区",
+    "all": "全部",
+    "filterType": "资源类型",
+    "filterVersion": "MC 版本",
+    "filterLoader": "加载器",
+    "filterPlatform": "平台",
+    "searchPlaceholder": "搜索资源名称、标签…",
+    "stateLoading": "正在加载…",
+    "downloadCount": "{count} 次下载",
+    "empty": "没有符合条件的资源",
+    "emptyDescription": "试试调整筛选条件或更换关键词",
+    "notFound": "资源不存在或已被删除",
+    "confirmDelete": "确定删除这个资源吗？此操作无法撤销。",
+    "download": "下载文件",
+    "fileName": "文件名",
+    "fileSize": "文件大小",
+    "fileInfo": "文件信息",
+    "uploadedBy": "上传者：{name}",
+    "compatVersions": "适用版本",
+    "compatLoaders": "加载器",
+    "compatPlatforms": "适用平台",
+    "descriptionLabel": "资源介绍",
+    "creditTitle": "归属与授权",
+    "license": "许可协议",
+    "originalAuthor": "原作者",
+    "originalUrl": "原帖链接",
+    "unspecified": "未填写",
+    "changelogLabel": "更新日志",
+    "edit": "编辑",
+    "delete": "删除",
+    "sectionBasic": "基本信息",
+    "sectionFiles": "文件与标签",
+    "sectionCredit": "授权与归属",
+    "resourceTypes": {
+      "mod": "模组 Mod",
+      "texture_pack": "材质包 Texture Pack",
+      "map": "地图 Map",
+      "skin": "皮肤 Skin",
+      "plugin": "插件 Plugin",
+      "modpack": "整合包 Modpack",
+      "datapack": "数据包 Data Pack",
+      "other": "其他 Other"
+    },
+    "form": {
+      "title": "资源标题",
+      "titlePlaceholder": "请输入资源标题",
+      "resourceType": "资源类型",
+      "mcVersions": "适用 MC 版本（可多选）",
+      "versionHint": "已选择 {selected} / {max} 个版本",
+      "loaders": "加载器（可多选）",
+      "platforms": "适用平台（可多选）",
+      "file": "资源文件",
+      "uploadFile": "上传资源文件",
+      "fileHint": "仅允许白名单内的资源文件类型，单个文件不超过 20MB",
+      "cover": "封面图片",
+      "tags": "标签",
+      "tagsPlaceholder": "多个标签用逗号分隔",
+      "license": "许可协议",
+      "licensePlaceholder": "例如 MIT、All Rights Reserved",
+      "originalAuthor": "原作者",
+      "originalAuthorPlaceholder": "转载请填写原作者名称",
+      "originalUrl": "原帖链接",
+      "originalUrlPlaceholder": "https://…",
+      "description": "资源介绍",
+      "descriptionPlaceholder": "详细介绍资源的功能、用法与注意事项",
+      "changelog": "更新日志",
+      "changelogPlaceholder": "记录本次版本的变更内容",
+      "submitCreate": "发布资源",
+      "submitEdit": "保存修改",
+      "cancel": "取消"
+    },
+    "errors": {
+      "titleInvalid": "标题长度需在 1-100 个字符之间",
+      "typeRequired": "请选择资源类型",
+      "versionRequired": "请至少选择一个 MC 版本",
+      "platformRequired": "请至少选择一个适用平台",
+      "descriptionInvalid": "资源介绍长度需在 1-5000 个字符之间",
+      "fileRequired": "请上传资源文件",
+      "licenseInvalid": "许可协议长度不能超过 100 个字符",
+      "originalAuthorInvalid": "原作者名称长度不能超过 50 个字符",
+      "originalUrlInvalid": "原帖链接需为合法的 http(s) 链接",
+      "changelogInvalid": "更新日志长度不能超过 5000 个字符",
+      "resourceTypeInvalid": "资源类型不合法",
+      "tooManyVersions": "最多只能选择 {max} 个版本",
+      "versionInvalid": "存在不合法的 MC 版本",
+      "loaderInvalid": "存在不合法的加载器",
+      "platformInvalid": "存在不合法的平台"
+    }
   }
 }

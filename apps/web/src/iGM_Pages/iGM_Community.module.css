@@ -759,3 +759,131 @@
   background: var(--igm-success-soft);
   color: var(--igm-success);
 }
+
+/* ===== 模块十：帖子配图画廊与灯箱 ===== */
+.galleryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.gallerySingle {
+  display: block;
+}
+
+.galleryItem {
+  display: block;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: var(--igm-radius);
+  overflow: hidden;
+  background: var(--igm-surface-subtle);
+  cursor: zoom-in;
+  aspect-ratio: 1 / 1;
+}
+
+.gallerySingle .galleryItem {
+  aspect-ratio: auto;
+  max-height: 480px;
+}
+
+.galleryItem img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.18s ease;
+}
+
+.gallerySingle .galleryItem img {
+  object-fit: contain;
+}
+
+.galleryItem:hover img {
+  transform: scale(1.03);
+}
+
+/* 灯箱遮罩 */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.82);
+  padding: 48px 64px;
+}
+
+.lightbox > img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: var(--igm-radius);
+}
+
+.lightboxClose {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.lightboxClose:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.lightboxNav {
+  position: absolute;
+  top: 50%;
+  left: 18px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.lightboxNav:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.lightboxNav:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.lightboxNavNext {
+  left: auto;
+  right: 18px;
+}
+
+.lightboxCounter {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}

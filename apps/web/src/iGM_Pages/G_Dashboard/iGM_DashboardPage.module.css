@@ -1,0 +1,110 @@
+/*
+ * 文件路径：apps/web/src/iGM_Pages/G_Dashboard/iGM_DashboardPage.module.css
+ * 所属层：前端 / 页面样式（CSS Modules）
+ * 路由：G_Dashboard
+ * 模块：iGM_DashboardPage.module.css
+ * 作用：运营看板专用样式
+ * 内容：指标宫格、图表栅格、排行榜
+ */
+
+/* ===== 指标宫格 ===== */
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+/* ===== 图表栅格 ===== */
+.chartGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+/* ===== 排行榜 ===== */
+.leaderboardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.rankList {
+  display: flex;
+  flex-direction: column;
+}
+
+.rankRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--igm-border);
+}
+
+.rankRow:last-child {
+  border-bottom: none;
+}
+
+.rankNum {
+  width: 28px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--igm-text-subtle);
+  flex-shrink: 0;
+}
+
+.rankTop {
+  color: var(--igm-accent);
+}
+
+.rankInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rankTitle {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--igm-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.verifiedTag {
+  font-size: 10px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: var(--igm-accent-soft);
+  color: var(--igm-accent);
+  flex-shrink: 0;
+}
+
+.rankMeta {
+  font-size: 11px;
+  color: var(--igm-text-subtle);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rankScore {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+  flex-shrink: 0;
+}
+
+.emptyRank {
+  padding: 24px 12px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}

@@ -1,0 +1,531 @@
+/*
+ * 文件路径：apps/web/src/iGM_Pages/iGM_Module10.module.css
+ * 所属层：前端 / 页面样式
+ * 路由：G_UserRelations、G_Friends、G_Feed、G_Messages、G_MessageDetail、
+ *       G_MessageSettings
+ * 模块：iGM_Module10
+ * 作用：模块十社交关系与私信页面的共享样式
+ * 内容：卡片、行式列表、标签页、按钮、关系操作行、私信气泡、输入区
+ */
+
+/* ===== 通用卡片与列表 ===== */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sectionCard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  background: var(--igm-surface);
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  box-shadow: var(--igm-shadow);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 行式用户/会话条目 */
+.userRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 4px;
+}
+
+.userRow + .userRow {
+  border-top: 1px solid var(--igm-border);
+}
+
+.userMain {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.userName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--igm-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userSub {
+  font-size: 12.5px;
+  color: var(--igm-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ===== 标签页 ===== */
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--igm-surface);
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  width: fit-content;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border: none;
+  border-radius: var(--igm-radius);
+  background: transparent;
+  font-size: 13px;
+  color: var(--igm-text-muted);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.tab:hover {
+  color: var(--igm-text);
+  background: var(--igm-surface-subtle);
+}
+
+.tabActive {
+  color: var(--igm-text);
+  background: var(--igm-surface-subtle);
+  font-weight: 600;
+}
+
+.tabCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--igm-accent);
+  color: var(--igm-accent-contrast);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ===== 按钮 ===== */
+.primaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 15px;
+  border: none;
+  border-radius: var(--igm-radius);
+  background: var(--igm-accent);
+  color: var(--igm-accent-contrast);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.primaryButton:hover {
+  background: var(--igm-accent-hover);
+}
+
+.primaryButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ghostButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 15px;
+  border: 1px solid var(--igm-border-strong);
+  border-radius: var(--igm-radius);
+  background: transparent;
+  color: var(--igm-text);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.ghostButton:hover {
+  background: var(--igm-surface-subtle);
+}
+
+.ghostButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.dangerButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 15px;
+  border: none;
+  border-radius: var(--igm-radius);
+  background: var(--igm-danger);
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.dangerButton:hover {
+  opacity: 0.88;
+}
+
+.dangerButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--igm-border-strong);
+  border-radius: var(--igm-radius);
+  background: transparent;
+  color: var(--igm-text-muted);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.iconButton:hover {
+  background: var(--igm-surface-subtle);
+  color: var(--igm-text);
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--igm-text-muted);
+  text-decoration: none;
+}
+
+.backLink:hover {
+  color: var(--igm-text);
+}
+
+/* ===== 状态提示 ===== */
+.stateBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 40px 16px;
+  font-size: 13px;
+  color: var(--igm-text-muted);
+}
+
+.alert {
+  padding: 10px 14px;
+  border-radius: var(--igm-radius);
+  font-size: 13px;
+}
+
+.alertError {
+  background: var(--igm-danger-soft);
+  color: var(--igm-danger);
+  border: 1px solid color-mix(in srgb, var(--igm-danger) 25%, transparent);
+}
+
+.alertSuccess {
+  background: var(--igm-success-soft);
+  color: var(--igm-success);
+  border: 1px solid color-mix(in srgb, var(--igm-success) 25%, transparent);
+}
+
+.hint {
+  font-size: 12.5px;
+  color: var(--igm-text-subtle);
+}
+
+.actionRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* 徽标 */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  border: 1px solid var(--igm-border-strong);
+  color: var(--igm-text-muted);
+}
+
+.badgeAccent {
+  border-color: color-mix(in srgb, var(--igm-accent) 40%, transparent);
+  color: var(--igm-accent);
+}
+
+/* 未读小点 */
+.unreadDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--igm-accent);
+  flex-shrink: 0;
+}
+
+.unreadBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--igm-accent);
+  color: var(--igm-accent-contrast);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+/* ===== 私信会话 ===== */
+.conversationWrap {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 180px);
+  min-height: 420px;
+}
+
+.messageScroll {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 4px;
+  overflow-y: auto;
+}
+
+.bubbleRow {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-width: 72%;
+}
+
+.bubbleRowSelf {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.bubbleRowPeer {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.bubble {
+  padding: 9px 13px;
+  border-radius: var(--igm-radius-lg);
+  font-size: 13.5px;
+  line-height: 1.5;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.bubbleSelf {
+  background: var(--igm-accent);
+  color: var(--igm-accent-contrast);
+  border-bottom-right-radius: 4px;
+}
+
+.bubblePeer {
+  background: var(--igm-surface-subtle);
+  color: var(--igm-text);
+  border: 1px solid var(--igm-border);
+  border-bottom-left-radius: 4px;
+}
+
+.bubbleRecalled {
+  font-style: italic;
+  color: var(--igm-text-subtle);
+  background: transparent;
+  border: 1px dashed var(--igm-border-strong);
+}
+
+.bubbleMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--igm-text-subtle);
+}
+
+.bubbleMetaButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 11px;
+  color: var(--igm-text-subtle);
+  cursor: pointer;
+}
+
+.bubbleMetaButton:hover {
+  color: var(--igm-text-muted);
+}
+
+.composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--igm-border);
+}
+
+.composerInput {
+  flex: 1;
+  resize: none;
+  min-height: 42px;
+  max-height: 140px;
+  padding: 10px 13px;
+  border: 1px solid var(--igm-border-strong);
+  border-radius: var(--igm-radius-lg);
+  background: var(--igm-surface);
+  color: var(--igm-text);
+  font-size: 13.5px;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.composerInput:focus {
+  outline: none;
+  border-color: var(--igm-accent);
+}
+
+/* ===== 隐私设置单选项 ===== */
+.radioList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.radioCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.radioCard:hover {
+  background: var(--igm-surface-subtle);
+}
+
+.radioCardActive {
+  border-color: var(--igm-accent);
+}
+
+.radioInput {
+  margin-top: 2px;
+}
+
+.radioText {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.radioTitle {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.radioDescription {
+  font-size: 12.5px;
+  color: var(--igm-text-muted);
+}
+
+/* ===== 动态流 ===== */
+.feedCard {
+  display: flex;
+  gap: 12px;
+  padding: 15px 16px;
+}
+
+.feedCard + .feedCard {
+  border-top: 1px solid var(--igm-border);
+}
+
+.feedBody {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  flex: 1;
+}
+
+.feedLine {
+  font-size: 13.5px;
+  color: var(--igm-text);
+}
+
+.feedLink {
+  font-weight: 600;
+  color: var(--igm-text);
+  text-decoration: none;
+}
+
+.feedLink:hover {
+  color: var(--igm-accent);
+}
+
+.feedExcerpt {
+  font-size: 12.5px;
+  color: var(--igm-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.feedTime {
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+@media (max-width: 640px) {
+  .userRow {
+    flex-wrap: wrap;
+  }
+
+  .bubbleRow {
+    max-width: 85%;
+  }
+}

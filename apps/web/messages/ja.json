@@ -38,7 +38,17 @@
     "orgVerify": "組織認証",
     "orgVerifyStatus": "申請履歴",
     "adminOrgVerify": "認証審査",
-    "orgDetails": "組織詳細"
+    "orgDetails": "組織詳細",
+    "realtime": "リアルタイム",
+    "dashboard": "ダッシュボード",
+    "statsDetail": "統計詳細",
+    "minecraft": "Minecraft リソース",
+    "minecraftUpload": "MC リソース投稿",
+    "feed": "フィード",
+    "friends": "フレンド",
+    "userRelations": "フォローとフォロワー",
+    "messages": "メッセージ",
+    "messageSettings": "メッセージプライバシー"
   },
   "topbar": {
     "menu": "メニュー",
@@ -282,6 +292,54 @@
     "userRules": {
       "title": "利用規約",
       "description": "iGCraftLit Community 利用規約の全文：世界規模での共存、アカウント管理、行動規範、知的財産および定量的処罰"
+    },
+    "realtime": {
+      "title": "リアルタイム",
+      "description": "現在オンラインのユーザーとリアルタイム通知"
+    },
+    "dashboard": {
+      "title": "ダッシュボード",
+      "description": "主要指標の概要とトレンドチャート"
+    },
+    "statsDetail": {
+      "title": "統計詳細",
+      "description": "期間別の成長トレンド、ランキング、活動統計を表示"
+    },
+    "userRelations": {
+      "title": "フォローとフォロワー",
+      "description": "このユーザーのフォローとフォロワーを表示"
+    },
+    "friends": {
+      "title": "フレンド",
+      "description": "フレンド、届いた申請と送った申請を管理します"
+    },
+    "feed": {
+      "title": "フィード",
+      "description": "フォロー中のユーザーとフレンドの最新アクティビティ"
+    },
+    "messages": {
+      "title": "メッセージ",
+      "description": "プライベートメッセージの会話一覧"
+    },
+    "messageDetail": {
+      "title": "メッセージ会話",
+      "description": "他のメンバーとの1対1のプライベート会話"
+    },
+    "messageSettings": {
+      "title": "メッセージプライバシー",
+      "description": "メッセージを送信できる人を設定します"
+    },
+    "minecraft": {
+      "title": "Minecraft リソース",
+      "description": "Mod、テクスチャパック、マップ、スキンなどをバージョンとローダーで絞り込んで閲覧・ダウンロード"
+    },
+    "minecraftUpload": {
+      "title": "Minecraft リソースを投稿",
+      "description": "バージョン、ローダー、プラットフォーム、ライセンス情報を入力して投稿"
+    },
+    "minecraftDetail": {
+      "title": "Minecraft リソース詳細",
+      "description": "説明、対応環境、更新履歴を確認してダウンロード"
     }
   },
   "placeholder": {
@@ -589,7 +647,10 @@
       "contentPlaceholder": "本文を入力してください…",
       "save": "変更を保存",
       "publish": "投稿する",
-      "cancel": "キャンセル"
+      "cancel": "キャンセル",
+      "imagesLabel": "画像",
+      "addImages": "画像を追加",
+      "imagesHint": "{count} / {max} 枚追加済み（1枚5MBまで、ドラッグで並べ替え）"
     },
     "profile": {
       "noSelectionTitle": "ユーザーが指定されていません",
@@ -609,7 +670,9 @@
       "emptyPostsDesc": "公開投稿はまだありません",
       "emptyCommentsTitle": "コメントはまだありません",
       "emptyCommentsDesc": "公開コメントはまだありません",
-      "uidLabel": "iGMUid"
+      "uidLabel": "iGMUid",
+      "followingCountValue": "{count} フォロー",
+      "followersCountValue": "{count} フォロワー"
     },
     "myPosts": {
       "title": "マイ投稿",
@@ -659,7 +722,10 @@
       "websiteInvalid": "ウェブサイト URL の形式が正しくありません",
       "avatarInvalid": "アバター URL の形式が正しくありません",
       "unauthorized": "先にログインしてください",
-      "forbidden": "この操作を行う権限がありません"
+      "forbidden": "この操作を行う権限がありません",
+      "imagesInvalid": "画像の検証に失敗しました。ファイル形式とサイズを確認してください",
+      "tooManyImages": "画像は最大 {max} 枚までです",
+      "imageInvalid": "画像が不正です。画像形式のみ、1枚5MBまで対応しています"
     },
     "messages": {
       "postCreated": "投稿を公開しました",
@@ -669,7 +735,11 @@
       "commentUpdated": "コメントを更新しました",
       "commentDeleted": "コメントを削除しました",
       "profileUpdated": "プロフィールを更新しました"
-    }
+    },
+    "galleryImageAlt": "投稿画像 {index}",
+    "lightboxClose": "閉じる",
+    "lightboxPrev": "前の画像",
+    "lightboxNext": "次の画像"
   },
   "notification": {
     "title": "通知センター",
@@ -1318,5 +1388,277 @@
     "registerHint": "新規登録中です。規約を最後までお読みください。ページ最下部までスクロールすると同意して登録に戻れます。",
     "scrollToAccept": "下までスクロールして規約を読み終えると同意できます",
     "acceptAndReturn": "読み終えました。同意して登録に戻る"
+  },
+  "realtime": {
+    "status": {
+      "connected": "接続中",
+      "disconnected": "未接続"
+    },
+    "onlineCount": "オンライン {count} 人",
+    "onlineUsers": "オンラインユーザー",
+    "noOnline": "現在オンラインのユーザーはいません",
+    "you": "あなた",
+    "owner": "オーナー",
+    "notificationStream": "通知ストリーム",
+    "noNotifications": "新しい通知はありません",
+    "viewDetail": "詳細を見る",
+    "alert": {
+      "disconnected": "リアルタイム接続が切断されました。通知は自動で配信されなくなります。"
+    }
+  },
+  "dashboard": {
+    "metrics": {
+      "totalUsers": "総ユーザー数",
+      "newUsersToday": "今日の新規ユーザー",
+      "activeUsersDaily": "DAU",
+      "activeUsersWeekly": "WAU",
+      "activeUsersMonthly": "MAU",
+      "totalPosts": "総投稿数",
+      "postsToday": "今日の投稿数",
+      "totalComments": "総コメント数",
+      "commentsToday": "今日のコメント数",
+      "totalLikes": "総いいね数",
+      "totalResources": "総リソース数",
+      "totalActivities": "総活動数",
+      "totalActivityRegistrations": "活動参加総数",
+      "totalResourceDownloads": "リソースダウンロード総数",
+      "onlineUsers": "現在オンライン"
+    },
+    "charts": {
+      "userGrowth": "ユーザー成長",
+      "postVolume": "投稿数",
+      "commentVolume": "コメント数",
+      "newUsers": "新規ユーザー",
+      "posts": "投稿",
+      "comments": "コメント"
+    },
+    "leaderboards": {
+      "hotPosts": "人気投稿",
+      "hotResources": "人気リソース",
+      "activeUsers": "アクティブユーザー",
+      "likes": "いいね",
+      "comments": "コメント"
+    },
+    "noData": "データなし"
+  },
+  "stats": {
+    "ranges": {
+      "7d": "過去7日間",
+      "30d": "過去30日間",
+      "90d": "過去90日間"
+    },
+    "sections": {
+      "userGrowth": "ユーザー成長トレンド",
+      "postVolume": "投稿数トレンド",
+      "commentVolume": "コメント数トレンド",
+      "activity": "アクティビティトレンド"
+    },
+    "charts": {
+      "users": "ユーザー数",
+      "posts": "投稿数",
+      "comments": "コメント数",
+      "activity": "アクティブ数"
+    },
+    "activities": {
+      "title": "活動参加統計",
+      "totalActivities": "活動総数",
+      "totalRegistrations": "参加総数",
+      "colTitle": "タイトル",
+      "colStatus": "ステータス",
+      "colStartTime": "開始時間",
+      "colRegistrations": "参加人数"
+    }
+  },
+  "social": {
+    "relationsTitle": "フォローとフォロワー",
+    "relationsTitleWithName": "{name} のフォローとフォロワー",
+    "following": "フォロー中",
+    "followers": "フォロワー",
+    "follow": "フォロー",
+    "unblock": "ブロック解除",
+    "block": "ブロック",
+    "blockedBadge": "ブロック済み",
+    "friendsBadge": "フレンド",
+    "requestSent": "申請を送信しました",
+    "respondRequest": "申請に対応",
+    "addFriend": "フレンド申請",
+    "backToProfile": "プロフィールに戻る",
+    "sendMessage": "メッセージ",
+    "followedAt": "{date} にフォロー",
+    "stateLoading": "読み込み中…",
+    "emptyFollowing": "フォローしているユーザーはまだいません",
+    "emptyFollowers": "フォロワーはまだいません",
+    "friendsTitle": "フレンド",
+    "friendsDescription": "フレンドとフレンド申請を管理します",
+    "tabFriends": "フレンド",
+    "tabIncoming": "届いた申請",
+    "tabOutgoing": "送った申請",
+    "friendsSince": "{date} からフレンド",
+    "removeFriend": "フレンドを解除",
+    "emptyFriends": "フレンドはまだいません",
+    "emptyFriendsDescription": "コミュニティで志を同じくする探星者を見つけましょう",
+    "requestAt": "{date} に申請",
+    "accept": "承認",
+    "reject": "拒否",
+    "cancelRequest": "申請を取り消す",
+    "emptyIncoming": "届いたフレンド申請はありません",
+    "emptyOutgoing": "送ったフレンド申請はありません",
+    "feedTitle": "フィード",
+    "feedDescription": "フォロー中のユーザーとフレンドの最新の投稿とコメント",
+    "actionPosted": "投稿しました",
+    "actionCommented": "コメントしました",
+    "emptyFeed": "フィードはまだ空です",
+    "emptyFeedDescription": "他のユーザーをフォローすると、ここに最新アクティビティが表示されます",
+    "exploreCommunity": "コミュニティを見る",
+    "errors": {
+      "userMissing": "対象ユーザーが指定されていません",
+      "userNotFound": "対象ユーザーは存在しません",
+      "cannotSelf": "自分自身にこの操作を行うことはできません",
+      "blocked": "操作が拒否されました：相手との間にブロック関係があります",
+      "alreadyFriend": "すでにフレンドです",
+      "alreadyRequested": "フレンド申請はすでに存在します。再送信しないでください",
+      "requestNotFound": "フレンド申請が存在しないか、すでに処理済みです",
+      "friendNotFound": "フレンド関係が存在しません"
+    }
+  },
+  "message": {
+    "listTitle": "メッセージ",
+    "privacySettings": "プライバシー設定",
+    "stateLoading": "読み込み中…",
+    "recalledInline": "このメッセージは取り消されました",
+    "noMessages": "メッセージはまだありません",
+    "emptyConversations": "会話はまだありません",
+    "emptyConversationsDescription": "メンバーのプロフィールから最初のメッセージを送りましょう",
+    "backToList": "会話一覧に戻る",
+    "deleteConversation": "会話を削除",
+    "confirmDelete": "この会話を削除しますか？元に戻せません。",
+    "settingsTitle": "メッセージプライバシー",
+    "settingsDescription": "あなたにメッセージを送れる人を選択してください",
+    "settingsSaved": "設定を保存しました",
+    "saveSettings": "設定を保存",
+    "composerPlaceholder": "メッセージを入力（Enter で送信、Shift+Enter で改行）",
+    "send": "送信",
+    "recall": "取り消す",
+    "allowFrom": {
+      "everyone": {
+        "title": "全員",
+        "description": "サインインしている全員がメッセージを送れます"
+      },
+      "friends": {
+        "title": "フレンドのみ",
+        "description": "相互フォローのフレンドだけがメッセージを送れます"
+      },
+      "none": {
+        "title": "受信しない",
+        "description": "誰も新しい会話を始められません"
+      }
+    },
+    "errors": {
+      "conversationNotFound": "会話が見つかりません",
+      "closed": "相手がメッセージを無効にしているため送信できません",
+      "friendsOnly": "相手はフレンド以外からのメッセージを受け付けていません",
+      "contentRequired": "メッセージを入力してください",
+      "contentTooLong": "メッセージが長すぎます",
+      "notFound": "会話が存在しないか、アクセス権がありません",
+      "targetRequired": "送信先を指定してください",
+      "messageNotFound": "メッセージが見つかりません",
+      "alreadyRecalled": "このメッセージはすでに取り消されています",
+      "recallExpired": "取り消し可能な時間を過ぎているため取り消せません",
+      "allowFromInvalid": "プライバシー設定が不正です"
+    }
+  },
+  "minecraft": {
+    "title": "Minecraft リソース",
+    "description": "Mod、テクスチャパック、マップ、スキンなどを一か所で",
+    "upload": "投稿",
+    "editTitle": "リソースを編集",
+    "backToList": "リソース一覧に戻る",
+    "all": "すべて",
+    "filterType": "タイプ",
+    "filterVersion": "MC バージョン",
+    "filterLoader": "ローダー",
+    "filterPlatform": "プラットフォーム",
+    "searchPlaceholder": "リソース名やタグで検索…",
+    "stateLoading": "読み込み中…",
+    "downloadCount": "{count} 回ダウンロード",
+    "empty": "条件に一致するリソースがありません",
+    "emptyDescription": "絞り込み条件や検索キーワードを変えてみてください",
+    "notFound": "リソースが存在しないか削除されています",
+    "confirmDelete": "このリソースを削除しますか？元に戻せません。",
+    "download": "ダウンロード",
+    "fileName": "ファイル名",
+    "fileSize": "ファイルサイズ",
+    "fileInfo": "ファイル情報",
+    "uploadedBy": "投稿者：{name}",
+    "compatVersions": "対応バージョン",
+    "compatLoaders": "ローダー",
+    "compatPlatforms": "対応プラットフォーム",
+    "descriptionLabel": "説明",
+    "creditTitle": "クレジットとライセンス",
+    "license": "ライセンス",
+    "originalAuthor": "原作者",
+    "originalUrl": "元投稿 URL",
+    "unspecified": "未記入",
+    "changelogLabel": "更新履歴",
+    "edit": "編集",
+    "delete": "削除",
+    "sectionBasic": "基本情報",
+    "sectionFiles": "ファイルとタグ",
+    "sectionCredit": "ライセンスとクレジット",
+    "resourceTypes": {
+      "mod": "Mod",
+      "texture_pack": "Texture Pack",
+      "map": "Map",
+      "skin": "Skin",
+      "plugin": "Plugin",
+      "modpack": "Modpack",
+      "datapack": "Data Pack",
+      "other": "Other"
+    },
+    "form": {
+      "title": "タイトル",
+      "titlePlaceholder": "リソースタイトルを入力",
+      "resourceType": "リソースタイプ",
+      "mcVersions": "対応 MC バージョン（複数選択）",
+      "versionHint": "{selected} / {max} 件選択中",
+      "loaders": "ローダー（複数選択）",
+      "platforms": "プラットフォーム（複数選択）",
+      "file": "リソースファイル",
+      "uploadFile": "リソースファイルをアップロード",
+      "fileHint": "ホワイトリストのファイル形式のみ、1ファイル20MBまで",
+      "cover": "カバー画像",
+      "tags": "タグ",
+      "tagsPlaceholder": "カンマで区切って入力",
+      "license": "ライセンス",
+      "licensePlaceholder": "例：MIT、All Rights Reserved",
+      "originalAuthor": "原作者",
+      "originalAuthorPlaceholder": "転載の場合は原作者名を記入してください",
+      "originalUrl": "元投稿 URL",
+      "originalUrlPlaceholder": "https://…",
+      "description": "説明",
+      "descriptionPlaceholder": "機能、使い方、注意点を詳しく記載してください",
+      "changelog": "更新履歴",
+      "changelogPlaceholder": "このバージョンの変更内容",
+      "submitCreate": "投稿する",
+      "submitEdit": "変更を保存",
+      "cancel": "キャンセル"
+    },
+    "errors": {
+      "titleInvalid": "タイトルは1〜100文字で入力してください",
+      "typeRequired": "リソースタイプを選択してください",
+      "versionRequired": "MC バージョンを1つ以上選択してください",
+      "platformRequired": "プラットフォームを1つ以上選択してください",
+      "descriptionInvalid": "説明は1〜5000文字で入力してください",
+      "fileRequired": "リソースファイルをアップロードしてください",
+      "licenseInvalid": "ライセンスは100文字以内で入力してください",
+      "originalAuthorInvalid": "原作者名は50文字以内で入力してください",
+      "originalUrlInvalid": "元投稿 URL は有効な http(s) リンクを入力してください",
+      "changelogInvalid": "更新履歴は5000文字以内で入力してください",
+      "resourceTypeInvalid": "リソースタイプが不正です",
+      "tooManyVersions": "選択できるバージョンは最大 {max} 件です",
+      "versionInvalid": "不正な MC バージョンが含まれています",
+      "loaderInvalid": "不正なローダーが含まれています",
+      "platformInvalid": "不正なプラットフォームが含まれています"
+    }
   }
 }

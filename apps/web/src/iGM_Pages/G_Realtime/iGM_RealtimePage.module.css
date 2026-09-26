@@ -1,0 +1,178 @@
+/*
+ * 文件路径：apps/web/src/iGM_Pages/G_Realtime/iGM_RealtimePage.module.css
+ * 所属层：前端 / 页面样式（CSS Modules）
+ * 路由：G_Realtime
+ * 模块：iGM_RealtimePage.module.css
+ * 作用：实时在线状态页面专用样式
+ * 内容：连接状态徽标、在线人数、用户列表、通知流
+ */
+
+/* ===== 状态行 ===== */
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid transparent;
+}
+
+.statusOnline {
+  background: var(--igm-success-soft);
+  color: var(--igm-success);
+}
+
+.statusOffline {
+  background: var(--igm-surface-subtle);
+  color: var(--igm-text-muted);
+  border-color: var(--igm-border-strong);
+}
+
+.onlineCount {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--igm-text-muted);
+}
+
+/* ===== 两列布局 ===== */
+.twoCol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+/* ===== 在线用户列表 ===== */
+.userList {
+  display: flex;
+  flex-direction: column;
+}
+
+.userRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--igm-border);
+}
+
+.userRow:last-child {
+  border-bottom: none;
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.userName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--igm-text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.selfTag {
+  font-size: 11px;
+  color: var(--igm-accent);
+  font-weight: 400;
+}
+
+.verifiedBadge {
+  font-size: 11px;
+  color: var(--igm-accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ownerTag {
+  font-size: 10px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: var(--igm-accent-soft);
+}
+
+/* ===== 实时通知流 ===== */
+.notificationList {
+  display: flex;
+  flex-direction: column;
+}
+
+.notificationRow {
+  display: flex;
+  gap: 10px;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--igm-border);
+}
+
+.notificationRow:last-child {
+  border-bottom: none;
+}
+
+.notificationIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--igm-accent-soft);
+  color: var(--igm-accent);
+}
+
+.notificationBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.notificationTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.notificationContent {
+  font-size: 12px;
+  color: var(--igm-text-muted);
+  line-height: 1.5;
+}
+
+.notificationMeta {
+  font-size: 11px;
+  color: var(--igm-text-subtle);
+}
+
+.notificationLink {
+  font-size: 12px;
+  color: var(--igm-accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ===== 空状态 ===== */
+.emptyState {
+  padding: 32px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--igm-text-subtle);
+}

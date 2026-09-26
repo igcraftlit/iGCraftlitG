@@ -11,7 +11,7 @@
 // 导入依赖 //
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { iGM_Link as Link } from "../../iGM_Components/iGM_Link/iGM_Link";
 import { usePathname } from "next/navigation";
 import { iGM_StripLocalePrefix } from "../../iGM_i18n/iGM_LocalePath";
@@ -81,8 +81,16 @@ export function iGM_Sidebar({ open, onNavigate }: iGM_SidebarProps) {
     iGM_StripLocalePrefix(usePathname()).replace(/\/$/, "") || "/";
   const { user } = iGM_UseAuth();
 
-  // 用户手动展开/折叠覆盖：缺省时命中当前路由的分支自动展开
+  // 用户手动展开/折叠覆盖：仅在当前路由内有效，切换路由后自动清空，
+  // 使展开态回归“按当前路由自动展开”，离开的分支随之折叠
   const [overrides, setOverrides] = useState<Record<string, boolean>>({});
+  const iGM_PreviousPath = useRef(pathname);
+  useEffect(() => {
+    if (iGM_PreviousPath.current !== pathname) {
+      iGM_PreviousPath.current = pathname;
+      setOverrides({});
+    }
+  }, [pathname]);
 
   /** 角色可见性过滤（含子树），隐藏无可见项的分区 */
   const visibleGroups = iGM_NavGroups.map((group) => ({

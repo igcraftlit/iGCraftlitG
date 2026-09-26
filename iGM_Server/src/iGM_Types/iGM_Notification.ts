@@ -14,14 +14,19 @@
 /**
  * 通知类型：
  * comment 帖子被评论 / reply 评论被回复 / activity 活动报名成功 /
- * resource 资源被下载 / system 系统消息
+ * resource 资源被下载 / system 系统消息 /
+ * friend_request 收到好友申请 / friend_accept 好友申请通过 /
+ * message 收到私信（离线提醒）
  */
 export type iGM_NotificationType =
   | "comment"
   | "reply"
   | "activity"
   | "resource"
-  | "system";
+  | "system"
+  | "friend_request"
+  | "friend_accept"
+  | "message";
 
 /* ---------- 数据库行类型 ---------- */
 
@@ -92,6 +97,9 @@ export const iGM_NotificationTypes: iGM_NotificationType[] = [
   "activity",
   "resource",
   "system",
+  "friend_request",
+  "friend_accept",
+  "message",
 ];
 
 /** 通知行转 DTO */

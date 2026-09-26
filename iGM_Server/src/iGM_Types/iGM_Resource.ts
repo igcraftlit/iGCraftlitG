@@ -50,6 +50,17 @@ export interface iGM_ResourceRow {
   iGM_ActivityId: string | null;
   iGM_DownloadCount: number;
   iGM_Status: iGM_ResourceStatus;
+  /** 模块十：Minecraft 资源类型，非 Minecraft 资源为 null */
+  iGM_ResourceType: string | null;
+  /** 模块十：适用版本/加载器/平台，JSON 数组字符串（行存储原始文本） */
+  iGM_McVersions: string | null;
+  iGM_Loaders: string | null;
+  iGM_Platforms: string | null;
+  /** 模块十：许可协议、原作者、原帖链接、更新日志 */
+  iGM_License: string | null;
+  iGM_OriginalAuthor: string | null;
+  iGM_OriginalUrl: string | null;
+  iGM_Changelog: string | null;
   iGM_CreatedAt: string;
   iGM_UpdatedAt: string;
 }
@@ -82,6 +93,17 @@ export interface iGM_ResourceListItemDto {
   /** 关联活动 ID，无关联时为 null */
   activityId: string | null;
   downloadCount: number;
+  /** 模块十：Minecraft 资源类型，非 Minecraft 资源为 null */
+  resourceType: string | null;
+  /** 模块十：适用版本/加载器/平台（已解析为数组，无则空数组） */
+  mcVersions: string[];
+  loaders: string[];
+  platforms: string[];
+  /** 模块十：许可协议、原作者、原帖链接、更新日志 */
+  license: string | null;
+  originalAuthor: string | null;
+  originalUrl: string | null;
+  changelog: string | null;
   uploader: iGM_AuthorDto;
   file: iGM_FileDto;
   cover: iGM_FileDto | null;
@@ -118,6 +140,29 @@ export interface iGM_ResourceInput {
   tags?: string;
   /** 资源状态：仅编辑时可选，缺省沿用原状态 */
   status?: string | null;
+  /* ---------- 模块十：Minecraft 字段 ---------- */
+  /** Minecraft 分区标记：true 时按 Minecraft 资源校验与写入 */
+  minecraft?: boolean;
+  resourceType?: string | null;
+  /** 多选值：逗号分隔字符串或数组，服务端统一解析 */
+  mcVersions?: string | string[];
+  loaders?: string | string[];
+  platforms?: string | string[];
+  license?: string | null;
+  originalAuthor?: string | null;
+  originalUrl?: string | null;
+  changelog?: string | null;
+}
+
+/** Minecraft 列表筛选参数（列表查询用） */
+export interface iGM_MinecraftQuery {
+  resourceType?: string;
+  mcVersion?: string;
+  loader?: string;
+  platform?: string;
+  search?: string;
+  page?: number;
+  pageSize?: number;
 }
 
 // 核心逻辑 //
@@ -135,6 +180,95 @@ export function iGM_IsResourceStatus(
     typeof value === "string" &&
     iGM_ResourceStatuses.includes(value as iGM_ResourceStatus)
   );
+}
+
+/* ---------- 模块十：Minecraft 常量（术语保留英文） ---------- */
+/** 资源类型：模组/材质包/地图/皮肤/插件/整合包/数据包/其他 */
+export const iGM_McResourceTypes = [
+  "mod",
+  "texture_pack",
+  "map",
+  "skin",
+  "plugin",
+  "modpack",
+  "datapack",
+  "other",
+] as const;
+export type iGM_McResourceType = (typeof iGM_McResourceTypes)[number];
+
+/** 加载器：Forge、Fabric、NeoForge、Quilt、vanilla 原版、none 无 */
+export const iGM_McLoaders = [
+  "Forge",
+  "Fabric",
+  "NeoForge",
+  "Quilt",
+  "vanilla",
+  "none",
+] as const;
+export type iGM_McLoader = (typeof iGM_McLoaders)[number];
+
+/** 支持平台：Java Edition、Bedrock Edition */
+export const iGM_McPlatforms = ["Java Edition", "Bedrock Edition"] as const;
+export type iGM_McPlatform = (typeof iGM_McPlatforms)[number];
+
+/** 常用 Minecraft 版本选项（前端多选展示，上传可自由填写其它版本） */
+export const iGM_McVersionOptions = [
+  "1.12.2",
+  "1.16.5",
+  "1.18.2",
+  "1.19.2",
+  "1.19.4",
+  "1.20.1",
+  "1.20.2",
+  "1.20.4",
+  "1.20.6",
+  "1.21",
+  "1.21.1",
+  "1.21.3",
+  "1.21.4",
+] as const;
+
+/** 判断值是否为合法 Minecraft 资源类型 */
+export function iGM_IsMcResourceType(value: unknown): value is iGM_McResourceType {
+  return (
+    typeof value === "string" &&
+    (iGM_McResourceTypes as readonly string[]).includes(value)
+  );
+}
+
+/** 判断值是否为合法加载器 */
+export function iGM_IsMcLoader(value: unknown): value is iGM_McLoader {
+  return (
+    typeof value === "string" && (iGM_McLoaders as readonly string[]).includes(value)
+  );
+}
+
+/** 判断值是否为合法平台 */
+export function iGM_IsMcPlatform(value: unknown): value is iGM_McPlatform {
+  return (
+    typeof value === "string" &&
+    (iGM_McPlatforms as readonly string[]).includes(value)
+  );
+}
+
+/**
+ * 解析多选值：数组原样清洗；字符串按逗号/顿号/分号/空白分隔。
+ * 返回去重后的非空字符串数组，保持出现顺序。
+ */
+export function iGM_ParseMultiValue(
+  value: string | string[] | null | undefined,
+): string[] {
+  const raw = Array.isArray(value) ? value : String(value ?? "").split(/[,，、；;\s]+/);
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const item of raw) {
+    const trimmed = item.trim();
+    if (trimmed && !seen.has(trimmed)) {
+      seen.add(trimmed);
+      result.push(trimmed);
+    }
+  }
+  return result;
 }
 
 /** 资源分类行转 DTO */
