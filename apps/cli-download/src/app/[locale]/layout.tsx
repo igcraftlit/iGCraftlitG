@@ -30,7 +30,7 @@ interface iGM_CLI_LocaleLayoutProps {
 // 核心逻辑 //
 /** 站点根地址：构建期可通过 IGM_CLI_SITE_URL 覆盖（默认生产域名） */
 const iGM_CLI_SiteUrl = (
-  process.env.IGM_CLI_SITE_URL ?? "https://api.igcraftlit.com"
+  process.env.IGM_CLI_SITE_URL ?? "https://cli.igcraftlit.com"
 ).replace(/\/$/, "");
 
 /** 构建期为五种语言各自生成静态路由参数（output: 'export' 必需） */
