@@ -29,13 +29,34 @@
   },
   "pages": {
     "docs": {
-      "title": "ドキュメント"
+      "title": "ドキュメントセンター"
+    },
+    "docsCli": {
+      "title": "iGM CLI ガイド"
+    },
+    "docsInstall": {
+      "title": "iGM CLI のインストール"
+    },
+    "docsCommands": {
+      "title": "コマンドリファレンス"
+    },
+    "docsConfig": {
+      "title": "設定"
+    },
+    "docsFaq": {
+      "title": "よくある質問"
     },
     "sdk": {
       "title": "SDK"
     },
     "api": {
-      "title": "API"
+      "title": "API",
+      "installTitle": "iGM CLI をインストール",
+      "installLead": "API を利用する前に iGM CLI をインストールしてください。npm または bun でのインストールを推奨します：",
+      "viewFullInstall": "完全なインストールガイドを見る",
+      "latestVersion": "最新バージョン",
+      "updateTitle": "キャッシュをクリアして最新版に更新",
+      "updateNote": "以下のコマンドを実行してローカルキャッシュをクリアし、iGM CLI を最新版に更新します："
     },
     "commands": {
       "title": "コマンド"
@@ -43,6 +64,247 @@
   },
   "common": {
     "backToHome": "ホームへ戻る",
-    "language": "言語"
+    "language": "言語",
+    "backToMainSite": "メインサイトへ戻る",
+    "themeToggle": "ライト/ダークテーマ切替",
+    "copy": "コピー",
+    "copied": "コピー済み"
+  },
+  "docs": {
+    "sidebar": {
+      "title": "ドキュメント",
+      "group": "iGM CLI",
+      "index": "ドキュメントセンター",
+      "guide": "完全ガイド",
+      "install": "インストール",
+      "commands": "コマンドリファレンス",
+      "config": "設定",
+      "faq": "よくある質問"
+    },
+    "tocTitle": "ON THIS PAGE",
+    "leads": {
+      "full": "このドキュメントでは、iGM CLI のサービス概要、インストール、コマンド、設定、よくある質問を扱います。右側の目次から各章へ移動できます。",
+      "install": "この章では iGM CLI の利用資格と各プラットフォームでのインストール方法を説明します。",
+      "commands": "この章では基本コマンド、リソース検索、インストールとダウンロード、プロジェクト管理のすべてのコマンドを掲載します。",
+      "config": "この章では igm.json 設定ファイル、キャッシュディレクトリ、ミラー、多言語出力について説明します。",
+      "faq": "この章では iGM CLI でよくある質問と回答をまとめています。"
+    },
+    "index": {
+      "title": "ドキュメントセンター",
+      "description": "iGM CLI は iGCraftLit × MuoCeon が共同構築したコマンドラインダウンロードツールです。下のセクションからインストール、コマンド、設定をご確認ください。",
+      "sectionsTitle": "ドキュメントセクション",
+      "guideTitle": "完全ガイド",
+      "guideDesc": "サービス概要、インストールからコマンド、設定、よくある質問まで全13章。右側に章の目次があります。",
+      "installTitle": "インストール",
+      "installDesc": "Windows PowerShell、macOS / Linux、npm、bun、npx / bunx でのインストール方法。",
+      "commandsTitle": "コマンドリファレンス",
+      "commandsDesc": "検索、インストール、更新、アンインストール、プロジェクト管理のすべてのコマンド。",
+      "configTitle": "設定",
+      "configDesc": "igm.json 設定ファイル、キャッシュディレクトリ、ミラー、多言語出力の設定。",
+      "faqTitle": "よくある質問",
+      "faqDesc": "レート制限、セッション履歴、商用利用、フィードバック窓口について。",
+      "moreTitle": "その他",
+      "mainSiteTitle": "メインサイトへ戻る",
+      "mainSiteDesc": "iGCraftLit Community 公式サイト igcraftlit.com にアクセス。"
+    },
+    "cli": {
+      "intro": {
+        "title": "サービス概要",
+        "body": "iGM CLI は iGCraftLit × MuoCeon が共同構築したコマンドラインダウンロードツールです。CMD、PowerShell、Bash から iGCraftLit Community 上のリソースを直接検索・ダウンロード・更新・アンインストールでき、Minecraft の MOD、リソースパック、マップ、MODパックなどを中心にサポートします。コマンド接頭辞はすべて igm です。"
+      },
+      "features": {
+        "title": "特長",
+        "items": [
+          "1 つのコマンドで検索、ダウンロード、インストールが完了します。",
+          "Forge、Fabric、NeoForge、Quilt など、バージョンとローダーで絞り込めます。",
+          "igm.json 設定ファイルによる一括インストールとチーム連携。",
+          "レジューム機能、キャッシュ、ハッシュ検証をサポート。",
+          "複数ミラーと多言語出力をサポート。",
+          "iGCraftLit アカウントと連携し、ログインとダウンロード履歴の同期に対応。"
+        ]
+      },
+      "eligibility": {
+        "title": "利用資格",
+        "items": [
+          "公開リソースはログイン不要でダウンロードできます。",
+          "非公開またはログインが必要なリソースは、先に igm login を実行してください。",
+          "提供開始直後は全面的に開放し、利用状況に応じて段階的に制限を調整します。",
+          "利用者は『iGCraftLit コミュニティ利用規約』を遵守する必要があります。"
+        ]
+      },
+      "install": {
+        "title": "インストール",
+        "lead": "npm または bun でのインストールを推奨します。「汎用ダウンロード」で単一ファイルを直接実行することもできます。リモートインストールスクリプトと npx チャネルは近日公開予定です。",
+        "windows": "Windows PowerShell",
+        "unix": "macOS / Linux",
+        "npm": "npm（推奨）",
+        "bun": "bun（推奨）",
+        "npx": "npx / bunx",
+        "directWindows": "汎用ダウンロード（Windows）",
+        "directUnix": "汎用ダウンロード（macOS / Linux）",
+        "comingSoon": "近日公開",
+        "done": "インストール後、ターミナルで igm と入力すると利用を開始できます。"
+      },
+      "basic": {
+        "title": "基本コマンド",
+        "items": [
+          {
+            "c": "igm",
+            "d": "ヘルプとバージョン情報を表示"
+          },
+          {
+            "c": "igm --version",
+            "d": "バージョン番号を表示"
+          },
+          {
+            "c": "igm --help",
+            "d": "すべてのコマンドを表示"
+          }
+        ]
+      },
+      "search": {
+        "title": "リソース検索",
+        "items": [
+          {
+            "c": "igm search <キーワード>",
+            "d": "リソースを検索"
+          },
+          {
+            "c": "igm search <キーワード> --type=mod|modpack|resourcepack|map|skin|plugin|datapack",
+            "d": "リソースタイプで絞り込み"
+          },
+          {
+            "c": "igm search <キーワード> --version=1.20.1 --loader=fabric",
+            "d": "ゲームバージョンとローダーで絞り込み"
+          },
+          {
+            "c": "igm list",
+            "d": "インストール済みリソースを一覧表示"
+          },
+          {
+            "c": "igm info <リソースID または slug>",
+            "d": "リソースの詳細を表示"
+          }
+        ]
+      },
+      "download": {
+        "title": "インストールとダウンロード",
+        "items": [
+          {
+            "c": "igm install <リソース>",
+            "d": "現在のディレクトリにリソースをダウンロードしてインストール"
+          },
+          {
+            "c": "igm install <リソース> --version=1.20.1 --loader=fabric",
+            "d": "バージョンとローダーを指定してインストール"
+          },
+          {
+            "c": "igm install <リソース> --dir=./mods",
+            "d": "インストール先ディレクトリを指定"
+          },
+          {
+            "c": "igm install --file=igm.json",
+            "d": "設定ファイルから一括インストール"
+          },
+          {
+            "c": "igm add <リソース>",
+            "d": "igm.json の依存関係に追加してすぐインストール"
+          },
+          {
+            "c": "igm remove <リソース>",
+            "d": "igm.json から削除し、ローカルファイルも削除"
+          },
+          {
+            "c": "igm update",
+            "d": "すべてのインストール済みリソースを更新"
+          },
+          {
+            "c": "igm update <リソース>",
+            "d": "指定したリソースを更新"
+          }
+        ]
+      },
+      "project": {
+        "title": "プロジェクト管理",
+        "items": [
+          {
+            "c": "igm init",
+            "d": "igm.json 設定ファイルを初期化"
+          },
+          {
+            "c": "igm login",
+            "d": "iGCraftLit アカウントにログイン"
+          },
+          {
+            "c": "igm logout",
+            "d": "ログアウト"
+          },
+          {
+            "c": "igm whoami",
+            "d": "現在のログインユーザーを表示"
+          },
+          {
+            "c": "igm cache clean",
+            "d": "ローカルキャッシュを消去"
+          },
+          {
+            "c": "igm cache list",
+            "d": "キャッシュ内容を表示"
+          },
+          {
+            "c": "igm doctor",
+            "d": "環境、ネットワーク、キャッシュ、バックエンド接続を確認"
+          },
+          {
+            "c": "igm serve",
+            "d": "ローカルアダプターサービスを起動"
+          },
+          {
+            "c": "igm sdk",
+            "d": "SDK を取得"
+          },
+          {
+            "c": "igm api",
+            "d": "API ドキュメントを表示"
+          }
+        ]
+      },
+      "config": {
+        "title": "igm.json 設定ファイル",
+        "lead": "プロジェクトのルートで igm init を実行すると igm.json が生成されます。例：",
+        "lock": "付随する igm.lock には各依存関係の正確なバージョンとハッシュが記録されます。手動で編集しないでください。"
+      },
+      "cache": {
+        "title": "キャッシュとミラー",
+        "cacheTitle": "既定のキャッシュディレクトリ",
+        "windows": "Windows：%USERPROFILE%\\.igm\\cache",
+        "unix": "macOS / Linux：~/.igm/cache",
+        "mirror": "ミラーを設定できます。既定では iGCraftLit 公式ミラーを使用し、ネットワークが制限された環境ではミラー切り替えでダウンロードを高速化できます。"
+      },
+      "lang": {
+        "title": "多言語出力",
+        "lead": "出力は既定で英語です。設定コマンドで言語を切り替えられます：",
+        "supported": "簡体字中国語、繁体字中国語、英語、日本語、ロシア語に対応。出力は最小限に保たれ、emoji は使用しません。"
+      },
+      "faq": {
+        "title": "よくある質問",
+        "hint": "以下はよくある質問の概要です。詳しい回答はよくある質問ページをご覧ください。",
+        "viewAll": "すべての回答を見る",
+        "q1": "なぜリクエストが制限されるのですか？",
+        "a1": "サービスを安定して提供するため、API には IP アドレスとアカウントごとにレート制限があります。短時間に多数のリクエストを送信すると一時的に制限されますので、時間をおいて再試行してください。ログインするとより高い利用枠を利用できます。解決しない場合は igm doctor でネットワークとバックエンド接続を確認してください。",
+        "q2": "セッション履歴は保存されますか？",
+        "a2": "ログイン中は検索履歴とダウンロード履歴がアカウントに同期され、複数の端末で確認できます。未ログイン状態ではローカルキャッシュのみが保持され、igm cache clean でいつでも消去できます。許可なくターミナルのセッション内容を収集することはありません。",
+        "q3": "商用利用できますか？",
+        "a3": "iGM CLI ツール自体は無料で提供されており、商用環境でのリソース管理に利用できます。ただし、ツールでダウンロードしたリソースにはそれぞれのオープンソースライセンスと作者の定めが適用されます。商用利用前に各リソースのライセンスを確認し、『iGCraftLit コミュニティ利用規約』を遵守してください。",
+        "q4": "問題はどこに報告すればよいですか？",
+        "a4": "igcraftlit@outlook.com（.NET）または igcraftlit@163.com（.CN）までメールするか、https://igcraftlit.com からフィードバックをお送りください。件名に「iGM CLI」を含めると問題をより早く特定できます。"
+      },
+      "contact": {
+        "title": "連絡先とチーム",
+        "website": "公式サイト",
+        "email": "連絡先メール",
+        "built": "iGCraftLit × MuoCeon 共同構築"
+      }
+    }
   }
 }

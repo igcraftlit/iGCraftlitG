@@ -48,7 +48,8 @@
     "friends": "好友",
     "userRelations": "关注与粉丝",
     "messages": "私信",
-    "messageSettings": "私信隐私"
+    "messageSettings": "私信隐私",
+    "becomeDeveloper": "成为开发者"
   },
   "topbar": {
     "menu": "菜单",
@@ -933,6 +934,9 @@
     "notFound": "资源不存在或已下架",
     "download": "下载",
     "downloadCount": "下载 {count} 次",
+    "cliDownload": "iGM CLI 下载",
+    "cliHint": "使用 iGM CLI 一键下载本资源。资源包内应包含 /pack/manifest.json 记录版本与支持信息，下载器将据此识别最新版本。",
+    "copy": "复制",
     "uploadedBy": "上传者",
     "relatedActivity": "关联活动",
     "publishedAt": "发布时间",
@@ -959,6 +963,11 @@
       "coverHint": "上传图片作为资源封面，可选",
       "uploadCover": "上传封面",
       "clearCover": "移除封面",
+      "downloadable": "允许通过 iGM CLI 下载",
+      "downloadableHint": "勾选后系统自动生成下载命令，用户可通过 igm install 下载本资源",
+      "version": "版本号（选填）",
+      "versionHint": "填写后下载命令将包含 @版本号，如 1.0.0",
+      "downloadCmdPreview": "下载命令预览",
       "submitCreate": "发布资源",
       "submitEdit": "保存修改",
       "submitting": "提交中…",

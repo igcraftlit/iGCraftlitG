@@ -29,13 +29,34 @@
   },
   "pages": {
     "docs": {
-      "title": "Documentation"
+      "title": "Documentation Center"
+    },
+    "docsCli": {
+      "title": "iGM CLI Guide"
+    },
+    "docsInstall": {
+      "title": "Install iGM CLI"
+    },
+    "docsCommands": {
+      "title": "Command Reference"
+    },
+    "docsConfig": {
+      "title": "Configuration"
+    },
+    "docsFaq": {
+      "title": "FAQ"
     },
     "sdk": {
       "title": "SDK"
     },
     "api": {
-      "title": "API"
+      "title": "API",
+      "installTitle": "Install iGM CLI",
+      "installLead": "Install iGM CLI before using the API. We recommend npm or bun:",
+      "viewFullInstall": "View full installation guide",
+      "latestVersion": "Latest Version",
+      "updateTitle": "Clear cache and update to latest",
+      "updateNote": "Run the following commands to clear local cache and update iGM CLI to the latest version:"
     },
     "commands": {
       "title": "Commands"
@@ -43,6 +64,247 @@
   },
   "common": {
     "backToHome": "Back to Home",
-    "language": "Language"
+    "language": "Language",
+    "backToMainSite": "Back to main site",
+    "themeToggle": "Toggle light/dark theme",
+    "copy": "Copy",
+    "copied": "Copied"
+  },
+  "docs": {
+    "sidebar": {
+      "title": "Documentation",
+      "group": "iGM CLI",
+      "index": "Documentation Center",
+      "guide": "Complete Guide",
+      "install": "Installation",
+      "commands": "Command Reference",
+      "config": "Configuration",
+      "faq": "FAQ"
+    },
+    "tocTitle": "ON THIS PAGE",
+    "leads": {
+      "full": "This document covers the iGM CLI service overview, installation, commands, configuration, and FAQ. Use the section navigator on the right to jump between chapters.",
+      "install": "This chapter explains iGM CLI eligibility and platform-specific installation methods.",
+      "commands": "This chapter lists every command for basics, resource search, installation and download, and project management.",
+      "config": "This chapter covers the igm.json config file, cache directories, mirrors, and multilingual output.",
+      "faq": "This chapter collects frequently asked questions about iGM CLI and their answers."
+    },
+    "index": {
+      "title": "Documentation Center",
+      "description": "iGM CLI is a command-line download tool built jointly by iGCraftLit × MuoCeon. Pick a section below for installation, commands, and configuration.",
+      "sectionsTitle": "Documentation sections",
+      "guideTitle": "Complete Guide",
+      "guideDesc": "All thirteen chapters, from service overview and installation to commands, configuration, and FAQ, with an in-page section navigator.",
+      "installTitle": "Installation",
+      "installDesc": "Installation for Windows PowerShell, macOS / Linux, npm, bun, and npx / bunx.",
+      "commandsTitle": "Command Reference",
+      "commandsDesc": "Every command for searching, installing, updating, uninstalling, and project management.",
+      "configTitle": "Configuration",
+      "configDesc": "The igm.json config file, cache directories, mirrors, and multilingual output.",
+      "faqTitle": "FAQ",
+      "faqDesc": "Rate limits, session history, commercial use, and feedback channels.",
+      "moreTitle": "More",
+      "mainSiteTitle": "Back to main site",
+      "mainSiteDesc": "Visit the iGCraftLit Community website at igcraftlit.com."
+    },
+    "cli": {
+      "intro": {
+        "title": "Service Overview",
+        "body": "iGM CLI is a command-line download tool built jointly by iGCraftLit × MuoCeon. It lets you search, download, update, and uninstall resources from iGCraftLit Community directly in CMD, PowerShell, or Bash, with first-class support for Minecraft mods, resource packs, maps, and modpacks. Every command uses the igm prefix."
+      },
+      "features": {
+        "title": "Features",
+        "items": [
+          "Search, download, and install with a single command.",
+          "Filter by game version and loader, including Forge, Fabric, NeoForge, and Quilt.",
+          "The igm.json config file supports batch installation and team collaboration.",
+          "Resumable downloads, local cache, and hash verification.",
+          "Multiple mirrors and multilingual output.",
+          "Integrated with the iGCraftLit account system, with login and synced download history."
+        ]
+      },
+      "eligibility": {
+        "title": "Eligibility",
+        "items": [
+          "Public resources can be downloaded without signing in.",
+          "For private or login-required resources, run igm login first.",
+          "Access is fully open during the early stage and will be tightened gradually based on usage patterns.",
+          "Users must comply with the iGCraftLit Community User Rules."
+        ]
+      },
+      "install": {
+        "title": "Installation",
+        "lead": "We recommend installing with npm or bun. You can also run the single file directly via「Generic Download」. Remote install scripts and the npx channel are coming soon.",
+        "windows": "Windows PowerShell",
+        "unix": "macOS / Linux",
+        "npm": "npm (recommended)",
+        "bun": "bun (recommended)",
+        "npx": "npx / bunx",
+        "directWindows": "Generic Download (Windows)",
+        "directUnix": "Generic Download (macOS / Linux)",
+        "comingSoon": "Coming soon",
+        "done": "Once installed, type igm in your terminal to get started."
+      },
+      "basic": {
+        "title": "Basic Commands",
+        "items": [
+          {
+            "c": "igm",
+            "d": "Show help and version information"
+          },
+          {
+            "c": "igm --version",
+            "d": "Show the version number"
+          },
+          {
+            "c": "igm --help",
+            "d": "Show all commands"
+          }
+        ]
+      },
+      "search": {
+        "title": "Searching Resources",
+        "items": [
+          {
+            "c": "igm search <keyword>",
+            "d": "Search for resources"
+          },
+          {
+            "c": "igm search <keyword> --type=mod|modpack|resourcepack|map|skin|plugin|datapack",
+            "d": "Filter by resource type"
+          },
+          {
+            "c": "igm search <keyword> --version=1.20.1 --loader=fabric",
+            "d": "Filter by game version and loader"
+          },
+          {
+            "c": "igm list",
+            "d": "List installed resources"
+          },
+          {
+            "c": "igm info <resource ID or slug>",
+            "d": "Show resource details"
+          }
+        ]
+      },
+      "download": {
+        "title": "Installing and Downloading",
+        "items": [
+          {
+            "c": "igm install <resource>",
+            "d": "Download and install a resource into the current directory"
+          },
+          {
+            "c": "igm install <resource> --version=1.20.1 --loader=fabric",
+            "d": "Install with a specific version and loader"
+          },
+          {
+            "c": "igm install <resource> --dir=./mods",
+            "d": "Install into a specified directory"
+          },
+          {
+            "c": "igm install --file=igm.json",
+            "d": "Batch install from a config file"
+          },
+          {
+            "c": "igm add <resource>",
+            "d": "Add to igm.json dependencies and install immediately"
+          },
+          {
+            "c": "igm remove <resource>",
+            "d": "Remove from igm.json and delete local files"
+          },
+          {
+            "c": "igm update",
+            "d": "Update all installed resources"
+          },
+          {
+            "c": "igm update <resource>",
+            "d": "Update a specific resource"
+          }
+        ]
+      },
+      "project": {
+        "title": "Project Management",
+        "items": [
+          {
+            "c": "igm init",
+            "d": "Initialize an igm.json config file"
+          },
+          {
+            "c": "igm login",
+            "d": "Sign in to your iGCraftLit account"
+          },
+          {
+            "c": "igm logout",
+            "d": "Sign out"
+          },
+          {
+            "c": "igm whoami",
+            "d": "Show the currently signed-in user"
+          },
+          {
+            "c": "igm cache clean",
+            "d": "Clear the local cache"
+          },
+          {
+            "c": "igm cache list",
+            "d": "View cached content"
+          },
+          {
+            "c": "igm doctor",
+            "d": "Check environment, network, cache, and backend connectivity"
+          },
+          {
+            "c": "igm serve",
+            "d": "Start the local adapter service"
+          },
+          {
+            "c": "igm sdk",
+            "d": "Get the SDK"
+          },
+          {
+            "c": "igm api",
+            "d": "Open the API documentation"
+          }
+        ]
+      },
+      "config": {
+        "title": "The igm.json Config File",
+        "lead": "Run igm init in your project root to generate igm.json. Example:",
+        "lock": "A companion igm.lock file records the exact version and hash of every dependency. Do not edit it manually."
+      },
+      "cache": {
+        "title": "Cache and Mirrors",
+        "cacheTitle": "Default cache directory",
+        "windows": "Windows: %USERPROFILE%\\.igm\\cache",
+        "unix": "macOS / Linux: ~/.igm/cache",
+        "mirror": "Mirrors are configurable; the iGCraftLit official mirror is used by default. Switch mirrors to speed up downloads on restricted networks."
+      },
+      "lang": {
+        "title": "Multilingual Output",
+        "lead": "Output defaults to English. Switch the language with the config command:",
+        "supported": "Simplified Chinese, Traditional Chinese, English, Japanese, and Russian are supported. Output stays minimal, with no emoji."
+      },
+      "faq": {
+        "title": "FAQ",
+        "hint": "Below is an overview of frequently asked questions. See the FAQ page for full answers.",
+        "viewAll": "View all answers",
+        "q1": "Why is my request being rate limited?",
+        "a1": "To keep the service stable, the API enforces rate limits per IP address and per account. Very frequent requests are throttled temporarily; please wait and retry. Signing in grants a higher quota. If the problem persists, run igm doctor to check your network and backend connectivity.",
+        "q2": "Is my session history saved?",
+        "a2": "When signed in, search and download history is synced with your account so you can view it across devices. When signed out, only the local cache is kept, which you can clear at any time with igm cache clean. We never collect terminal session content without authorization.",
+        "q3": "Can I use it commercially?",
+        "a3": "The iGM CLI tool itself is free and may be used for resource management in commercial environments. Resources downloaded through the tool remain subject to their own open-source licenses and author terms. Verify each resource's license before commercial use and follow the iGCraftLit Community User Rules.",
+        "q4": "How do I report an issue?",
+        "a4": "Email the team at igcraftlit@outlook.com (.NET) or igcraftlit@163.com (.CN), or submit feedback at https://igcraftlit.com. Putting \"iGM CLI\" in the subject line helps us locate the issue faster."
+      },
+      "contact": {
+        "title": "Contact and Team",
+        "website": "Website",
+        "email": "Email",
+        "built": "Built jointly by iGCraftLit × MuoCeon"
+      }
+    }
   }
 }

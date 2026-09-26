@@ -516,6 +516,63 @@
   margin: 2px 0;
 }
 
+/* 模块十三：iGM CLI 下载命令区块 */
+.cliBlock {
+  margin: 20px 0;
+  padding: 16px 18px;
+  background: var(--igm-surface-subtle);
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+}
+
+.cliTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--igm-text);
+  margin-bottom: 10px;
+}
+
+.cliCode {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--igm-surface);
+  border: 1px solid var(--igm-border-strong);
+  border-radius: var(--igm-radius);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 13px;
+  color: var(--igm-accent);
+}
+
+.cliCopy {
+  flex-shrink: 0;
+  padding: 4px 12px;
+  font-size: 12px;
+  border: 1px solid var(--igm-border-strong);
+  border-radius: var(--igm-radius);
+  background: transparent;
+  color: var(--igm-text-muted);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.cliCopy:hover {
+  color: var(--igm-accent);
+  border-color: var(--igm-accent);
+}
+
+.cliHint {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+  line-height: 1.6;
+}
+
 .actionRow {
   display: flex;
   align-items: center;

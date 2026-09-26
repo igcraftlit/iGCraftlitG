@@ -48,7 +48,8 @@
     "friends": "フレンド",
     "userRelations": "フォローとフォロワー",
     "messages": "メッセージ",
-    "messageSettings": "メッセージプライバシー"
+    "messageSettings": "メッセージプライバシー",
+    "becomeDeveloper": "開発者になる"
   },
   "topbar": {
     "menu": "メニュー",
@@ -933,6 +934,9 @@
     "notFound": "リソースが存在しないか、公開が停止されています",
     "download": "ダウンロード",
     "downloadCount": "ダウンロード {count} 回",
+    "cliDownload": "iGM CLI ダウンロード",
+    "cliHint": "iGM CLI で本リソースをワンコマンドでダウンロードできます。リソースパッケージには /pack/manifest.json を含め、バージョンと対応情報を記録してください。ダウンローダーはこれを基に最新版を判別します。",
+    "copy": "コピー",
     "uploadedBy": "アップロード者",
     "relatedActivity": "関連する活動",
     "publishedAt": "公開日時",
@@ -959,6 +963,11 @@
       "coverHint": "リソースのカバー画像をアップロード（任意）",
       "uploadCover": "カバーをアップロード",
       "clearCover": "カバーを削除",
+      "downloadable": "iGM CLI でのダウンロードを許可",
+      "downloadableHint": "チェックするとダウンロードコマンドが自動生成され、ユーザーは igm install で本リソースをダウンロードできます",
+      "version": "バージョン（任意）",
+      "versionHint": "入力するとダウンロードコマンドに @バージョン が含まれます（例: 1.0.0）",
+      "downloadCmdPreview": "ダウンロードコマンドプレビュー",
       "submitCreate": "リソースを公開",
       "submitEdit": "変更を保存",
       "submitting": "送信中…",

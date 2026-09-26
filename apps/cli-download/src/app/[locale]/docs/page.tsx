@@ -3,18 +3,18 @@
  * 所属层：前端 / 页面层
  * 路由：/{locale}/docs
  * 模块：iGM_CLI_Downloader
- * 作用：文档占位页——仅保留标题与返回链接，本阶段不填充具体内容
+ * 作用：文档中心页——文档分区卡片导航（完整指南/安装/命令/配置/FAQ）
+ * 内容：构建期五语言静态生成，正文由 iGM_CLI_DocsHome 客户端组件渲染
  */
 
 // 导入依赖 //
 import type { Metadata } from "next";
-import { BookOpen } from "lucide-react";
-import { iGM_CLI_PlaceholderPage as IGM_CLI_PlaceholderPage } from "../../../components/iGM_CLI_PlaceholderSection/iGM_CLI_PlaceholderPage";
+import { iGM_CLI_DocsHome as IGM_CLI_DocsHome } from "../../../components/iGM_CLI_DocsHome/iGM_CLI_DocsHome";
 import { iGM_CLI_GetMessages } from "../../../i18n/iGM_CLI_Messages";
 import { iGM_CLI_IsLocale } from "../../../i18n/iGM_CLI_Locales";
 
 // 类型定义 //
-interface iGM_CLI_DocsPageProps {
+interface iGM_CLI_DocsHomePageProps {
   params: Promise<{ locale: string }>;
 }
 
@@ -22,23 +22,20 @@ interface iGM_CLI_DocsPageProps {
 /** 每语言页面元数据 */
 export async function generateMetadata({
   params,
-}: iGM_CLI_DocsPageProps): Promise<Metadata> {
+}: iGM_CLI_DocsHomePageProps): Promise<Metadata> {
   const { locale: raw } = await params;
   const locale = iGM_CLI_IsLocale(raw) ? raw : "zh-CN";
   const messages = iGM_CLI_GetMessages(locale);
-  return { title: messages.pages.docs.title };
+  return {
+    title: messages.pages.docs.title,
+    description: messages.docs.index.description,
+  };
 }
 
-/** 文档占位页 */
-export default async function iGM_CLI_DocsPage({ params }: iGM_CLI_DocsPageProps) {
-  const { locale: raw } = await params;
-  const locale = iGM_CLI_IsLocale(raw) ? raw : "zh-CN";
-  const messages = iGM_CLI_GetMessages(locale);
-
-  return (
-    <IGM_CLI_PlaceholderPage
-      title={messages.pages.docs.title}
-      icon={<BookOpen size={28} aria-hidden />}
-    />
-  );
+/** 文档中心页 */
+export default async function iGM_CLI_DocsHomePage({
+  params,
+}: iGM_CLI_DocsHomePageProps) {
+  await params;
+  return <IGM_CLI_DocsHome />;
 }

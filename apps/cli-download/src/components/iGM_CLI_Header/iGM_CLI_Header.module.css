@@ -69,6 +69,36 @@
   gap: 8px;
 }
 
+/* 返回主站外链：桌面端位于操作区 */
+.mainSiteLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: var(--igm-radius);
+  font-size: 13.5px;
+  color: var(--igm-text-muted);
+  white-space: nowrap;
+  transition:
+    color var(--igm-motion-nav) var(--igm-motion-ease),
+    background-color var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.mainSiteLink:hover {
+  color: var(--igm-text);
+  background: var(--igm-surface-subtle);
+}
+
+.mainSiteMobile {
+  display: none;
+}
+
+.mainSiteMobile .mainSiteLink {
+  padding: 10px 12px;
+  width: 100%;
+  font-size: 14px;
+}
+
 .langWrap {
   display: flex;
   align-items: center;
@@ -123,6 +153,16 @@
 @media (max-width: 768px) {
   .nav {
     display: none;
+  }
+
+  .mainSiteDesktop {
+    display: none;
+  }
+
+  .mainSiteMobile {
+    display: block;
+    margin-top: 4px;
+    border-top: 1px solid var(--igm-border);
   }
 
   .menuButton {

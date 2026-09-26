@@ -28,6 +28,7 @@ import { iGM_BuildFileResponse } from "../iGM_Services/iGM_FileService";
 import {
   iGM_CreateResourceService,
   iGM_DeleteResourceService,
+  iGM_DownloadResourceByIdentifierService,
   iGM_DownloadResourceService,
   iGM_GetResourceDetail,
   iGM_ListResourceCategoriesService,
@@ -55,6 +56,9 @@ function iGM_ReadResourceInput(body: unknown): iGM_ResourceInput {
     activityId: iGM_Field(body, "activityId"),
     tags: iGM_Field(body, "tags"),
     status: iGM_Field(body, "status"),
+    // 模块十三：CLI 下载
+    downloadable: (body as Record<string, unknown>)?.downloadable === true,
+    version: iGM_Field(body, "version") || null,
   };
 }
 
@@ -147,6 +151,20 @@ async function iGM_HandleDownload(ctx: iGM_RouteContext) {
   return iGM_BuildFileResponse(content, false);
 }
 
+/* ---------- 下载资源（按标识符：ID 或标题，供 iGM CLI 调用） ---------- */
+async function iGM_HandleDownloadByIdentifier(ctx: iGM_RouteContext) {
+  const params = (ctx as unknown as { params: Record<string, string> }).params;
+  const identifier = params?.identifier ?? "";
+  if (!identifier) throw new iGM_ContentError("resource.errors.notFound", 404);
+  iGM_EnforceRateLimit(ctx, "resourceDownload", `res:${identifier}`);
+  const content = await iGM_DownloadResourceByIdentifierService(
+    iGM_CurrentUser(ctx),
+    decodeURIComponent(identifier),
+    iGM_RequestLocale(ctx),
+  );
+  return iGM_BuildFileResponse(content, false);
+}
+
 /**
  * G_Resource 资源路由集合
  * 下载接口直接返回二进制 Response（不套统一响应结构）
@@ -159,7 +177,11 @@ export const G_Resource = new Elysia({ name: "G_Resource" })
   .put("/G_Resource/edit", iGM_HandleEdit as never)
   .delete("/G_Resource/delete", iGM_HandleDelete as never)
   .post("/G_Resource/status", iGM_HandleSetStatus as never)
-  .get("/G_Resource/download", iGM_HandleDownload as never);
+  .get("/G_Resource/download", iGM_HandleDownload as never)
+  .get(
+    "/G_Resource/:identifier/download",
+    iGM_HandleDownloadByIdentifier as never,
+  );
 
 // 导出 //
 export default G_Resource;

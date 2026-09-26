@@ -74,6 +74,12 @@ export interface iGM_ResourceDetail
   extends Omit<iGM_ResourceListItem, "excerpt"> {
   description: string;
   canManage: boolean;
+  /** 模块十三：是否允许 iGM CLI 下载 */
+  downloadable: boolean;
+  /** 模块十三：CLI 下载标识符（u{uid}-{slug}），不可下载时为 null */
+  slug: string | null;
+  /** 模块十三：版本号（选填） */
+  version: string | null;
 }
 
 /** 资源分页数据 */
@@ -109,6 +115,10 @@ export interface iGM_ResourcePayload {
   /** 标签原始字符串，后端解析 */
   tags: string;
   status?: string;
+  /** 模块十三：是否允许 iGM CLI 下载 */
+  downloadable?: boolean;
+  /** 模块十三：版本号（选填） */
+  version?: string | null;
 }
 
 // 核心逻辑 //

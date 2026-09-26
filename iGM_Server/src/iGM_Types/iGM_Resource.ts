@@ -61,6 +61,12 @@ export interface iGM_ResourceRow {
   iGM_OriginalAuthor: string | null;
   iGM_OriginalUrl: string | null;
   iGM_Changelog: string | null;
+  /** 模块十三：是否允许通过 iGM CLI 下载 */
+  iGM_Downloadable: number;
+  /** 模块十三：CLI 下载标识符，格式 u{uid}-{slug}，全局唯一 */
+  iGM_Slug: string | null;
+  /** 模块十三：版本号（选填），如 1.0.0 */
+  iGM_Version: string | null;
   iGM_CreatedAt: string;
   iGM_UpdatedAt: string;
 }
@@ -116,6 +122,12 @@ export interface iGM_ResourceDetailDto extends Omit<iGM_ResourceListItemDto, "ex
   description: string;
   /** 当前登录用户是否有编辑/删除权限（上传者或协管员及以上） */
   canManage: boolean;
+  /** 模块十三：是否允许 iGM CLI 下载 */
+  downloadable: boolean;
+  /** 模块十三：CLI 下载标识符（u{uid}-{slug}），不可下载时为 null */
+  slug: string | null;
+  /** 模块十三：版本号（选填） */
+  version: string | null;
 }
 
 /** 资源分页数据 */
@@ -152,6 +164,11 @@ export interface iGM_ResourceInput {
   originalAuthor?: string | null;
   originalUrl?: string | null;
   changelog?: string | null;
+  /* ---------- 模块十三：iGM CLI 下载 ---------- */
+  /** 是否允许通过 iGM CLI 下载，勾选后自动生成下载命令 */
+  downloadable?: boolean;
+  /** 版本号（选填），如 1.0.0；填写后下载命令包含 @version */
+  version?: string | null;
 }
 
 /** Minecraft 列表筛选参数（列表查询用） */

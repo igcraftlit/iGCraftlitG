@@ -1,0 +1,26 @@
+/*
+ * 文件路径：apps/cli-download/src/components/iGM_CLI_ThemeToggle/iGM_CLI_ThemeToggle.module.css
+ * 所属层：前端 / 组件样式层
+ * 路由：全局（站点头部）
+ * 模块：iGM_CLI_Downloader
+ * 作用：明暗主题切换按钮样式——与头部图标按钮同规格，极简无装饰
+ */
+
+/* 核心逻辑 */
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--igm-radius);
+  color: var(--igm-text-muted);
+  transition:
+    color var(--igm-motion-nav) var(--igm-motion-ease),
+    background-color var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.toggle:hover {
+  background: var(--igm-surface-subtle);
+  color: var(--igm-text);
+}

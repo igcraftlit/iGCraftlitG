@@ -1,0 +1,287 @@
+/*
+ * 文件路径：apps/cli-download/src/components/iGM_CLI_CliGuide/iGM_CLI_DocContent.module.css
+ * 所属层：前端 / 组件样式层
+ * 路由：/docs/cli/* 全部 CLI 指南页
+ * 模块：iGM_CLI_Downloader
+ * 作用：文档正文排版——页头、章节标题、段落、有序/无序列表、
+ *       命令表（命令 + 说明）、代码块留白、问答、联系方式；
+ *       所有锚点设置 scroll-margin-top 避让吸顶头部
+ */
+
+/* ===== 正文页头 ===== */
+.articleHead {
+  padding-bottom: 20px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--igm-border);
+}
+
+.h1 {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--igm-text);
+}
+
+.lead {
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+/* ===== 章节 ===== */
+.section {
+  margin-top: 36px;
+  /* 避让 60px 吸顶头部，点击目录锚点定位时留足间距 */
+  scroll-margin-top: 84px;
+}
+
+.h2 {
+  margin-bottom: 14px;
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--igm-text);
+}
+
+.h3 {
+  margin: 18px 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--igm-text);
+}
+
+.subBlock {
+  margin: 16px 0 4px;
+  scroll-margin-top: 84px;
+}
+
+.p {
+  margin: 8px 0;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--igm-text);
+}
+
+.subLabel {
+  margin: 10px 0 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+/* 敬请期待：暂不可用的安装渠道占位 */
+.comingSoon {
+  margin: 6px 0 0;
+  padding: 12px 14px;
+  border: 1px dashed var(--igm-border);
+  border-radius: var(--igm-radius);
+  font-size: 13px;
+  color: var(--igm-text-subtle);
+  background: var(--igm-surface-subtle);
+}
+
+/* ===== 列表 ===== */
+.bulletList,
+.orderList {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding-left: 22px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--igm-text);
+}
+
+.bulletList {
+  list-style: disc;
+}
+
+.orderList {
+  list-style: decimal;
+}
+
+.bulletList li::marker,
+.orderList li::marker {
+  color: var(--igm-text-subtle);
+}
+
+/* ===== 命令表 ===== */
+.cmdList {
+  margin-top: 4px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius);
+  background: var(--igm-surface);
+  overflow: hidden;
+}
+
+.cmdRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 3px;
+  padding: 10px 14px;
+}
+
+.cmdRow + .cmdRow {
+  border-top: 1px solid var(--igm-border);
+}
+
+.cmdName {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas,
+    "Liberation Mono", monospace;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--igm-text);
+  word-break: break-word;
+}
+
+.cmdDesc {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--igm-text-muted);
+}
+
+/* 桌面：命令与说明左右两栏 */
+@media (min-width: 768px) {
+  .cmdRow {
+    grid-template-columns: minmax(220px, 0.95fr) minmax(0, 1.05fr);
+    gap: 18px;
+    align-items: baseline;
+  }
+}
+
+/* ===== 行内代码 ===== */
+.inlineCode {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas,
+    "Liberation Mono", monospace;
+  font-size: 12.5px;
+  padding: 2px 7px;
+  border: 1px solid var(--igm-border);
+  border-radius: 6px;
+  background: var(--igm-surface-subtle);
+  color: var(--igm-text);
+  word-break: break-all;
+}
+
+.pathList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 0;
+  list-style: none;
+}
+
+/* ===== 文字链接 ===== */
+.textLink {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 13.5px;
+  color: var(--igm-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.textLink:hover {
+  color: var(--igm-accent-hover);
+}
+
+/* ===== 常见问题（完整版：问题概览列表） ===== */
+.faqQuestionList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.faqQuestion {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 11px 14px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius);
+  background: var(--igm-surface);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--igm-text);
+  scroll-margin-top: 84px;
+}
+
+/* ===== 常见问题（FAQ 子页：问答块） ===== */
+.faqAnswerList {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  margin-top: 12px;
+}
+
+.faqItem {
+  scroll-margin-top: 84px;
+}
+
+.faqQuestionTitle {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  margin-bottom: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--igm-text);
+}
+
+.qBadge {
+  flex: 0 0 auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--igm-accent);
+}
+
+/* ===== 联系与团队 ===== */
+.contactList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.contactRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.contactLabel {
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.contactValue {
+  color: var(--igm-text-muted);
+  word-break: break-all;
+}
+
+.contactValue .textLink {
+  margin-top: 0;
+}
+
+.contactBuilt {
+  margin-top: 4px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--igm-text-muted);
+}
+
+@media (min-width: 768px) {
+  .contactRow {
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 16px;
+    align-items: baseline;
+  }
+}

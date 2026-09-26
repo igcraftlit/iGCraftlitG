@@ -44,6 +44,7 @@ import {
 } from "../../iGM_Services/iGM_FileClient";
 import { iGM_ResolveErrorText } from "../../iGM_Components/iGM_AuthUI/iGM_AuthUI";
 import { iGM_ImageUploader as IGM_ImageUploader } from "../../iGM_Components/iGM_ImageUploader/iGM_ImageUploader";
+import { iGM_UseAuth } from "../../iGM_Providers/iGM_AuthProvider";
 // JSX 要求组件标识符首字母大写，iGM_ 前缀组件在使用处统一别名为 IGM_
 import { iGM_RequireAuth as IGM_RequireAuth } from "../../iGM_Components/iGM_RequireAuth/iGM_RequireAuth";
 import pageStyles from "../iGM_Page.module.css";
@@ -59,6 +60,7 @@ const iGM_ResourceDescriptionMax = 5000;
 function iGM_ResourceEditInner() {
   const t = useTranslations();
   const router = iGM_UseLocaleRouter();
+  const { user } = iGM_UseAuth();
   const searchParams = useSearchParams();
   const resourceId = searchParams.get("resourceId");
   const isEdit = resourceId !== null;
@@ -75,6 +77,9 @@ function iGM_ResourceEditInner() {
   const [fileSize, setFileSize] = useState(0);
   const [coverFileId, setCoverFileId] = useState<string | null>(null);
   const [activityId, setActivityId] = useState<string | null>(queryActivityId);
+  // 模块十三：CLI 下载——是否可下载 + 版本号
+  const [downloadable, setDownloadable] = useState(false);
+  const [version, setVersion] = useState("");
   const [fileUploading, setFileUploading] = useState(false);
   const [coverUploading, setCoverUploading] = useState(false);
   const [loading, setLoading] = useState(isEdit);
@@ -112,6 +117,9 @@ function iGM_ResourceEditInner() {
       setCoverFileId(resource.cover?.id ?? null);
       // 编辑模式保持资源原有活动关联，不因查询参数改变
       setActivityId(resource.activityId);
+      // 模块十三：回填可下载与版本号
+      setDownloadable(!!resource.downloadable);
+      setVersion(resource.version ?? "");
     } catch (error) {
       setErrorText(iGM_ResolveErrorText(t, error));
     } finally {
@@ -180,6 +188,9 @@ function iGM_ResourceEditInner() {
         coverFileId,
         activityId,
         tags,
+        // 模块十三：CLI 下载
+        downloadable,
+        version: downloadable ? version.trim() || null : null,
       };
       const response = isEdit
         ? await iGM_ApiUpdateResource({
@@ -359,6 +370,56 @@ function iGM_ResourceEditInner() {
             onUploadingChange={setCoverUploading}
           />
           <span className={styles.hint}>{t("resource.form.coverHint")}</span>
+        </div>
+
+        {/* 模块十三：iGM CLI 下载设置 */}
+        <div className={styles.formRow}>
+          <label className={styles.label}>
+            <input
+              type="checkbox"
+              checked={downloadable}
+              onChange={(e) => setDownloadable(e.target.checked)}
+              disabled={submitting}
+              style={{ marginRight: 8 }}
+            />
+            {t("resource.form.downloadable")}
+          </label>
+          <span className={styles.hint}>{t("resource.form.downloadableHint")}</span>
+
+          {downloadable && (
+            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+              <div className={styles.formRow} style={{ marginBottom: 0 }}>
+                <label className={styles.label} htmlFor="igm-resource-version">
+                  {t("resource.form.version")}
+                </label>
+                <input
+                  id="igm-resource-version"
+                  className={styles.input}
+                  type="text"
+                  value={version}
+                  placeholder="1.0.0"
+                  maxLength={32}
+                  onChange={(e) => setVersion(e.target.value)}
+                />
+                <span className={styles.hint}>{t("resource.form.versionHint")}</span>
+              </div>
+              <div
+                style={{
+                  padding: "10px 14px",
+                  borderRadius: "var(--igm-radius-lg)",
+                  background: "var(--igm-surface-subtle)",
+                  border: "1px solid var(--igm-border)",
+                  fontFamily: "var(--font-mono, ui-monospace, monospace)",
+                  fontSize: 13,
+                  color: "var(--igm-accent)",
+                }}
+              >
+                {t("resource.form.downloadCmdPreview")}: igm install{" "}
+                {user?.uid ? `u${user.uid}-${title.toLowerCase().replace(/[\s_]+/g, "-").replace(/[^\p{L}\p{N}-]+/gu, "-").replace(/-+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "resource"}` : "…"}
+                {version.trim() ? `@${version.trim()}` : ""}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 操作按钮 */}

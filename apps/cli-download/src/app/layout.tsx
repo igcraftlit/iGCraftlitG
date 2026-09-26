@@ -11,12 +11,22 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import type { ReactNode } from "react";
+import { Cinzel } from "next/font/google";
 import "./iGM_Globals.css";
 
 // 类型定义 //
 interface iGM_CLI_RootLayoutProps {
   children: ReactNode;
 }
+
+// 核心逻辑 //
+/** Cinzel 艺术字体：用于站点大标题，通过 CSS 变量 --font-cinzel 暴露 */
+const iGM_CLI_Cinzel = Cinzel({
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+  variable: "--font-cinzel",
+  display: "swap",
+});
 
 // 核心逻辑 //
 export const metadata: Metadata = {
@@ -38,7 +48,7 @@ const iGM_CLI_ThemeInitScript = `
 export default function iGM_CLI_RootLayout({ children }: iGM_CLI_RootLayoutProps) {
   return (
     <html lang="zh-CN" suppressHydrationWarning>
-      <body>
+      <body className={iGM_CLI_Cinzel.variable}>
         <Script
           id="igm-cli-theme-init"
           strategy="beforeInteractive"

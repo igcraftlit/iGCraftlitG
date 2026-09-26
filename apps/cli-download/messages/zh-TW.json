@@ -29,13 +29,34 @@
   },
   "pages": {
     "docs": {
-      "title": "文件"
+      "title": "文件中心"
+    },
+    "docsCli": {
+      "title": "iGM CLI 指南"
+    },
+    "docsInstall": {
+      "title": "安裝 iGM CLI"
+    },
+    "docsCommands": {
+      "title": "命令參考"
+    },
+    "docsConfig": {
+      "title": "設定"
+    },
+    "docsFaq": {
+      "title": "常見問題"
     },
     "sdk": {
       "title": "SDK"
     },
     "api": {
-      "title": "API"
+      "title": "API",
+      "installTitle": "安裝 iGM CLI",
+      "installLead": "在使用 API 之前，請先安裝 iGM CLI。推薦使用 npm 或 bun 安裝：",
+      "viewFullInstall": "查看完整安裝文件",
+      "latestVersion": "最新版本",
+      "updateTitle": "清理快取並更新至最新版本",
+      "updateNote": "執行以下指令清理本機快取並將 iGM CLI 更新至最新版本："
     },
     "commands": {
       "title": "命令"
@@ -43,6 +64,247 @@
   },
   "common": {
     "backToHome": "返回首頁",
-    "language": "語言"
+    "language": "語言",
+    "backToMainSite": "返回主站",
+    "themeToggle": "切換明暗主題",
+    "copy": "複製",
+    "copied": "已複製"
+  },
+  "docs": {
+    "sidebar": {
+      "title": "文件",
+      "group": "iGM CLI",
+      "index": "文件中心",
+      "guide": "完整指南",
+      "install": "安裝",
+      "commands": "命令參考",
+      "config": "設定",
+      "faq": "常見問題"
+    },
+    "tocTitle": "ON THIS PAGE",
+    "leads": {
+      "full": "本文件涵蓋 iGM CLI 的服務簡介、安裝、命令、設定與常見問題，可透過右側目錄快速跳轉章節。",
+      "install": "本章說明 iGM CLI 的使用資格與各平台安裝方式。",
+      "commands": "本章列出基礎命令、資源檢索、安裝下載與專案管理的全部命令。",
+      "config": "本章介紹 igm.json 設定檔、快取目錄、鏡像源與多語言輸出。",
+      "faq": "本章彙整使用 iGM CLI 時的常見問題與解答。"
+    },
+    "index": {
+      "title": "文件中心",
+      "description": "iGM CLI 是 iGCraftLit × MuoCeon 聯合構建的命令列下載工具。選擇下方分區，查看安裝、命令與設定說明。",
+      "sectionsTitle": "文件分區",
+      "guideTitle": "完整指南",
+      "guideDesc": "從服務簡介、安裝到命令與設定的全部十三章內容，附右側章節目錄。",
+      "installTitle": "安裝",
+      "installDesc": "Windows PowerShell、macOS / Linux、npm、bun 與 npx / bunx 安裝方式。",
+      "commandsTitle": "命令參考",
+      "commandsDesc": "資源檢索、安裝下載、更新解除安裝與專案管理的全部命令。",
+      "configTitle": "設定",
+      "configDesc": "igm.json 設定檔、快取目錄、鏡像源與多語言輸出設定。",
+      "faqTitle": "常見問題",
+      "faqDesc": "請求限制、工作階段歷程、商用授權與問題回報管道。",
+      "moreTitle": "其他",
+      "mainSiteTitle": "返回主站",
+      "mainSiteDesc": "造訪 iGCraftLit Community 官網 igcraftlit.com。"
+    },
+    "cli": {
+      "intro": {
+        "title": "服務簡介",
+        "body": "iGM CLI 是 iGCraftLit × MuoCeon 聯合構建的命令列下載工具，可在 CMD、PowerShell、Bash 中直接檢索、下載、更新、解除安裝 iGCraftLit Community 上的資源，重點支援 Minecraft 模組、材質包、地圖、整合包等。命令前綴統一為 igm。"
+      },
+      "features": {
+        "title": "特色",
+        "items": [
+          "一條命令完成搜尋、下載、安裝。",
+          "支援版本與載入器篩選，如 Forge、Fabric、NeoForge、Quilt。",
+          "支援 igm.json 設定檔，適合批次安裝與團隊協作。",
+          "支援斷點續傳、快取、雜湊校驗。",
+          "支援多鏡像源、多語言輸出。",
+          "與 iGCraftLit 帳號體系打通，支援登入與下載記錄同步。"
+        ]
+      },
+      "eligibility": {
+        "title": "使用資格",
+        "items": [
+          "公開資源無需登入即可下載。",
+          "私有資源或需登入的資源，請先執行 igm login。",
+          "前期完全開放，後期依存取模式逐步收緊。",
+          "使用者須遵守《iGCraftLit 使用者管理規定》。"
+        ]
+      },
+      "install": {
+        "title": "安裝",
+        "lead": "推薦使用 npm 或 bun 安裝；也可使用「通用下載」直接執行單檔；遠端安裝腳本與 npx 等管道即將上線，敬請期待。",
+        "windows": "Windows PowerShell",
+        "unix": "macOS / Linux",
+        "npm": "npm（推薦）",
+        "bun": "bun（推薦）",
+        "npx": "npx / bunx",
+        "directWindows": "通用下載（Windows）",
+        "directUnix": "通用下載（macOS / Linux）",
+        "comingSoon": "敬請期待",
+        "done": "安裝完成後，於終端機輸入 igm 即可開始使用。"
+      },
+      "basic": {
+        "title": "基礎命令",
+        "items": [
+          {
+            "c": "igm",
+            "d": "顯示說明與版本"
+          },
+          {
+            "c": "igm --version",
+            "d": "顯示版本號"
+          },
+          {
+            "c": "igm --help",
+            "d": "顯示所有命令"
+          }
+        ]
+      },
+      "search": {
+        "title": "資源檢索",
+        "items": [
+          {
+            "c": "igm search <關鍵字>",
+            "d": "搜尋資源"
+          },
+          {
+            "c": "igm search <關鍵字> --type=mod|modpack|resourcepack|map|skin|plugin|datapack",
+            "d": "依類型篩選：模組、整合包、材質包、地圖、皮膚、插件、資料包"
+          },
+          {
+            "c": "igm search <關鍵字> --version=1.20.1 --loader=fabric",
+            "d": "依遊戲版本與載入器篩選"
+          },
+          {
+            "c": "igm list",
+            "d": "列出已安裝資源"
+          },
+          {
+            "c": "igm info <資源ID或slug>",
+            "d": "查看資源詳情"
+          }
+        ]
+      },
+      "download": {
+        "title": "安裝與下載",
+        "items": [
+          {
+            "c": "igm install <資源>",
+            "d": "下載並安裝資源至目前目錄"
+          },
+          {
+            "c": "igm install <資源> --version=1.20.1 --loader=fabric",
+            "d": "指定版本與載入器安裝"
+          },
+          {
+            "c": "igm install <資源> --dir=./mods",
+            "d": "指定安裝目錄"
+          },
+          {
+            "c": "igm install --file=igm.json",
+            "d": "依設定檔批次安裝"
+          },
+          {
+            "c": "igm add <資源>",
+            "d": "加入 igm.json 相依套件並立即安裝"
+          },
+          {
+            "c": "igm remove <資源>",
+            "d": "從 igm.json 移除並刪除本機檔案"
+          },
+          {
+            "c": "igm update",
+            "d": "更新所有已安裝資源"
+          },
+          {
+            "c": "igm update <資源>",
+            "d": "更新指定資源"
+          }
+        ]
+      },
+      "project": {
+        "title": "專案管理",
+        "items": [
+          {
+            "c": "igm init",
+            "d": "初始化 igm.json 設定檔"
+          },
+          {
+            "c": "igm login",
+            "d": "登入 iGCraftLit 帳號"
+          },
+          {
+            "c": "igm logout",
+            "d": "登出"
+          },
+          {
+            "c": "igm whoami",
+            "d": "查看目前登入使用者"
+          },
+          {
+            "c": "igm cache clean",
+            "d": "清空本機快取"
+          },
+          {
+            "c": "igm cache list",
+            "d": "查看快取內容"
+          },
+          {
+            "c": "igm doctor",
+            "d": "檢查環境、網路、快取、後端連線狀態"
+          },
+          {
+            "c": "igm serve",
+            "d": "啟動本機介面卡服務"
+          },
+          {
+            "c": "igm sdk",
+            "d": "取得 SDK"
+          },
+          {
+            "c": "igm api",
+            "d": "查看 API 文件"
+          }
+        ]
+      },
+      "config": {
+        "title": "設定檔 igm.json",
+        "lead": "在專案根目錄執行 igm init 即可產生 igm.json，範例如下：",
+        "lock": "配套 igm.lock 會記錄每個相依套件的精確版本與雜湊，請勿手動編輯。"
+      },
+      "cache": {
+        "title": "快取與鏡像源",
+        "cacheTitle": "預設快取目錄",
+        "windows": "Windows：%USERPROFILE%\\.igm\\cache",
+        "unix": "macOS / Linux：~/.igm/cache",
+        "mirror": "支援鏡像源設定，預設使用 iGCraftLit 官方源；網路受限時可切換鏡像以提升下載速度。"
+      },
+      "lang": {
+        "title": "多語言輸出",
+        "lead": "預設為英文輸出，可透過設定命令切換語言：",
+        "supported": "支援簡體中文、繁體中文、英文、日文、俄文。輸出保持極簡，不使用 emoji。"
+      },
+      "faq": {
+        "title": "常見問題",
+        "hint": "以下為常見問題概覽，詳細解答請見常見問題頁。",
+        "viewAll": "查看全部解答",
+        "q1": "為什麼我的請求被限制了？",
+        "a1": "為保障服務穩定，API 針對同一 IP 或帳號設有存取頻率限制。請求過於頻繁時會暫時受到限制，請稍後重試；登入帳號可獲得更高配額。如仍有異常，可執行 igm doctor 檢查網路與後端連線狀態。",
+        "q2": "工作階段歷程會儲存嗎？",
+        "a2": "登入帳號後，搜尋與下載記錄會隨帳號同步，方便在多部裝置查看；未登入時僅保留本機快取，可隨時執行 igm cache clean 清空。我們不會在未經授權的情況下收集終端機工作階段內容。",
+        "q3": "可以商用嗎？",
+        "a3": "iGM CLI 工具本身免費提供，可用於商業環境中的資源管理；但透過工具下載的各類資源仍遵循其各自的開放原始碼授權與作者聲明，商用前請確認具體資源授權，並遵守《iGCraftLit 使用者管理規定》。",
+        "q4": "如何回報問題？",
+        "a4": "可透過郵件 igcraftlit@outlook.com（.NET）或 igcraftlit@163.com（.CN）聯絡團隊，也可至官網 https://igcraftlit.com 提交回報；郵件標題註明「iGM CLI」可更快定位問題。"
+      },
+      "contact": {
+        "title": "聯絡與團隊",
+        "website": "團隊官網",
+        "email": "聯絡郵箱",
+        "built": "iGCraftLit × MuoCeon 聯合構建"
+      }
+    }
   }
 }

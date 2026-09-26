@@ -1,0 +1,47 @@
+/**
+ * 文件路径：apps/cli-download/src/components/iGM_CLI_VersionBadge/iGM_CLI_VersionBadge.module.css
+ * 所属层：前端 / 组件层
+ * 路由：/{locale}/api
+ * 模块：iGM_CLI_Downloader
+ * 作用：iGM_CLI_VersionBadge 组件样式——标签 + 版本号胶囊
+ * 内容：横向排列，accent 色边框，加载动画
+ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: var(--igm-radius-lg);
+  border: 1px solid var(--igm-border-strong);
+  background: var(--igm-surface-subtle);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.label {
+  color: var(--igm-text-muted);
+  font-size: 13px;
+}
+
+.value {
+  color: var(--igm-accent);
+  font-weight: 600;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  display: inline-flex;
+  align-items: center;
+  min-width: 28px;
+}
+
+.spin {
+  animation: iGM_CLI_spin 1s linear infinite;
+}
+
+@keyframes iGM_CLI_spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

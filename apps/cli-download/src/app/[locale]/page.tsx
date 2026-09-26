@@ -10,10 +10,12 @@
 
 // 导入依赖 //
 import type { Metadata } from "next";
-import { Terminal, Zap, ListOrdered, Package, Plug } from "lucide-react";
+import Link from "next/link";
+import { Terminal, Zap, ListOrdered, Package, Plug, BookOpen } from "lucide-react";
 import { iGM_CLI_PlaceholderSection as IGM_CLI_PlaceholderSection } from "../../components/iGM_CLI_PlaceholderSection/iGM_CLI_PlaceholderSection";
 import { iGM_CLI_GetMessages } from "../../i18n/iGM_CLI_Messages";
 import { iGM_CLI_IsLocale } from "../../i18n/iGM_CLI_Locales";
+import { iGM_CLI_LocalePath } from "../../i18n/iGM_CLI_LocalePath";
 import styles from "./iGM_CLI_Home.module.css";
 
 // 类型定义 //
@@ -48,9 +50,30 @@ export default async function iGM_CLI_HomePage({ params }: iGM_CLI_HomePageProps
         <span className={styles.heroIcon}>
           <Terminal size={28} aria-hidden />
         </span>
-        <h1 className={styles.heroTitle}>{messages.hero.title}</h1>
+        <h1 className={styles.heroTitle}>
+          {messages.hero.title.replace(/API$/, "")}
+          <span className={styles.heroTitleAccent}>API</span>
+        </h1>
         <p className={styles.heroSubtitle}>{messages.hero.subtitle}</p>
         <p className={styles.heroDescription}>{messages.hero.description}</p>
+
+        {/* Hero 跳转按钮：快速开始锚点 + 文档页 */}
+        <div className={styles.heroActions}>
+          <Link
+            href={`${iGM_CLI_LocalePath("/", locale)}#quickstart`}
+            className={styles.ctaPrimary}
+          >
+            <Zap size={16} aria-hidden />
+            {messages.nav.quickstart}
+          </Link>
+          <Link
+            href={iGM_CLI_LocalePath("/docs", locale)}
+            className={styles.ctaSecondary}
+          >
+            <BookOpen size={16} aria-hidden />
+            {messages.nav.docs}
+          </Link>
+        </div>
       </section>
 
       {/* 快速开始区块：占位，暂不填充安装命令 */}

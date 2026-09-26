@@ -32,6 +32,7 @@ import {
   Library,
   LoaderCircle,
   Pencil,
+  Terminal,
   Trash2,
 } from "lucide-react";
 import {
@@ -254,6 +255,30 @@ export function iGM_ResourceDetailPage() {
         <hr className={styles.divider} />
 
         <div className={styles.detailContent}>{resource.description}</div>
+
+        {/* 模块十三：iGM CLI 下载命令（可下载资源自动显示） */}
+        {resource.downloadable && resource.slug && (
+          <div className={styles.cliBlock}>
+            <div className={styles.cliTitle}>
+              <Terminal size={15} strokeWidth={1.8} />
+              {t("resource.cliDownload")}
+            </div>
+            <div className={styles.cliCode}>
+              <code>{`igm install ${resource.slug}${resource.version ? `@${resource.version}` : ""}`}</code>
+              <button
+                type="button"
+                className={styles.cliCopy}
+                onClick={() => {
+                  const cmd = `igm install ${resource.slug}${resource.version ? `@${resource.version}` : ""}`;
+                  navigator.clipboard?.writeText(cmd).catch(() => undefined);
+                }}
+              >
+                {t("resource.copy")}
+              </button>
+            </div>
+            <p className={styles.cliHint}>{t("resource.cliHint")}</p>
+          </div>
+        )}
 
         <hr className={styles.divider} />
 

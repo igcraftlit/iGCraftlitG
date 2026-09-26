@@ -48,7 +48,8 @@
     "friends": "Friends",
     "userRelations": "Following & Followers",
     "messages": "Messages",
-    "messageSettings": "Message Privacy"
+    "messageSettings": "Message Privacy",
+    "becomeDeveloper": "Become a Developer"
   },
   "topbar": {
     "menu": "Menu",
@@ -933,6 +934,9 @@
     "notFound": "This resource does not exist or has been unpublished",
     "download": "Download",
     "downloadCount": "{count} downloads",
+    "cliDownload": "iGM CLI Download",
+    "cliHint": "Download this resource with one command via iGM CLI. The resource package should contain /pack/manifest.json to record version and support info, which the downloader uses to identify the latest version.",
+    "copy": "Copy",
     "uploadedBy": "Uploaded by",
     "relatedActivity": "Related activity",
     "publishedAt": "Published",
@@ -959,6 +963,11 @@
       "coverHint": "Upload an image as the resource cover (optional)",
       "uploadCover": "Upload cover",
       "clearCover": "Remove cover",
+      "downloadable": "Allow download via iGM CLI",
+      "downloadableHint": "When checked, a download command is auto-generated; users can download this resource via igm install",
+      "version": "Version (optional)",
+      "versionHint": "If filled, the download command will include @version, e.g. 1.0.0",
+      "downloadCmdPreview": "Download command preview",
       "submitCreate": "Publish resource",
       "submitEdit": "Save changes",
       "submitting": "Submitting…",

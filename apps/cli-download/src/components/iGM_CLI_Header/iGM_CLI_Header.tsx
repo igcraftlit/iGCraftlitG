@@ -13,13 +13,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { Languages, Menu, Terminal, X } from "lucide-react";
+import { ArrowUpRight, Languages, Menu, Terminal, X } from "lucide-react";
 import {
   iGM_CLI_Locales,
   type iGM_CLI_Locale,
 } from "../../i18n/iGM_CLI_Locales";
 import { iGM_CLI_LocalePath } from "../../i18n/iGM_CLI_LocalePath";
 import { iGM_CLI_UseLocale } from "../iGM_CLI_Providers/iGM_CLI_LocaleProvider";
+import { iGM_CLI_ThemeToggle as IGM_CLI_ThemeToggle } from "../iGM_CLI_ThemeToggle/iGM_CLI_ThemeToggle";
 import styles from "./iGM_CLI_Header.module.css";
 
 // 类型定义 //
@@ -40,6 +41,9 @@ const iGM_CLI_NavItems: iGM_CLI_NavItem[] = [
   { key: "api", href: "/api" },
   { key: "docs", href: "/docs" },
 ];
+
+/** iGCraftLit 主站地址（文档子站返回入口，外链新标签页打开） */
+const iGM_CLI_MainSiteUrl = "https://igcraftlit.com";
 
 /** 站点顶部导航栏 */
 export function iGM_CLI_Header() {
@@ -65,6 +69,21 @@ export function iGM_CLI_Header() {
     </Link>
   ));
 
+  /** 返回主站外链（桌面显示文字 + 图标，移动端仅图标） */
+  const mainSiteLink = (
+    <a
+      href={iGM_CLI_MainSiteUrl}
+      target="_blank"
+      rel="noreferrer"
+      className={styles.mainSiteLink}
+      aria-label={t("common.backToMainSite")}
+      onClick={() => setMenuOpen(false)}
+    >
+      <span>{t("common.backToMainSite")}</span>
+      <ArrowUpRight size={14} aria-hidden />
+    </a>
+  );
+
   return (
     <header className={styles.header}>
       <div className={styles.inner}>
@@ -80,6 +99,10 @@ export function iGM_CLI_Header() {
         </nav>
 
         <div className={styles.actions}>
+          <div className={styles.mainSiteDesktop}>{mainSiteLink}</div>
+
+          <IGM_CLI_ThemeToggle />
+
           <label className={styles.langWrap} aria-label={t("common.language")}>
             <Languages size={16} aria-hidden />
             <select
@@ -111,6 +134,7 @@ export function iGM_CLI_Header() {
 
       <nav className={styles.mobileNav} data-open={menuOpen} aria-label="mobile">
         {navLinks}
+        <div className={styles.mainSiteMobile}>{mainSiteLink}</div>
       </nav>
     </header>
   );

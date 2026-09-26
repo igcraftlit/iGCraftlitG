@@ -15,6 +15,7 @@ import {
   iGM_CreateResource,
   iGM_DeleteResource,
   iGM_FindResourceById,
+  iGM_FindResourceByIdentifier,
   iGM_FindResourceCategoryById,
   iGM_FindResourceTagBySlug,
   iGM_FindOrCreateResourceTags,
@@ -75,6 +76,22 @@ const iGM_TagNameMaxLength = 20;
 const iGM_MaxPageSize = 50;
 const iGM_DefaultPageSize = 10;
 const iGM_ExcerptLength = 160;
+
+/**
+ * 生成资源的 CLI 下载标识符：u{uid}-{slug}
+ * slug 规则：标题转小写，空白与标点替换为连字符，保留字母数字与中文，
+ * 去除首尾连字符并压缩多个连字符
+ */
+function iGM_BuildResourceSlug(uid: string, title: string): string {
+  const slug = title
+    .toLowerCase()
+    .replace(/[\s_]+/g, "-")
+    .replace(/[^\p{L}\p{N}-]+/gu, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+  return `u${uid}-${slug || "resource"}`;
+}
 
 /** 协管员及以上可管理任意资源与分类 */
 function iGM_CanModerate(user: iGM_UserRow): boolean {
@@ -431,6 +448,10 @@ export function iGM_CreateResourceService(
   const activityId = iGM_ResolveActivity(input.activityId);
   // 模块十：仅 Minecraft 分区表单携带 minecraft 标记并做扩展校验
   const mc = input.minecraft ? iGM_ValidateMcFields(input) : iGM_EmptyMcFields();
+  // 模块十三：CLI 下载——勾选可下载时生成 slug（含用户 uid）
+  const downloadable = input.downloadable === true;
+  const slug = downloadable ? iGM_BuildResourceSlug(user.iGM_Uid, title) : null;
+  const version = downloadable ? (input.version ?? null) : null;
 
   const resource = iGM_Db.transaction(() => {
     const created = iGM_CreateResource({
@@ -451,6 +472,10 @@ export function iGM_CreateResourceService(
       originalAuthor: mc.originalAuthor,
       originalUrl: mc.originalUrl,
       changelog: mc.changelog,
+      // 模块十三：CLI 下载
+      downloadable,
+      slug,
+      version,
       now: new Date().toISOString(),
     });
     if (tags.length > 0) {
@@ -497,6 +522,10 @@ export function iGM_UpdateResourceService(
   const mc = input.minecraft
     ? iGM_ValidateMcFields(input)
     : iGM_McFieldsFromRow(resource);
+  // 模块十三：CLI 下载——勾选可下载时重新生成 slug（含用户 uid）
+  const downloadable = input.downloadable === true;
+  const slug = downloadable ? iGM_BuildResourceSlug(user.iGM_Uid, title) : null;
+  const version = downloadable ? (input.version ?? null) : null;
 
   iGM_Db.transaction(() => {
     iGM_UpdateResource(resourceId, {
@@ -519,6 +548,10 @@ export function iGM_UpdateResourceService(
       originalAuthor: mc.originalAuthor,
       originalUrl: mc.originalUrl,
       changelog: mc.changelog,
+      // 模块十三：CLI 下载
+      downloadable,
+      slug,
+      version,
       now: new Date().toISOString(),
     });
     const tagRows = tags.length > 0 ? iGM_FindOrCreateResourceTags(tags) : [];
@@ -714,6 +747,9 @@ export function iGM_GetResourceDetail(
     ...rest,
     description: row.iGM_Description,
     canManage: isUploader || canModerate,
+    downloadable: row.iGM_Downloadable === 1,
+    slug: row.iGM_Slug,
+    version: row.iGM_Version,
   };
 }
 
@@ -752,6 +788,38 @@ export async function iGM_DownloadResourceService(
   return iGM_ReadFileContentService(resource.iGM_FileId);
 }
 
+/**
+ * 按标识符（资源 ID 或标题）下载资源附件。
+ * 供 iGM CLI 的 `igm install <资源>` 调用，路径形如 /G_Resource/:identifier/download。
+ */
+export async function iGM_DownloadResourceByIdentifierService(
+  actor: iGM_UserRow | null,
+  identifier: string,
+  locale?: string,
+): Promise<iGM_FileContent> {
+  const resource = iGM_FindResourceByIdentifier(identifier);
+  if (!resource || resource.iGM_Status !== "published") {
+    throw new iGM_ContentError("resource.errors.notFound", 404);
+  }
+  const resourceId = resource.iGM_Id;
+
+  iGM_IncrementDownloadCount(resourceId);
+
+  if (actor && actor.iGM_Id !== resource.iGM_UploaderId) {
+    iGM_Notify({
+      userId: resource.iGM_UploaderId,
+      actorId: actor.iGM_Id,
+      actorName: actor.iGM_DisplayName ?? actor.iGM_Username,
+      type: "resource",
+      title: resource.iGM_Title,
+      link: `/G_ResourceDetail?resourceId=${resourceId}`,
+      locale,
+    });
+  }
+
+  return iGM_ReadFileContentService(resource.iGM_FileId);
+}
+
 // 导出 //
 export default {
   iGM_ListResourceCategoriesService,
@@ -763,4 +831,5 @@ export default {
   iGM_ListActivityResourcesService,
   iGM_GetResourceDetail,
   iGM_DownloadResourceService,
+  iGM_DownloadResourceByIdentifierService,
 };

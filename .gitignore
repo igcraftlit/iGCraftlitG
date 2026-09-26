@@ -10,3 +10,4 @@ uploads/
 .trae/
 *.tsbuildinfo
 screenshots/
+RUN.txt

@@ -38,6 +38,7 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
+  Terminal,
   Trophy,
   Upload,
   UserRound,
@@ -48,8 +49,8 @@ import type { iGM_UserRole } from "../iGM_Services/iGM_AuthClient";
 
 // 类型定义 //
 export interface iGM_NavItem {
-  /** 路由地址，统一 G_Xxxxx 命名 */
-  href: `/${string}`;
+  /** 路由地址，统一 G_Xxxxx 命名；external 为 true 时为完整外链 */
+  href: `/${string}` | `https://${string}`;
   /** lucide-react 简约图标 */
   icon: LucideIcon;
   /** 语言包文案键 */
@@ -61,6 +62,8 @@ export interface iGM_NavItem {
    * 与 roles 同时满足时才显示；后端仍按组织 owner 邮箱独立鉴权。
    */
   orgOwnerOnly?: boolean;
+  /** 外链入口：新标签页打开，不参与站内高亮与语言前缀拼装 */
+  external?: boolean;
   /** 子导航项：存在时该节点为树状父节点，可展开折叠；父节点本身仍可点击跳转 */
   children?: iGM_NavItem[];
 }
@@ -85,6 +88,13 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
         icon: Radio,
         labelKey: "nav.realtime",
         roles: ["user", "moderator", "admin"],
+      },
+      {
+        // iGM CLI Download API 开发者门户：独立站点（cli.igcraftlit.com），外链新标签页打开
+        href: "https://cli.igcraftlit.com",
+        icon: Terminal,
+        labelKey: "nav.becomeDeveloper",
+        external: true,
       },
     ],
   },

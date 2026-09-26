@@ -65,6 +65,12 @@ export interface iGM_CreateResourceInput {
   originalAuthor?: string | null;
   originalUrl?: string | null;
   changelog?: string | null;
+  /** 模块十三：是否允许 CLI 下载 */
+  downloadable?: boolean;
+  /** 模块十三：CLI 下载标识符，由服务层生成（u{uid}-{slug}） */
+  slug?: string | null;
+  /** 模块十三：版本号（选填） */
+  version?: string | null;
   now: string;
 }
 
@@ -86,6 +92,12 @@ export interface iGM_UpdateResourceInput {
   originalAuthor?: string | null;
   originalUrl?: string | null;
   changelog?: string | null;
+  /** 模块十三：是否允许 CLI 下载 */
+  downloadable?: boolean;
+  /** 模块十三：CLI 下载标识符，由服务层生成（u{uid}-{slug}） */
+  slug?: string | null;
+  /** 模块十三：版本号（选填） */
+  version?: string | null;
   now: string;
 }
 
@@ -331,6 +343,9 @@ export function iGM_CreateResource(
     iGM_OriginalAuthor: input.originalAuthor ?? null,
     iGM_OriginalUrl: input.originalUrl ?? null,
     iGM_Changelog: input.changelog ?? null,
+    iGM_Downloadable: input.downloadable ? 1 : 0,
+    iGM_Slug: input.downloadable ? (input.slug ?? null) : null,
+    iGM_Version: input.downloadable ? (input.version ?? null) : null,
     iGM_CreatedAt: input.now,
     iGM_UpdatedAt: input.now,
   };
@@ -340,8 +355,9 @@ export function iGM_CreateResource(
         iGM_FileId, iGM_CoverFileId, iGM_ActivityId, iGM_DownloadCount,
         iGM_Status, iGM_ResourceType, iGM_McVersions, iGM_Loaders, iGM_Platforms,
         iGM_License, iGM_OriginalAuthor, iGM_OriginalUrl, iGM_Changelog,
+        iGM_Downloadable, iGM_Slug, iGM_Version,
         iGM_CreatedAt, iGM_UpdatedAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       row.iGM_Id,
       row.iGM_UploaderId,
@@ -361,6 +377,9 @@ export function iGM_CreateResource(
       row.iGM_OriginalAuthor,
       row.iGM_OriginalUrl,
       row.iGM_Changelog,
+      row.iGM_Downloadable,
+      row.iGM_Slug,
+      row.iGM_Version,
       row.iGM_CreatedAt,
       row.iGM_UpdatedAt,
     ],
@@ -377,6 +396,37 @@ export function iGM_FindResourceById(id: string): iGM_ResourceRow | null {
   );
 }
 
+/**
+ * 按标识符查询资源：
+ * - UUID 走主键
+ * - 否则优先按 iGM_Slug 匹配（CLI 下载标识符，含 uid），
+ *   再回退按标题精确匹配（兼容旧资源）
+ * 供 iGM CLI 的 `/G_Resource/:identifier/download` 路由使用
+ */
+const iGM_UuidPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function iGM_FindResourceByIdentifier(
+  identifier: string,
+): iGM_ResourceRow | null {
+  const trimmed = identifier.trim();
+  if (!trimmed) return null;
+  if (iGM_UuidPattern.test(trimmed)) {
+    return iGM_FindResourceById(trimmed);
+  }
+  // 优先按 slug 匹配
+  const bySlug = iGM_Db
+    .query(`SELECT * FROM iGM_Resources WHERE iGM_Slug = ? LIMIT 1`)
+    .get(trimmed) as iGM_ResourceRow | undefined;
+  if (bySlug) return bySlug;
+  // 回退按标题精确匹配
+  return (
+    (iGM_Db
+      .query(`SELECT * FROM iGM_Resources WHERE iGM_Title = ? LIMIT 1`)
+      .get(trimmed) as iGM_ResourceRow | undefined) ?? null
+  );
+}
+
 /** 更新资源 */
 export function iGM_UpdateResource(
   id: string,
@@ -389,7 +439,9 @@ export function iGM_UpdateResource(
        iGM_Status = ?, iGM_ResourceType = ?,
        iGM_McVersions = ?, iGM_Loaders = ?, iGM_Platforms = ?,
        iGM_License = ?, iGM_OriginalAuthor = ?, iGM_OriginalUrl = ?,
-       iGM_Changelog = ?, iGM_UpdatedAt = ?
+       iGM_Changelog = ?,
+       iGM_Downloadable = ?, iGM_Slug = ?, iGM_Version = ?,
+       iGM_UpdatedAt = ?
      WHERE iGM_Id = ?`,
     [
       input.title,
@@ -407,6 +459,9 @@ export function iGM_UpdateResource(
       input.originalAuthor ?? null,
       input.originalUrl ?? null,
       input.changelog ?? null,
+      input.downloadable ? 1 : 0,
+      input.downloadable ? (input.slug ?? null) : null,
+      input.downloadable ? (input.version ?? null) : null,
       input.now,
       id,
     ],

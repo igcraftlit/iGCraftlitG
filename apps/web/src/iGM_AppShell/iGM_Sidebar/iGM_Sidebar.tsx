@@ -114,7 +114,8 @@ export function iGM_Sidebar({ open, onNavigate }: iGM_SidebarProps) {
   /** 递归渲染单个导航节点（叶子或树状父节点） */
   function iGM_RenderNavItem(item: iGM_NavItem, depth: number) {
     const Icon = item.icon;
-    const active = iGM_IsActive(pathname, item.href);
+    // 外链入口不参与站内高亮
+    const active = !item.external && iGM_IsActive(pathname, item.href);
     const hasChildren = !!item.children && item.children.length > 0;
     const expanded = hasChildren && iGM_IsOpen(item);
 
@@ -129,6 +130,9 @@ export function iGM_Sidebar({ open, onNavigate }: iGM_SidebarProps) {
             aria-current={active ? "page" : undefined}
             title={t(item.labelKey)}
             onClick={onNavigate}
+            {...(item.external
+              ? { target: "_blank", rel: "noopener noreferrer" }
+              : {})}
           >
             <span className={styles.navIcon}>
               <Icon

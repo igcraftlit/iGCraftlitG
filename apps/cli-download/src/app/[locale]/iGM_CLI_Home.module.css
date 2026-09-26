@@ -30,11 +30,22 @@
 }
 
 .heroTitle {
+  font-family: var(--font-cinzel), "Noto Serif SC", serif;
   font-size: 40px;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.03em;
   color: var(--igm-text);
   line-height: 1.2;
+}
+
+/* 大标题 API 三字：渐变蓝粉 */
+.heroTitleAccent {
+  font-family: inherit;
+  background: linear-gradient(120deg, #2f6bff 0%, #38bdf8 40%, #ec4899 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
 }
 
 .heroSubtitle {
@@ -47,6 +58,50 @@
   font-size: 15px;
   color: var(--igm-text-subtle);
   max-width: 560px;
+}
+
+/* Hero 跳转按钮 */
+.heroActions {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.ctaPrimary,
+.ctaSecondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--igm-radius);
+  font-size: 14px;
+  font-weight: 500;
+  transition:
+    background-color var(--igm-motion-nav) var(--igm-motion-ease),
+    border-color var(--igm-motion-nav) var(--igm-motion-ease),
+    box-shadow var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.ctaPrimary {
+  background: var(--igm-accent);
+  color: var(--igm-accent-contrast);
+}
+
+.ctaPrimary:hover {
+  background: var(--igm-accent-hover);
+}
+
+.ctaSecondary {
+  background: var(--igm-surface);
+  color: var(--igm-text);
+  border: 1px solid var(--igm-border);
+}
+
+.ctaSecondary:hover {
+  border-color: var(--igm-border-strong);
+  box-shadow: var(--igm-shadow-hover);
 }
 
 /* 平板适配 */

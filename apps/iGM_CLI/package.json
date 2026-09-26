@@ -1,0 +1,34 @@
+{
+  "name": "igm-cli",
+  "version": "0.1.3",
+  "description": "iGM CLI - iGCraftLit × MuoCeon 联合构建的命令行下载工具，用于检索、下载、更新、卸载 iGCraftLit Community 资源。",
+  "type": "module",
+  "main": "./build/iGM_CLIMain.js",
+  "bin": {
+    "igm": "build/iGM_CLIMain.js"
+  },
+  "files": [
+    "build"
+  ],
+  "scripts": {
+    "start": "node ./build/iGM_CLIMain.js"
+  },
+  "keywords": [
+    "igm",
+    "igcraftlit",
+    "cli",
+    "minecraft",
+    "mod",
+    "download"
+  ],
+  "author": "iGCraftLit Community",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iGCraftlitG/iGCraftlitG.git"
+  },
+  "homepage": "https://cli.igcraftlit.com",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
