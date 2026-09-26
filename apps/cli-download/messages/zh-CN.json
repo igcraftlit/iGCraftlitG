@@ -1,0 +1,48 @@
+{
+  "site": {
+    "name": "iGM CLI Download API",
+    "tagline": "iGCraftLit × MuoCeon 联合构建"
+  },
+  "nav": {
+    "overview": "概览",
+    "quickstart": "快速开始",
+    "commands": "命令",
+    "sdk": "SDK",
+    "api": "API",
+    "docs": "文档"
+  },
+  "hero": {
+    "title": "iGM CLI Download API",
+    "subtitle": "iGCraftLit × MuoCeon 联合构建",
+    "description": "极简、高效、可扩展的文件下载接口服务。"
+  },
+  "sections": {
+    "quickstart": "快速开始",
+    "commands": "命令列表",
+    "sdk": "SDK",
+    "adapter": "适配器协议"
+  },
+  "placeholder": "内容即将上线，敬请期待。",
+  "footer": {
+    "builtBy": "iGCraftLit × MuoCeon 联合构建",
+    "copyright": "© {year} iGM CLI Download API. 保留所有权利。"
+  },
+  "pages": {
+    "docs": {
+      "title": "文档"
+    },
+    "sdk": {
+      "title": "SDK"
+    },
+    "api": {
+      "title": "API"
+    },
+    "commands": {
+      "title": "命令"
+    }
+  },
+  "common": {
+    "backToHome": "返回首页",
+    "language": "语言"
+  }
+}

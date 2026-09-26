@@ -1,0 +1,36 @@
+/**
+ * 文件路径：apps/cli-download/src/components/iGM_CLI_Footer/iGM_CLI_Footer.module.css
+ * 所属层：前端 / 组件样式层
+ * 路由：全局
+ * 模块：iGM_CLI_Downloader
+ * 作用：站点页脚样式（团队署名、版权信息）
+ */
+
+/* 核心逻辑 */
+
+.footer {
+  border-top: 1px solid var(--igm-border);
+  background: var(--igm-surface);
+}
+
+.inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.builtBy {
+  font-size: 14px;
+  color: var(--igm-text);
+  font-weight: 500;
+}
+
+.copyright {
+  font-size: 13px;
+  color: var(--igm-text-subtle);
+}

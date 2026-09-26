@@ -1,0 +1,48 @@
+{
+  "site": {
+    "name": "iGM CLI Download API",
+    "tagline": "Built by iGCraftLit × MuoCeon"
+  },
+  "nav": {
+    "overview": "Overview",
+    "quickstart": "Quick Start",
+    "commands": "Commands",
+    "sdk": "SDK",
+    "api": "API",
+    "docs": "Docs"
+  },
+  "hero": {
+    "title": "iGM CLI Download API",
+    "subtitle": "Built by iGCraftLit × MuoCeon",
+    "description": "A minimal, efficient, and extensible file download interface service."
+  },
+  "sections": {
+    "quickstart": "Quick Start",
+    "commands": "Command List",
+    "sdk": "SDK",
+    "adapter": "Adapter Protocol"
+  },
+  "placeholder": "Content coming soon. Stay tuned.",
+  "footer": {
+    "builtBy": "Built by iGCraftLit × MuoCeon",
+    "copyright": "© {year} iGM CLI Download API. All rights reserved."
+  },
+  "pages": {
+    "docs": {
+      "title": "Documentation"
+    },
+    "sdk": {
+      "title": "SDK"
+    },
+    "api": {
+      "title": "API"
+    },
+    "commands": {
+      "title": "Commands"
+    }
+  },
+  "common": {
+    "backToHome": "Back to Home",
+    "language": "Language"
+  }
+}

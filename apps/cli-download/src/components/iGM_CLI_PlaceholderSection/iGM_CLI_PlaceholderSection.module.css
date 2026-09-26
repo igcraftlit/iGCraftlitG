@@ -1,0 +1,58 @@
+/**
+ * 文件路径：apps/cli-download/src/components/iGM_CLI_PlaceholderSection/iGM_CLI_PlaceholderSection.module.css
+ * 所属层：前端 / 组件样式层
+ * 路由：全局
+ * 模块：iGM_CLI_Downloader
+ * 作用：内容占位区块样式（占位标题 + 占位提示，响应式留白）
+ */
+
+/* 核心逻辑 */
+
+.section {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 56px 20px;
+  scroll-margin-top: 72px;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--igm-text);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.titleIcon {
+  color: var(--igm-accent);
+  display: flex;
+}
+
+.body {
+  border: 1px dashed var(--igm-border-strong);
+  border-radius: var(--igm-radius-lg);
+  background: var(--igm-surface);
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+}
+
+.placeholderText {
+  color: var(--igm-text-subtle);
+  font-size: 14px;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .section {
+    padding: 40px 16px;
+  }
+
+  .title {
+    font-size: 19px;
+  }
+}

@@ -4,11 +4,25 @@
   "workspaces": {
     "": {
       "name": "igcraftlit-community",
-      "dependencies": {
-        "recharts": "^3.10.1",
-      },
       "devDependencies": {
         "concurrently": "9.1.2",
+        "typescript": "5.9.2",
+      },
+    },
+    "apps/cli-download": {
+      "name": "igcraftlit-cli-download",
+      "version": "0.1.0",
+      "dependencies": {
+        "lucide-react": "1.47.0",
+        "next": "16.3.5",
+        "next-intl": "4.14.5",
+        "react": "19.3.0",
+        "react-dom": "19.3.0",
+      },
+      "devDependencies": {
+        "@types/node": "24.6.0",
+        "@types/react": "19.3.0",
+        "@types/react-dom": "19.3.0",
         "typescript": "5.9.2",
       },
     },
@@ -337,6 +351,8 @@
     "icu-minify": ["icu-minify@4.14.5", "", { "dependencies": { "@formatjs/icu-messageformat-parser": "^3.4.0" } }, "sha512-5RQ5fP5inR+VZRTR4KwYBzy217ua4E9lxBT+zFHZcJv0dTOtRs9xXECSIWMQHAfmd0Hq2RXSSP2Gmyw/oQQY6A=="],
 
     "ieee754": ["ieee754@1.2.1", "", {}, "sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA=="],
+
+    "igcraftlit-cli-download": ["igcraftlit-cli-download@workspace:apps/cli-download"],
 
     "igcraftlit-server": ["igcraftlit-server@workspace:iGM_Server"],
 

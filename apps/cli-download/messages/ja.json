@@ -1,0 +1,48 @@
+{
+  "site": {
+    "name": "iGM CLI Download API",
+    "tagline": "iGCraftLit × MuoCeon 共同構築"
+  },
+  "nav": {
+    "overview": "概要",
+    "quickstart": "クイックスタート",
+    "commands": "コマンド",
+    "sdk": "SDK",
+    "api": "API",
+    "docs": "ドキュメント"
+  },
+  "hero": {
+    "title": "iGM CLI Download API",
+    "subtitle": "iGCraftLit × MuoCeon 共同構築",
+    "description": "最小限で効率的かつ拡張可能なファイルダウンロードインターフェースサービス。"
+  },
+  "sections": {
+    "quickstart": "クイックスタート",
+    "commands": "コマンド一覧",
+    "sdk": "SDK",
+    "adapter": "アダプタープロトコル"
+  },
+  "placeholder": "コンテンツは近日公開予定です。お楽しみに。",
+  "footer": {
+    "builtBy": "iGCraftLit × MuoCeon 共同構築",
+    "copyright": "© {year} iGM CLI Download API. All rights reserved."
+  },
+  "pages": {
+    "docs": {
+      "title": "ドキュメント"
+    },
+    "sdk": {
+      "title": "SDK"
+    },
+    "api": {
+      "title": "API"
+    },
+    "commands": {
+      "title": "コマンド"
+    }
+  },
+  "common": {
+    "backToHome": "ホームへ戻る",
+    "language": "言語"
+  }
+}

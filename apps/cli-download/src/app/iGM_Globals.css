@@ -1,0 +1,119 @@
+/**
+ * 文件路径：apps/cli-download/src/app/iGM_Globals.css
+ * 所属层：前端 / 全局样式层
+ * 路由：全局
+ * 模块：iGM_CLI_Downloader
+ * 作用：iGM CLI Download API 站点全局 CSS 变量与基础样式
+ * 内容：中性灰阶色板、单一强调色、字号/圆角/间距基线、基础重置
+ */
+
+/* 导入依赖 */
+/* （无外部样式依赖） */
+
+/* 类型定义 */
+/* （样式文件无类型） */
+
+/* 核心逻辑 */
+
+/* 浅色主题变量（默认） */
+:root,
+html[data-theme="light"] {
+  --igm-bg: #f7f7f8;
+  --igm-surface: #ffffff;
+  --igm-surface-subtle: #f1f1f3;
+  --igm-border: #e4e4e7;
+  --igm-border-strong: #d4d4d8;
+  --igm-text: #18181b;
+  --igm-text-muted: #71717a;
+  --igm-text-subtle: #a1a1aa;
+  --igm-accent: #2563eb;
+  --igm-accent-hover: #1d4ed8;
+  --igm-accent-contrast: #ffffff;
+  --igm-accent-soft: rgba(37, 99, 235, 0.08);
+  --igm-danger: #dc2626;
+  --igm-success: #16a34a;
+  --igm-shadow: 0 1px 2px rgba(24, 24, 27, 0.06);
+  --igm-shadow-hover: 0 4px 16px rgba(24, 24, 27, 0.1);
+  --igm-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", sans-serif;
+  --igm-radius: 8px;
+  --igm-radius-lg: 12px;
+  --igm-motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --igm-motion-nav: 200ms;
+}
+
+/* 深色主题变量 */
+html[data-theme="dark"] {
+  --igm-bg: #0c0c0e;
+  --igm-surface: #161618;
+  --igm-surface-subtle: #1d1d20;
+  --igm-border: #2a2a2e;
+  --igm-border-strong: #3a3a40;
+  --igm-text: #ededef;
+  --igm-text-muted: #9b9ba3;
+  --igm-text-subtle: #6b6b74;
+  --igm-accent: #60a5fa;
+  --igm-accent-hover: #93c5fd;
+  --igm-accent-contrast: #0c0c0e;
+  --igm-accent-soft: rgba(96, 165, 250, 0.12);
+  --igm-danger: #f87171;
+  --igm-success: #4ade80;
+  --igm-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --igm-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+/* 基础重置 */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--igm-bg);
+  color: var(--igm-text);
+  font-family: var(--igm-font-sans);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color var(--igm-motion-nav) var(--igm-motion-ease),
+    color var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--igm-accent);
+  outline-offset: 2px;
+}
+
+/* 无障碍：系统偏好减少动态 */
+@media (prefers-reduced-motion: reduce) {
+  body {
+    transition: none;
+  }
+}

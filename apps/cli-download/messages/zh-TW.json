@@ -1,0 +1,48 @@
+{
+  "site": {
+    "name": "iGM CLI Download API",
+    "tagline": "iGCraftLit × MuoCeon 聯合構建"
+  },
+  "nav": {
+    "overview": "概覽",
+    "quickstart": "快速開始",
+    "commands": "命令",
+    "sdk": "SDK",
+    "api": "API",
+    "docs": "文件"
+  },
+  "hero": {
+    "title": "iGM CLI Download API",
+    "subtitle": "iGCraftLit × MuoCeon 聯合構建",
+    "description": "極簡、高效、可擴展的檔案下載介面服務。"
+  },
+  "sections": {
+    "quickstart": "快速開始",
+    "commands": "命令列表",
+    "sdk": "SDK",
+    "adapter": "介面卡協定"
+  },
+  "placeholder": "內容即將上線，敬請期待。",
+  "footer": {
+    "builtBy": "iGCraftLit × MuoCeon 聯合構建",
+    "copyright": "© {year} iGM CLI Download API. 保留所有權利。"
+  },
+  "pages": {
+    "docs": {
+      "title": "文件"
+    },
+    "sdk": {
+      "title": "SDK"
+    },
+    "api": {
+      "title": "API"
+    },
+    "commands": {
+      "title": "命令"
+    }
+  },
+  "common": {
+    "backToHome": "返回首頁",
+    "language": "語言"
+  }
+}

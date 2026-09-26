@@ -1,0 +1,72 @@
+/**
+ * 文件路径：apps/cli-download/src/app/[locale]/iGM_CLI_Home.module.css
+ * 所属层：前端 / 页面样式层
+ * 路由：/{locale}
+ * 模块：iGM_CLI_Downloader
+ * 作用：主页面 Hero 区样式（大标题、副标题、一句话简介占位）
+ */
+
+/* 核心逻辑 */
+
+.hero {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 96px 20px 64px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.heroIcon {
+  color: var(--igm-accent);
+  display: flex;
+  padding: 14px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  background: var(--igm-surface);
+  box-shadow: var(--igm-shadow);
+}
+
+.heroTitle {
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--igm-text);
+  line-height: 1.2;
+}
+
+.heroSubtitle {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--igm-text-muted);
+}
+
+.heroDescription {
+  font-size: 15px;
+  color: var(--igm-text-subtle);
+  max-width: 560px;
+}
+
+/* 平板适配 */
+@media (max-width: 1024px) {
+  .hero {
+    padding: 72px 20px 48px;
+  }
+
+  .heroTitle {
+    font-size: 34px;
+  }
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .hero {
+    padding: 56px 16px 40px;
+  }
+
+  .heroTitle {
+    font-size: 28px;
+  }
+}

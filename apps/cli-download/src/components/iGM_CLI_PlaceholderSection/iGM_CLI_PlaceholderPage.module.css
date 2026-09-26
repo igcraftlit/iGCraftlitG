@@ -1,0 +1,73 @@
+/**
+ * 文件路径：apps/cli-download/src/components/iGM_CLI_PlaceholderSection/iGM_CLI_PlaceholderPage.module.css
+ * 所属层：前端 / 组件样式层
+ * 路由：全局
+ * 模块：iGM_CLI_Downloader
+ * 作用：独立占位页样式（页面标题 + 返回首页链接）
+ */
+
+/* 核心逻辑 */
+
+.page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 72px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+}
+
+.icon {
+  color: var(--igm-accent);
+  display: flex;
+  padding: 14px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  background: var(--igm-surface);
+  box-shadow: var(--igm-shadow);
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.placeholder {
+  color: var(--igm-text-subtle);
+  font-size: 14px;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px 16px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius);
+  background: var(--igm-surface);
+  color: var(--igm-text);
+  font-size: 14px;
+  transition:
+    border-color var(--igm-motion-nav) var(--igm-motion-ease),
+    box-shadow var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.backLink:hover {
+  border-color: var(--igm-border-strong);
+  box-shadow: var(--igm-shadow-hover);
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .page {
+    padding: 48px 16px;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "site": {
+    "name": "iGM CLI Download API",
+    "tagline": "Совместно создано iGCraftLit × MuoCeon"
+  },
+  "nav": {
+    "overview": "Обзор",
+    "quickstart": "Быстрый старт",
+    "commands": "Команды",
+    "sdk": "SDK",
+    "api": "API",
+    "docs": "Документация"
+  },
+  "hero": {
+    "title": "iGM CLI Download API",
+    "subtitle": "Совместно создано iGCraftLit × MuoCeon",
+    "description": "Минималистичный, эффективный и расширяемый сервис интерфейса загрузки файлов."
+  },
+  "sections": {
+    "quickstart": "Быстрый старт",
+    "commands": "Список команд",
+    "sdk": "SDK",
+    "adapter": "Протокол адаптера"
+  },
+  "placeholder": "Контент скоро появится. Оставайтесь с нами.",
+  "footer": {
+    "builtBy": "Совместно создано iGCraftLit × MuoCeon",
+    "copyright": "© {year} iGM CLI Download API. Все права защищены."
+  },
+  "pages": {
+    "docs": {
+      "title": "Документация"
+    },
+    "sdk": {
+      "title": "SDK"
+    },
+    "api": {
+      "title": "API"
+    },
+    "commands": {
+      "title": "Команды"
+    }
+  },
+  "common": {
+    "backToHome": "Вернуться на главную",
+    "language": "Язык"
+  }
+}
