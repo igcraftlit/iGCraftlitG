@@ -1,0 +1,79 @@
+/*
+ * 文件路径：apps/web/src/iGM_AppShell/iGM_MobileTabBar/iGM_MobileTabBar.module.css
+ * 所属层：前端 / 应用骨架样式
+ * 路由：全局（仅 < 768px 显示）
+ * 模块：iGM_MobileTabBar
+ * 作用：移动端底部标签栏样式
+ * 内容：固定底部、安全区适配、等价分栏、图标+文案、当前路由高亮；
+ *       平板及以上隐藏
+ */
+
+/* 底部标签栏：移动端固定底部，平板及桌面隐藏 */
+.tabBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 35;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
+  height: calc(var(--igm-tabbar-height) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--igm-surface);
+  border-top: 1px solid var(--igm-border);
+}
+
+/* 单个标签：图标在上、文案在下，等宽均分 */
+.tabItem {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: var(--igm-text-muted);
+  transition: color var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.tabItem:hover {
+  color: var(--igm-text);
+}
+
+/* 当前路由高亮 */
+.tabItemActive,
+.tabItemActive:hover {
+  color: var(--igm-accent);
+}
+
+.tabIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 文案：小号，超长省略，避免撑破分栏 */
+.tabLabel {
+  max-width: 100%;
+  padding: 0 2px;
+  font-size: 11px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 平板及以上：不显示底部标签栏（改用侧边导航） */
+@media (min-width: 768px) {
+  .tabBar {
+    display: none;
+  }
+}
+
+/* 无障碍：减少动态时不做颜色过渡 */
+@media (prefers-reduced-motion: reduce) {
+  .tabItem {
+    transition: none;
+  }
+}

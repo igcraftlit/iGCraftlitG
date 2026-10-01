@@ -261,6 +261,10 @@
       "title": "申请状态",
       "description": "查看开发者申请状态与接入资格"
     },
+    "developerPortal": {
+      "title": "开发者平台",
+      "description": "开发者申请通过后直接进入的平台入口，管理 OAuth 应用、查看接入文档与 SDK"
+    },
     "developerReview": {
       "title": "开发者申请审核",
       "description": "审核开发者申请，通过或拒绝并填写审核意见；通过后申请人即可进入开发者接入界面"
@@ -1255,6 +1259,24 @@
       "approved": "申请已通过",
       "rejected": "申请已被拒绝"
     },
+    "portal": {
+      "title": "开发者平台",
+      "description": "管理 OAuth 应用、查阅接入文档与 SDK，并使用开发者接口。",
+      "loadFailed": "开发者平台会话校验失败，请稍后重试",
+      "retry": "重试",
+      "uid": "iGMUid",
+      "username": "用户名",
+      "displayName": "昵称",
+      "appsTitle": "应用管理",
+      "appsDesc": "查看与维护你提交的 OAuth 应用、重置 client_secret、查看接入日志。",
+      "docsTitle": "接入文档",
+      "docsDesc": "OAuth 2.0 / OpenID Connect 接入规范与接口说明。",
+      "sdkTitle": "SDK 下载",
+      "sdkDesc": "下载开发者 SDK 与适配器协议文档。",
+      "logout": "退出开发者平台",
+      "notDeveloper": "你尚未通过开发者申请，通过后即可直接进入开发者平台。",
+      "becomeDeveloper": "成为开发者"
+    },
     "capabilities": {
       "sdk": {
         "title": "SDK",
@@ -1347,6 +1369,7 @@
     },
     "errors": {
       "badRequest": "请求参数有误",
+      "notDeveloper": "你还不是开发者，暂无权限使用该功能",
       "projectNameInvalid": "项目名称不能为空且不超过 60 个字符",
       "projectTypeInvalid": "项目类型不合法",
       "projectDescInvalid": "项目描述不能为空且不超过 1000 个字符",

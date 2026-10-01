@@ -28,6 +28,7 @@ import {
   iGM_AdminListDevelopersService,
   iGM_DeveloperError,
   iGM_GetMyDeveloperService,
+  iGM_IsApprovedDeveloper,
   iGM_IsDeveloperReviewer,
   iGM_ListMyDevelopersService,
   iGM_ReviewDeveloperService,
@@ -155,6 +156,23 @@ async function iGM_HandleReview(ctx: iGM_RouteContext) {
   );
 }
 
+/* ---------- 模块二十二：开发者平台准入状态（登录即可进入，无需密钥） ---------- */
+
+/**
+ * GET /api/developer/status：开发者平台准入校验。
+ * 已登录且开发者申请已通过即视为开发者，可直接进入开发者平台；
+ * 未通过时返回 isDeveloper=false，由前端引导至申请页。
+ */
+async function iGM_HandleDeveloperStatus(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
+  return iGM_Ok({
+    isDeveloper: await iGM_IsApprovedDeveloper(user.iGM_Id),
+    uid: user.iGM_Uid,
+    username: user.iGM_Username,
+    displayName: user.iGM_DisplayName,
+  });
+}
+
 /**
  * G_Developer 开发者申请路由集合
  * 业务错误统一抛 iGM_DeveloperError / iGM_AuthError，
@@ -167,7 +185,9 @@ export const G_Developer = new Elysia({ name: "G_Developer" })
   .get("/G_Developer/me", iGM_HandleMyDeveloper as never)
   .post("/G_Developer/withdraw", iGM_HandleWithdraw as never)
   .get("/G_Developer/applications", iGM_HandleApplications as never)
-  .post("/G_Developer/review", iGM_HandleReview as never);
+  .post("/G_Developer/review", iGM_HandleReview as never)
+  // 模块二十二：开发者平台准入状态（登录即可进入，无需密钥）
+  .get("/api/developer/status", iGM_HandleDeveloperStatus as never);
 
 // 导出 //
 export default G_Developer;

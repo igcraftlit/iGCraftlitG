@@ -36,11 +36,13 @@ import styles from "./iGM_TopBar.module.css";
 interface iGM_TopBarProps {
   /** 打开移动端导航抽屉 */
   onOpenMenu: () => void;
+  /** 移动端抽屉当前是否打开（用于无障碍 aria-expanded，桌面端忽略） */
+  drawerOpen?: boolean;
 }
 
 // 核心逻辑 //
 /** 顶部栏 */
-export function iGM_TopBar({ onOpenMenu }: iGM_TopBarProps) {
+export function iGM_TopBar({ onOpenMenu, drawerOpen = false }: iGM_TopBarProps) {
   const t = useTranslations();
   const { status, user, logout } = iGM_UseAuth();
   const router = iGM_UseLocaleRouter();
@@ -109,6 +111,8 @@ export function iGM_TopBar({ onOpenMenu }: iGM_TopBarProps) {
           type="button"
           className={styles.menuButton}
           aria-label={t("topbar.menu")}
+          aria-expanded={drawerOpen}
+          aria-controls="igm-sidebar"
           onClick={onOpenMenu}
         >
           <Menu size={20} strokeWidth={1.8} />

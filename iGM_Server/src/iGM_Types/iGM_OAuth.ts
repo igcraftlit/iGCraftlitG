@@ -14,13 +14,14 @@
 // （本文件仅包含类型与常量，无运行时依赖）
 
 // 类型定义 //
-/** 应用状态：pending 待审核 / approved 已通过 / rejected 已拒绝 / disabled 已禁用 / withdrawn 已撤回 */
+/** 应用状态：pending 待审核 / approved 已通过 / rejected 已拒绝 / disabled 已禁用 / withdrawn 已撤回 / deleted 已删除 */
 export type iGM_OAuthClientStatus =
   | "pending"
   | "approved"
   | "rejected"
   | "disabled"
-  | "withdrawn";
+  | "withdrawn"
+  | "deleted";
 
 /** 应用类型：web 网页 / desktop 桌面 / mobile 移动 / service 服务端 / other 其他 */
 export type iGM_OAuthClientType =
@@ -54,6 +55,10 @@ export interface iGM_OAuthClientRow {
   iGM_ReviewerId: string | null;
   iGM_ReviewComment: string | null;
   iGM_SecretRotatedAt: string | null;
+  /** 模块二十二：是否为本地测试用途（1 时允许 http://localhost 等回调） */
+  iGM_IsLocalTest: number;
+  /** 模块二十二：软删除时间（非 NULL 表示已删除，行保留以占用 client_id） */
+  iGM_DeletedAt: string | null;
   iGM_CreatedAt: string;
   iGM_UpdatedAt: string;
 }
@@ -74,6 +79,10 @@ export interface iGM_OAuthClientDto {
   reviewerId: string | null;
   reviewComment: string | null;
   secretRotatedAt: string | null;
+  /** 模块二十二：是否为本地测试用途（前端展示「仅开发调试使用」标签） */
+  isLocalTest: boolean;
+  /** 模块二十二：软删除时间（未删除为 null） */
+  deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -174,6 +183,8 @@ export interface iGM_OAuthApplyInput {
   purpose: string;
   contact: string;
   agreeRules: boolean;
+  /** 模块二十二：是否为本地测试用途（勾选后允许 http://localhost 等回调） */
+  localTest: boolean;
 }
 
 // 核心逻辑 //

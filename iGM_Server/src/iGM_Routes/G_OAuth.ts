@@ -48,6 +48,7 @@ import {
   iGM_ApproveAuthorizationService,
   iGM_BuildRedirect,
   iGM_DeleteOAuthClientService,
+  iGM_DeleteOwnOAuthClientService,
   iGM_DenyAuthorizationService,
   iGM_ExchangeAuthorizationCodeService,
   iGM_GetAuthorizeInfoService,
@@ -452,6 +453,7 @@ async function iGM_HandleApply(ctx: iGM_RouteContext) {
     purpose: iGM_Field(ctx.body, "purpose"),
     contact: iGM_Field(ctx.body, "contact"),
     agreeRules: iGM_BoolField(ctx.body, "agreeRules"),
+    localTest: iGM_BoolField(ctx.body, "localTest"),
   };
   return iGM_Ok(
     await iGM_SubmitOAuthApplyService(user, input),
@@ -558,6 +560,28 @@ async function iGM_HandleAdminDelete(ctx: iGM_RouteContext) {
   return iGM_Ok({ clientId }, "oauth.messages.deleted");
 }
 
+/* ---------- 模块二十二：OAuth 应用删除（软删除） ---------- */
+
+/**
+ * DELETE /api/oauth/clients/:id
+ * 应用所有者可删除本人应用；管理员可删除任意应用。
+ * 软删除：客户端记录标记为 deleted，令牌 / 授权 / 授权码立即失效，
+ * 行保留以占用 client_id（已删除的 client_id 不可再次使用）。
+ */
+async function iGM_HandleDeleteClient(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
+  const clientId = (ctx.params?.id ?? "").trim();
+  if (!clientId) throw new iGM_OAuthError("oauth.errors.badRequest", 422);
+  iGM_EnforceRateLimit(ctx, "oauthAppWrite", `user:${user.iGM_Id}`);
+  const ip = iGM_ClientIp(ctx);
+  if (user.iGM_Role === "admin") {
+    await iGM_DeleteOAuthClientService(user, clientId, ip);
+  } else {
+    await iGM_DeleteOwnOAuthClientService(user, clientId, ip);
+  }
+  return iGM_Ok({ clientId }, "oauth.messages.deleted");
+}
+
 /* ---------- 站内端点：用户授权管理 ---------- */
 
 /** GET /G_OAuth/consents/mine：我授权过的应用列表 */
@@ -592,6 +616,8 @@ export const G_OAuth = new Elysia({ name: "G_OAuth" })
   .get("/G_OAuth/apps/mine", iGM_HandleMyApps as never)
   .post("/G_OAuth/apps/withdraw", iGM_HandleWithdraw as never)
   .post("/G_OAuth/apps/reset-secret", iGM_HandleResetSecret as never)
+  // 模块二十二：应用删除（软删除，所有者或管理员）
+  .delete("/api/oauth/clients/:id", iGM_HandleDeleteClient as never)
   .get("/G_OAuth/apps/logs", iGM_HandleMyLogs as never)
   .get("/G_OAuth/admin/apps", iGM_HandleAdminList as never)
   .post("/G_OAuth/admin/review", iGM_HandleAdminReview as never)

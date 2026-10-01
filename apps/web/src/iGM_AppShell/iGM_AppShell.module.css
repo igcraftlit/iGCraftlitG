@@ -19,6 +19,13 @@
   min-height: 100vh;
 }
 
+/* 移动端：为固定底部标签栏预留空间，避免页脚与内容被遮挡 */
+@media (max-width: 767.98px) {
+  .column {
+    padding-bottom: calc(var(--igm-tabbar-height) + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 /* 平板端：为图标栏预留宽度 */
 @media (min-width: 768px) {
   .column {

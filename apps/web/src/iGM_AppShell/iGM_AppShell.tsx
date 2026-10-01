@@ -13,12 +13,13 @@
 // 导入依赖 //
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { iGM_IsShellExemptPath } from "../iGM_i18n/iGM_LocalePath";
 import { iGM_Sidebar as IGM_Sidebar } from "./iGM_Sidebar/iGM_Sidebar";
 import { iGM_TopBar as IGM_TopBar } from "./iGM_TopBar/iGM_TopBar";
+import { iGM_MobileTabBar as IGM_MobileTabBar } from "./iGM_MobileTabBar/iGM_MobileTabBar";
 import { iGM_Footer as IGM_Footer } from "../iGM_Components/iGM_Footer/iGM_Footer";
 import styles from "./iGM_AppShell.module.css";
 
@@ -32,6 +33,7 @@ interface iGM_AppShellProps {
 const IGM_ConsoleShell = function iGM_ConsoleShell({
   children,
 }: iGM_AppShellProps) {
+  const pathname = usePathname();
   // 移动端抽屉开关状态（桌面端布局不受此状态影响）
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -42,6 +44,15 @@ const IGM_ConsoleShell = function iGM_ConsoleShell({
       document.body.style.overflow = "";
     };
   }, [drawerOpen]);
+
+  // 路由切换后自动关闭抽屉：从任意入口跳转（含浏览器前进/后退）均收拢抽屉
+  const iGM_PreviousPath = useRef(pathname);
+  useEffect(() => {
+    if (iGM_PreviousPath.current !== pathname) {
+      iGM_PreviousPath.current = pathname;
+      setDrawerOpen(false);
+    }
+  }, [pathname]);
 
   return (
     <div className={styles.shell}>
@@ -57,10 +68,16 @@ const IGM_ConsoleShell = function iGM_ConsoleShell({
       )}
 
       <div className={styles.column}>
-        <IGM_TopBar onOpenMenu={() => setDrawerOpen(true)} />
+        <IGM_TopBar
+          onOpenMenu={() => setDrawerOpen(true)}
+          drawerOpen={drawerOpen}
+        />
         <main className={styles.main}>{children}</main>
         <IGM_Footer />
       </div>
+
+      {/* 移动端专属底部标签栏（< 768px 显示，内容区已预留底部内边距） */}
+      <IGM_MobileTabBar />
     </div>
   );
 };

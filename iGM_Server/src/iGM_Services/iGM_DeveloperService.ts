@@ -95,6 +95,17 @@ async function iGM_ResolveReviewerNames(
 }
 
 /**
+ * 模块二十二：是否已通过开发者申请（以最近一条申请状态为准）。
+ * 账户设置与开发者平台均以此判定开发者身份。
+ */
+export async function iGM_IsApprovedDeveloper(
+  userId: string,
+): Promise<boolean> {
+  const latest = await iGM_FindLatestDeveloperApplicationByUser(userId);
+  return latest?.iGM_Status === "approved";
+}
+
+/**
  * 是否具备开发者申请审核资格：管理员，或受信任组织负责人。
  * 组织负责人判定复用 iGM_Organizations.iGM_OwnerEmail 与用户邮箱比对。
  */
@@ -329,6 +340,7 @@ export async function iGM_ReviewDeveloperService(
 
 // 导出 //
 export default {
+  iGM_IsApprovedDeveloper,
   iGM_IsDeveloperReviewer,
   iGM_SubmitDeveloperApplyService,
   iGM_GetMyDeveloperService,

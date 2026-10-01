@@ -12,6 +12,7 @@
 import {
   iGM_CLI_Get,
   iGM_CLI_Post,
+  iGM_CLI_Request,
   iGM_CLI_RequestError,
   type iGM_CLI_ApiResponse,
 } from "./iGM_CLI_Request";
@@ -69,6 +70,8 @@ export interface iGM_CLI_OAuthApplication {
   reviewerId: string | null;
   reviewComment: string | null;
   secretRotatedAt: string | null;
+  /** 是否为本地测试用途应用（回调地址允许 http://localhost 等本地地址） */
+  isLocalTest: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -107,6 +110,8 @@ export interface iGM_CLI_OAuthApplyPayload {
   purpose: string;
   contact: string;
   agreeRules: boolean;
+  /** 本地测试用途：为 true 时允许 http://localhost / 127.0.0.1 / [::1] 回调地址 */
+  localTest: boolean;
 }
 
 /** next-intl 翻译函数的最简契约 */
@@ -156,6 +161,18 @@ export function iGM_CLI_ApiResetOAuthSecret(
   clientId: string,
 ): Promise<iGM_CLI_ApiResponse<{ clientId: string; clientSecret: string }>> {
   return iGM_CLI_Post("/G_OAuth/apps/reset-secret", { clientId });
+}
+
+/**
+ * 删除本人 OAuth 应用（登录，应用所有者或管理员）。
+ * 删除会同时撤销该应用的全部授权与令牌，且 client_id 不可再次使用。
+ */
+export function iGM_CLI_ApiDeleteOAuthApp(
+  clientId: string,
+): Promise<iGM_CLI_ApiResponse<{ clientId: string }>> {
+  return iGM_CLI_Request(`/api/oauth/clients/${clientId}`, {
+    method: "DELETE",
+  });
 }
 
 /** 查看本人应用的接入日志（登录，分页） */
@@ -214,6 +231,7 @@ export default {
   iGM_CLI_ApiListMyOAuthApps,
   iGM_CLI_ApiWithdrawOAuthApp,
   iGM_CLI_ApiResetOAuthSecret,
+  iGM_CLI_ApiDeleteOAuthApp,
   iGM_CLI_ApiListMyOAuthLogs,
   iGM_CLI_ApiGetMe,
   iGM_CLI_ResolveErrorText,

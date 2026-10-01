@@ -1,0 +1,123 @@
+/*
+ * 文件路径：apps/web/src/iGM_Pages/G_DeveloperPortal/iGM_DeveloperPortal.module.css
+ * 所属层：前端 / 页面样式
+ * 路由：/G_DeveloperPortal
+ * 模块：G_DeveloperPortal
+ * 作用：开发者平台页样式——会话信息卡与入口卡片栅格
+ * 内容：信息行、入口卡片、卡片图标、状态徽标
+ */
+
+/* 核心逻辑 */
+
+.infoCard {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 18px;
+  background: var(--igm-surface);
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  box-shadow: var(--igm-shadow);
+}
+
+.infoRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+}
+
+.infoRow + .infoRow {
+  border-top: 1px solid var(--igm-border);
+}
+
+.infoLabel {
+  font-size: 13px;
+  color: var(--igm-text-muted);
+  flex-shrink: 0;
+}
+
+.infoValue {
+  font-size: 13px;
+  color: var(--igm-text);
+  text-align: right;
+  word-break: break-all;
+  font-variant-numeric: tabular-nums;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.linkCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px;
+  background: var(--igm-surface);
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  box-shadow: var(--igm-shadow);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.linkCard:hover {
+  border-color: var(--igm-border-strong);
+}
+
+.linkIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--igm-accent);
+}
+
+.linkBody {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.linkTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.linkDesc {
+  font-size: 12.5px;
+  color: var(--igm-text-subtle);
+  line-height: 1.5;
+}
+
+.actionRow {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ghostButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border: 1px solid var(--igm-border-strong);
+  border-radius: var(--igm-radius);
+  background: var(--igm-surface);
+  color: var(--igm-text);
+  font-size: 13px;
+  transition: border-color 0.15s ease;
+}
+
+.ghostButton:hover:not(:disabled) {
+  border-color: var(--igm-accent);
+}
+
+.ghostButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

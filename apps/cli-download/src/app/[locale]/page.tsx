@@ -25,6 +25,7 @@ import {
 import { iGM_CLI_GetMessages } from "../../i18n/iGM_CLI_Messages";
 import { iGM_CLI_IsLocale } from "../../i18n/iGM_CLI_Locales";
 import { iGM_CLI_LocalePath } from "../../i18n/iGM_CLI_LocalePath";
+import { iGM_CLI_DeveloperPortalButton as IGM_CLI_DeveloperPortalButton } from "../../components/iGM_CLI_DeveloperPortalButton/iGM_CLI_DeveloperPortalButton";
 import styles from "./iGM_CLI_Home.module.css";
 
 // 类型定义 //
@@ -125,6 +126,7 @@ export default async function iGM_CLI_HomePage({ params }: iGM_CLI_HomePageProps
             <BookOpen size={16} aria-hidden />
             {messages.nav.docs}
           </Link>
+          <IGM_CLI_DeveloperPortalButton className={styles.ctaSecondary} />
         </div>
       </section>
 

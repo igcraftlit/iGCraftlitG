@@ -45,6 +45,7 @@ html[data-theme="light"] {
   --igm-sidebar-width: 256px;
   --igm-sidebar-width-rail: 72px;
   --igm-topbar-height: 60px;
+  --igm-tabbar-height: 56px; /* 移动端底部标签栏高度（安全区另计） */
 
   /* 动效令牌：与 iGM_TransitionVariants.ts 数值保持一致
      统一 ease-out 曲线，时长收敛在 200–400ms，干净无拖影 */
@@ -172,5 +173,50 @@ html[data-igm-theme-anim="active"] body {
 
   body {
     transition: none;
+  }
+}
+
+/* ===== 移动端全局响应式规则（< 768px） =====
+   统一处理横向溢出、表格/代码/长内容滚动、触屏点击区；
+   桌面端（≥ 1024px）与平板端不受影响 */
+@media (max-width: 767.98px) {
+  /* 兜底：禁止意外横向滚动（clip 不建立滚动容器，避免破坏 sticky 顶栏） */
+  html,
+  body {
+    overflow-x: clip;
+  }
+
+  /* 表格：窄屏在自身容器内横向滚动，不撑破页面 */
+  table {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 代码块 / 命令示例 / 长 URL / 长密钥：允许横向滚动，禁止撑破容器 */
+  pre {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 长串（URL / 密钥 / 文件路径）在窄屏可换行，避免撑破容器 */
+  p,
+  li,
+  dd,
+  dt,
+  td,
+  th {
+    overflow-wrap: anywhere;
+  }
+
+  /* 媒体元素不超出容器 */
+  img,
+  video,
+  canvas,
+  iframe {
+    max-width: 100%;
   }
 }

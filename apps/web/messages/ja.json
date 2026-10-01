@@ -261,6 +261,10 @@
       "title": "申請状況",
       "description": "開発者申請の状況と接続資格を確認"
     },
+    "developerPortal": {
+      "title": "開発者ポータル",
+      "description": "開発者申請の承認後すぐに入場できるポータル。OAuth アプリの管理、連携ドキュメントと SDK を提供"
+    },
     "developerReview": {
       "title": "開発者申請の審査",
       "description": "開発者申請を審査し、コメント付きで承認または却下します。承認後、申請者は開発者コンソールにアクセスできます"
@@ -1255,6 +1259,24 @@
       "approved": "申請が承認されました",
       "rejected": "申請が却下されました"
     },
+    "portal": {
+      "title": "開発者ポータル",
+      "description": "OAuth アプリの管理、連携ドキュメントと SDK の閲覧、開発者 API の利用を行います。",
+      "loadFailed": "開発者ポータルセッションの検証に失敗しました。しばらくして再試行してください。",
+      "retry": "再試行",
+      "uid": "iGMUid",
+      "username": "ユーザー名",
+      "displayName": "表示名",
+      "appsTitle": "アプリ管理",
+      "appsDesc": "提出した OAuth アプリの確認・管理、client_secret の再生成、連携ログの確認。",
+      "docsTitle": "連携ドキュメント",
+      "docsDesc": "OAuth 2.0 / OpenID Connect の連携仕様と API リファレンス。",
+      "sdkTitle": "SDK ダウンロード",
+      "sdkDesc": "開発者 SDK とアダプタープロトコルのドキュメントをダウンロード。",
+      "logout": "開発者ポータルからログアウト",
+      "notDeveloper": "開発者申請がまだ承認されていません。承認されると開発者ポータルに直接入場できます。",
+      "becomeDeveloper": "開発者になる"
+    },
     "capabilities": {
       "sdk": {
         "title": "SDK",
@@ -1347,6 +1369,7 @@
     },
     "errors": {
       "badRequest": "リクエストパラメータが不正です",
+      "notDeveloper": "あなたは開発者ではないため、この機能を利用できません",
       "projectNameInvalid": "プロジェクト名は必須で、60 文字以内で入力してください",
       "projectTypeInvalid": "プロジェクト種別が不正です",
       "projectDescInvalid": "プロジェクトの説明は必須で、1000 文字以内で入力してください",

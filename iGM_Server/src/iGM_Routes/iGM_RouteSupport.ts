@@ -25,6 +25,8 @@ import type { iGM_UserRow } from "../iGM_Types/iGM_Auth";
 export interface iGM_RouteContext {
   body: unknown;
   query: Record<string, string | undefined>;
+  /** 路径参数（形如 /api/oauth/clients/:id 中的 id） */
+  params?: Record<string, string | undefined>;
   request: Request;
   set: {
     status: number;

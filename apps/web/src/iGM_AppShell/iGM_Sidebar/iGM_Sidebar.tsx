@@ -214,6 +214,7 @@ export function iGM_Sidebar({ open, onNavigate }: iGM_SidebarProps) {
 
   return (
     <aside
+      id="igm-sidebar"
       className={`${styles.sidebar} ${open ? styles.open : ""}`}
       aria-label={t("nav.groupMain")}
     >

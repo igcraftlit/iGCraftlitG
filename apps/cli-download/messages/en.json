@@ -15,7 +15,8 @@
   "hero": {
     "title": "iGM CLI Download API",
     "subtitle": "Built by iGCraftLit × MuoCeon",
-    "description": "A minimal, efficient, and extensible file download interface service."
+    "description": "A minimal, efficient, and extensible file download interface service.",
+    "enterDeveloperPortal": "Open Developer Portal"
   },
   "sections": {
     "quickstart": {
@@ -548,6 +549,7 @@
       "flowExpired": "The authorization request has expired, please start again",
       "badRequest": "Invalid request parameters",
       "nameInvalid": "The application name format is invalid",
+      "localTestRequired": "Local loopback redirect URIs require the 'Local testing' option to be enabled",
       "descriptionInvalid": "The application description format is invalid",
       "redirectInvalid": "The redirect URI format is invalid",
       "redirectInsecure": "Redirect URIs must use HTTPS",
@@ -599,6 +601,9 @@
       "revoke": "Token revoked",
       "consentRevoke": "Authorization revoked"
     },
+    "messages": {
+      "deleted": "Application deleted"
+    },
     "apply": {
       "intro": "Let third-party sites sign users in with iGCraftLit accounts: submit your application details and receive a client_id and client_secret once approved.",
       "name": "Application name",
@@ -608,7 +613,10 @@
       "descriptionPlaceholder": "Briefly describe the purpose and main features of your application",
       "redirectUris": "Redirect URIs",
       "redirectUrisPlaceholder": "https://example.com/oauth/callback",
-      "redirectUrisHint": "One per line, HTTPS only; multiple entries allowed and must match the authorization request exactly",
+      "redirectUrisHint": "One per line; production must use https://, local testing may use http://localhost:port, http://127.0.0.1:port or http://[::1]:port",
+      "localTest": "Local testing",
+      "localTestHint": "For local development only. Allows http://localhost, http://127.0.0.1 and http://[::1] redirect URIs (any port)",
+      "localTestTag": "For development and debugging only — do not use in production",
       "scopes": "Requested scopes",
       "purpose": "Intended use",
       "purposePlaceholder": "Explain how you will use the information the user authorizes",
@@ -651,7 +659,10 @@
       "viewLogs": "View integration logs",
       "hideLogs": "Hide logs",
       "logsEmpty": "No integration logs yet",
-      "logsTitle": "Integration logs"
+      "logsTitle": "Integration logs",
+      "localTestTag": "Development only",
+      "delete": "Delete app",
+      "deleteConfirm": "Deleting also revokes all authorizations and tokens for this app, and its client_id can never be used again. Delete anyway?"
     },
     "admin": {
       "all": "All",

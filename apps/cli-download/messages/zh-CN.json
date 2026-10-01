@@ -15,7 +15,8 @@
   "hero": {
     "title": "iGM CLI Download API",
     "subtitle": "iGCraftLit × MuoCeon 联合构建",
-    "description": "极简、高效、可扩展的文件下载接口服务。"
+    "description": "极简、高效、可扩展的文件下载接口服务。",
+    "enterDeveloperPortal": "进入开发者平台"
   },
   "sections": {
     "quickstart": {
@@ -548,6 +549,7 @@
       "flowExpired": "授权请求已失效，请重新发起",
       "badRequest": "请求参数有误",
       "nameInvalid": "应用名称格式不正确",
+      "localTestRequired": "本地回环回调地址需勾选「本地测试用途」",
       "descriptionInvalid": "应用描述格式不正确",
       "redirectInvalid": "回调地址格式不正确",
       "redirectInsecure": "回调地址必须使用 HTTPS",
@@ -599,6 +601,9 @@
       "revoke": "撤销令牌",
       "consentRevoke": "撤销授权"
     },
+    "messages": {
+      "deleted": "应用已删除"
+    },
     "apply": {
       "intro": "让第三方网站接入 iGCraftLit 账号登录：填写应用信息并提交，审核通过后发放 client_id 与 client_secret。",
       "name": "应用名称",
@@ -608,7 +613,10 @@
       "descriptionPlaceholder": "简要说明应用的用途与主要功能",
       "redirectUris": "回调地址 redirect_uri",
       "redirectUrisPlaceholder": "https://example.com/oauth/callback",
-      "redirectUrisHint": "每行一个，必须为 HTTPS；支持多条，需与授权请求严格一致",
+      "redirectUrisHint": "每行一个；生产环境必须为 https://，本地测试可用 http://localhost:端口、http://127.0.0.1:端口、http://[::1]:端口",
+      "localTest": "本地测试用途",
+      "localTestHint": "仅用于本地开发调试，允许 http://localhost、http://127.0.0.1、http://[::1] 回调地址（端口任意）",
+      "localTestTag": "仅开发调试使用，请勿用于生产环境",
       "scopes": "申请权限范围 scope",
       "purpose": "使用用途",
       "purposePlaceholder": "说明你将如何使用用户授权的信息",
@@ -651,7 +659,10 @@
       "viewLogs": "查看接入日志",
       "hideLogs": "收起日志",
       "logsEmpty": "暂无接入日志",
-      "logsTitle": "接入日志"
+      "logsTitle": "接入日志",
+      "localTestTag": "仅开发调试使用",
+      "delete": "删除应用",
+      "deleteConfirm": "删除会同时撤销该应用的全部授权与令牌，且该应用 client_id 不可再次使用。确定删除吗？"
     },
     "admin": {
       "all": "全部",

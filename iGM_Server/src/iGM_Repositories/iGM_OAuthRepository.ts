@@ -51,6 +51,8 @@ export async function iGM_InsertOAuthClient(params: {
   purpose: string;
   contact: string;
   ownerUid: string;
+  /** 模块二十二：是否本地测试用途（1 时允许 http://localhost 等回调） */
+  isLocalTest: boolean;
   now: string;
 }): Promise<iGM_OAuthClientRow> {
   await iGM_Db.run(
@@ -58,8 +60,9 @@ export async function iGM_InsertOAuthClient(params: {
        (iGM_Id, iGM_ClientId, iGM_ClientSecretHash, iGM_Name, iGM_Type,
         iGM_Description, iGM_RedirectUris, iGM_Scopes, iGM_Purpose,
         iGM_Contact, iGM_OwnerUid, iGM_Status, iGM_ReviewerId,
-        iGM_ReviewComment, iGM_SecretRotatedAt, iGM_CreatedAt, iGM_UpdatedAt)
-     VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NULL, NULL, NULL, ?, ?)`,
+        iGM_ReviewComment, iGM_SecretRotatedAt, iGM_IsLocalTest,
+        iGM_DeletedAt, iGM_CreatedAt, iGM_UpdatedAt)
+     VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NULL, NULL, NULL, ?, NULL, ?, ?)`,
     [
       params.id,
       params.clientId,
@@ -71,6 +74,7 @@ export async function iGM_InsertOAuthClient(params: {
       params.purpose,
       params.contact,
       params.ownerUid,
+      params.isLocalTest ? 1 : 0,
       params.now,
       params.now,
     ],
@@ -102,13 +106,14 @@ export async function iGM_FindOAuthClientByClientId(
   );
 }
 
-/** 开发者侧：按申请人 UID 列出全部应用（创建时间倒序） */
+/** 开发者侧：按申请人 UID 列出全部未删除应用（创建时间倒序） */
 export async function iGM_ListOAuthClientsByOwner(
   ownerUid: string,
 ): Promise<iGM_OAuthClientRow[]> {
   return (await iGM_Db.query(
     `SELECT * FROM iGM_OAuthClients
-     WHERE iGM_OwnerUid = ? ORDER BY iGM_CreatedAt DESC`,
+     WHERE iGM_OwnerUid = ? AND iGM_DeletedAt IS NULL
+     ORDER BY iGM_CreatedAt DESC`,
   ).all(ownerUid)) as iGM_OAuthClientRow[];
 }
 
@@ -206,12 +211,44 @@ export async function iGM_WithdrawOAuthClient(params: {
   return result.changes > 0;
 }
 
-/** 删除应用（级联清理授权码 / 令牌 / 同意记录） */
-export async function iGM_DeleteOAuthClient(id: string): Promise<boolean> {
-  const result = await iGM_Db.run(`DELETE FROM iGM_OAuthClients WHERE iGM_Id = ?`, [
-    id,
-  ]);
+/**
+ * 模块二十二：软删除应用。
+ * 行保留（占用 client_id，已删除的 client_id 不可再次使用），
+ * 仅标记 iGM_Status='deleted' 与 iGM_DeletedAt；关联令牌 / 授权 / 同意由业务层清理。
+ */
+export async function iGM_SoftDeleteOAuthClient(params: {
+  id: string;
+  now: string;
+}): Promise<boolean> {
+  const result = await iGM_Db.run(
+    `UPDATE iGM_OAuthClients
+     SET iGM_Status = 'deleted', iGM_DeletedAt = ?, iGM_UpdatedAt = ?
+     WHERE iGM_Id = ? AND iGM_DeletedAt IS NULL`,
+    [params.now, params.now, params.id],
+  );
   return result.changes > 0;
+}
+
+/** 模块二十二：删除某应用的全部授权码（应用被删除时清理） */
+export async function iGM_DeleteOAuthCodesByClient(
+  clientId: string,
+): Promise<number> {
+  const result = await iGM_Db.run(
+    `DELETE FROM iGM_OAuthCodes WHERE iGM_ClientId = ?`,
+    [clientId],
+  );
+  return result.changes;
+}
+
+/** 模块二十二：删除某应用的全部用户授权同意记录（应用被删除时清理） */
+export async function iGM_DeleteOAuthConsentsByClient(
+  clientId: string,
+): Promise<number> {
+  const result = await iGM_Db.run(
+    `DELETE FROM iGM_OAuthConsents WHERE iGM_ClientId = ?`,
+    [clientId],
+  );
+  return result.changes;
 }
 
 /* ---------- 授权码 Codes ---------- */
@@ -402,7 +439,7 @@ export async function iGM_FindOAuthConsent(
   );
 }
 
-/** 用户侧：列出已授权应用（连应用基本信息） */
+/** 用户侧：列出已授权应用（连应用基本信息，排除已删除应用） */
 export async function iGM_ListOAuthConsentsByUser(
   userId: string,
 ): Promise<iGM_OAuthConsentClientRow[]> {
@@ -410,7 +447,7 @@ export async function iGM_ListOAuthConsentsByUser(
     `SELECT s.*, c.iGM_Name, c.iGM_Type, c.iGM_Description, c.iGM_Status
      FROM iGM_OAuthConsents s
      JOIN iGM_OAuthClients c ON c.iGM_ClientId = s.iGM_ClientId
-     WHERE s.iGM_UserId = ?
+     WHERE s.iGM_UserId = ? AND c.iGM_DeletedAt IS NULL
      ORDER BY s.iGM_GrantedAt DESC`,
   ).all(userId)) as iGM_OAuthConsentClientRow[];
 }
@@ -541,7 +578,9 @@ export default {
   iGM_UpdateOAuthClientStatus,
   iGM_SetOAuthClientSecret,
   iGM_WithdrawOAuthClient,
-  iGM_DeleteOAuthClient,
+  iGM_SoftDeleteOAuthClient,
+  iGM_DeleteOAuthCodesByClient,
+  iGM_DeleteOAuthConsentsByClient,
   iGM_InsertOAuthCode,
   iGM_FindOAuthCodeByCode,
   iGM_MarkOAuthCodeUsed,

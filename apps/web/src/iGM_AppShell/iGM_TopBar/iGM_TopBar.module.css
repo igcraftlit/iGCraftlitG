@@ -226,9 +226,22 @@
   flex-shrink: 0;
 }
 
+@media (max-width: 767.98px) {
+  /* 触屏友好：移动端菜单按钮点击区不小于 44×44 */
+  .menuButton {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* 移动端用户区按钮加高，便于点按 */
+  .userChip {
+    height: 40px;
+  }
+}
+
 @media (max-width: 480px) {
-  .userName,
-  .loginLink {
+  /* 仅隐藏用户名，保留登录/用户按钮入口，避免小屏无认证入口 */
+  .userName {
     display: none;
   }
 }

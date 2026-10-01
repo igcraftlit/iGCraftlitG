@@ -525,6 +525,13 @@
   cursor: pointer;
 }
 
+/* 触屏友好：移动端按钮点击区不小于 44px 高 */
+@media (max-width: 767.98px) {
+  .copyButton {
+    min-height: 44px;
+  }
+}
+
 /* 区块：状态与键值展示 */
 .statusCard {
   border: 1px solid var(--igm-border);

@@ -42,3 +42,10 @@
   color: var(--igm-text-muted);
   font-variant-numeric: tabular-nums;
 }
+
+/* 触屏友好：移动端翻页按钮点击区不小于 44px 高 */
+@media (max-width: 767.98px) {
+  .navButton {
+    min-height: 44px;
+  }
+}

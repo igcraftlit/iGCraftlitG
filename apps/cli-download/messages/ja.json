@@ -15,7 +15,8 @@
   "hero": {
     "title": "iGM CLI Download API",
     "subtitle": "iGCraftLit × MuoCeon 共同構築",
-    "description": "最小限で効率的かつ拡張可能なファイルダウンロードインターフェースサービス。"
+    "description": "最小限で効率的かつ拡張可能なファイルダウンロードインターフェースサービス。",
+    "enterDeveloperPortal": "開発者ポータルへ"
   },
   "sections": {
     "quickstart": {
@@ -548,6 +549,7 @@
       "flowExpired": "認可リクエストが失効しました。再度開始してください",
       "badRequest": "リクエストパラメータが不正です",
       "nameInvalid": "アプリ名の形式が正しくありません",
+      "localTestRequired": "ローカルループバックのリダイレクト URI には「ローカルテスト」を有効にしてください",
       "descriptionInvalid": "アプリの説明の形式が正しくありません",
       "redirectInvalid": "リダイレクト URI の形式が正しくありません",
       "redirectInsecure": "リダイレクト URI は HTTPS を使用する必要があります",
@@ -599,6 +601,9 @@
       "revoke": "トークン取消",
       "consentRevoke": "認可を取消"
     },
+    "messages": {
+      "deleted": "アプリを削除しました"
+    },
     "apply": {
       "intro": "サードパーティサイトが iGCraftLit アカウントでログインできるようにします：アプリ情報を送信し、審査通過後に client_id と client_secret が発行されます。",
       "name": "アプリ名",
@@ -608,7 +613,10 @@
       "descriptionPlaceholder": "アプリの用途と主な機能を簡単に説明してください",
       "redirectUris": "リダイレクト URI",
       "redirectUrisPlaceholder": "https://example.com/oauth/callback",
-      "redirectUrisHint": "1 行に 1 つ、HTTPS のみ；複数指定可能で、認可リクエストと完全に一致する必要があります",
+      "redirectUrisHint": "1 行に 1 つ；本番環境は https:// が必須、ローカルテストでは http://localhost:ポート、http://127.0.0.1:ポート、http://[::1]:ポート を利用できます",
+      "localTest": "ローカルテスト",
+      "localTestHint": "ローカル開発専用。http://localhost、http://127.0.0.1、http://[::1] のリダイレクト URI（任意のポート）を許可します",
+      "localTestTag": "開発・デバッグ専用です。本番環境では使用しないでください",
       "scopes": "要求するスコープ",
       "purpose": "利用目的",
       "purposePlaceholder": "ユーザーが認可した情報をどのように利用するか説明してください",
@@ -651,7 +659,10 @@
       "viewLogs": "連携ログを表示",
       "hideLogs": "ログを閉じる",
       "logsEmpty": "連携ログはまだありません",
-      "logsTitle": "連携ログ"
+      "logsTitle": "連携ログ",
+      "localTestTag": "開発・デバッグ専用",
+      "delete": "アプリを削除",
+      "deleteConfirm": "削除するとこのアプリのすべての認可とトークンが失効し、client_id は二度と使用できなくなります。削除しますか？"
     },
     "admin": {
       "all": "すべて",

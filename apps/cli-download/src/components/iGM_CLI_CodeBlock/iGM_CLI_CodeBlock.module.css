@@ -67,3 +67,10 @@
   white-space: pre;
   word-break: normal;
 }
+
+/* 触屏友好：移动端复制按钮点击区不小于 44px 高 */
+@media (max-width: 767.98px) {
+  .copyButton {
+    min-height: 44px;
+  }
+}

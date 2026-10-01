@@ -28,7 +28,8 @@ import {
   type iGM_TokenResponse,
 } from "../iGM_Types/iGM_OAuth";
 import {
-  iGM_DeleteOAuthClient,
+  iGM_DeleteOAuthCodesByClient,
+  iGM_DeleteOAuthConsentsByClient,
   iGM_DeleteOAuthConsent,
   iGM_FindOAuthClientByClientId,
   iGM_FindOAuthClientById,
@@ -50,6 +51,7 @@ import {
   iGM_RevokeOAuthTokensByClient,
   iGM_RevokeOAuthTokensByUserClient,
   iGM_SetOAuthClientSecret,
+  iGM_SoftDeleteOAuthClient,
   iGM_UpdateOAuthClientStatus,
   iGM_UpsertOAuthConsent,
   iGM_WithdrawOAuthClient,
@@ -110,6 +112,8 @@ function iGM_ToClientDto(row: iGM_OAuthClientRow): iGM_OAuthClientDto {
     reviewerId: row.iGM_ReviewerId,
     reviewComment: row.iGM_ReviewComment,
     secretRotatedAt: row.iGM_SecretRotatedAt,
+    isLocalTest: row.iGM_IsLocalTest === 1,
+    deletedAt: row.iGM_DeletedAt,
     createdAt: row.iGM_CreatedAt,
     updatedAt: row.iGM_UpdatedAt,
   };
@@ -146,11 +150,26 @@ async function iGM_Log(params: {
   });
 }
 
-/** 校验回调地址：必须为 HTTPS（本地开发可放行 http://localhost） */
+/**
+ * 模块二十二：是否为本地测试回调地址。
+ * 仅允许 http 协议 + 回环主机（localhost / 127.0.0.1 / [::1]），端口任意，路径任意；
+ * 其他 http 地址一律拒绝。
+ */
+export function iGM_IsLocalTestRedirectUri(uri: string): boolean {
+  return /^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?(\/|$)/i.test(uri);
+}
+
+/** 是否为安全回调地址（HTTPS），生产回调必须满足 */
+function iGM_IsSecureRedirectUri(uri: string): boolean {
+  return /^https:\/\//i.test(uri);
+}
+
+/**
+ * 校验回调地址格式：HTTPS，或本地测试回调（http + 回环地址）。
+ * 是否勾选「本地测试用途」由申请入参单独校验，此处只判断协议与主机是否合法。
+ */
 export function iGM_IsAcceptableRedirectUri(uri: string): boolean {
-  if (/^https:\/\//i.test(uri)) return true;
-  if (!iGM_Config.oauth.allowHttpRedirect) return false;
-  return /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/i.test(uri);
+  return iGM_IsSecureRedirectUri(uri) || iGM_IsLocalTestRedirectUri(uri);
 }
 
 /** 组装重定向地址（保留原有查询串，追加/覆盖指定参数） */
@@ -177,6 +196,7 @@ function iGM_ValidateApplyInput(input: iGM_OAuthApplyInput): {
   scopes: string;
   purpose: string;
   contact: string;
+  isLocalTest: boolean;
 } {
   const name = input.name.trim();
   const description = input.description.trim();
@@ -204,6 +224,11 @@ function iGM_ValidateApplyInput(input: iGM_OAuthApplyInput): {
   if (!redirectUris.every(iGM_IsAcceptableRedirectUri)) {
     throw new iGM_OAuthError("oauth.errors.redirectInsecure", 422);
   }
+  // 含本地测试回调（http 回环地址）时必须勾选「本地测试用途」
+  const hasLocalTestUri = redirectUris.some(iGM_IsLocalTestRedirectUri);
+  if (hasLocalTestUri && !input.localTest) {
+    throw new iGM_OAuthError("oauth.errors.localTestRequired", 422);
+  }
   if (!purpose || purpose.length > iGM_PurposeMax) {
     throw new iGM_OAuthError("oauth.errors.purposeInvalid", 422);
   }
@@ -222,6 +247,7 @@ function iGM_ValidateApplyInput(input: iGM_OAuthApplyInput): {
     scopes,
     purpose,
     contact,
+    isLocalTest: input.localTest,
   };
 }
 
@@ -460,24 +486,70 @@ export async function iGM_SetOAuthClientDisabledService(
   });
 }
 
-/** 管理端：删除应用（级联清理授权码 / 令牌 / 同意记录） */
+/**
+ * 模块二十二：应用删除（软删除）内部实现。
+ * 1) 客户端记录标记为 deleted（行保留，占用 client_id 不可复用）；
+ * 2) 关联 access_token / refresh_token 立即失效；
+ * 3) 用户授权记录与授权码清理；
+ * 4) 操作写入日志。
+ */
+async function iGM_PerformClientDelete(params: {
+  row: iGM_OAuthClientRow;
+  operatorId: string;
+  ip: string | null;
+  action: string;
+}): Promise<void> {
+  const now = new Date().toISOString();
+  await iGM_SoftDeleteOAuthClient({ id: params.row.iGM_Id, now });
+  await iGM_RevokeOAuthTokensByClient({ clientId: params.row.iGM_ClientId, now });
+  await iGM_DeleteOAuthConsentsByClient(params.row.iGM_ClientId);
+  await iGM_DeleteOAuthCodesByClient(params.row.iGM_ClientId);
+  await iGM_Log({
+    clientId: params.row.iGM_ClientId,
+    userId: params.operatorId,
+    action: params.action,
+    detail: params.row.iGM_Name,
+    ip: params.ip,
+  });
+}
+
+/** 开发者侧：删除本人应用（软删除，仅应用所有者可操作） */
+export async function iGM_DeleteOwnOAuthClientService(
+  user: iGM_UserRow,
+  clientId: string,
+  ip: string | null,
+): Promise<void> {
+  const row = await iGM_FindOAuthClientByClientId(clientId);
+  if (!row || row.iGM_DeletedAt) {
+    throw new iGM_OAuthError("oauth.errors.appNotFound", 404);
+  }
+  if (row.iGM_OwnerUid !== user.iGM_Uid) {
+    throw new iGM_OAuthError("auth.errors.forbidden", 403);
+  }
+  await iGM_PerformClientDelete({
+    row,
+    operatorId: user.iGM_Id,
+    ip,
+    action: "delete",
+  });
+}
+
+/** 管理端：删除任意应用（软删除，管理员可删除任意应用） */
 export async function iGM_DeleteOAuthClientService(
   reviewer: iGM_UserRow,
   clientId: string,
   ip: string | null,
 ): Promise<void> {
   const row = await iGM_FindOAuthClientByClientId(clientId);
-  if (!row) {
+  if (!row || row.iGM_DeletedAt) {
     throw new iGM_OAuthError("oauth.errors.appNotFound", 404);
   }
-  await iGM_Log({
-    clientId: row.iGM_ClientId,
-    userId: reviewer.iGM_Id,
-    action: "delete",
-    detail: row.iGM_Name,
+  await iGM_PerformClientDelete({
+    row,
+    operatorId: reviewer.iGM_Id,
     ip,
+    action: "delete.admin",
   });
-  await iGM_DeleteOAuthClient(row.iGM_Id);
 }
 
 /* ---------- 授权端点 ---------- */
@@ -1018,9 +1090,11 @@ export default {
   iGM_AdminListOAuthClientsService,
   iGM_ReviewOAuthClientService,
   iGM_SetOAuthClientDisabledService,
+  iGM_DeleteOwnOAuthClientService,
   iGM_DeleteOAuthClientService,
   iGM_ParseRedirectUris,
   iGM_IsAcceptableRedirectUri,
+  iGM_IsLocalTestRedirectUri,
   iGM_BuildRedirect,
   iGM_ValidateAuthorizeRequest,
   iGM_GetAuthorizeInfoService,

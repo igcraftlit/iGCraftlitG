@@ -222,6 +222,18 @@
   }
 }
 
+/* 触屏友好：移动端抽屉内展开按钮点击区不小于 44×44 */
+@media (max-width: 767.98px) {
+  .navToggle {
+    width: 44px;
+    height: 44px;
+  }
+
+  .navLink {
+    min-height: 44px;
+  }
+}
+
 /* 无障碍：系统偏好减少动态时，高亮与抽屉即时切换，不做过渡 */
 @media (prefers-reduced-motion: reduce) {
   .sidebar,

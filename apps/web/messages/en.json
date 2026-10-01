@@ -261,6 +261,10 @@
       "title": "Application Status",
       "description": "View your developer application status and access qualification"
     },
+    "developerPortal": {
+      "title": "Developer Portal",
+      "description": "Portal for approved developers to manage OAuth apps and access integration docs and SDK"
+    },
     "developerReview": {
       "title": "Developer Application Review",
       "description": "Review developer applications, approve or reject with a comment; once approved, the applicant can enter the developer console"
@@ -1255,6 +1259,24 @@
       "approved": "Application approved",
       "rejected": "Application rejected"
     },
+    "portal": {
+      "title": "Developer Portal",
+      "description": "Manage OAuth apps, read integration docs and SDK, and use the developer APIs.",
+      "loadFailed": "Failed to verify the developer portal session. Please try again later.",
+      "retry": "Retry",
+      "uid": "iGMUid",
+      "username": "Username",
+      "displayName": "Display name",
+      "appsTitle": "App Management",
+      "appsDesc": "View and maintain your OAuth apps, reset client_secret, and check integration logs.",
+      "docsTitle": "Integration Docs",
+      "docsDesc": "OAuth 2.0 / OpenID Connect integration specification and API reference.",
+      "sdkTitle": "SDK Download",
+      "sdkDesc": "Download the developer SDK and adapter protocol docs.",
+      "logout": "Sign out of developer portal",
+      "notDeveloper": "You have not been approved as a developer yet. Once approved, you can enter the developer portal directly.",
+      "becomeDeveloper": "Become a developer"
+    },
     "capabilities": {
       "sdk": {
         "title": "SDK",
@@ -1347,6 +1369,7 @@
     },
     "errors": {
       "badRequest": "Invalid request parameters",
+      "notDeveloper": "You are not a developer and cannot use this feature",
       "projectNameInvalid": "Project name is required and must be at most 60 characters",
       "projectTypeInvalid": "Invalid project type",
       "projectDescInvalid": "Project description is required and must be at most 1000 characters",

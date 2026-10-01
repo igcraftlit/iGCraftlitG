@@ -3,15 +3,20 @@
  * 所属层：前端 / 基础服务层
  * 路由：调用后端 /G_Developer/*
  * 模块：iGM_DeveloperClient
- * 作用：开发者资格（SDK / 适配器协议）相关后端接口的唯一前端调用出口
+ * 作用：开发者资格（SDK / 适配器协议）与开发者平台准入状态相关后端接口的唯一前端调用出口
  * 内容：开发者能力说明、提交 / 重新申请、我的申请状态与历史、撤回申请、
- *       待审核列表与审核（组织所有者与管理员）
+ *       待审核列表与审核（组织所有者与管理员），
+ *       模块二十二：开发者平台准入状态查询（凭站点登录会话，无需密钥）
  * 约束：只经 iGM_Request 发请求；类型与后端 iGM_Types/iGM_Developer.ts 保持一致；
  *       审核只变更状态与意见，通过即授予接入资格（不发放 API Key）
  */
 
 // 导入依赖 //
-import { iGM_Get, iGM_Post, type iGM_ApiResponse } from "./iGM_Request";
+import {
+  iGM_Get,
+  iGM_Post,
+  type iGM_ApiResponse,
+} from "./iGM_Request";
 
 // 类型定义 //
 /** 申请状态：pending 待审核 / approved 已通过 / rejected 已拒绝 / withdrawn 已撤回 */
@@ -101,6 +106,16 @@ export interface iGM_DeveloperIntro {
   openAccess: boolean;
 }
 
+/* ---------- 模块二十二：开发者平台准入状态 ---------- */
+
+/** 开发者平台准入状态：登录后查询，isDeveloper=false 表示尚未通过开发者申请 */
+export interface iGM_DeveloperPortalStatus {
+  isDeveloper: boolean;
+  uid: string;
+  username: string;
+  displayName: string | null;
+}
+
 /** 待审核申请列表（组织所有者与管理员） */
 export interface iGM_DeveloperApplicationList {
   items: Array<
@@ -171,6 +186,18 @@ export function iGM_ApiReviewDeveloper(input: {
   return iGM_Post("/G_Developer/review", input);
 }
 
+/* ---------- 模块二十二：开发者平台准入状态 ---------- */
+
+/**
+ * 查询开发者平台准入状态（登录）。
+ * 已通过开发者申请返回 isDeveloper=true，可直接进入开发者平台，无需密钥。
+ */
+export function iGM_ApiGetDeveloperStatus(): Promise<
+  iGM_ApiResponse<iGM_DeveloperPortalStatus>
+> {
+  return iGM_Get("/api/developer/status");
+}
+
 // 导出 //
 export default {
   iGM_ApiGetDeveloperIntro,
@@ -180,4 +207,5 @@ export default {
   iGM_ApiWithdrawDeveloper,
   iGM_ApiListDeveloperApplications,
   iGM_ApiReviewDeveloper,
+  iGM_ApiGetDeveloperStatus,
 };

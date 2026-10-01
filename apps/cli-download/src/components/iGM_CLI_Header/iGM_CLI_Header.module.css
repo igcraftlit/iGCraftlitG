@@ -169,6 +169,12 @@
     display: flex;
   }
 
+  /* 触屏友好：菜单按钮点击区不小于 44×44 */
+  .menuButton {
+    width: 44px;
+    height: 44px;
+  }
+
   .mobileNav[data-open="true"] {
     display: flex;
   }

@@ -87,3 +87,11 @@
   color: var(--igm-accent);
   flex-shrink: 0;
 }
+
+/* 触屏友好：移动端触发按钮点击区不小于 44×44 */
+@media (max-width: 767.98px) {
+  .trigger {
+    width: 44px;
+    height: 44px;
+  }
+}

@@ -37,6 +37,11 @@ function iGM_CLI_ParseRedirectUris(raw: string): string[] {
     .filter(Boolean);
 }
 
+/** 本地回环回调地址（http://localhost / 127.0.0.1 / [::1]，端口任意） */
+function iGM_CLI_IsLocalRedirect(uri: string): boolean {
+  return /^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?(\/|$)/i.test(uri);
+}
+
 // 核心逻辑 //
 /** 申请表单主体（登录守卫内） */
 function iGM_CLI_OAuthApplyForm() {
@@ -51,6 +56,7 @@ function iGM_CLI_OAuthApplyForm() {
   const [purpose, setPurpose] = useState("");
   const [contact, setContact] = useState("");
   const [agreeRules, setAgreeRules] = useState(false);
+  const [localTest, setLocalTest] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -83,8 +89,18 @@ function iGM_CLI_OAuthApplyForm() {
       setError(t("oauth.apply.redirectRequired"));
       return;
     }
-    if (!redirectUris.every((uri) => /^https:\/\//i.test(uri))) {
+    // 非 HTTPS 仅允许本地回环地址（localhost / 127.0.0.1 / [::1]）
+    if (
+      redirectUris.some(
+        (uri) => !/^https:\/\//i.test(uri) && !iGM_CLI_IsLocalRedirect(uri),
+      )
+    ) {
       setError(t("oauth.apply.redirectInsecure"));
+      return;
+    }
+    // 使用本地回环回调地址时必须勾选「本地测试用途」
+    if (redirectUris.some(iGM_CLI_IsLocalRedirect) && !localTest) {
+      setError(t("oauth.errors.localTestRequired"));
       return;
     }
     if (!agreeRules) {
@@ -102,6 +118,7 @@ function iGM_CLI_OAuthApplyForm() {
       purpose: purpose.trim(),
       contact: contact.trim(),
       agreeRules,
+      localTest,
     })
       .then(() => setSubmitted(true))
       .catch((submitError: unknown) =>
@@ -184,6 +201,35 @@ function iGM_CLI_OAuthApplyForm() {
         />
         <span className={styles.hint}>{t("oauth.apply.redirectUrisHint")}</span>
       </label>
+
+      {/* 本地测试用途：允许 http://localhost 等本地回环回调地址 */}
+      <label className={styles.checkRow}>
+        <input
+          type="checkbox"
+          className={styles.checkbox}
+          checked={localTest}
+          onChange={(event) => setLocalTest(event.target.checked)}
+        />
+        <span>
+          <span className={styles.scopeName}>
+            {t("oauth.apply.localTest")}
+          </span>
+          <span className={styles.scopeHint}>
+            {t("oauth.apply.localTestHint")}
+          </span>
+        </span>
+      </label>
+      {localTest && (
+        <div className={styles.note}>
+          <ShieldCheck
+            size={15}
+            strokeWidth={1.8}
+            className={styles.noteIcon}
+            aria-hidden
+          />
+          <span>{t("oauth.apply.localTestTag")}</span>
+        </div>
+      )}
 
       {/* scope 多选：openid 为 OIDC 基础项，固定选中 */}
       <div className={styles.field}>

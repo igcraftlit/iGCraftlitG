@@ -25,9 +25,11 @@ import {
   ListChecks,
   Plus,
   RotateCcw,
+  Trash2,
   Undo2,
 } from "lucide-react";
 import {
+  iGM_CLI_ApiDeleteOAuthApp,
   iGM_CLI_ApiListMyOAuthApps,
   iGM_CLI_ApiListMyOAuthLogs,
   iGM_CLI_ApiResetOAuthSecret,
@@ -97,6 +99,7 @@ function iGM_CLI_OAuthAppsList() {
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
+  const [successText, setSuccessText] = useState<string | null>(null);
   /** 正在提交操作的应用 clientId（防重复点击） */
   const [actingId, setActingId] = useState<string | null>(null);
   /** 重置后仅本次展示的明文密钥（clientId -> secret） */
@@ -192,6 +195,31 @@ function iGM_CLI_OAuthAppsList() {
       .finally(() => setActingId(null));
   }
 
+  /** 删除应用（不可恢复：同时撤销该应用的全部授权与令牌，client_id 不可再次使用） */
+  function iGM_CLI_HandleDelete(clientId: string) {
+    if (!window.confirm(t("oauth.apps.deleteConfirm"))) return;
+    setErrorText(null);
+    setSuccessText(null);
+    setActingId(clientId);
+    iGM_CLI_ApiDeleteOAuthApp(clientId)
+      .then(() => {
+        setItems((current) =>
+          current.filter((item) => item.clientId !== clientId),
+        );
+        setSecretMap((previous) => {
+          const next = { ...previous };
+          delete next[clientId];
+          return next;
+        });
+        if (logClientId === clientId) setLogClientId(null);
+        setSuccessText(t("oauth.messages.deleted"));
+      })
+      .catch((error) =>
+        setErrorText(iGM_CLI_ResolveErrorText(t, error, "oauth.apps.loadFailed")),
+      )
+      .finally(() => setActingId(null));
+  }
+
   /** 复制文本到剪贴板 */
   async function iGM_CLI_Copy(text: string, clientId: string) {
     try {
@@ -224,6 +252,11 @@ function iGM_CLI_OAuthAppsList() {
       {errorText && (
         <div className={`${styles.alert} ${styles.alertError}`}>{errorText}</div>
       )}
+      {successText && (
+        <div className={`${styles.alert} ${styles.alertSuccess}`}>
+          {successText}
+        </div>
+      )}
 
       <div className={styles.actionRow} style={{ marginTop: 16 }}>
         <Link
@@ -248,10 +281,17 @@ function iGM_CLI_OAuthAppsList() {
               <section key={item.id} className={styles.statusCard}>
                 <div className={styles.appHead}>
                   <h2 className={styles.appName}>{item.name}</h2>
-                  <span
-                    className={[styles.badge, iGM_CLI_BadgeClass(status)].join(" ")}
-                  >
-                    {t(`oauth.status.${item.status}`)}
+                  <span className={styles.appBadges}>
+                    {item.isLocalTest && (
+                      <span className={styles.badge}>
+                        {t("oauth.apps.localTestTag")}
+                      </span>
+                    )}
+                    <span
+                      className={[styles.badge, iGM_CLI_BadgeClass(status)].join(" ")}
+                    >
+                      {t(`oauth.status.${item.status}`)}
+                    </span>
                   </span>
                 </div>
 
@@ -392,6 +432,23 @@ function iGM_CLI_OAuthAppsList() {
                     {logClientId === item.clientId
                       ? t("oauth.apps.hideLogs")
                       : t("oauth.apps.viewLogs")}
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.dangerButton}
+                    disabled={actingId === item.clientId}
+                    onClick={() => iGM_CLI_HandleDelete(item.clientId)}
+                  >
+                    {actingId === item.clientId ? (
+                      <LoaderCircle
+                        size={15}
+                        className={styles.spinner}
+                        aria-hidden
+                      />
+                    ) : (
+                      <Trash2 size={15} strokeWidth={1.8} aria-hidden />
+                    )}
+                    {t("oauth.apps.delete")}
                   </button>
                 </div>
 

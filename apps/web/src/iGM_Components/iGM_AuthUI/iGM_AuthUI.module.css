@@ -386,3 +386,54 @@
   border: none;
   border-top: 1px solid var(--igm-border);
 }
+
+/* 模块二十二：账户设置开发者密钥展示区 */
+.keyRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 64 位密钥明文：等宽字体、可选中、窄屏横向滚动不溢出 */
+.keyBox {
+  flex: 1 1 260px;
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px dashed var(--igm-border-strong);
+  border-radius: var(--igm-radius);
+  background: var(--igm-surface-subtle);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  letter-spacing: 0.02em;
+  color: var(--igm-text);
+  white-space: nowrap;
+  overflow-x: auto;
+  user-select: all;
+}
+
+/* 隐藏态占位文案：无等宽、弱化颜色 */
+.keyHidden {
+  color: var(--igm-text-subtle);
+  font-family: inherit;
+  user-select: none;
+}
+
+.keyActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+/* 仅开发调试使用等轻量标签 */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  border: 1px solid var(--igm-border-strong);
+  color: var(--igm-text-muted);
+}
