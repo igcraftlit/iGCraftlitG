@@ -20,11 +20,15 @@ import {
   ChartColumn,
   ChartLine,
   ClipboardList,
+  Code2,
   FileText,
   Flag,
   FolderOpen,
+  HardDriveDownload,
+  GraduationCap,
   Home,
   Library,
+  ListChecks,
   Mail,
   MessageSquare,
   MessageSquareText,
@@ -33,12 +37,12 @@ import {
   NotebookPen,
   PenSquare,
   Radio,
+  ScrollText,
   Settings,
   Shield,
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
-  Terminal,
   Trophy,
   Upload,
   UserRound,
@@ -64,6 +68,13 @@ export interface iGM_NavItem {
   orgOwnerOnly?: boolean;
   /** 外链入口：新标签页打开，不参与站内高亮与语言前缀拼装 */
   external?: boolean;
+  /**
+   * 模块十六：开发者入口。目标页随身份与申请状态变化——
+   * 组织所有者与已通过者进入开发者接入界面（外链），待审核者进入
+   * /G_DeveloperStatus，其余进入 /G_DeveloperApply
+   * （与账户设置页「成为开发者」按钮行为一致）。
+   */
+  developerEntry?: boolean;
   /** 子导航项：存在时该节点为树状父节点，可展开折叠；父节点本身仍可点击跳转 */
   children?: iGM_NavItem[];
 }
@@ -90,11 +101,11 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
         roles: ["user", "moderator", "admin"],
       },
       {
-        // iGM CLI Download API 开发者门户：独立站点（cli.igcraftlit.com），外链新标签页打开
-        href: "https://cli.igcraftlit.com",
-        icon: Terminal,
-        labelKey: "nav.becomeDeveloper",
-        external: true,
+        // 模块十六：开发者入口不再位于主区块，改置于导航栏最下边独立分区
+        // （见文件末尾 groupDeveloper），此处仅保留用户管理规定
+        href: "/G_UserAgreement",
+        icon: ScrollText,
+        labelKey: "nav.userAgreement",
       },
     ],
   },
@@ -141,6 +152,19 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
                 href: "/G_MinecraftUpload",
                 icon: Upload,
                 labelKey: "nav.minecraftUpload",
+              },
+              {
+                // 模块十八：原版游戏与版本资料库（按年份分组，含加载器选择下载入口）
+                href: "/G_MinecraftVersions",
+                icon: Blocks,
+                labelKey: "nav.minecraftVersions",
+              },
+              {
+                // 模块十七：已安装版本管理（校验/修复/删除）
+                href: "/G_GameInstalled",
+                icon: HardDriveDownload,
+                labelKey: "nav.gameInstalled",
+                roles: ["user", "moderator", "admin"],
               },
             ],
           },
@@ -247,6 +271,15 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
           },
         ],
       },
+      {
+        // 模块十六：开发者申请审核入口（组织负责人）。
+        // 负责人账号角色为普通用户，管理分组不可见，故在个人区提供入口；
+        // 后端按 owner 邮箱鉴权，管理员另有管理区入口。
+        href: "/G_DeveloperReview",
+        icon: Code2,
+        labelKey: "nav.developerReview",
+        orgOwnerOnly: true,
+      },
     ],
   },
   {
@@ -258,6 +291,10 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
         labelKey: "nav.points",
         children: [
           { href: "/G_Checkin", icon: CalendarCheck, labelKey: "nav.checkin" },
+          // 模块十五：等级展示与考核
+          { href: "/G_Levels", icon: GraduationCap, labelKey: "nav.levels" },
+          // 模块十五：任务中心（每周 / 每季）
+          { href: "/G_Tasks", icon: ListChecks, labelKey: "nav.tasks" },
           { href: "/G_Badges", icon: Award, labelKey: "nav.badges" },
           { href: "/G_Leaderboard", icon: Trophy, labelKey: "nav.leaderboard" },
         ],
@@ -310,6 +347,14 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
             roles: ["admin"],
           },
           {
+            // 模块十六：开发者申请审核（全局视图仅 admin；
+            // 组织负责人入口在个人区，按 isOwner 显示）
+            href: "/G_DeveloperReview",
+            icon: Code2,
+            labelKey: "nav.developerReview",
+            roles: ["admin"],
+          },
+          {
             // 以下两项仅 admin（后端接口同样限 admin）
             href: "/G_AdminSettings",
             icon: Settings,
@@ -323,6 +368,21 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
             roles: ["admin"],
           },
         ],
+      },
+    ],
+  },
+  {
+    // 模块十六：开发者入口——置于导航栏最下边；登录用户可见，
+    // 目标由 iGM_Sidebar 解析：组织所有者与已通过者进接入界面（外链），
+    // 待审核进状态页，其余进申请页
+    titleKey: "nav.developer",
+    items: [
+      {
+        href: "/G_DeveloperApply",
+        icon: Code2,
+        labelKey: "nav.becomeDeveloper",
+        roles: ["user", "moderator", "admin"],
+        developerEntry: true,
       },
     ],
   },

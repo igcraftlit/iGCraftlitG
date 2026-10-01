@@ -37,6 +37,13 @@ export const iGM_SeoPublicPaths = [
   "/G_Api_Health",
   // 模块八：用户管理规定（公开、可收录）
   "/G_UserRules",
+  // 模块十五：等级展示、任务中心与用户管理规定（公开、可收录）
+  // 模块十六：开发者申请页与状态页须登录后访问，不参与索引
+  "/G_Levels",
+  "/G_Tasks",
+  "/G_UserAgreement",
+  // 模块十七：Minecraft 本体版本资料库（公开、可收录）
+  "/G_MinecraftVersions",
 ] as const;
 
 /** 爬虫禁止收录的路径前缀（robots.txt 通配规则） */
@@ -59,6 +66,17 @@ export const iGM_SeoDisallowPatterns = [
   "/*/G_OrgDetails",
   "/G_Admin",
   "/G_Auth",
+  // 模块十五：开发者申请与状态页（须登录，不收录）
+  "/*/G_DeveloperApply",
+  "/*/G_DeveloperStatus",
+  // 模块十六：开发者申请审核页（须登录，不收录）
+  "/*/G_DeveloperReview",
+  // 模块十八：本体版本详情（带查询参数）与下载相关页面（登录态/用户私有，不收录）
+  "/*/G_MinecraftVersionDetail",
+  "/*/G_GameInstall",
+  "/*/G_GameProgress",
+  "/*/G_GameInstalled",
+  "/G_Game",
 ] as const;
 
 // 导出 //

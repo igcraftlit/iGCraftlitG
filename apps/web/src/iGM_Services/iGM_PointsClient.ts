@@ -21,6 +21,8 @@ export interface iGM_Level {
   maxPoints: number | null;
   icon: string | null;
   sortOrder: number;
+  /** 模块十五：该等级是否需通过考核方可升级 */
+  isExamRequired: boolean;
 }
 
 /** 积分流水条目 */
@@ -70,6 +72,8 @@ export interface iGM_Badge {
   icon: string | null;
   conditionType: string;
   conditionValue: number;
+  /** 模块十五：稀有度 common 普通 / rare 稀有 / legendary 传说 */
+  rarity: string;
   granted: boolean;
   grantedAt: string | null;
 }
@@ -83,9 +87,55 @@ export interface iGM_Task {
   targetCount: number;
   rewardPoints: number;
   taskType: string;
+  /** 模块十五：赛季标识（每季任务使用，每周任务为 null） */
+  seasonId: string | null;
   sortOrder: number;
   progress: number;
   isCompleted: boolean;
+  /** 模块十五：奖励是否已领取 */
+  isClaimed: boolean;
+}
+
+/** 等级考核记录 */
+export interface iGM_LevelExam {
+  id: string;
+  levelId: string;
+  levelName: string | null;
+  /** pending 待审核 / approved 已通过 / rejected 未通过 */
+  status: string;
+  content: string | null;
+  reviewNote: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** 升级进度 */
+export interface iGM_LevelProgress {
+  totalPoints: number;
+  level: iGM_Level | null;
+  nextLevel: iGM_Level | null;
+  pointsToNext: number;
+  pointsReached: boolean;
+  nextLevelExamRequired: boolean;
+  /** 下一等级考核状态：none / pending / approved / rejected */
+  examStatus: string;
+  canLevelUp: boolean;
+}
+
+/** 我的考核记录与进度 */
+export interface iGM_MyExamsData {
+  progress: iGM_LevelProgress;
+  exams: iGM_LevelExam[];
+}
+
+/** 任务奖励领取结果 */
+export interface iGM_TaskClaimResult {
+  taskId: string;
+  pointsEarned: number;
+  totalPoints: number;
+  level: iGM_Level | null;
+  levelUp: boolean;
+  newBadges: iGM_Badge[];
 }
 
 /** 签到状态 */
@@ -144,18 +194,53 @@ export function iGM_ApiListLevels(): Promise<
   return iGM_Get("/G_Points/levels");
 }
 
-/** 勋章列表（公开；登录时附带获得状态） */
-export function iGM_ApiListBadges(): Promise<
-  iGM_ApiResponse<{ badges: iGM_Badge[] }>
+/** 模块十五：我的升级进度（登录） */
+export function iGM_ApiGetLevelProgress(): Promise<
+  iGM_ApiResponse<iGM_LevelProgress>
 > {
-  return iGM_Get("/G_Points/badges");
+  return iGM_Get("/G_Points/levels/progress");
 }
 
-/** 任务列表与进度（公开；登录时附带进度） */
-export function iGM_ApiListTasks(): Promise<
-  iGM_ApiResponse<{ tasks: iGM_Task[] }>
+/** 模块十五：我的考核记录与进度（登录） */
+export function iGM_ApiListMyExams(): Promise<
+  iGM_ApiResponse<iGM_MyExamsData>
 > {
-  return iGM_Get("/G_Points/tasks");
+  return iGM_Get("/G_Points/levels/exams");
+}
+
+/** 模块十五：提交等级考核申请（登录，限流） */
+export function iGM_ApiSubmitLevelExam(input: {
+  levelId: string;
+  content?: string;
+}): Promise<iGM_ApiResponse<iGM_LevelExam>> {
+  return iGM_Post("/G_Points/levels/exam", input);
+}
+
+/** 勋章列表（公开；登录时附带获得状态；rarity 可选筛选） */
+export function iGM_ApiListBadges(
+  rarity?: "common" | "rare" | "legendary",
+): Promise<iGM_ApiResponse<{ badges: iGM_Badge[] }>> {
+  const path = rarity
+    ? `/G_Points/badges?rarity=${encodeURIComponent(rarity)}`
+    : "/G_Points/badges";
+  return iGM_Get(path);
+}
+
+/** 任务列表与进度（公开；登录时附带进度；type 可选筛选） */
+export function iGM_ApiListTasks(
+  type?: "weekly" | "seasonal",
+): Promise<iGM_ApiResponse<{ tasks: iGM_Task[] }>> {
+  const path = type
+    ? `/G_Points/tasks?type=${encodeURIComponent(type)}`
+    : "/G_Points/tasks";
+  return iGM_Get(path);
+}
+
+/** 模块十五：领取任务奖励（登录，限流） */
+export function iGM_ApiClaimTask(
+  taskId: string,
+): Promise<iGM_ApiResponse<iGM_TaskClaimResult>> {
+  return iGM_Post("/G_Points/tasks/claim", { taskId });
 }
 
 /** 排行榜（公开；sort=total 按总量 / weekly 按周增量） */
@@ -176,7 +261,11 @@ export default {
   iGM_ApiCheckin,
   iGM_ApiGetCheckinStatus,
   iGM_ApiListLevels,
+  iGM_ApiGetLevelProgress,
+  iGM_ApiListMyExams,
+  iGM_ApiSubmitLevelExam,
   iGM_ApiListBadges,
   iGM_ApiListTasks,
+  iGM_ApiClaimTask,
   iGM_ApiGetLeaderboard,
 };

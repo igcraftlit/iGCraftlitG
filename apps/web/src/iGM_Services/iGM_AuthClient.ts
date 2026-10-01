@@ -50,12 +50,24 @@ export interface iGM_RegisterData extends iGM_AuthData {
   mailSent: boolean;
 }
 
+/** 模块十五：《用户管理规定》同意状态 */
+export interface iGM_AgreementStatus {
+  /** 已同意的版本号（未同意为 null） */
+  version: string | null;
+  acceptedAt: string | null;
+  /** 当前要求的最新版本号 */
+  currentVersion: string;
+  /** 是否需重新阅读并同意 */
+  needsReaccept: boolean;
+}
+
 // 核心逻辑 //
-/** 注册：成功后后端同时下发会话 Cookie */
+/** 注册：成功后后端同时下发会话 Cookie；agreementVersion 为已同意的规定版本号 */
 export function iGM_ApiRegister(input: {
   username: string;
   email: string;
   password: string;
+  agreementVersion?: string;
 }): Promise<iGM_ApiResponse<iGM_RegisterData>> {
   return iGM_Post("/G_Auth/register", input, 15000);
 }
@@ -147,6 +159,13 @@ export function iGM_ApiDeleteAccount(
   return iGM_Post("/G_Auth/delete-account", { code }, 15000);
 }
 
+/** 模块十五：查询我的《用户管理规定》同意状态（登录）；未登录返回 401 */
+export function iGM_ApiGetAgreementStatus(): Promise<
+  iGM_ApiResponse<iGM_AgreementStatus>
+> {
+  return iGM_Get("/G_Auth/agreement");
+}
+
 // 导出 //
 export default {
   iGM_ApiRegister,
@@ -162,4 +181,5 @@ export default {
   iGM_ApiChangePassword,
   iGM_ApiSendDeleteCode,
   iGM_ApiDeleteAccount,
+  iGM_ApiGetAgreementStatus,
 };

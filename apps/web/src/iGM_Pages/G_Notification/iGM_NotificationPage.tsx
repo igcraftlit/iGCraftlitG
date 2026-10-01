@@ -22,9 +22,12 @@ import {
   Check,
   Download,
   LoaderCircle,
+  Mail,
   MessageCircleReply,
   MessageSquareText,
   Trash2,
+  UserCheck,
+  UserPlus,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -52,6 +55,9 @@ const iGM_NotificationIcon: Record<iGM_NotificationType, LucideIcon> = {
   activity: CalendarDays,
   resource: Download,
   system: Bell,
+  friend_request: UserPlus,
+  friend_accept: UserCheck,
+  message: Mail,
 };
 
 // 核心逻辑 //

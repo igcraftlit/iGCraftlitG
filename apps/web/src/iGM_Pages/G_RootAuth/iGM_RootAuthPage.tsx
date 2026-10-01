@@ -5,8 +5,9 @@
  * 模块：G_RootAuth
  * 作用：登录/注册界面——品牌视觉区 + 登录/注册同屏卡片；注册为五框向导
  * 内容：品牌区（名称/标语/简介）、登录/注册切换页签、注册向导
- *       （第一框用户名→第二框邮箱→第三框密码→第四框阅读管理规定
- *       独立界面（滚动到底解锁同意）→第五框验证码）、步骤圆点指示、
+ *       （第一框用户名与邮箱→第二框密码→第三框阅读并同意管理规定
+ *       独立界面（滚动到底勾选后解锁同意）→第四框 IP 位置验证
+ *       （须明确同意授权查询 IP）→第五框验证码）、步骤圆点指示、
  *       每框副标题、已登录用户欢迎回执
  * 入口：根路径落地页顶部导航"登录/注册"按钮与站内各处认证链接进入
  */
@@ -16,7 +17,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { BookOpenText, ShieldCheck } from "lucide-react";
+import { BookOpenText, Globe, LoaderCircle, ShieldCheck } from "lucide-react";
 import { iGM_UseLocaleRouter } from "../../iGM_i18n/iGM_UseLocaleRouter";
 import { iGM_StripLocalePrefix } from "../../iGM_i18n/iGM_LocalePath";
 import {
@@ -25,6 +26,7 @@ import {
   iGM_ApiSendVerification,
   iGM_ApiVerifyEmail,
 } from "../../iGM_Services/iGM_AuthClient";
+import { iGM_ApiGetClientIp } from "../../iGM_Services/iGM_SystemClient";
 import { iGM_UseAuth } from "../../iGM_Providers/iGM_AuthProvider";
 import {
   iGM_Alert as IGM_Alert,
@@ -195,7 +197,7 @@ function iGM_LoginPanel({ onSwitchTab }: { onSwitchTab: () => void }) {
   );
 }
 
-/** 注册五框向导：用户名 → 邮箱 → 密码 → 跳转独立页阅读管理规定 → 验证码 */
+/** 注册五框向导：用户名与邮箱 → 密码 → 阅读并同意管理规定 → IP 位置验证 → 验证码 */
 function iGM_RegisterWizard({ onSwitchTab }: { onSwitchTab: () => void }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -209,8 +211,13 @@ function iGM_RegisterWizard({ onSwitchTab }: { onSwitchTab: () => void }) {
   const [confirm, setConfirm] = useState("");
 
   const [registering, setRegistering] = useState(false);
-  /** 独立规定页带回的同意凭证（时间 + 检测 IP），未阅读同意前为 null */
+  /** 独立规定页带回的同意凭证（时间 + 版本号），未阅读同意前为 null */
   const [accepted, setAccepted] = useState<iGM_RulesAcceptedData | null>(null);
+
+  /** 第四框：IP 位置验证状态（须用户明确同意授权查询） */
+  const [clientIp, setClientIp] = useState<string | null>(null);
+  const [ipFailed, setIpFailed] = useState(false);
+  const [ipConsent, setIpConsent] = useState(false);
 
   const [code, setCode] = useState("");
   const [verifying, setVerifying] = useState(false);
@@ -228,7 +235,7 @@ function iGM_RegisterWizard({ onSwitchTab }: { onSwitchTab: () => void }) {
     return () => clearTimeout(timer);
   }, [cooldown]);
 
-  /* 挂载时恢复跳转规定页期间暂存的草稿与阅读同意凭证（第四框返回场景） */
+  /* 挂载时恢复跳转规定页期间暂存的草稿与阅读同意凭证（第三框返回场景） */
   useEffect(() => {
     const draft = iGM_LoadRegisterDraft();
     if (draft) {
@@ -236,13 +243,36 @@ function iGM_RegisterWizard({ onSwitchTab }: { onSwitchTab: () => void }) {
       setEmail(draft.email);
       setPassword(draft.password);
       setConfirm(draft.password);
-      setStep(4);
+      setStep(3);
     }
     const acceptedDraft = iGM_ConsumeRulesAccepted();
     if (acceptedDraft) setAccepted(acceptedDraft);
   }, []);
 
-  /** 逐框校验，通过则前进；第四框由"同意并继续"触发注册 */
+  /* 进入第四框时检测 IP（纯后端自研解析，无第三方服务） */
+  useEffect(() => {
+    if (step !== 4) return;
+    let cancelled = false;
+    setClientIp(null);
+    setIpFailed(false);
+    iGM_ApiGetClientIp()
+      .then((response) => {
+        if (cancelled) return;
+        if (response.data?.ip) setClientIp(response.data.ip);
+        else setIpFailed(true);
+      })
+      .catch(() => {
+        if (!cancelled) setIpFailed(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [step]);
+
+  /**
+   * 逐框校验，通过则前进：
+   * 第一框用户名与邮箱 → 第二框密码 → 第三框阅读同意 → 第四框 IP 授权后注册
+   */
   function iGM_GoNext(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorText(null);
@@ -252,18 +282,14 @@ function iGM_RegisterWizard({ onSwitchTab }: { onSwitchTab: () => void }) {
         setErrorText(t("auth.errors.usernameInvalid"));
         return;
       }
-      setStep(2);
-      return;
-    }
-    if (step === 2) {
       if (!iGM_EmailPattern.test(email.trim())) {
         setErrorText(t("auth.errors.emailInvalid"));
         return;
       }
-      setStep(3);
+      setStep(2);
       return;
     }
-    if (step === 3) {
+    if (step === 2) {
       if (password.length < 8 || password.length > 128) {
         setErrorText(t("auth.errors.passwordInvalid"));
         return;
@@ -272,23 +298,35 @@ function iGM_RegisterWizard({ onSwitchTab }: { onSwitchTab: () => void }) {
         setErrorText(t("auth.errors.passwordMismatch"));
         return;
       }
+      setStep(3);
+      return;
+    }
+    if (step === 3) {
+      // 阅读同意由独立规定页带回凭证，未同意不得前进
+      if (!accepted) {
+        setErrorText(t("auth.errors.agreementRequired"));
+        return;
+      }
       setStep(4);
     }
   }
 
-  /** 第四框：暂存草稿并跳转独立规定页（右侧目录阅读 + 底部同意后返回） */
+  /** 第三框：暂存草稿并跳转独立规定页（右侧目录阅读 + 滚动到底勾选同意后返回） */
   function iGM_GoViewRules() {
     iGM_SaveRegisterDraft({
       username: username.trim(),
       email: email.trim(),
       password,
     });
-    router.push("/G_UserRules?from=register");
+    router.push("/G_UserAgreement?from=register");
   }
 
-  /** 第四框：已在独立页阅读同意后提交注册，成功自动登录并进入第五框验证码 */
-  async function iGM_HandleAgree() {
-    if (!accepted) return;
+  /** 第四框：IP 授权同意后提交注册（携带已同意的规定版本号），成功自动登录并进入第五框 */
+  async function iGM_HandleRegister() {
+    if (!ipConsent) {
+      setErrorText(t("auth.errors.ipConsentRequired"));
+      return;
+    }
     setErrorText(null);
     setRegistering(true);
     try {
@@ -296,6 +334,7 @@ function iGM_RegisterWizard({ onSwitchTab }: { onSwitchTab: () => void }) {
         username: username.trim(),
         email: email.trim(),
         password,
+        agreementVersion: accepted?.version,
       });
       if (!response.data) throw new Error("auth.errors.generic");
       setUser(response.data.user);
@@ -366,12 +405,12 @@ function iGM_RegisterWizard({ onSwitchTab }: { onSwitchTab: () => void }) {
         onSubmit={iGM_GoNext}
         noValidate
       >
-        {errorText && step <= 3 && <IGM_Alert tone="error">{errorText}</IGM_Alert>}
-        {noticeText && step <= 3 && (
+        {errorText && step <= 2 && <IGM_Alert tone="error">{errorText}</IGM_Alert>}
+        {noticeText && step <= 2 && (
           <IGM_Alert tone="success">{noticeText}</IGM_Alert>
         )}
 
-        {/* 第一框：用户名 */}
+        {/* 第一框：用户名与邮箱 */}
         {step === 1 && (
           <>
             <IGM_FormField
@@ -391,13 +430,6 @@ function iGM_RegisterWizard({ onSwitchTab }: { onSwitchTab: () => void }) {
                 maxLength={20}
               />
             </IGM_FormField>
-            <IGM_SubmitButton>{t("auth.wizard.next")}</IGM_SubmitButton>
-          </>
-        )}
-
-        {/* 第二框：邮箱 */}
-        {step === 2 && (
-          <>
             <IGM_FormField id="igm-wizard-email" label={t("auth.fields.email")}>
               <input
                 id="igm-wizard-email"
@@ -411,15 +443,12 @@ function iGM_RegisterWizard({ onSwitchTab }: { onSwitchTab: () => void }) {
                 maxLength={128}
               />
             </IGM_FormField>
-            <IGM_SecondaryButton onClick={() => setStep(1)}>
-              {t("auth.wizard.back")}
-            </IGM_SecondaryButton>
             <IGM_SubmitButton>{t("auth.wizard.next")}</IGM_SubmitButton>
           </>
         )}
 
-        {/* 第三框：密码 + 确认密码 */}
-        {step === 3 && (
+        {/* 第二框：密码 + 确认密码 */}
+        {step === 2 && (
           <>
             <IGM_FormField
               id="igm-wizard-password"
@@ -456,7 +485,7 @@ function iGM_RegisterWizard({ onSwitchTab }: { onSwitchTab: () => void }) {
                 maxLength={128}
               />
             </IGM_FormField>
-            <IGM_SecondaryButton onClick={() => setStep(2)}>
+            <IGM_SecondaryButton onClick={() => setStep(1)}>
               {t("auth.wizard.back")}
             </IGM_SecondaryButton>
             <IGM_SubmitButton>{t("auth.wizard.next")}</IGM_SubmitButton>
@@ -464,12 +493,12 @@ function iGM_RegisterWizard({ onSwitchTab }: { onSwitchTab: () => void }) {
         )}
       </form>
 
-      {/* 第四框：跳转独立规定页阅读（右侧目录），同意后返回本框继续注册 */}
-      {step === 4 && (
+      {/* 第三框：跳转独立规定页阅读（右侧目录），滚动到底勾选同意后返回本框继续 */}
+      {step === 3 && (
         <div className={styles.step4Frame}>
           {errorText && <IGM_Alert tone="error">{errorText}</IGM_Alert>}
 
-          <p className={styles.step4Intro}>{t("auth.wizard.step4Intro")}</p>
+          <p className={styles.step4Intro}>{t("auth.wizard.step3Intro")}</p>
 
           <button
             type="button"
@@ -483,7 +512,7 @@ function iGM_RegisterWizard({ onSwitchTab }: { onSwitchTab: () => void }) {
           {accepted && (
             <IGM_Alert tone="success">
               {t("auth.wizard.acceptedInfo", {
-                ip: accepted.ip || "-",
+                version: accepted.version || "-",
                 time: new Date(accepted.at).toLocaleString(locale, {
                   hour12: false,
                 }),
@@ -492,14 +521,70 @@ function iGM_RegisterWizard({ onSwitchTab }: { onSwitchTab: () => void }) {
           )}
 
           <div className={styles.rulesActions}>
+            <IGM_SecondaryButton onClick={() => setStep(2)}>
+              {t("auth.wizard.back")}
+            </IGM_SecondaryButton>
+            <button
+              type="button"
+              className={styles.agreeButton}
+              disabled={!accepted}
+              onClick={() => setStep(4)}
+            >
+              {t("auth.wizard.next")}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 第四框：IP 位置验证（须用户明确同意授权查询 IP），同意后提交注册 */}
+      {step === 4 && (
+        <div className={styles.step4Frame}>
+          {errorText && <IGM_Alert tone="error">{errorText}</IGM_Alert>}
+
+          <p className={styles.step4Intro}>{t("auth.wizard.step4Intro")}</p>
+
+          <p className={styles.sentBanner}>
+            {ipFailed ? (
+              <>
+                <Globe size={15} strokeWidth={1.8} aria-hidden />
+                <span>{t("auth.wizard.ipDetectFailed")}</span>
+              </>
+            ) : clientIp ? (
+              <>
+                <Globe size={15} strokeWidth={1.8} aria-hidden />
+                <span>{t("auth.wizard.ipNotice", { ip: clientIp })}</span>
+              </>
+            ) : (
+              <>
+                <LoaderCircle
+                  size={15}
+                  strokeWidth={1.8}
+                  className={authStyles.spinner}
+                  aria-hidden
+                />
+                <span>{t("auth.wizard.ipDetecting")}</span>
+              </>
+            )}
+          </p>
+
+          <label className={styles.rulesActions}>
+            <input
+              type="checkbox"
+              checked={ipConsent}
+              onChange={(event) => setIpConsent(event.target.checked)}
+            />
+            <span>{t("auth.wizard.ipConsentLabel")}</span>
+          </label>
+
+          <div className={styles.rulesActions}>
             <IGM_SecondaryButton onClick={() => setStep(3)}>
               {t("auth.wizard.back")}
             </IGM_SecondaryButton>
             <button
               type="button"
               className={styles.agreeButton}
-              disabled={!accepted || registering}
-              onClick={() => void iGM_HandleAgree()}
+              disabled={!ipConsent || registering}
+              onClick={() => void iGM_HandleRegister()}
             >
               {registering && <span className={authStyles.spinner} aria-hidden />}
               {t("auth.wizard.agreeAndContinue")}

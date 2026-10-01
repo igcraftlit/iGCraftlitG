@@ -25,7 +25,6 @@ import {
   MailWarning,
   Settings,
   Trash2,
-  TriangleAlert,
   UserRound,
 } from "lucide-react";
 import { iGM_UseAuth } from "../iGM_Providers/iGM_AuthProvider";
@@ -447,17 +446,11 @@ function iGM_AccountSettingsInner() {
           {/* 模块七第三轮：危险操作——永久删除账号（须邮箱验证码） */}
           <div className={authStyles.settingsSection}>
             <h2 className={authStyles.settingsSectionTitle}>
-              <span className={authStyles.settingsSectionIcon}>
-                <TriangleAlert size={16} strokeWidth={1.8} />
-              </span>
               {t("auth.settings.deleteAccount.title")}
             </h2>
 
             <IGM_Alert tone="error">
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                <TriangleAlert size={15} strokeWidth={2} />
-                {t("auth.settings.deleteAccount.warning")}
-              </span>
+              {t("auth.settings.deleteAccount.warning")}
             </IGM_Alert>
 
             {!deleteOpen ? (

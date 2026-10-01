@@ -25,7 +25,9 @@ import { iGM_UseLocale } from "../../iGM_Providers/iGM_LocaleProvider";
 import { iGM_FormatDate } from "../../iGM_Components/iGM_Format/iGM_Format";
 import pageStyles from "../iGM_Page.module.css";
 import uiStyles from "../iGM_Module4.module.css";
-import styles from "../iGM_Points.module.css";
+import pointsStyles from "../iGM_Points.module.css";
+// 模块十五：稀有度分组与勋章样式
+import styles from "../iGM_Module15.module.css";
 
 // 类型定义 //
 // （数据类型来自 iGM_PointsClient）
@@ -39,7 +41,14 @@ const iGM_ConditionKeys = [
   "checkin_days",
   "likes_received",
   "points_total",
+  // 模块十五：季度任务完成数、考核通过数、管理员人工授予
+  "seasonal_tasks",
+  "exams_passed",
+  "manual",
 ] as const;
+
+/** 模块十五：稀有度分组顺序（普通 → 稀有 → 传说） */
+const iGM_RarityOrder = ["common", "rare", "legendary"] as const;
 
 /** 勋章墙页主体 */
 export function iGM_BadgesInner() {
@@ -101,7 +110,7 @@ export function iGM_BadgesInner() {
 
       {/* 未登录提示：仍可浏览勋章，但不显示获得状态 */}
       {status === "anonymous" && (
-        <div className={styles.loginHint}>{t("badges.loginHint")}</div>
+        <div className={pointsStyles.loginHint}>{t("badges.loginHint")}</div>
       )}
 
       {loading ? (
@@ -114,39 +123,72 @@ export function iGM_BadgesInner() {
           {t("badges.loadFailed")}
         </div>
       ) : (
-        <div className={styles.badgeGrid}>
-          {badges.map((badge) => (
-            <article
-              key={badge.id}
-              className={[
-                styles.badgeCard,
-                badge.granted ? styles.badgeCardGranted : styles.badgeCardLocked,
-              ]
-                .filter(Boolean)
-                .join(" ")}
-            >
-              <span className={styles.badgeIcon}>
-                {badge.granted ? (
-                  <BadgeCheck size={24} strokeWidth={1.6} />
-                ) : (
-                  <Lock size={24} strokeWidth={1.6} />
-                )}
-              </span>
-              <h2 className={styles.badgeName}>{badge.name}</h2>
-              <p className={styles.badgeDescription}>{badge.description}</p>
-              <div className={styles.badgeFooter}>
-                <span>{iGM_ConditionText(badge)}</span>
-                {badge.granted && badge.grantedAt && (
-                  <span className={styles.badgeGrantedTag}>
-                    {t("badges.grantedAt", {
-                      date: iGM_FormatDate(locale, badge.grantedAt),
-                    })}
+        <>
+          {/* 模块十五：按稀有度分组展示（普通 → 稀有 → 传说） */}
+          {iGM_RarityOrder.map((rarity) => {
+            const group = badges.filter((badge) => badge.rarity === rarity);
+            if (group.length === 0) return null;
+            return (
+              <section key={rarity} className={styles.raritySection}>
+                <div className={styles.rarityHead}>
+                  <h2 className={styles.rarityTitle}>
+                    {t(`badges.rarity.${rarity}`)}
+                  </h2>
+                  <span className={styles.rarityCount}>
+                    {t("badges.rarityCount", { count: group.length })}
                   </span>
-                )}
-              </div>
-            </article>
-          ))}
-        </div>
+                  <span
+                    className={[
+                      styles.rarityTag,
+                      rarity === "legendary" ? styles.rarityLegendary : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                  >
+                    {t(`badges.rarityHint.${rarity}`)}
+                  </span>
+                </div>
+                <div className={pointsStyles.badgeGrid}>
+                  {group.map((badge) => (
+                    <article
+                      key={badge.id}
+                      className={[
+                        pointsStyles.badgeCard,
+                        badge.granted
+                          ? pointsStyles.badgeCardGranted
+                          : pointsStyles.badgeCardLocked,
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                    >
+                      <span className={pointsStyles.badgeIcon}>
+                        {badge.granted ? (
+                          <BadgeCheck size={24} strokeWidth={1.6} />
+                        ) : (
+                          <Lock size={24} strokeWidth={1.6} />
+                        )}
+                      </span>
+                      <h3 className={pointsStyles.badgeName}>{badge.name}</h3>
+                      <p className={pointsStyles.badgeDescription}>
+                        {badge.description}
+                      </p>
+                      <div className={pointsStyles.badgeFooter}>
+                        <span>{iGM_ConditionText(badge)}</span>
+                        {badge.granted && badge.grantedAt && (
+                          <span className={pointsStyles.badgeGrantedTag}>
+                            {t("badges.grantedAt", {
+                              date: iGM_FormatDate(locale, badge.grantedAt),
+                            })}
+                          </span>
+                        )}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            );
+          })}
+        </>
       )}
     </div>
   );

@@ -15,6 +15,7 @@ import { iGM_Link as Link } from "../../iGM_Components/iGM_Link/iGM_Link";
 import { useTranslations } from "next-intl";
 import {
   ArrowRight,
+  ArrowUpRight,
   BookOpen,
   CalendarDays,
   ChevronDown,
@@ -28,6 +29,7 @@ import {
   Package,
   Search,
   Sparkles,
+  Terminal,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { iGM_Reveal as IGM_Reveal } from "../../iGM_Components/iGM_Reveal/iGM_Reveal";
@@ -324,9 +326,21 @@ export function iGM_LandingPage() {
         <span className={styles.footerCopyright}>
           {t("landing.footer.rights", { year })}
         </span>
-        <Link href="/G_Home" className={styles.footerConsole}>
-          {t("landing.footer.console")}
-        </Link>
+        <span className={styles.footerActions}>
+          <a
+            className={styles.footerDev}
+            href="https://cli.igcraftlit.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Terminal size={12} aria-hidden />
+            {t("footer.devPortal")}
+            <ArrowUpRight size={11} aria-hidden />
+          </a>
+          <Link href="/G_Home" className={styles.footerConsole}>
+            {t("landing.footer.console")}
+          </Link>
+        </span>
       </footer>
     </div>
   );

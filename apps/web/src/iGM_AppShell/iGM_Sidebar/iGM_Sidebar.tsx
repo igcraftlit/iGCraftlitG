@@ -22,6 +22,7 @@ import {
   type iGM_NavItem,
 } from "../../iGM_Navigation/iGM_NavConfig";
 import type { iGM_User } from "../../iGM_Services/iGM_AuthClient";
+import { iGM_ApiGetMyDeveloper, iGM_DeveloperConsoleUrl, iGM_ResolveDeveloperEntry } from "../../iGM_Services/iGM_DeveloperClient";
 import { iGM_UseAuth } from "../../iGM_Providers/iGM_AuthProvider";
 import styles from "./iGM_Sidebar.module.css";
 
@@ -81,6 +82,44 @@ export function iGM_Sidebar({ open, onNavigate }: iGM_SidebarProps) {
     iGM_StripLocalePrefix(usePathname()).replace(/\/$/, "") || "/";
   const { user } = iGM_UseAuth();
 
+  // 模块十六：开发者入口目标——组织所有者免申请、直接进入接入界面；
+  // 其余用户按最新申请状态解析：已通过进接入界面，待审进状态页，其余进申请页
+  const [developerTarget, setDeveloperTarget] = useState<{
+    href: string;
+    external: boolean;
+  }>({ href: "/G_DeveloperApply", external: false });
+  const iGM_IsOrgOwner = user?.verifiedOrg?.isOwner === true;
+  useEffect(() => {
+    /** 按身份与申请状态写入入口目标 */
+    function iGM_ApplyTarget(status: string | null): void {
+      const target = iGM_ResolveDeveloperEntry(iGM_IsOrgOwner, status);
+      setDeveloperTarget(
+        target === "console"
+          ? { href: iGM_DeveloperConsoleUrl, external: true }
+          : target === "status"
+            ? { href: "/G_DeveloperStatus", external: false }
+            : { href: "/G_DeveloperApply", external: false },
+      );
+    }
+    if (!user) {
+      setDeveloperTarget({ href: "/G_DeveloperApply", external: false });
+      return;
+    }
+    // 组织所有者不依赖申请记录，先按身份给出目标，再按最新申请状态校正
+    iGM_ApplyTarget(null);
+    let active = true;
+    iGM_ApiGetMyDeveloper()
+      .then((response) => {
+        if (active) iGM_ApplyTarget(response.data?.latest?.status ?? null);
+      })
+      .catch(() => {
+        /* 读取失败时保持当前目标 */
+      });
+    return () => {
+      active = false;
+    };
+  }, [user, iGM_IsOrgOwner]);
+
   // 用户手动展开/折叠覆盖：仅在当前路由内有效，切换路由后自动清空，
   // 使展开态回归“按当前路由自动展开”，离开的分支随之折叠
   const [overrides, setOverrides] = useState<Record<string, boolean>>({});
@@ -114,8 +153,12 @@ export function iGM_Sidebar({ open, onNavigate }: iGM_SidebarProps) {
   /** 递归渲染单个导航节点（叶子或树状父节点） */
   function iGM_RenderNavItem(item: iGM_NavItem, depth: number) {
     const Icon = item.icon;
+    // 模块十六：开发者入口按身份与申请状态解析目标（可能为外链），其余项使用配置内的静态路由
+    const target = item.developerEntry
+      ? developerTarget
+      : { href: item.href, external: item.external === true };
     // 外链入口不参与站内高亮
-    const active = !item.external && iGM_IsActive(pathname, item.href);
+    const active = !target.external && iGM_IsActive(pathname, target.href);
     const hasChildren = !!item.children && item.children.length > 0;
     const expanded = hasChildren && iGM_IsOpen(item);
 
@@ -123,14 +166,14 @@ export function iGM_Sidebar({ open, onNavigate }: iGM_SidebarProps) {
       <li key={item.href}>
         <div className={styles.itemRow}>
           <Link
-            href={item.href}
+            href={target.href}
             className={`${styles.navLink} ${active ? styles.navLinkActive : ""} ${
               depth > 0 ? styles.navLinkChild : ""
             }`}
             aria-current={active ? "page" : undefined}
             title={t(item.labelKey)}
             onClick={onNavigate}
-            {...(item.external
+            {...(target.external
               ? { target: "_blank", rel: "noopener noreferrer" }
               : {})}
           >

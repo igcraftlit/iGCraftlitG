@@ -1,0 +1,652 @@
+/**
+ * 文件路径：apps/web/src/iGM_Pages/iGM_Module15.module.css
+ * 所属层：前端 / 页面样式层
+ * 路由：/G_Levels、/G_Tasks、/G_Badges、/G_Developer*、/G_UserAgreement
+ * 模块：iGM_Module15
+ * 作用：模块十五（等级/任务/勋章分级/开发者申请/用户管理规定）页面共用样式
+ * 内容：等级阶梯、升级进度条、考核卡片、任务标签页与进度、勋章稀有度分组、
+ *       开发者介绍与申请表单、规定文档排版与目录
+ * 说明：极简排版，颜色取自全局主题变量，无动画与装饰符号
+ */
+
+/* 区块：等级阶梯 */
+.levelGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.levelCard {
+  border: 1px solid var(--igm-border);
+  border-radius: 12px;
+  padding: 16px;
+  background: var(--igm-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.levelCardCurrent {
+  border-color: var(--igm-accent);
+}
+
+.levelHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.levelName {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.levelOrder {
+  font-size: 12px;
+  color: var(--igm-text-weak);
+}
+
+.levelPoints {
+  font-size: 13px;
+  color: var(--igm-text-weak);
+}
+
+.levelTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.levelTag {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border);
+  color: var(--igm-text-weak);
+}
+
+.levelTagExam {
+  border-color: var(--igm-warning, #b8860b);
+  color: var(--igm-warning, #b8860b);
+}
+
+.levelTagCurrent {
+  border-color: var(--igm-accent);
+  color: var(--igm-accent);
+}
+
+/* 区块：升级进度 */
+.progressCard {
+  border: 1px solid var(--igm-border);
+  border-radius: 12px;
+  padding: 16px;
+  background: var(--igm-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.progressHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.progressTitle {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.progressMeta {
+  font-size: 13px;
+  color: var(--igm-text-weak);
+}
+
+.progressTrack {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--igm-surface-strong, rgba(127, 127, 127, 0.18));
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--igm-accent);
+}
+
+.progressActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* 区块：考核区 */
+.examBox {
+  border: 1px solid var(--igm-border);
+  border-radius: 12px;
+  padding: 16px;
+  background: var(--igm-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.examTextarea {
+  width: 100%;
+  min-height: 120px;
+  resize: vertical;
+  border: 1px solid var(--igm-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: 1.7;
+}
+
+.examStatus {
+  font-size: 13px;
+  color: var(--igm-text-weak);
+}
+
+.examList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.examItem {
+  border: 1px solid var(--igm-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* 区块：按钮 */
+.primaryButton {
+  border: 1px solid var(--igm-accent);
+  background: var(--igm-accent);
+  color: #fff;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.primaryButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ghostButton {
+  border: 1px solid var(--igm-border);
+  background: transparent;
+  color: inherit;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.ghostButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 区块：任务标签页 */
+.tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--igm-border);
+  margin-bottom: 16px;
+}
+
+.tab {
+  border: none;
+  background: transparent;
+  color: var(--igm-text-weak);
+  padding: 8px 14px;
+  font-size: 14px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.tabActive {
+  color: var(--igm-accent);
+  border-bottom-color: var(--igm-accent);
+}
+
+.taskList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.taskCard {
+  border: 1px solid var(--igm-border);
+  border-radius: 12px;
+  padding: 16px;
+  background: var(--igm-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.taskHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.taskName {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.taskReward {
+  font-size: 13px;
+  color: var(--igm-accent);
+}
+
+.taskDesc {
+  font-size: 13px;
+  color: var(--igm-text-weak);
+  margin: 0;
+}
+
+.taskFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.taskProgressText {
+  font-size: 13px;
+  color: var(--igm-text-weak);
+}
+
+/* 区块：勋章稀有度 */
+.raritySection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.rarityHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rarityTitle {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.rarityCount {
+  font-size: 12px;
+  color: var(--igm-text-weak);
+}
+
+.rarityTag {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border);
+  color: var(--igm-text-weak);
+}
+
+.rarityLegendary {
+  border-color: var(--igm-accent);
+  color: var(--igm-accent);
+}
+
+/* 区块：开发者介绍 */
+.introGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.introCard {
+  border: 1px solid var(--igm-border);
+  border-radius: 12px;
+  padding: 16px;
+  background: var(--igm-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.introTitle {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.introText {
+  font-size: 13px;
+  color: var(--igm-text-weak);
+  margin: 0;
+  line-height: 1.7;
+}
+
+.actionRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+/* 区块：表单 */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 640px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 13px;
+  color: var(--igm-text-weak);
+}
+
+.input,
+.textarea {
+  width: 100%;
+  border: 1px solid var(--igm-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.textarea {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.7;
+}
+
+/* 区块：表单下拉与勾选（模块十六开发者申请） */
+/* 下拉框：Chromium 对 background: transparent 的 select 仍会绘制系统白色底，
+   故显式取主题底色并去掉原生外观，自绘同色系箭头，明暗主题下均与页面协调 */
+.select {
+  width: 100%;
+  border: 1px solid var(--igm-border);
+  border-radius: 10px;
+  padding: 10px 34px 10px 12px;
+  background-color: var(--igm-surface-subtle);
+  color: var(--igm-text);
+  font: inherit;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 14px 14px;
+}
+
+/* 展开后的选项列表同样取主题底色，避免系统白色面板 */
+.select option {
+  background-color: var(--igm-surface);
+  color: var(--igm-text);
+}
+
+.optional {
+  margin-left: 6px;
+  color: var(--igm-text-weak);
+  font-size: 12px;
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+  cursor: pointer;
+}
+
+/* 勾选框：原生 unchecked 方框为系统白色，改为自绘主题色方框 + 主题色对勾 */
+.checkbox {
+  flex: none;
+  position: relative;
+  width: 15px;
+  height: 15px;
+  margin-top: 2px;
+  border: 1px solid var(--igm-border-strong);
+  border-radius: 4px;
+  background-color: var(--igm-surface-subtle);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.checkbox:checked {
+  border-color: var(--igm-accent);
+  background-color: var(--igm-accent);
+}
+
+.checkbox:checked::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid var(--igm-accent-contrast);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.checkbox:focus-visible {
+  outline: 2px solid var(--igm-accent);
+  outline-offset: 2px;
+}
+
+.reviewHint {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--igm-text-weak);
+  border: 1px solid var(--igm-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+/* 区块：状态徽标与复制行（模块十六开发者状态页） */
+.stateBadge {
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border);
+  color: var(--igm-text-weak);
+}
+
+.stateBadgePending {
+  border-color: var(--igm-warning, #b8860b);
+  color: var(--igm-warning, #b8860b);
+}
+
+.stateBadgeApproved {
+  border-color: var(--igm-success, #2e7d32);
+  color: var(--igm-success, #2e7d32);
+}
+
+.stateBadgeRejected {
+  border-color: var(--igm-danger, #c62828);
+  color: var(--igm-danger, #c62828);
+}
+
+.keyRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.copyButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--igm-border);
+  background: transparent;
+  color: inherit;
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* 区块：状态与键值展示 */
+.statusCard {
+  border: 1px solid var(--igm-border);
+  border-radius: 12px;
+  padding: 16px;
+  background: var(--igm-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.statusRow {
+  display: flex;
+  gap: 12px;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+
+.statusLabel {
+  color: var(--igm-text-weak);
+  min-width: 88px;
+}
+
+.statusValue {
+  word-break: break-all;
+}
+
+.keyBox {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  border: 1px dashed var(--igm-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  word-break: break-all;
+}
+
+/* 区块：用户管理规定文档 */
+.docLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 32px;
+  align-items: start;
+}
+
+.docBody {
+  min-width: 0;
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.docMeta {
+  font-size: 13px;
+  color: var(--igm-text-weak);
+  margin: 0 0 16px;
+}
+
+.docH1 {
+  font-size: 22px;
+  margin: 0 0 12px;
+}
+
+.docH2 {
+  font-size: 18px;
+  margin: 28px 0 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--igm-border);
+}
+
+.docH3 {
+  font-size: 15px;
+  margin: 20px 0 8px;
+}
+
+.docH4 {
+  font-size: 14px;
+  margin: 16px 0 6px;
+  color: var(--igm-text-weak);
+}
+
+.docP {
+  margin: 0 0 8px;
+}
+
+.docList {
+  margin: 0 0 12px;
+  padding-left: 22px;
+}
+
+.docList li {
+  margin-bottom: 4px;
+}
+
+.docHr {
+  border: none;
+  border-top: 1px solid var(--igm-border);
+  margin: 20px 0;
+}
+
+.tocRail {
+  position: sticky;
+  top: 84px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.tocTop {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .docLayout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tocRail {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .tocTop {
+    display: block;
+    margin-bottom: 16px;
+  }
+}

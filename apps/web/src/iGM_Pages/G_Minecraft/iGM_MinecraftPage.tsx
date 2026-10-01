@@ -208,6 +208,11 @@ export function iGM_MinecraftPage() {
             onChange={(event) => setKeywordInput(event.target.value)}
           />
         </form>
+        {/* 模块十七：本体版本资料库入口 */}
+        <Link href="/G_MinecraftVersions" className={m10.ghostButton}>
+          <Blocks size={15} strokeWidth={1.8} />
+          {t("minecraft.gameVersions")}
+        </Link>
         <Link href="/G_MinecraftUpload" className={m10.primaryButton}>
           <Upload size={15} strokeWidth={1.8} />
           {t("minecraft.upload")}

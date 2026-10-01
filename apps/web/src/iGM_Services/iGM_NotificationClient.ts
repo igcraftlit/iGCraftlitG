@@ -24,7 +24,10 @@ export type iGM_NotificationType =
   | "reply"
   | "activity"
   | "resource"
-  | "system";
+  | "system"
+  | "friend_request"
+  | "friend_accept"
+  | "message";
 
 /** 通知条目 */
 export interface iGM_Notification {

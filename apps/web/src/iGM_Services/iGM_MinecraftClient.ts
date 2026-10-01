@@ -20,6 +20,10 @@ import {
 } from "./iGM_Request";
 import { iGM_Config } from "./iGM_Config";
 import type { iGM_ResourceDetail, iGM_ResourceListData } from "./iGM_ResourceClient";
+import type {
+  iGM_GameVersion,
+  iGM_GameVersionListData,
+} from "./iGM_GameClient";
 
 // 类型定义 //
 /** 分区列表查询参数 */
@@ -36,9 +40,20 @@ export interface iGM_MinecraftQuery {
 /** 表单选项字典 */
 export interface iGM_MinecraftOptions {
   resourceTypes: string[];
+  /** 分区浏览类型（含 minecraft_version 本体分区） */
+  partitionTypes: string[];
   versionOptions: string[];
   loaders: string[];
   platforms: string[];
+}
+
+/** 本体分区版本查询参数（模块十七） */
+export interface iGM_MinecraftVersionQuery {
+  type?: string;
+  search?: string;
+  sort?: "newest" | "oldest";
+  page?: number;
+  pageSize?: number;
 }
 
 /** 创建/编辑提交载荷（多选字段以数组提交） */
@@ -129,6 +144,28 @@ export function iGM_ApiDeleteMinecraft(
   );
 }
 
+/** 本体分区版本列表（模块十七：资源库 Minecraft 本体分区） */
+export function iGM_ApiListMinecraftVersions(
+  query: iGM_MinecraftVersionQuery,
+): Promise<iGM_ApiResponse<iGM_GameVersionListData>> {
+  return iGM_Get(
+    `/G_Minecraft/versions${iGM_BuildQuery({
+      type: query.type,
+      search: query.search,
+      sort: query.sort,
+      page: query.page,
+      pageSize: query.pageSize,
+    })}`,
+  );
+}
+
+/** 本体分区版本详情（模块十七） */
+export function iGM_ApiGetMinecraftVersion(
+  versionId: string,
+): Promise<iGM_ApiResponse<{ version: iGM_GameVersion }>> {
+  return iGM_Get(`/G_Minecraft/version/${encodeURIComponent(versionId)}`);
+}
+
 /** 资源下载地址（附件，浏览器直接打开触发下载） */
 export function iGM_MinecraftDownloadUrl(resourceId: string): string {
   return `${iGM_Config.apiBase}/G_Minecraft/download?resourceId=${encodeURIComponent(resourceId)}`;
@@ -142,5 +179,7 @@ export default {
   iGM_ApiCreateMinecraft,
   iGM_ApiUpdateMinecraft,
   iGM_ApiDeleteMinecraft,
+  iGM_ApiListMinecraftVersions,
+  iGM_ApiGetMinecraftVersion,
   iGM_MinecraftDownloadUrl,
 };

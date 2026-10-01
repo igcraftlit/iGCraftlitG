@@ -26,6 +26,8 @@ export interface iGM_RulesAcceptedData {
   at: string;
   /** 规定页检测到的客户端 IP（告知展示用，落库以后端解析为准） */
   ip: string;
+  /** 模块十五：已同意的《用户管理规定》版本号 */
+  version?: string;
 }
 
 // 核心逻辑 //
