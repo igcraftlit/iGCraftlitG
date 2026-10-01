@@ -1,0 +1,195 @@
+/*
+ * 文件路径：apps/launcher-ui/components/iGM_Launcher_Pages/iGM_Launcher_AccountMsBindPage.module.css
+ * 所属层：前端 / 页面层样式
+ * 路由：G_Account_MSBind（/accountMsBind）
+ * 模块：iGM_Launcher_AccountMsBindPage
+ * 作用：绑定方式切换、设备代码展示块、认证链进度列表与提示行样式
+ */
+
+.page {
+  max-width: 860px;
+}
+
+.card {
+  margin-top: 14px;
+}
+
+.cardTitle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.cardDesc {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+/* 方式切换行 */
+.methodRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.fieldLabel {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--igm-text-subtle);
+}
+
+.methodBody {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--igm-border);
+}
+
+/* 设备代码展示 */
+.codeBlock {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.codeItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-border);
+  background-color: var(--igm-surface-subtle);
+}
+
+.codeLabel {
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+.codeValue {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--igm-text);
+  font-family: var(--igm-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  user-select: all;
+}
+
+.codeLink {
+  font-size: 13px;
+  color: var(--igm-text-muted);
+  word-break: break-all;
+}
+
+/* 操作区 */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+/* 等待与提示行 */
+.waitingLine,
+.errorLine,
+.successLine {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  font-size: 12px;
+}
+
+.waitingLine {
+  color: var(--igm-text-muted);
+}
+
+.waitingHint {
+  margin-left: 4px;
+  color: var(--igm-text-subtle);
+}
+
+.errorLine {
+  color: var(--igm-danger);
+}
+
+.successLine {
+  color: var(--igm-success);
+}
+
+.spin {
+  animation: iGM_Launcher_Spin 1s linear infinite;
+}
+
+@keyframes iGM_Launcher_Spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 认证链进度 */
+.stageList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+  list-style: none;
+}
+
+.stageItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-border);
+  background-color: var(--igm-surface-subtle);
+  color: var(--igm-text-muted);
+}
+
+.stageItemActive {
+  border-color: var(--igm-accent);
+  background-color: var(--igm-accent-soft);
+  color: var(--igm-text);
+}
+
+.stageIcon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.stageName {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+}
+
+.stageState {
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+@media (max-width: 760px) {
+  .codeBlock {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
+}

@@ -1,0 +1,368 @@
+/*
+ * 文件路径：apps/launcher-ui/components/iGM_Launcher_Pages/iGM_Launcher_AccountPage.module.css
+ * 所属层：前端 / 页面层样式
+ * 路由：G_Account（/account）
+ * 模块：iGM_Launcher_AccountPage
+ * 作用：账户卡片布局、头像块、iGMUid 行与统计栅格
+ */
+
+.page {
+  max-width: 860px;
+}
+
+.profileCard {
+  display: flex;
+  gap: 22px;
+  padding: 24px;
+}
+
+.avatarBlock {
+  flex-shrink: 0;
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 76px;
+  height: 76px;
+  border-radius: 999px;
+  background-color: var(--igm-surface-subtle);
+  border: 1px solid var(--igm-border);
+  color: var(--igm-text-muted);
+}
+
+/* 社区头像：与占位圆形同尺寸，裁剪填充避免拉伸 */
+.avatarImage {
+  display: block;
+  width: 76px;
+  height: 76px;
+  border-radius: 999px;
+  object-fit: cover;
+  background-color: var(--igm-surface-subtle);
+  border: 1px solid var(--igm-border);
+}
+
+.profileBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.userName {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.uidRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.uidLabel {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--igm-text-subtle);
+}
+
+.uidValue {
+  font-size: 13px;
+  color: var(--igm-text-muted);
+}
+
+/* 统计栅格 */
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-border);
+  background-color: var(--igm-surface-subtle);
+}
+
+.statLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+.statValue {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+/* 操作区 */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.verifiedHint {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+.signInDesc {
+  margin-top: 10px;
+  max-width: 560px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+/* 未登录：登录方式三栏 */
+.methodGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.methodCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.methodIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--igm-radius);
+  background-color: var(--igm-accent-soft);
+  color: var(--igm-accent);
+}
+
+.methodTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.methodDesc {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+.methodCard > :last-child {
+  margin-top: auto;
+}
+
+/* 模块五：离线模式身份信息（本机生成，与正版绑定 UUID 区分） */
+.offlineIdentity {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-border);
+  background-color: var(--igm-surface-subtle);
+}
+
+.offlineRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.offlineRow dt {
+  color: var(--igm-text-subtle);
+}
+
+.offlineRow dd {
+  color: var(--igm-text);
+  font-weight: 600;
+}
+
+.offlineUuid {
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--igm-text-muted);
+  word-break: break-all;
+}
+
+/* 本地账号与 Minecraft 正版账号卡片 */
+.localCard,
+.mcCard {
+  margin-top: 14px;
+}
+
+/* Minecraft 正版账号绑定 */
+.mcHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.mcList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.mcItem {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px;
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-border);
+  background-color: var(--igm-surface-subtle);
+}
+
+.mcItemMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.mcItemNameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mcItemName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.mcItemMeta {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+  word-break: break-all;
+}
+
+.mcItemActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.mcCount {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+@media (max-width: 760px) {
+  .mcItem {
+    flex-direction: column;
+  }
+
+  .mcItemActions {
+    justify-content: flex-start;
+  }
+}
+
+.orgTitle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.orgList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.orgItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-border);
+  background-color: var(--igm-surface-subtle);
+}
+
+.orgName {
+  font-size: 13px;
+  color: var(--igm-text);
+}
+
+.orgEmpty {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+/* 本地数据 */
+.localDesc {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+.localPath {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+  word-break: break-all;
+}
+
+@media (max-width: 1000px) {
+  .methodGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .profileCard {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .statGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

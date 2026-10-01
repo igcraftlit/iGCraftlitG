@@ -1,0 +1,68 @@
+/*
+ * 文件路径：apps/launcher-download/src/components/iGM_LauncherDl_LanguageSwitcher/iGM_LauncherDl_LanguageSwitcher.module.css
+ * 所属层：前端 / 组件样式层
+ * 路由：全局（站点头部）
+ * 模块：iGM_LauncherDl_Downloader
+ * 作用：语言切换器样式——图标触发按钮 + 下拉菜单，极简无装饰
+ */
+
+/* 核心逻辑 */
+.wrap {
+  position: relative;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--igm-radius);
+  color: var(--igm-text-muted);
+  transition:
+    color var(--igm-motion-nav) var(--igm-motion-ease),
+    background-color var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.trigger:hover {
+  background: var(--igm-surface-subtle);
+  color: var(--igm-text);
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 60;
+  min-width: 150px;
+  padding: 5px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius);
+  background: var(--igm-surface);
+  box-shadow: var(--igm-shadow-hover);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 13.5px;
+  color: var(--igm-text-muted);
+  text-align: left;
+  transition:
+    color var(--igm-motion-nav) var(--igm-motion-ease),
+    background-color var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.item:hover {
+  color: var(--igm-text);
+  background: var(--igm-surface-subtle);
+}
+
+.itemLabel {
+  white-space: nowrap;
+}

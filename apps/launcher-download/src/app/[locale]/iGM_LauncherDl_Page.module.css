@@ -1,0 +1,274 @@
+/*
+ * 文件路径：apps/launcher-download/src/app/[locale]/iGM_LauncherDl_Page.module.css
+ * 所属层：前端 / 页面样式层
+ * 路由：/{locale}/download、releases、changelog、about（共享）
+ * 模块：iGM_LauncherDl_Downloader
+ * 作用：下载 / 版本 / 更新日志 / 关于等页面的共享排版样式
+ * 内容：页面标题区、字段卡、时间线、信息卡网格、按钮；极简风格，无装饰
+ */
+
+/* 核心逻辑 */
+
+.page {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 48px 20px 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.title {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--igm-text);
+}
+
+.lead {
+  max-width: 680px;
+  font-size: 14.5px;
+  line-height: 1.75;
+  color: var(--igm-text-muted);
+}
+
+/* ===== 字段卡 ===== */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  background: var(--igm-surface);
+  box-shadow: var(--igm-shadow);
+}
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px 28px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.fieldLabel {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--igm-text-subtle);
+}
+
+.fieldValue {
+  font-size: 14.5px;
+  color: var(--igm-text);
+  word-break: break-word;
+}
+
+.fieldValueStrong {
+  font-weight: 600;
+}
+
+.fieldValueMono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+}
+
+.fieldValuePending {
+  color: var(--igm-text-subtle);
+}
+
+/* ===== 按钮 ===== */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.primaryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: 1px solid var(--igm-accent);
+  border-radius: var(--igm-radius);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--igm-accent-contrast);
+  background: var(--igm-accent);
+  transition:
+    background-color var(--igm-motion-nav) var(--igm-motion-ease),
+    border-color var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.primaryButton:hover {
+  background: var(--igm-accent-hover);
+  border-color: var(--igm-accent-hover);
+}
+
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--igm-text);
+  background: var(--igm-surface);
+  transition:
+    border-color var(--igm-motion-nav) var(--igm-motion-ease),
+    box-shadow var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.secondaryButton:hover {
+  border-color: var(--igm-border-strong);
+  box-shadow: var(--igm-shadow);
+}
+
+/* ===== 提示语 ===== */
+.note {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--igm-text-subtle);
+}
+
+/* ===== 时间线（更新日志） ===== */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  border-left: 1px solid var(--igm-border);
+  padding-left: 24px;
+}
+
+.timelineItem {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.timelineItem::before {
+  content: "";
+  position: absolute;
+  left: -30px;
+  top: 6px;
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--igm-surface);
+  border-radius: 50%;
+  background: var(--igm-accent);
+}
+
+.timelineHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.timelineVersion {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.timelineDate {
+  font-size: 13px;
+  color: var(--igm-text-subtle);
+}
+
+.badge {
+  padding: 3px 10px;
+  border: 1px solid var(--igm-border);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--igm-text-muted);
+  background: var(--igm-surface);
+}
+
+.timelineList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.timelineListItem {
+  position: relative;
+  padding-left: 16px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+.timelineListItem::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 0.72em;
+  width: 5px;
+  height: 1px;
+  background: var(--igm-text-subtle);
+}
+
+/* ===== 信息卡网格 ===== */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.infoCard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  background: var(--igm-surface);
+  box-shadow: var(--igm-shadow);
+}
+
+.infoIcon {
+  display: flex;
+  color: var(--igm-accent);
+}
+
+.infoTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.infoDesc {
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+@media (max-width: 640px) {
+  .title {
+    font-size: 25px;
+  }
+}

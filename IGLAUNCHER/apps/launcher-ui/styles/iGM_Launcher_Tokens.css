@@ -1,0 +1,73 @@
+/*
+ * 文件路径：apps/launcher-ui/styles/iGM_Launcher_Tokens.css
+ * 所属层：前端 / 设计令牌层
+ * 路由：全局
+ * 模块：iGM_Launcher_Tokens
+ * 作用：与 igcraftlit.com 主站一致的 --igm- 前缀 CSS 变量，
+ *       由 html[data-theme] 驱动明暗主题，追加启动器布局尺寸令牌
+ * 内容：中性灰阶色板、单一强调色、圆角/阴影、AppShell 布局尺寸
+ */
+
+/* 类型定义 */
+/* （样式文件无类型） */
+
+/* 核心逻辑 */
+
+/* 浅色主题（默认） */
+:root,
+html[data-theme="light"] {
+  --igm-bg: #f7f7f8;
+  --igm-surface: #ffffff;
+  --igm-surface-subtle: #f1f1f3;
+  --igm-border: #e4e4e7;
+  --igm-border-strong: #d4d4d8;
+  --igm-text: #18181b;
+  --igm-text-muted: #71717a;
+  --igm-text-subtle: #a1a1aa;
+  --igm-accent: #2563eb;
+  --igm-accent-hover: #1d4ed8;
+  --igm-accent-contrast: #ffffff;
+  --igm-accent-soft: rgba(37, 99, 235, 0.08);
+  --igm-danger: #dc2626;
+  --igm-danger-soft: rgba(220, 38, 38, 0.08);
+  --igm-success: #16a34a;
+  --igm-success-soft: rgba(22, 163, 74, 0.1);
+  --igm-shadow: 0 1px 2px rgba(24, 24, 27, 0.06);
+  --igm-shadow-hover: 0 4px 16px rgba(24, 24, 27, 0.1);
+  --igm-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", sans-serif;
+  --igm-radius: 8px;
+  --igm-radius-lg: 12px;
+
+  /* 启动器 AppShell 布局令牌 */
+  --igm-launcher-topbar-height: 52px;
+  --igm-launcher-statusbar-height: 28px;
+  --igm-launcher-sidebar-width: 232px;
+  --igm-launcher-sidebar-rail-width: 64px;
+  /* 窗口最小可用尺寸（Electrobun 无 min-size API，由界面层兜底） */
+  --igm-launcher-min-width: 1024px;
+  --igm-launcher-min-height: 640px;
+}
+
+/* 深色主题 */
+html[data-theme="dark"] {
+  --igm-bg: #0c0c0e;
+  --igm-surface: #161618;
+  --igm-surface-subtle: #1d1d20;
+  --igm-border: #2a2a2e;
+  --igm-border-strong: #3a3a40;
+  --igm-text: #ededef;
+  --igm-text-muted: #9b9ba3;
+  --igm-text-subtle: #6b6b74;
+  --igm-accent: #60a5fa;
+  --igm-accent-hover: #93c5fd;
+  --igm-accent-contrast: #0c0c0e;
+  --igm-accent-soft: rgba(96, 165, 250, 0.12);
+  --igm-danger: #f87171;
+  --igm-danger-soft: rgba(248, 113, 113, 0.12);
+  --igm-success: #4ade80;
+  --igm-success-soft: rgba(74, 222, 128, 0.12);
+  --igm-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --igm-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.5);
+}

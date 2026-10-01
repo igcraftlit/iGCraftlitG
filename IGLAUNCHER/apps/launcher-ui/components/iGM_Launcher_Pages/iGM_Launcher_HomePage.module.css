@@ -1,0 +1,222 @@
+/*
+ * 文件路径：apps/launcher-ui/components/iGM_Launcher_Pages/iGM_Launcher_HomePage.module.css
+ * 所属层：前端 / 页面层样式
+ * 路由：G_Home（/）
+ * 模块：iGM_Launcher_HomePage
+ * 作用：Hero 与三栏占位卡片的响应式栅格
+ */
+
+.page {
+  max-width: 1080px;
+}
+
+/* Hero */
+.hero {
+  padding: 28px;
+  background-color: var(--igm-surface);
+}
+
+.heroTitle {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.heroDesc {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--igm-text-muted);
+  max-width: 560px;
+}
+
+.heroActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.heroSecondaryLink {
+  display: inline-flex;
+}
+
+/* 离线启动面板（模块八） */
+.offlinePanel {
+  margin-top: 20px;
+  padding: 12px 14px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius);
+  background-color: var(--igm-surface-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 560px;
+}
+
+.offlineRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.offlineLabel {
+  min-width: 88px;
+  color: var(--igm-text-subtle);
+}
+
+.offlineValue {
+  color: var(--igm-text);
+  font-weight: 500;
+}
+
+.offlineMono {
+  color: var(--igm-text-muted);
+  font-family: "Consolas", "SFMono-Regular", monospace;
+  font-size: 11px;
+  word-break: break-all;
+}
+
+.offlineNote {
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--igm-text-subtle);
+}
+
+/* 三栏栅格 */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.cardTitle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--igm-text);
+}
+
+.cardTitle h3 {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.emptyLine {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+.lineList {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 最近实例列表 */
+.instanceList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.instanceRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: var(--igm-radius);
+  transition: background-color 120ms ease;
+}
+
+.instanceRow:hover {
+  background-color: var(--igm-surface-subtle);
+}
+
+.instanceRowIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  background-color: var(--igm-accent-soft);
+  color: var(--igm-accent);
+}
+
+.instanceRowName {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--igm-text);
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardLink {
+  margin-top: 10px;
+  height: 26px;
+  padding: 0 8px;
+  font-size: 12px;
+}
+
+/* 模块五：版本库同步状态 */
+.libraryStatus {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.libraryMeta {
+  font-size: 12px;
+  color: var(--igm-text-muted);
+}
+
+.libraryActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.lineList li {
+  position: relative;
+  padding-left: 14px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--igm-text-muted);
+}
+
+.lineList li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background-color: var(--igm-border-strong);
+}
+
+/* 窗口收窄时退化为两栏 / 单栏 */
+@media (max-width: 1180px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 820px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

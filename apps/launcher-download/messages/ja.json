@@ -1,0 +1,220 @@
+{
+  "site": {
+    "name": "iGM CraftCeon Launcher",
+    "tagline": "iGCraftLit × MuoCeon 共同構築"
+  },
+  "nav": {
+    "download": "ダウンロード",
+    "releases": "バージョン",
+    "docs": "ドキュメント",
+    "about": "概要"
+  },
+  "language": {
+    "zh-CN": "简体中文",
+    "zh-TW": "繁體中文",
+    "en": "English",
+    "ja": "日本語",
+    "ru": "Русский"
+  },
+  "hero": {
+    "title": "iGM CraftCeon Launcher",
+    "subtitle": "iGCraftLit × MuoCeon 共同構築",
+    "description": "Minecraft プレイヤー向けのオールインワンランチャー。インスタンス管理、Java 管理、リソースのダウンロード、正規アカウント認証、オフラインモードをすぐに利用できます。",
+    "downloadCta": "Windows x64 版をダウンロード",
+    "docsCta": "ドキュメントを見る"
+  },
+  "version": {
+    "sectionTitle": "現在のバージョン",
+    "sectionDesc": "ダウンロード前にバージョン番号とファイルの検証情報をご確認ください。",
+    "label": "バージョン",
+    "platform": "プラットフォーム",
+    "releasedAt": "リリース日",
+    "fileSize": "ファイルサイズ",
+    "sha256": "SHA256",
+    "fileName": "ファイル",
+    "pending": "ビルド後に記載",
+    "download": "ダウンロード",
+    "installGuide": "インストール手順"
+  },
+  "features": {
+    "sectionTitle": "機能",
+    "sectionDesc": "インスタンスから実行環境まで、Minecraft の起動に関わる一連の流れをカバーします。",
+    "instances": {
+      "title": "インスタンス管理",
+      "desc": "MOD パックやワールドごとに独立したインスタンスを作成し、バージョン・MOD・設定を分離してワンクリックで切り替えます。"
+    },
+    "java": {
+      "title": "Java 管理",
+      "desc": "ローカルの Java を自動検出し、ゲームバージョンに応じた実行環境を推奨してワンクリックで導入します。パスの手動設定は不要です。"
+    },
+    "resources": {
+      "title": "リソースのダウンロード",
+      "desc": "内蔵ライブラリから MOD、リソースパック、シェーダー、MOD パックを検索して導入し、依存関係も自動で処理します。"
+    },
+    "auth": {
+      "title": "正規アカウント認証",
+      "desc": "iGCraftLit アカウントまたは Microsoft アカウントでログインし、スキン・マント・ゲームデータを同期します。"
+    },
+    "offline": {
+      "title": "オフラインモード",
+      "desc": "ネットワークがない環境でも導入済みインスタンスを起動でき、ローカル検証でファイルの完全性を保ちます。"
+    }
+  },
+  "org": {
+    "title": "クレジット",
+    "description": "iGM CraftCeon Launcher は iGCraftLit Community と MuoCeon チームが共同で設計・構築し、長期にわたり保守・改善しています。",
+    "badge": "iGCraftLit × MuoCeon 共同構築"
+  },
+  "download": {
+    "title": "iGM CraftCeon Launcher をダウンロード",
+    "lead": "現在は Windows x64 版のみ提供しています。ダウンロード後にファイルサイズと SHA256 を確認してください。",
+    "platform": "プラットフォーム",
+    "version": "バージョン",
+    "file": "ファイル",
+    "fileSize": "ファイルサイズ",
+    "sha256": "SHA256",
+    "downloadBtn": "Windows x64 版をダウンロード",
+    "installGuide": "インストール手順を見る",
+    "note": "インストーラーはまだビルド中です。公開後、利用可能なダウンロード先と検証値がここに表示されます。"
+  },
+  "releases": {
+    "title": "バージョン一覧",
+    "lead": "iGM CraftCeon Launcher のリリース履歴です。現在は Windows x64 版のみ提供しています。",
+    "currentTag": "現在のバージョン",
+    "platform": "プラットフォーム",
+    "releasedAt": "リリース日",
+    "fileSize": "ファイルサイズ",
+    "sha256": "SHA256",
+    "file": "ファイル",
+    "pending": "ビルド後に記載",
+    "downloadAction": "ダウンロード",
+    "viewChangelog": "更新履歴を見る"
+  },
+  "changelog": {
+    "title": "更新履歴",
+    "lead": "iGM CraftCeon Launcher の各バージョンの変更内容を記録します。",
+    "currentTag": "現在のバージョン",
+    "entries": [
+      {
+        "version": "26.1.2 official version",
+        "date": "2026-10-01",
+        "items": [
+          "最初の正式版。インスタンス・Java・リソース・アカウントの四つの中核機能を確立。",
+          "インスタンス管理を追加：MOD・設定・ワールドを分離して管理。",
+          "Java 管理を追加：自動検出とバージョン別の実行環境推奨。",
+          "リソースのダウンロードを追加：MOD・リソースパック・MOD パックの検索と導入。",
+          "正規アカウント認証とオフラインモードを追加し、オンラインとローカルの両方に対応。"
+        ]
+      }
+    ]
+  },
+  "docs": {
+    "tocTitle": "ON THIS PAGE",
+    "sidebar": {
+      "title": "ドキュメント",
+      "group": "iGM CraftCeon Launcher",
+      "index": "ドキュメント",
+      "install": "インストール手順",
+      "faq": "よくある質問"
+    },
+    "index": {
+      "title": "ドキュメント",
+      "description": "iGM CraftCeon Launcher のインストール手順とよくある質問を確認し、起動環境をすばやく準備できます。",
+      "sectionsTitle": "セクション",
+      "installTitle": "インストール手順",
+      "installDesc": "システム要件、インストール手順、検証方法、起動前の注意点。",
+      "faqTitle": "よくある質問",
+      "faqDesc": "ログイン、Java、ダウンロード速度、オフラインモード、フィードバック窓口に関する質問。",
+      "moreTitle": "その他",
+      "downloadTitle": "ダウンロードページ",
+      "downloadDesc": "現在のバージョンのプラットフォーム・ファイル・検証情報を確認します。",
+      "mainSiteTitle": "メインサイトへ戻る",
+      "mainSiteDesc": "iGCraftLit Community の公式サイト igcraftlit.com にアクセスします。"
+    },
+    "install": {
+      "title": "インストール手順",
+      "lead": "本章では iGM CraftCeon Launcher のシステム要件、インストール手順、検証方法を説明します。",
+      "system": {
+        "title": "システム要件",
+        "items": [
+          "OS：Windows 10 / 11 64 ビット。",
+          "CPU：SSE2 対応のデュアルコア以上。",
+          "メモリ：4 GB 以上を推奨。MOD パックの規模に応じて増やしてください。",
+          "ストレージ：ランチャーとデータ用に 2 GB 以上の空き容量。",
+          "実行環境：利用可能な Java 実行環境。またはランチャーが自動で導入します。"
+        ]
+      },
+      "steps": {
+        "title": "インストール手順",
+        "items": [
+          "ダウンロードページから iGM CraftCeon Launcher のインストーラーを取得します。",
+          "インストーラーをダブルクリックし、ウィザードでインストール先を選んで完了します。",
+          "初回起動時に言語とデータディレクトリを選択します。",
+          "Java 管理で対応バージョンの実行環境を確認または導入します。",
+          "インスタンスを作成または読み込み、ゲームを起動します。"
+        ]
+      },
+      "verify": {
+        "title": "検証と起動",
+        "lead": "ダウンロード後、PowerShell でインストーラーの完全性を検証できます：",
+        "codeLabel": "powershell",
+        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.1.2.exe -Algorithm SHA256",
+        "after": "計算結果をダウンロードページの SHA256 と比較し、一致すればファイルは完全です。"
+      },
+      "notes": {
+        "title": "注意点",
+        "items": [
+          "インストーラーは必ず公式ダウンロードページから取得してください。",
+          "インストール中にウイルス対策ソフトが遮断した場合は、出所を確認してから許可してください。",
+          "ランチャーはデータディレクトリに書き込むため、読み書き可能であることを確認してください。"
+        ]
+      }
+    },
+    "faq": {
+      "title": "よくある質問",
+      "lead": "iGM CraftCeon Launcher の利用時によくある質問と回答をまとめました。",
+      "q1": "正規アカウントは必要ですか？",
+      "a1": "いいえ。ランチャーは正規アカウント認証とオフラインモードの両方に対応しています。正規アカウントはスキンやゲームデータを同期し、オフラインモードはネットワークなしで導入済みインスタンスを起動できます。",
+      "q2": "Java は自動でインストールされますか？",
+      "a2": "はい。Java 管理がローカルの実行環境を検出し、選択したゲームバージョンに合うバージョンを推奨します。不足時はランチャーが導入でき、既存のパスを指定することもできます。",
+      "q3": "ダウンロードが遅い場合はどうすればよいですか？",
+      "a3": "ダウンロードは選択したミラーに依存します。設定でミラーを切り替えるか、混雑時間帯を避けて再試行してください。中断しても自動で再開します。",
+      "q4": "オフラインモードでは何ができますか？",
+      "a4": "オフラインモードではネットワークなしで導入済みのインスタンスとリソースを起動でき、ローカル検証でファイルの完全性を保ちます。新しいリソースの取得やデータ同期にはオンラインに戻してください。",
+      "q5": "不具合や要望はどう報告しますか？",
+      "a5": "igcraftlit@outlook.com へメールするか、公式サイト https://igcraftlit.com からフィードバックをお送りください。件名に「iGM CraftCeon Launcher」と記載すると特定が早くなります。"
+    }
+  },
+  "about": {
+    "title": "iGM CraftCeon Launcher について",
+    "lead": "iGM CraftCeon Launcher は、iGCraftLit Community と MuoCeon が共同で設計・構築した Minecraft オールインワンランチャーです。",
+    "missionTitle": "私たちの目標",
+    "mission": "シンプルで信頼できるランチャーで、インスタンス・実行環境・リソース・アカウントをつなぎ、Minecraft の導入と起動を再び簡単にします。",
+    "igcraftlit": {
+      "title": "iGCraftLit Community",
+      "desc": "コミュニティリソース、アカウント体系、ダウンロードサービスを長期的に運営し、規範を定めます。"
+    },
+    "muoceon": {
+      "title": "MuoCeon",
+      "desc": "ランチャークライアント、実行環境管理、ダウンロードエンジンの実装を担当します。"
+    },
+    "contactTitle": "お問い合わせ",
+    "websiteLabel": "公式サイト",
+    "emailLabel": "メール"
+  },
+  "footer": {
+    "builtBy": "iGCraftLit × MuoCeon 共同構築",
+    "website": "公式サイト",
+    "email": "メール",
+    "copyright": "© {year} iGM CraftCeon Launcher. All rights reserved."
+  },
+  "common": {
+    "backToHome": "ホームへ戻る",
+    "language": "言語",
+    "selectLanguage": "言語を選択",
+    "backToMainSite": "メインサイトへ戻る",
+    "themeToggle": "ライト／ダークテーマの切り替え",
+    "copy": "コピー",
+    "copied": "コピーしました"
+  }
+}

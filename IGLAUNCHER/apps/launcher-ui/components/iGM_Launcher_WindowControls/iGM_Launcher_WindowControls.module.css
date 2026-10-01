@@ -1,0 +1,39 @@
+/*
+ * 文件路径：apps/launcher-ui/components/iGM_Launcher_WindowControls/iGM_Launcher_WindowControls.module.css
+ * 所属层：前端 / 窗口控制层样式
+ * 路由：全局（TopBar）
+ * 模块：iGM_Launcher_WindowControls
+ * 作用：原生风格的最小化 / 最大化 / 关闭按钮样式
+ * 内容：透明底、悬浮浅灰、关闭钮悬浮红色；禁止拖动窗口，保证可点击
+ */
+
+.controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  /* 位于可拖动 TopBar 内，按钮必须声明为不可拖动区域 */
+  -webkit-app-region: no-drag;
+}
+
+.controlButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 32px;
+  border-radius: 6px;
+  color: var(--igm-text-muted);
+  transition:
+    background-color 140ms ease,
+    color 140ms ease;
+}
+
+.controlButton:hover {
+  background-color: var(--igm-surface-subtle);
+  color: var(--igm-text);
+}
+
+.closeButton:hover {
+  background-color: var(--igm-danger);
+  color: #ffffff;
+}

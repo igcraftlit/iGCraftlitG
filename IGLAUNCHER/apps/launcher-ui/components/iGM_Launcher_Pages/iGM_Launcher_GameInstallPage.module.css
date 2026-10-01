@@ -1,0 +1,144 @@
+/*
+ * 文件路径：apps/launcher-ui/components/iGM_Launcher_Pages/iGM_Launcher_GameInstallPage.module.css
+ * 所属层：前端 / 页面层样式
+ * 路由：G_GameInstall（SPA 页 id：gameInstall）
+ * 模块：iGM_Launcher_GameInstallPage
+ * 作用：真实下载页的卡片、元数据行、目录结构预览、下载进度条与底部操作条（极简风格）
+ */
+
+.page {
+  max-width: 860px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+  padding: 16px 18px;
+}
+
+.cardTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+/* 元数据行：徽章与路径混排 */
+.metaRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.metaLabel {
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+.metaText {
+  font-size: 12px;
+  color: var(--igm-text-muted);
+}
+
+.pathText {
+  max-width: 100%;
+  font-size: 12px;
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color: var(--igm-text);
+  word-break: break-all;
+}
+
+/* 目录结构预览 */
+.tree {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-border);
+  background-color: var(--igm-surface-subtle);
+  font-size: 12px;
+  line-height: 1.7;
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.treeLine {
+  color: var(--igm-text-muted);
+}
+
+/* 共享目录高亮：强调 versions / libraries / assets 只存一份 */
+.treeShared {
+  color: var(--igm-accent);
+}
+
+.note {
+  font-size: 12px;
+  color: var(--igm-text-muted);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* 前置目录输入行：输入框占满剩余宽度，右侧为浏览按钮 */
+.dirRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dirRow > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* 底部操作条 */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* 双列字段网格：加载器类型与加载器版本并排 */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+/* 下载进度条 */
+.progressTrack {
+  height: 6px;
+  border-radius: 999px;
+  background-color: var(--igm-surface-subtle);
+  border: 1px solid var(--igm-border);
+  overflow: hidden;
+}
+
+.progressBar {
+  height: 100%;
+  background-color: var(--igm-accent);
+  transition: width 0.2s ease;
+}
+
+/* 错误提示：图标与文案同行 */
+.errorText {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--igm-danger);
+}

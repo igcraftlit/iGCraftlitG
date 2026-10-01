@@ -1,0 +1,21 @@
+{
+  "name": "igm-launcher-shell",
+  "version": "26.1.2",
+  "private": true,
+  "module": "src/iGM_Launcher_Main.ts",
+  "scripts": {
+    "dev": "bun run src/iGM_Launcher_Main.ts",
+    "sync:ui": "bun run scripts/iGM_Launcher_SyncUi.ts",
+    "build": "bun x electrobun build --env=stable",
+    "portable": "bun run scripts/iGM_Launcher_MakePortable.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@igm-launcher/shared": "workspace:*",
+    "electrobun": "2.0.1"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "5.9.2"
+  }
+}

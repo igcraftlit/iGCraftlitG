@@ -1,0 +1,220 @@
+{
+  "site": {
+    "name": "iGM CraftCeon Launcher",
+    "tagline": "iGCraftLit × MuoCeon 聯合構建"
+  },
+  "nav": {
+    "download": "下載",
+    "releases": "版本",
+    "docs": "文件",
+    "about": "關於"
+  },
+  "language": {
+    "zh-CN": "简体中文",
+    "zh-TW": "繁體中文",
+    "en": "English",
+    "ja": "日本語",
+    "ru": "Русский"
+  },
+  "hero": {
+    "title": "iGM CraftCeon Launcher",
+    "subtitle": "iGCraftLit × MuoCeon 聯合構建",
+    "description": "為 Minecraft 玩家打造的一體化啟動器：實例管理、Java 管理、資源下載、正版驗證與離線模式，開箱即用。",
+    "downloadCta": "下載 Windows x64",
+    "docsCta": "查看文件"
+  },
+  "version": {
+    "sectionTitle": "當前版本",
+    "sectionDesc": "下載前請核對版本號與檔案校驗資訊。",
+    "label": "版本",
+    "platform": "平台",
+    "releasedAt": "發佈時間",
+    "fileSize": "檔案大小",
+    "sha256": "SHA256",
+    "fileName": "檔案",
+    "pending": "待構建後填入",
+    "download": "下載",
+    "installGuide": "安裝說明"
+  },
+  "features": {
+    "sectionTitle": "功能特性",
+    "sectionDesc": "從實例到執行環境，覆蓋 Minecraft 啟動的完整鏈路。",
+    "instances": {
+      "title": "實例管理",
+      "desc": "為每個整合包與存檔建立獨立實例，隔離版本、模組與設定，一鍵切換。"
+    },
+    "java": {
+      "title": "Java 管理",
+      "desc": "自動偵測本機 Java，依遊戲版本推薦執行環境並一鍵安裝，無需手動設定路徑。"
+    },
+    "resources": {
+      "title": "資源下載",
+      "desc": "內建資源庫，檢索並安裝模組、材質包、光影與整合包，自動處理相依性。"
+    },
+    "auth": {
+      "title": "正版驗證",
+      "desc": "支援 iGCraftLit 帳號與 Microsoft 正版登入，同步外觀、披風與遊戲資料。"
+    },
+    "offline": {
+      "title": "離線模式",
+      "desc": "無網路環境下亦可啟動已安裝實例，本機校驗確保檔案完整。"
+    }
+  },
+  "org": {
+    "title": "組織署名",
+    "description": "iGM CraftCeon Launcher 由 iGCraftLit Community 與 MuoCeon 團隊聯合設計與構建，長期維護並持續迭代。",
+    "badge": "iGCraftLit × MuoCeon 聯合構建"
+  },
+  "download": {
+    "title": "下載 iGM CraftCeon Launcher",
+    "lead": "當前僅提供 Windows x64 版本，下載後請核對檔案大小與 SHA256 校驗值。",
+    "platform": "平台",
+    "version": "版本",
+    "file": "檔案",
+    "fileSize": "檔案大小",
+    "sha256": "SHA256",
+    "downloadBtn": "下載 Windows x64",
+    "installGuide": "查看安裝指南",
+    "note": "安裝包尚在構建流程中，發佈後此處將提供可用的下載位址與校驗值。"
+  },
+  "releases": {
+    "title": "版本列表",
+    "lead": "iGM CraftCeon Launcher 的發佈記錄，當前僅提供 Windows x64 構建。",
+    "currentTag": "當前版本",
+    "platform": "平台",
+    "releasedAt": "發佈時間",
+    "fileSize": "檔案大小",
+    "sha256": "SHA256",
+    "file": "檔案",
+    "pending": "待構建後填入",
+    "downloadAction": "下載",
+    "viewChangelog": "查看更新日誌"
+  },
+  "changelog": {
+    "title": "更新日誌",
+    "lead": "記錄 iGM CraftCeon Launcher 各版本的變更內容。",
+    "currentTag": "當前版本",
+    "entries": [
+      {
+        "version": "26.1.2 official version",
+        "date": "2026-10-01",
+        "items": [
+          "首個正式版本，確立實例、Java、資源與帳號四大核心能力。",
+          "新增實例管理：獨立隔離模組、設定與存檔。",
+          "新增 Java 管理：自動偵測並依版本推薦執行環境。",
+          "新增資源下載：檢索並安裝模組、材質包與整合包。",
+          "新增正版驗證與離線模式，兼顧線上與本機情境。"
+        ]
+      }
+    ]
+  },
+  "docs": {
+    "tocTitle": "ON THIS PAGE",
+    "sidebar": {
+      "title": "文件",
+      "group": "iGM CraftCeon Launcher",
+      "index": "文件中心",
+      "install": "安裝指南",
+      "faq": "常見問題"
+    },
+    "index": {
+      "title": "文件中心",
+      "description": "查閱 iGM CraftCeon Launcher 的安裝步驟與常見問題，快速完成啟動環境準備。",
+      "sectionsTitle": "文件分區",
+      "installTitle": "安裝指南",
+      "installDesc": "系統要求、安裝步驟、校驗方式與啟動前注意事項。",
+      "faqTitle": "常見問題",
+      "faqDesc": "登入、Java、下載速度、離線模式與回饋管道的常見問答。",
+      "moreTitle": "其他",
+      "downloadTitle": "下載頁",
+      "downloadDesc": "查看當前版本的平台、檔案與校驗資訊。",
+      "mainSiteTitle": "返回主站",
+      "mainSiteDesc": "訪問 iGCraftLit Community 官網 igcraftlit.com。"
+    },
+    "install": {
+      "title": "安裝指南",
+      "lead": "本章說明 iGM CraftCeon Launcher 的系統要求、安裝步驟與校驗方式。",
+      "system": {
+        "title": "系統要求",
+        "items": [
+          "作業系統：Windows 10 / 11 64 位。",
+          "處理器：支援 SSE2 指令集的雙核及以上。",
+          "記憶體：建議 4 GB 及以上，依整合包規模適當提高。",
+          "儲存：至少 2 GB 可用空間，用於啟動器與執行資料。",
+          "執行環境：已安裝可用的 Java 執行環境，或由啟動器自動安裝。"
+        ]
+      },
+      "steps": {
+        "title": "安裝步驟",
+        "items": [
+          "從下載頁取得 iGM CraftCeon Launcher 安裝包。",
+          "雙擊安裝包，依精靈選擇安裝目錄並完成安裝。",
+          "首次啟動時選擇語言與資料目錄。",
+          "在 Java 管理中確認或安裝對應版本的執行環境。",
+          "建立或匯入實例後即可啟動遊戲。"
+        ]
+      },
+      "verify": {
+        "title": "校驗與啟動",
+        "lead": "下載完成後，可在 PowerShell 中校驗安裝包完整性：",
+        "codeLabel": "powershell",
+        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.1.2.exe -Algorithm SHA256",
+        "after": "將計算結果與下載頁給出的 SHA256 比對，一致則表示檔案完整。"
+      },
+      "notes": {
+        "title": "注意事項",
+        "items": [
+          "請從官方下載頁取得安裝包，避免使用來源不明的檔案。",
+          "安裝過程中如遇防毒軟體攔截，請確認來源後放行。",
+          "啟動器會寫入資料目錄，請確保該目錄可讀寫。"
+        ]
+      }
+    },
+    "faq": {
+      "title": "常見問題",
+      "lead": "以下彙整使用 iGM CraftCeon Launcher 時的常見問題與解答。",
+      "q1": "需要正版帳號才能使用嗎？",
+      "a1": "不需要。啟動器同時支援正版驗證與離線模式：正版帳號可同步外觀與遊戲資料，離線模式則可在無網路環境下啟動已安裝的實例。",
+      "q2": "啟動器會自動安裝 Java 嗎？",
+      "a2": "會。Java 管理會偵測本機執行環境，並依所選遊戲版本推薦合適的版本；缺少時可由啟動器自動下載安裝，也支援手動指定既有路徑。",
+      "q3": "資源下載速度較慢怎麼辦？",
+      "a3": "資源下載依賴所選鏡像源。可在設定中切換鏡像源，或避開網路高峰時段重試；下載中斷後啟動器會自動續傳。",
+      "q4": "離線模式能做什麼？",
+      "a4": "離線模式可在無網路時啟動已安裝的實例與資源，本機校驗確保檔案完整。需要下載新資源或同步帳號資料時，請切換回線上狀態。",
+      "q5": "如何回饋問題或建議？",
+      "a5": "可透過郵件 igcraftlit@outlook.com 聯繫團隊，或訪問官網 https://igcraftlit.com 提交回饋，郵件標題註明「iGM CraftCeon Launcher」可更快定位問題。"
+    }
+  },
+  "about": {
+    "title": "關於 iGM CraftCeon Launcher",
+    "lead": "iGM CraftCeon Launcher 是 iGCraftLit Community 與 MuoCeon 聯合設計與構建的 Minecraft 一體化啟動器。",
+    "missionTitle": "我們的目標",
+    "mission": "以簡潔可靠的啟動器，串聯實例、執行環境、資源與帳號，讓 Minecraft 的安裝與啟動回歸簡單。",
+    "igcraftlit": {
+      "title": "iGCraftLit Community",
+      "desc": "負責社群資源、帳號體系與下載服務的長期營運與規範制定。"
+    },
+    "muoceon": {
+      "title": "MuoCeon",
+      "desc": "負責啟動器客戶端、執行環境管理與下載引擎的工程實現。"
+    },
+    "contactTitle": "聯繫我們",
+    "websiteLabel": "團隊官網",
+    "emailLabel": "聯繫郵箱"
+  },
+  "footer": {
+    "builtBy": "iGCraftLit × MuoCeon 聯合構建",
+    "website": "官網",
+    "email": "聯繫郵箱",
+    "copyright": "© {year} iGM CraftCeon Launcher. 保留所有權利。"
+  },
+  "common": {
+    "backToHome": "返回首頁",
+    "language": "語言",
+    "selectLanguage": "選擇語言",
+    "backToMainSite": "返回主站",
+    "themeToggle": "切換明暗主題",
+    "copy": "複製",
+    "copied": "已複製"
+  }
+}

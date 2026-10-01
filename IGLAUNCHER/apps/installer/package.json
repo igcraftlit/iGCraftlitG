@@ -1,0 +1,21 @@
+{
+  "name": "igm-installer-shell",
+  "version": "26.1.2",
+  "private": true,
+  "module": "src/iGM_Installer_Main.ts",
+  "scripts": {
+    "dev": "bun run src/iGM_Installer_Main.ts",
+    "sync:ui": "bun run scripts/iGM_Installer_SyncUi.ts",
+    "sync:payload": "bun run scripts/iGM_Installer_SyncPayload.ts",
+    "build": "bun x electrobun build --env=stable",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@igm-launcher/shared": "workspace:*",
+    "electrobun": "2.0.1"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "5.9.2"
+  }
+}

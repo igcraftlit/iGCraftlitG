@@ -1,0 +1,83 @@
+/*
+ * 文件路径：apps/launcher-ui/components/iGM_Launcher_Notice/iGM_Launcher_NoticeBar.module.css
+ * 所属层：前端 / 提示反馈层样式
+ * 路由：全局
+ * 模块：iGM_Launcher_NoticeBar
+ * 作用：内容区顶部操作反馈提示条
+ * 内容：成功 / 失败色调、紧凑单行布局、关闭按钮
+ */
+
+.notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 9px 10px 9px 12px;
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-border);
+  background-color: var(--igm-surface);
+  box-shadow: var(--igm-shadow);
+  font-size: 12px;
+  animation: iGM_Launcher_NoticeIn 160ms ease;
+}
+
+.noticeSuccess {
+  border-color: var(--igm-border);
+  background-color: var(--igm-success-soft, var(--igm-surface-subtle));
+  color: var(--igm-text);
+}
+
+.noticeError {
+  border-color: var(--igm-danger);
+  background-color: var(--igm-danger-soft);
+  color: var(--igm-text);
+}
+
+.icon {
+  flex-shrink: 0;
+}
+
+.noticeSuccess .icon {
+  color: var(--igm-success);
+}
+
+.noticeError .icon {
+  color: var(--igm-danger);
+}
+
+.message {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.close {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  color: var(--igm-text-subtle);
+  transition:
+    background-color 140ms ease,
+    color 140ms ease;
+}
+
+.close:hover {
+  background-color: var(--igm-surface-subtle);
+  color: var(--igm-text);
+}
+
+@keyframes iGM_Launcher_NoticeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

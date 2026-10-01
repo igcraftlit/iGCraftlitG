@@ -1,0 +1,97 @@
+/*
+ * 文件路径：apps/launcher-ui/components/iGM_Launcher_Pages/iGM_Launcher_AccountLoginPage.module.css
+ * 所属层：前端 / 页面层样式
+ * 路由：G_Account_Login（SPA 页 id：accountLogin）
+ * 模块：iGM_Launcher_AccountLoginPage
+ * 作用：登录卡片、表单纵向布局、错误行与次要操作样式
+ */
+
+.page {
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cardHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.cardIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: var(--igm-radius);
+  background-color: var(--igm-accent-soft);
+  color: var(--igm-accent);
+}
+
+.cardHint {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.errorLine {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--igm-danger);
+}
+
+.submit {
+  align-self: flex-start;
+  min-width: 120px;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+  border-top: 1px solid var(--igm-border);
+}
+
+.linkButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--igm-accent);
+}
+
+.linkButton:hover {
+  text-decoration: underline;
+}
+
+.footerHint {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+.secondaryActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

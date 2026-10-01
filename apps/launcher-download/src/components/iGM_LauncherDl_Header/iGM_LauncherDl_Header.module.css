@@ -1,0 +1,152 @@
+/*
+ * 文件路径：apps/launcher-download/src/components/iGM_LauncherDl_Header/iGM_LauncherDl_Header.module.css
+ * 所属层：前端 / 组件样式层
+ * 路由：全局
+ * 模块：iGM_LauncherDl_Downloader
+ * 作用：站点顶部导航栏样式（Logo、菜单、语言切换、移动端折叠）
+ */
+
+/* 核心逻辑 */
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--igm-surface);
+  border-bottom: 1px solid var(--igm-border);
+}
+
+.inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 20px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--igm-text);
+  white-space: nowrap;
+}
+
+.logoIcon {
+  color: var(--igm-accent);
+  display: flex;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.navLink {
+  padding: 6px 12px;
+  border-radius: var(--igm-radius);
+  font-size: 14px;
+  color: var(--igm-text-muted);
+  transition:
+    color var(--igm-motion-nav) var(--igm-motion-ease),
+    background-color var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.navLink:hover {
+  color: var(--igm-text);
+  background: var(--igm-surface-subtle);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 返回主站外链：桌面端位于操作区 */
+.mainSiteLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: var(--igm-radius);
+  font-size: 13.5px;
+  color: var(--igm-text-muted);
+  white-space: nowrap;
+  transition:
+    color var(--igm-motion-nav) var(--igm-motion-ease),
+    background-color var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.mainSiteLink:hover {
+  color: var(--igm-text);
+  background: var(--igm-surface-subtle);
+}
+
+.mainSiteMobile {
+  display: none;
+}
+
+.mainSiteMobile .mainSiteLink {
+  padding: 10px 12px;
+  width: 100%;
+  font-size: 14px;
+}
+
+.menuButton {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--igm-radius);
+  color: var(--igm-text-muted);
+}
+
+.menuButton:hover {
+  background: var(--igm-surface-subtle);
+  color: var(--igm-text);
+}
+
+.mobileNav {
+  display: none;
+  flex-direction: column;
+  border-top: 1px solid var(--igm-border);
+  padding: 8px 20px 12px;
+  gap: 2px;
+}
+
+.mobileNav .navLink {
+  padding: 10px 12px;
+}
+
+/* 移动端适配：折叠为汉堡菜单 */
+@media (max-width: 768px) {
+  .nav {
+    display: none;
+  }
+
+  .mainSiteDesktop {
+    display: none;
+  }
+
+  .mainSiteMobile {
+    display: block;
+    margin-top: 4px;
+    border-top: 1px solid var(--igm-border);
+  }
+
+  .menuButton {
+    display: flex;
+  }
+
+  .mobileNav[data-open="true"] {
+    display: flex;
+  }
+}

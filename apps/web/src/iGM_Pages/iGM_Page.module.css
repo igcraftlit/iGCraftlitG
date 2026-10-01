@@ -40,17 +40,14 @@
   color: var(--igm-text-muted);
 }
 
-/* 卡片栅格：移动端单列，桌面端三列 */
+/*
+ * 卡片栅格：随可用宽度自适应列数（窄屏单列，宽屏最多四列），
+ * 首页现有四个入口卡片（社区 / 个人主页 / 管理后台 / iGM Launcher）
+ */
 .cardGrid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 16px;
-}
-
-@media (min-width: 1024px) {
-  .cardGrid {
-    grid-template-columns: repeat(3, 1fr);
-  }
 }
 
 /* ===== 通用骨架页 ===== */

@@ -1,0 +1,220 @@
+{
+  "site": {
+    "name": "iGM CraftCeon Launcher",
+    "tagline": "Built jointly by iGCraftLit × MuoCeon"
+  },
+  "nav": {
+    "download": "Download",
+    "releases": "Releases",
+    "docs": "Docs",
+    "about": "About"
+  },
+  "language": {
+    "zh-CN": "简体中文",
+    "zh-TW": "繁體中文",
+    "en": "English",
+    "ja": "日本語",
+    "ru": "Русский"
+  },
+  "hero": {
+    "title": "iGM CraftCeon Launcher",
+    "subtitle": "Built jointly by iGCraftLit × MuoCeon",
+    "description": "An all-in-one launcher for Minecraft players: instance management, Java management, resource downloads, official account verification, and offline mode, ready out of the box.",
+    "downloadCta": "Download for Windows x64",
+    "docsCta": "View docs"
+  },
+  "version": {
+    "sectionTitle": "Current version",
+    "sectionDesc": "Check the version number and file verification details before downloading.",
+    "label": "Version",
+    "platform": "Platform",
+    "releasedAt": "Released",
+    "fileSize": "File size",
+    "sha256": "SHA256",
+    "fileName": "File",
+    "pending": "To be filled after the build",
+    "download": "Download",
+    "installGuide": "Installation guide"
+  },
+  "features": {
+    "sectionTitle": "Features",
+    "sectionDesc": "From instances to runtimes, covering the whole Minecraft launch pipeline.",
+    "instances": {
+      "title": "Instance management",
+      "desc": "Create an isolated instance for every modpack and world, separating versions, mods, and settings, with one-click switching."
+    },
+    "java": {
+      "title": "Java management",
+      "desc": "Detect local Java automatically, recommend a runtime per game version, and install it in one click without manual paths."
+    },
+    "resources": {
+      "title": "Resource downloads",
+      "desc": "Search and install mods, resource packs, shaders, and modpacks from the built-in library, with dependencies resolved automatically."
+    },
+    "auth": {
+      "title": "Official account verification",
+      "desc": "Sign in with an iGCraftLit account or Microsoft account, syncing skins, capes, and game data."
+    },
+    "offline": {
+      "title": "Offline mode",
+      "desc": "Launch installed instances without a network connection, with local verification to keep files intact."
+    }
+  },
+  "org": {
+    "title": "Credits",
+    "description": "iGM CraftCeon Launcher is designed and built jointly by the iGCraftLit Community and the MuoCeon team, maintained and iterated over the long term.",
+    "badge": "Built jointly by iGCraftLit × MuoCeon"
+  },
+  "download": {
+    "title": "Download iGM CraftCeon Launcher",
+    "lead": "Only the Windows x64 build is available for now. After downloading, verify the file size and SHA256 checksum.",
+    "platform": "Platform",
+    "version": "Version",
+    "file": "File",
+    "fileSize": "File size",
+    "sha256": "SHA256",
+    "downloadBtn": "Download for Windows x64",
+    "installGuide": "View installation guide",
+    "note": "The installer is still being built. Once released, a working download address and checksum will appear here."
+  },
+  "releases": {
+    "title": "Releases",
+    "lead": "Release history of iGM CraftCeon Launcher. Only the Windows x64 build is provided for now.",
+    "currentTag": "Current version",
+    "platform": "Platform",
+    "releasedAt": "Released",
+    "fileSize": "File size",
+    "sha256": "SHA256",
+    "file": "File",
+    "pending": "To be filled after the build",
+    "downloadAction": "Download",
+    "viewChangelog": "View changelog"
+  },
+  "changelog": {
+    "title": "Changelog",
+    "lead": "Changes in each release of iGM CraftCeon Launcher.",
+    "currentTag": "Current version",
+    "entries": [
+      {
+        "version": "26.1.2 official version",
+        "date": "2026-10-01",
+        "items": [
+          "First official release, establishing four core capabilities: instances, Java, resources, and accounts.",
+          "Added instance management: isolated mods, settings, and worlds.",
+          "Added Java management: automatic detection and per-version runtime recommendations.",
+          "Added resource downloads: search and install mods, resource packs, and modpacks.",
+          "Added official account verification and offline mode for both online and local scenarios."
+        ]
+      }
+    ]
+  },
+  "docs": {
+    "tocTitle": "ON THIS PAGE",
+    "sidebar": {
+      "title": "Docs",
+      "group": "iGM CraftCeon Launcher",
+      "index": "Documentation",
+      "install": "Installation",
+      "faq": "FAQ"
+    },
+    "index": {
+      "title": "Documentation",
+      "description": "Read the installation steps and frequently asked questions for iGM CraftCeon Launcher to prepare your launch environment quickly.",
+      "sectionsTitle": "Sections",
+      "installTitle": "Installation guide",
+      "installDesc": "System requirements, installation steps, verification, and pre-launch notes.",
+      "faqTitle": "FAQ",
+      "faqDesc": "Common questions about sign-in, Java, download speed, offline mode, and feedback channels.",
+      "moreTitle": "More",
+      "downloadTitle": "Download page",
+      "downloadDesc": "View the platform, file, and verification details of the current version.",
+      "mainSiteTitle": "Back to main site",
+      "mainSiteDesc": "Visit the iGCraftLit Community website at igcraftlit.com."
+    },
+    "install": {
+      "title": "Installation guide",
+      "lead": "This chapter covers the system requirements, installation steps, and verification for iGM CraftCeon Launcher.",
+      "system": {
+        "title": "System requirements",
+        "items": [
+          "OS: Windows 10 / 11 64-bit.",
+          "CPU: dual-core or better with SSE2 support.",
+          "Memory: 4 GB or more recommended, increased for larger modpacks.",
+          "Storage: at least 2 GB free for the launcher and its data.",
+          "Runtime: a working Java runtime installed, or installed automatically by the launcher."
+        ]
+      },
+      "steps": {
+        "title": "Installation steps",
+        "items": [
+          "Get the iGM CraftCeon Launcher installer from the download page.",
+          "Double-click the installer, choose an install directory, and finish the wizard.",
+          "On first launch, choose the language and data directory.",
+          "Confirm or install the matching runtime in Java management.",
+          "Create or import an instance, then launch the game."
+        ]
+      },
+      "verify": {
+        "title": "Verification and launch",
+        "lead": "After downloading, verify the installer integrity in PowerShell:",
+        "codeLabel": "powershell",
+        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.1.2.exe -Algorithm SHA256",
+        "after": "Compare the result with the SHA256 shown on the download page; a match means the file is intact."
+      },
+      "notes": {
+        "title": "Notes",
+        "items": [
+          "Always get the installer from the official download page; avoid files from unknown sources.",
+          "If antivirus software blocks the installation, confirm the source and then allow it.",
+          "The launcher writes to its data directory; make sure it is readable and writable."
+        ]
+      }
+    },
+    "faq": {
+      "title": "FAQ",
+      "lead": "Frequently asked questions and answers about using iGM CraftCeon Launcher.",
+      "q1": "Do I need an official account to use it?",
+      "a1": "No. The launcher supports both official account verification and offline mode: an official account syncs skins and game data, while offline mode launches installed instances without a network.",
+      "q2": "Does the launcher install Java automatically?",
+      "a2": "Yes. Java management detects the local runtime and recommends a suitable version for the selected game version; if missing, the launcher can download and install it, or you can point to an existing path.",
+      "q3": "Downloads are slow. What can I do?",
+      "a3": "Downloads depend on the selected mirror. Switch mirrors in settings, or retry off-peak; interrupted downloads resume automatically.",
+      "q4": "What can offline mode do?",
+      "a4": "Offline mode launches installed instances and resources without a network, with local verification keeping files intact. Switch back online to download new resources or sync account data.",
+      "q5": "How do I report issues or suggestions?",
+      "a5": "Email the team at igcraftlit@outlook.com, or submit feedback via https://igcraftlit.com. Adding “iGM CraftCeon Launcher” to the subject helps us locate the issue faster."
+    }
+  },
+  "about": {
+    "title": "About iGM CraftCeon Launcher",
+    "lead": "iGM CraftCeon Launcher is an all-in-one Minecraft launcher designed and built jointly by the iGCraftLit Community and MuoCeon.",
+    "missionTitle": "Our goal",
+    "mission": "A simple and reliable launcher that ties instances, runtimes, resources, and accounts together, making Minecraft setup and launch simple again.",
+    "igcraftlit": {
+      "title": "iGCraftLit Community",
+      "desc": "Runs community resources, the account system, and download services over the long term, and sets the standards."
+    },
+    "muoceon": {
+      "title": "MuoCeon",
+      "desc": "Handles the engineering of the launcher client, runtime management, and the download engine."
+    },
+    "contactTitle": "Contact us",
+    "websiteLabel": "Website",
+    "emailLabel": "Email"
+  },
+  "footer": {
+    "builtBy": "Built jointly by iGCraftLit × MuoCeon",
+    "website": "Website",
+    "email": "Email",
+    "copyright": "© {year} iGM CraftCeon Launcher. All rights reserved."
+  },
+  "common": {
+    "backToHome": "Back to home",
+    "language": "Language",
+    "selectLanguage": "Select language",
+    "backToMainSite": "Back to main site",
+    "themeToggle": "Toggle light or dark theme",
+    "copy": "Copy",
+    "copied": "Copied"
+  }
+}

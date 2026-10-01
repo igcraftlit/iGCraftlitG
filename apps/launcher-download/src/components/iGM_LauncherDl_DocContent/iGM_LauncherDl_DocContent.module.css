@@ -1,0 +1,147 @@
+/*
+ * 文件路径：apps/launcher-download/src/components/iGM_LauncherDl_DocContent/iGM_LauncherDl_DocContent.module.css
+ * 所属层：前端 / 组件样式层
+ * 路由：/docs/install、/docs/faq 文档正文
+ * 模块：iGM_LauncherDl_Downloader
+ * 作用：文档正文排版样式——标题层级、正文行高、列表与步骤序号、章节锚点滚动避让
+ */
+
+/* 核心逻辑 */
+.doc {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 760px;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--igm-text);
+}
+
+.lead {
+  font-size: 14.5px;
+  line-height: 1.75;
+  color: var(--igm-text-muted);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  /* 锚点滚动避让 60px 吸顶头部 */
+  scroll-margin-top: 84px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.paragraph {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--igm-text-muted);
+}
+
+/* 无序要点：极简前缀短线，无装饰符号 */
+.bullets {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bulletItem {
+  position: relative;
+  padding-left: 16px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+.bulletItem::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 0.72em;
+  width: 5px;
+  height: 1px;
+  background: var(--igm-text-subtle);
+}
+
+/* 有序步骤：序号方块 + 文本 */
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stepItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+.stepIndex {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  border: 1px solid var(--igm-border);
+  border-radius: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--igm-text-subtle);
+  background: var(--igm-surface);
+}
+
+/* 常见问题列表 */
+.faqList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.faqItem {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px 20px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  background: var(--igm-surface);
+  scroll-margin-top: 84px;
+}
+
+.faqQuestion {
+  font-size: 15.5px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.faqAnswer {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--igm-text-muted);
+}
+
+@media (max-width: 640px) {
+  .title {
+    font-size: 24px;
+  }
+}

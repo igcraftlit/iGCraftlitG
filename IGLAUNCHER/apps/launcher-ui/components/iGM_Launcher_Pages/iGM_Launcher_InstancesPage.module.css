@@ -1,0 +1,269 @@
+/*
+ * 文件路径：apps/launcher-ui/components/iGM_Launcher_Pages/iGM_Launcher_InstancesPage.module.css
+ * 所属层：前端 / 页面层样式
+ * 路由：G_Instances（SPA 页 id：instances）
+ * 模块：iGM_Launcher_InstancesPage
+ * 作用：实例工具栏、卡片栅格 / 列表、空状态与计数行样式，
+ *       以及模块五「扫描本机游戏」面板
+ */
+
+.page {
+  max-width: 1080px;
+}
+
+/* 页头动作区：扫描 + 新建 */
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 扫描面板 */
+.scanPanel {
+  margin-bottom: 16px;
+  padding: 18px;
+}
+
+.scanHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.scanTitle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.scanClose {
+  height: 26px;
+  width: 26px;
+  padding: 0;
+}
+
+.scanDesc {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+  max-width: 620px;
+}
+
+.scanManual {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.scanEmpty {
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+.scanList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.scanItem {
+  padding: 12px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius);
+}
+
+.scanItemHead {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.scanPath {
+  flex: 1 1 260px;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--igm-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scanVersions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.scanVersionRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.scanVersionName {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--igm-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scanImport {
+  height: 26px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.scanNoVersion {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+.scanHint {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+/* 工具栏 */
+.toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.searchBox {
+  position: relative;
+  flex: 1 1 240px;
+  min-width: 200px;
+  max-width: 320px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--igm-text-subtle);
+  pointer-events: none;
+}
+
+.searchInput {
+  padding-left: 30px;
+}
+
+.filterSelect {
+  width: 148px;
+  flex-shrink: 0;
+}
+
+.countLine {
+  margin-bottom: 10px;
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+/* 卡片视图 */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 14px;
+}
+
+/* 列表视图 */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 空状态 */
+.emptyCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 28px;
+}
+
+.emptyTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.emptyDesc {
+  max-width: 520px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+.emptyCard > button {
+  margin-top: 6px;
+}
+
+.stateLine {
+  padding: 20px 0;
+  font-size: 13px;
+  color: var(--igm-text-subtle);
+}
+
+/* 模块七：底部统一启动栏——勾选实例后再启动 */
+.launchBar {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 12px 16px;
+  background-color: var(--igm-surface);
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  box-shadow: var(--igm-shadow);
+}
+
+.launchInfo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--igm-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.launchIcon {
+  flex-shrink: 0;
+  color: var(--igm-accent);
+}
+
+@media (max-width: 900px) {
+  .searchBox {
+    max-width: none;
+  }
+
+  .filterSelect {
+    width: 132px;
+  }
+}

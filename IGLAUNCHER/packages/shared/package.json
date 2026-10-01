@@ -1,0 +1,16 @@
+{
+  "name": "@igm-launcher/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/iGM_Launcher_Shared.ts"
+  },
+  "types": "./src/iGM_Launcher_Shared.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "5.9.2"
+  }
+}

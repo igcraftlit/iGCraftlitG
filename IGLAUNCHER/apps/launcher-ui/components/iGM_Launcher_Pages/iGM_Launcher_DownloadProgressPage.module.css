@@ -1,0 +1,122 @@
+/*
+ * 文件路径：apps/launcher-ui/components/iGM_Launcher_Pages/iGM_Launcher_DownloadProgressPage.module.css
+ * 所属层：前端 / 页面层样式
+ * 路由：G_DownloadProgress（SPA 页 id：downloadProgress）
+ * 模块：iGM_Launcher_DownloadProgressPage
+ * 作用：下载进度独立页的卡片、进度条、统计行、明细与操作区样式（极简风格）
+ */
+
+.page {
+  max-width: 780px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+  padding: 16px 18px;
+}
+
+.headRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.headIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--igm-text);
+}
+
+.cardTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+/* 进度条：与启动进度页保持一致的视觉 */
+.progressTrack {
+  height: 6px;
+  border-radius: 999px;
+  background-color: var(--igm-surface-subtle);
+  border: 1px solid var(--igm-border);
+  overflow: hidden;
+}
+
+.progressBar {
+  height: 100%;
+  background-color: var(--igm-accent);
+  transition: width 0.2s ease;
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.metaText {
+  font-size: 12px;
+  color: var(--igm-text-muted);
+}
+
+.okText {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--igm-success, var(--igm-accent));
+}
+
+/* 明细行：标签固定宽度 + 值自适应，值可换行 */
+.detailRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.metaLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 108px;
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+.pathText {
+  min-width: 0;
+  font-size: 12px;
+  color: var(--igm-text);
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  word-break: break-all;
+}
+
+.errorText {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--igm-danger);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.note {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}

@@ -1,0 +1,87 @@
+/*
+ * 文件路径：apps/launcher-ui/components/iGM_Launcher_StatusBar/iGM_Launcher_StatusBar.module.css
+ * 所属层：前端 / 底部状态栏层样式
+ * 路由：全局
+ * 模块：iGM_Launcher_StatusBar
+ * 作用：28px 细状态栏，左侧版本与登录状态，右侧默认 Java、选中实例与网络状态
+ * 内容：静态条目、可点击条目、名称省略、认证标识与在线/离线配色
+ */
+
+.statusbar {
+  grid-area: status;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 12px;
+  background-color: var(--igm-surface);
+  border-top: 1px solid var(--igm-border);
+  font-size: 11px;
+  color: var(--igm-text-muted);
+  user-select: none;
+}
+
+.group {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.item,
+.itemMuted {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.online {
+  color: var(--igm-success);
+}
+
+.offline {
+  color: var(--igm-danger);
+}
+
+.itemMuted {
+  color: var(--igm-text-subtle);
+}
+
+/* 可点击条目（登录状态 / 默认 Java / 选中实例） */
+.itemButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  color: var(--igm-text-muted);
+  font-size: 11px;
+  white-space: nowrap;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+
+.itemButton:hover {
+  background-color: var(--igm-surface-subtle);
+  border-color: var(--igm-border);
+  color: var(--igm-text);
+}
+
+.name {
+  display: inline-block;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.verified {
+  color: var(--igm-accent);
+  flex-shrink: 0;
+}

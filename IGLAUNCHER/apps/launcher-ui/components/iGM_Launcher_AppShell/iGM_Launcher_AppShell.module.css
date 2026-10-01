@@ -1,0 +1,44 @@
+/*
+ * 文件路径：apps/launcher-ui/components/iGM_Launcher_AppShell/iGM_Launcher_AppShell.module.css
+ * 所属层：前端 / 应用骨架层样式
+ * 路由：全局
+ * 模块：iGM_Launcher_AppShell
+ * 作用：TopBar / Sidebar / 内容区 / StatusBar 的网格布局
+ * 内容：桌面常驻侧边栏；rail 形态收窄为图标轨
+ */
+
+.shell {
+  display: grid;
+  grid-template-columns: var(--igm-launcher-sidebar-width) 1fr;
+  grid-template-rows:
+    var(--igm-launcher-topbar-height) 1fr
+    var(--igm-launcher-statusbar-height);
+  grid-template-areas:
+    "topbar topbar"
+    "sidebar main"
+    "status status";
+  height: 100vh;
+  /* 窗口最小可用尺寸兜底：小于该尺寸时由 body 出现滚动条，布局不塌陷 */
+  min-width: var(--igm-launcher-min-width);
+  min-height: var(--igm-launcher-min-height);
+  background-color: var(--igm-bg);
+}
+
+/* 折叠态：侧边栏收为图标轨，变量只影响本网格实例 */
+.shellRail {
+  grid-template-columns: var(--igm-launcher-sidebar-rail-width) 1fr;
+}
+
+/* 内容区 */
+.content {
+  grid-area: main;
+  overflow: auto;
+  padding: 24px 28px;
+}
+
+/* 窄窗口（桌面应用缩到最小时）进一步压缩内容留白 */
+@media (max-width: 1100px) {
+  .content {
+    padding: 18px 18px;
+  }
+}

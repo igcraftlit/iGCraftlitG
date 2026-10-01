@@ -1,0 +1,269 @@
+/*
+ * 文件路径：apps/launcher-download/src/components/iGM_LauncherDl_DocLayout/iGM_LauncherDl_DocLayout.module.css
+ * 所属层：前端 / 组件样式层
+ * 路由：/docs、/docs/install、/docs/faq 全部文档页
+ * 模块：iGM_LauncherDl_Downloader
+ * 作用：统一文档布局样式——左侧文档侧边栏、中间正文、右侧 ON THIS PAGE 目录
+ * 响应式：≥1280 三栏常驻；1024-1279 左栏+正文（目录折叠顶部）；
+ *         768-1023 单栏（导航与目录均折叠顶部横向条）；
+ *         <768 单栏（仅文档分区横向条，目录隐藏）
+ */
+
+/* ===== 页面外层 ===== */
+.page {
+  width: 100%;
+}
+
+.inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 28px 20px 72px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+/* ===== 窄屏顶部文档分区横向条（<1024 显示） ===== */
+.sidebarTop {
+  display: block;
+  grid-column: 1 / -1;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--igm-border);
+}
+
+.sidebarTopTitle {
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--igm-text-subtle);
+}
+
+.sidebarTopScroll {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.sidebarTopScroll::-webkit-scrollbar {
+  display: none;
+}
+
+.topPill {
+  flex: 0 0 auto;
+  padding: 6px 13px;
+  border: 1px solid var(--igm-border);
+  border-radius: 999px;
+  font-size: 12.5px;
+  color: var(--igm-text-muted);
+  white-space: nowrap;
+  transition:
+    color var(--igm-motion-nav) var(--igm-motion-ease),
+    border-color var(--igm-motion-nav) var(--igm-motion-ease),
+    background-color var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.topPill:hover {
+  color: var(--igm-text);
+  border-color: var(--igm-border-strong);
+}
+
+.topPillActive,
+.topPillActive:hover {
+  color: var(--igm-text);
+  font-weight: 600;
+  border-color: var(--igm-text);
+  background: var(--igm-accent-soft);
+}
+
+/* ===== 顶部折叠的 ON THIS PAGE 横向条（768-1279 显示） ===== */
+.tocTop {
+  display: none;
+  grid-column: 1 / -1;
+}
+
+/* ===== 桌面左侧文档侧边栏（≥1024 显示） ===== */
+.sidebar {
+  display: none;
+}
+
+.sidebarTitle {
+  margin: 2px 0 12px;
+  padding-left: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--igm-text-subtle);
+}
+
+.sideList {
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--igm-border);
+}
+
+.sideLink {
+  margin-left: -1px;
+  padding: 7px 12px;
+  border-left: 2px solid transparent;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--igm-text-muted);
+  transition:
+    color 0.15s var(--igm-motion-ease),
+    border-color 0.15s var(--igm-motion-ease);
+}
+
+.sideLink:hover {
+  color: var(--igm-text);
+}
+
+.sideActive,
+.sideActive:hover {
+  color: var(--igm-text);
+  font-weight: 600;
+  border-left-color: var(--igm-text);
+}
+
+/* ===== 中间正文 ===== */
+.article {
+  min-width: 0;
+}
+
+/* ===== 右侧 ON THIS PAGE 目录（≥1280 显示） ===== */
+.tocRail {
+  display: none;
+}
+
+/* ===== 平板：768-1023 单栏，目录折叠顶部 ===== */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .inner {
+    gap: 16px;
+  }
+
+  .tocTop {
+    display: block;
+  }
+
+  /* 顶部目录横向胶囊化 */
+  .tocTop :global(ul) {
+    flex-direction: row;
+    gap: 6px;
+    overflow-x: auto;
+    border-left: none;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+
+  .tocTop :global(ul::-webkit-scrollbar) {
+    display: none;
+  }
+
+  .tocTop :global(button) {
+    flex: 0 0 auto;
+    width: auto;
+    margin-left: 0;
+    padding: 6px 13px;
+    border: 1px solid var(--igm-border);
+    border-left: 1px solid var(--igm-border);
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .tocTop :global(button.active) {
+    border-color: var(--igm-text);
+    background: var(--igm-accent-soft);
+  }
+
+  .tocTop :global(p) {
+    display: none;
+  }
+}
+
+/* ===== 小桌面：1024-1279 左栏 + 正文，目录折叠顶部 ===== */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .inner {
+    grid-template-columns: 190px minmax(0, 1fr);
+    gap: 32px;
+  }
+
+  .sidebarTop {
+    display: none;
+  }
+
+  .tocTop {
+    display: block;
+  }
+
+  .tocTop :global(ul) {
+    flex-direction: row;
+    gap: 6px;
+    overflow-x: auto;
+    border-left: none;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+
+  .tocTop :global(ul::-webkit-scrollbar) {
+    display: none;
+  }
+
+  .tocTop :global(button) {
+    flex: 0 0 auto;
+    width: auto;
+    margin-left: 0;
+    padding: 6px 13px;
+    border: 1px solid var(--igm-border);
+    border-left: 1px solid var(--igm-border);
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .tocTop :global(button.active) {
+    border-color: var(--igm-text);
+    background: var(--igm-accent-soft);
+  }
+
+  .tocTop :global(p) {
+    display: none;
+  }
+
+  .sidebar {
+    display: block;
+    position: sticky;
+    top: 84px;
+    align-self: start;
+  }
+}
+
+/* ===== 大桌面：≥1280 三栏常驻 ===== */
+@media (min-width: 1280px) {
+  .inner {
+    grid-template-columns: 210px minmax(0, 1fr) 200px;
+    gap: 40px;
+  }
+
+  .sidebarTop,
+  .tocTop {
+    display: none;
+  }
+
+  .sidebar {
+    display: block;
+    position: sticky;
+    top: 84px;
+    align-self: start;
+  }
+
+  .tocRail {
+    display: block;
+    position: sticky;
+    top: 84px;
+    align-self: start;
+  }
+}

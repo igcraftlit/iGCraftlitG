@@ -1,0 +1,30 @@
+/*
+ * 文件路径：apps/launcher-ui/components/iGM_Launcher_ThemeToggle/iGM_Launcher_ThemeToggle.module.css
+ * 所属层：前端 / 主题切换层样式
+ * 路由：全局（TopBar）
+ * 模块：iGM_Launcher_ThemeToggle
+ * 作用：TopBar 主题切换按钮样式（图标按钮，不可拖动窗口）
+ */
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 6px;
+  color: var(--igm-text-muted);
+  -webkit-app-region: no-drag;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease;
+}
+
+.iconButton:hover {
+  background-color: var(--igm-surface-subtle);
+  color: var(--igm-text);
+}
+
+.modeHint {
+  font-size: 12px;
+}

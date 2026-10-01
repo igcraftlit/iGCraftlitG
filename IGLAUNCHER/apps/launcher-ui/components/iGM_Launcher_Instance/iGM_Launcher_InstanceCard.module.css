@@ -1,0 +1,200 @@
+/*
+ * 文件路径：apps/launcher-ui/components/iGM_Launcher_Instance/iGM_Launcher_InstanceCard.module.css
+ * 所属层：前端 / 实例模块组件层样式
+ * 路由：G_Instances、G_Home
+ * 模块：iGM_Launcher_InstanceCard
+ * 作用：实例卡片 / 列表行布局、选择框、图标块、更多操作菜单
+ * 内容：卡片视图为横向四段栅格（选择框 / 图标 / 主体 / 操作），列表视图压缩为单行；
+ *       选中态用强调色描边
+ */
+
+.card {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  background-color: var(--igm-surface);
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  box-shadow: var(--igm-shadow);
+  transition: border-color 140ms ease;
+}
+
+.card:hover {
+  border-color: var(--igm-border-strong);
+}
+
+.cardSelected {
+  border-color: var(--igm-accent);
+}
+
+.cardList {
+  padding: 10px 16px;
+  border-radius: var(--igm-radius);
+  box-shadow: none;
+}
+
+/* 模块七：勾选式选择 */
+.check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.checkInput {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--igm-accent);
+  cursor: pointer;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--igm-radius);
+  background-color: var(--igm-accent-soft);
+  color: var(--igm-accent);
+}
+
+.cardList .icon {
+  width: 32px;
+  height: 32px;
+}
+
+.body {
+  min-width: 0;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--igm-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 7px;
+}
+
+.note {
+  margin-top: 7px;
+  font-size: 12px;
+  color: var(--igm-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 实例 gameDir：单行省略，完整路径见 title */
+.gameDir {
+  margin-top: 7px;
+  font-size: 12px;
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color: var(--igm-text-subtle);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lastPlayed {
+  margin-top: 7px;
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+.actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* 更多操作 */
+.menuWrap {
+  position: relative;
+}
+
+.menuButton {
+  width: 32px;
+  padding: 0;
+}
+
+.menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 20;
+  min-width: 148px;
+  padding: 4px;
+  background-color: var(--igm-surface);
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius);
+  box-shadow: var(--igm-shadow-hover);
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--igm-text-muted);
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.menuItem:hover {
+  background-color: var(--igm-surface-subtle);
+  color: var(--igm-text);
+}
+
+.menuItemDanger {
+  color: var(--igm-danger);
+}
+
+.menuItemDanger:hover {
+  background-color: var(--igm-danger-soft);
+  color: var(--igm-danger);
+}
+
+.menuItemLast {
+  /* 末项与上项之间留一条细分隔线，强化删除操作的边界 */
+  margin-top: 4px;
+  border-top: 1px solid var(--igm-border);
+  border-radius: 0 0 6px 6px;
+  padding-top: 4px;
+  height: 34px;
+}
+
+@media (max-width: 760px) {
+  .card {
+    grid-template-columns: auto 40px minmax(0, 1fr);
+  }
+
+  .actions {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+}

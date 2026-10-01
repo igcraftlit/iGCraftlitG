@@ -1,0 +1,155 @@
+/*
+ * 文件路径：apps/launcher-ui/components/iGM_Launcher_Dialogs/iGM_Launcher_Dialogs.module.css
+ * 所属层：前端 / 交互层样式
+ * 路由：全局
+ * 模块：iGM_Launcher_Dialogs
+ * 作用：模态遮罩、对话框卡片与操作按钮区样式
+ * 内容：半透明遮罩 + 居中卡片，不使用动效与装饰
+ */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background-color: rgba(9, 9, 11, 0.45);
+}
+
+.dialog {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  background-color: var(--igm-surface);
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  box-shadow: var(--igm-shadow-hover);
+}
+
+.dialogHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dangerIcon {
+  color: var(--igm-danger);
+  flex-shrink: 0;
+}
+
+.dialogTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.dialogDesc {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+.dialogLabel {
+  font-size: 12px;
+  color: var(--igm-text-muted);
+}
+
+.dialogActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.dangerButton {
+  background-color: var(--igm-danger);
+  color: #ffffff;
+}
+
+.dangerButton:hover:not(:disabled) {
+  /* 危险色无独立 hover 令牌，用透明度收敛差异 */
+  opacity: 0.9;
+}
+
+/* 启动登录方式选择：两个纵向可点选项 */
+.modeList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modeOption {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  text-align: left;
+  background-color: var(--igm-surface-subtle);
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius);
+  cursor: pointer;
+}
+
+.modeOption:hover:not(:disabled) {
+  border-color: var(--igm-accent);
+}
+
+.modeOption:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* 选中态：强调边框，不使用动画 */
+.modeOptionActive {
+  border-color: var(--igm-accent);
+  background-color: var(--igm-surface);
+}
+
+.modeIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--igm-text);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.modeBody {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.modeName {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.modeCheck {
+  color: var(--igm-accent);
+}
+
+.modeDesc {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--igm-text-muted);
+}
+
+/* 对话框内的下拉字段：标签在上，控件占满整行 */
+.dialogLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}

@@ -1,0 +1,111 @@
+/*
+ * 文件路径：apps/launcher-ui/components/iGM_Launcher_TopBar/iGM_Launcher_TopBar.module.css
+ * 所属层：前端 / 顶栏层样式
+ * 路由：全局
+ * 模块：iGM_Launcher_TopBar
+ * 作用：顶栏布局、品牌区、账户占位、分隔线样式
+ * 内容：整条顶栏为窗口拖动区（Electrobun draggable region），
+ *       交互控件自行声明 no-drag；底边线划定层级
+ */
+
+.topbar {
+  grid-area: topbar;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 10px 0 14px;
+  background-color: var(--igm-surface);
+  border-bottom: 1px solid var(--igm-border);
+  /* Electrobun/WebView2：整条顶栏可拖动移动窗口 */
+  -webkit-app-region: drag;
+}
+
+/* 品牌区 */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.logo {
+  border-radius: 5px;
+  flex-shrink: 0;
+  user-select: none;
+  pointer-events: none;
+}
+
+.appName {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--igm-text);
+  user-select: none;
+}
+
+/* 右侧操作区 */
+.actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.accountButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  /* Electrobun/WebView2：交互控件需显式退出拖动区 */
+  -webkit-app-region: no-drag;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease;
+}
+
+.accountButton:hover {
+  background-color: var(--igm-surface-subtle);
+  border-color: var(--igm-border);
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background-color: var(--igm-surface-subtle);
+  border: 1px solid var(--igm-border);
+  color: var(--igm-text-muted);
+}
+
+.accountName {
+  font-size: 12px;
+  color: var(--igm-text-muted);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.verifyIcon {
+  color: var(--igm-text-subtle);
+  flex-shrink: 0;
+}
+
+.verifyIconActive {
+  color: var(--igm-accent);
+  flex-shrink: 0;
+}
+
+.divider {
+  width: 1px;
+  height: 18px;
+  margin: 0 4px;
+  background-color: var(--igm-border);
+  flex-shrink: 0;
+}

@@ -1,0 +1,112 @@
+/*
+ * 文件路径：apps/launcher-download/src/components/iGM_LauncherDl_DocsHome/iGM_LauncherDl_DocsHome.module.css
+ * 所属层：前端 / 组件样式层
+ * 路由：/docs 文档首页
+ * 模块：iGM_LauncherDl_Downloader
+ * 作用：文档中心首页卡片网格样式——描边卡片、极简 hover（仅描边与阴影变化），无花哨动画
+ */
+
+/* 核心逻辑 */
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--igm-text);
+}
+
+.description {
+  max-width: 680px;
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--igm-text-subtle);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  background: var(--igm-surface);
+  box-shadow: var(--igm-shadow);
+  transition:
+    border-color var(--igm-motion-nav) var(--igm-motion-ease),
+    box-shadow var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.card:hover {
+  border-color: var(--igm-border-strong);
+  box-shadow: var(--igm-shadow-hover);
+}
+
+.cardIcon {
+  display: flex;
+  color: var(--igm-accent);
+}
+
+.cardTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.cardDesc {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--igm-text-muted);
+}
+
+.cardArrow {
+  margin-top: 4px;
+  display: flex;
+  color: var(--igm-text-subtle);
+  transition: color var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.card:hover .cardArrow {
+  color: var(--igm-accent);
+}
+
+@media (max-width: 640px) {
+  .title {
+    font-size: 24px;
+  }
+
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

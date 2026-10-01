@@ -1,0 +1,25 @@
+# iGM Launcher .gitignore
+
+node_modules/
+.next/
+out/
+
+# Electrobun / Hutch 构建产物
+.hutch/
+artifacts/
+build/
+apps/shell/iGM_Launcher_Assets/
+apps/installer/iGM_Installer_Assets/
+
+# Rust
+crates/**/target/
+
+# 环境与密钥
+.env
+.env.*
+.dev.vars*
+
+# 系统
+.DS_Store
+Thumbs.db
+*.tsbuildinfo

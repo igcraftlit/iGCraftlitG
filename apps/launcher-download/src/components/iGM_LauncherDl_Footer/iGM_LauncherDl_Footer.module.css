@@ -1,0 +1,56 @@
+/*
+ * 文件路径：apps/launcher-download/src/components/iGM_LauncherDl_Footer/iGM_LauncherDl_Footer.module.css
+ * 所属层：前端 / 组件样式层
+ * 路由：全局
+ * 模块：iGM_LauncherDl_Downloader
+ * 作用：站点页脚样式（官网/邮箱入口、团队署名、版权信息）
+ */
+
+/* 核心逻辑 */
+
+.footer {
+  border-top: 1px solid var(--igm-border);
+  background: var(--igm-surface);
+}
+
+.inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 20px;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  color: var(--igm-text-muted);
+  transition: color var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.link:hover {
+  color: var(--igm-text);
+}
+
+.builtBy {
+  font-size: 14px;
+  color: var(--igm-text);
+  font-weight: 500;
+}
+
+.copyright {
+  font-size: 13px;
+  color: var(--igm-text-subtle);
+}

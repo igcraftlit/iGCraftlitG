@@ -44,12 +44,21 @@
     "statsDetail": "Stats Detail",
     "minecraft": "Minecraft Resources",
     "minecraftUpload": "Upload MC Resource",
+    "minecraftVersions": "Version Library",
+    "gameInstalled": "Install Manager",
     "feed": "Feed",
     "friends": "Friends",
     "userRelations": "Following & Followers",
     "messages": "Messages",
     "messageSettings": "Message Privacy",
-    "becomeDeveloper": "Become a Developer"
+    "becomeDeveloper": "Become a Developer",
+    "developer": "Developers",
+    "developerApply": "Developer Application",
+    "developerStatus": "Application Status",
+    "developerReview": "Application Review",
+    "userAgreement": "User Agreement",
+    "levels": "Levels & Exams",
+    "tasks": "Task Center"
   },
   "topbar": {
     "menu": "Menu",
@@ -78,7 +87,9 @@
     "cardProfileTitle": "Profile",
     "cardProfileDesc": "View your profile and account settings",
     "cardAdminTitle": "Admin panel",
-    "cardAdminDesc": "Access site administration and maintenance"
+    "cardAdminDesc": "Access site administration and maintenance",
+    "cardLauncherTitle": "iGM Launcher",
+    "cardLauncherDesc": "Download iGM CraftCeon Launcher to manage instances, Java and game resources"
   },
   "landing": {
     "brand": "iGCraftLit",
@@ -226,6 +237,34 @@
       "title": "Daily Check-in",
       "description": "Check in consecutively for bonus points"
     },
+    "levels": {
+      "title": "Levels & Exams",
+      "description": "Ten levels — reach the point requirement and pass the exam to advance"
+    },
+    "tasks": {
+      "title": "Task Center",
+      "description": "Weekly and seasonal tasks — complete them to claim points and limited badges"
+    },
+    "developer": {
+      "title": "Developers",
+      "description": "Integrate with iGCraftLit Community via SDK and adapter protocol"
+    },
+    "developerApply": {
+      "title": "Developer Application",
+      "description": "Fill in purpose, project name, contact and expected quota; an organization owner reviews it after submission"
+    },
+    "developerStatus": {
+      "title": "Application Status",
+      "description": "View your developer application status and access qualification"
+    },
+    "developerReview": {
+      "title": "Developer Application Review",
+      "description": "Review developer applications, approve or reject with a comment; once approved, the applicant can enter the developer console"
+    },
+    "userAgreement": {
+      "title": "User Agreement",
+      "description": "Full text of the iGCraftLit Community User Agreement (14 sections)"
+    },
     "authLogin": {
       "title": "Sign in",
       "description": "Sign in to your iGCraftLit Community account"
@@ -341,6 +380,26 @@
     "minecraftDetail": {
       "title": "Minecraft Resource Detail",
       "description": "Read the description, compatibility notes and changelog, then download"
+    },
+    "minecraftVersions": {
+      "title": "Vanilla Game & Version Library",
+      "description": "Browse every Minecraft Java Edition version, grouped by year and filterable by type, with total size and a download entry"
+    },
+    "minecraftVersionDetail": {
+      "title": "Minecraft Version Details",
+      "description": "View Minecraft version information and total size, then start the download"
+    },
+    "gameInstall": {
+      "title": "Confirm Minecraft Installation",
+      "description": "Choose a mod loader and an install directory to start the automatic download and assembly"
+    },
+    "gameProgress": {
+      "title": "Minecraft Installation Progress",
+      "description": "Track the current stage, overall progress, speed and estimated time remaining"
+    },
+    "gameInstalled": {
+      "title": "Installed Minecraft Versions",
+      "description": "Inspect, verify, repair or remove installed Minecraft game files"
     }
   },
   "placeholder": {
@@ -436,7 +495,9 @@
       "resetTokenInvalid": "Reset link is invalid or has expired",
       "generic": "Something went wrong, please try again later",
       "network": "Cannot reach the local backend service",
-      "requestTimeout": "Request timed out, please try again"
+      "requestTimeout": "Request timed out, please try again",
+      "agreementRequired": "Please read and accept the iGCraftLit User Agreement first",
+      "ipConsentRequired": "Please consent to the IP lookup before completing registration"
     },
     "messages": {
       "registered": "Registration successful",
@@ -527,14 +588,14 @@
       }
     },
     "wizard": {
-      "stepSubtitle1": "Choose a username",
-      "stepSubtitle2": "Enter your email",
-      "stepSubtitle3": "Set a password",
-      "stepSubtitle4": "Read and accept the User Rules",
+      "stepSubtitle1": "Username and email",
+      "stepSubtitle2": "Set a password",
+      "stepSubtitle3": "Read and accept the User Agreement",
+      "stepSubtitle4": "Confirm location verification consent",
       "stepSubtitle5": "Verify your email",
       "next": "Next",
       "back": "Back",
-      "agreeAndContinue": "Finished reading — agree and continue",
+      "agreeAndContinue": "Finished reading — accept the rules",
       "rulesFullPage": "View the full rules page",
       "codeSentTo": "We have sent a verification code to {email}. Please enter the 6-digit code from the email",
       "codePlaceholder": "Enter the 6-digit code",
@@ -542,9 +603,14 @@
       "backToEdit": "Edit details",
       "welcomeBack": "Welcome back, {name}",
       "stepLabel": "Step {current} of {total}",
-      "step4Intro": "Before signing up, please read the iGCraftLit User Rules. Click the button below to view the full text on a separate page, then accept and return to this wizard.",
-      "viewRules": "Read the User Rules",
-      "acceptedInfo": "Rules read and accepted · IP: {ip} · {time}"
+      "step3Intro": "Please read the iGCraftLit User Agreement in full. Click the button below to open the full text on a separate page; scroll to the bottom, tick the consent box, then return to this wizard.",
+      "step4Intro": "To protect your account and support regional statistics, the system needs to look up your approximate IP location. Please review the details below and consent explicitly before completing registration.",
+      "viewRules": "Read the User Agreement",
+      "acceptedInfo": "Agreement read and accepted · Version {version} · {time}",
+      "ipDetecting": "Detecting IP location…",
+      "ipNotice": "Detected your IP: {ip} (used only for account security and regional statistics)",
+      "ipDetectFailed": "IP location detection failed. You can still continue; the location will be left empty.",
+      "ipConsentLabel": "I consent to the system looking up my IP for account security and regional statistics"
     }
   },
   "community": {
@@ -770,7 +836,10 @@
       "reply": "Reply",
       "activity": "Activity",
       "resource": "Resource",
-      "system": "System"
+      "system": "System",
+      "friend_request": "Friend request",
+      "friend_accept": "Friend accepted",
+      "message": "Message"
     },
     "settings": {
       "title": "Notification preferences",
@@ -1002,7 +1071,8 @@
     "backHome": "Back to home"
   },
   "footer": {
-    "copyright": "© {year} iGCraftLit Community"
+    "copyright": "© {year} iGCraftLit Community",
+    "devPortal": "iGM CLI Download API Developer Portal"
   },
   "points": {
     "loadFailed": "Failed to load points data",
@@ -1054,14 +1124,227 @@
     "loginHint": "Sign in to see your badge progress",
     "loadFailed": "Failed to load badges",
     "grantedAt": "Earned {date}",
+    "rarityCount": "{count} badges",
+    "rarity": {
+      "common": "Common badges",
+      "rare": "Rare badges",
+      "legendary": "Legendary badges"
+    },
+    "rarityHint": {
+      "common": "Earned from daily tasks, check-ins and activity",
+      "rare": "Earned from seasonal tasks, passing exams and organizational contributions",
+      "legendary": "Earned from special contributions, official grants and major achievements"
+    },
     "conditions": {
       "posts_count": "Publish {value} posts",
       "comments_count": "Post {value} comments",
       "resources_count": "Upload {value} resources",
       "checkin_days": "Check in {value} days in total",
       "likes_received": "Receive {value} likes in total",
-      "points_total": "Earn {value} points in total"
+      "points_total": "Earn {value} points in total",
+      "seasonal_tasks": "Complete {value} seasonal tasks",
+      "exams_passed": "Pass {value} level exams",
+      "manual": "Granted manually by administrators"
     }
+  },
+  "levels": {
+    "loadFailed": "Failed to load level data",
+    "range": "{min} – {max} total points",
+    "rangeFrom": "{min} total points and above",
+    "order": "Lv.{order}",
+    "tagCurrent": "Current level",
+    "tagExam": "Exam required",
+    "progress": {
+      "title": "My level progress",
+      "points": "{points} total points",
+      "current": "Current level: {name}",
+      "noLevel": "No level reached yet",
+      "reached": "You have met the point requirement for {name}; an exam is still required",
+      "toNext": "{points} points to {name}",
+      "maxed": "Highest level reached"
+    },
+    "exam": {
+      "title": "Apply for the {name} level exam",
+      "pending": "Your exam application is under review. Please wait.",
+      "approved": "You have passed this level exam.",
+      "hint": "The exam covers community rules, technical skills and community contributions. You are upgraded once you pass.",
+      "placeholder": "Briefly describe your contributions and why you are applying (optional)",
+      "submit": "Submit exam application",
+      "submitting": "Submitting…",
+      "submitted": "Exam application submitted. Please wait for administrator review.",
+      "submitFailed": "Failed to submit the exam application. Please try again later.",
+      "history": "Exam records",
+      "record": "{name}",
+      "status": {
+        "pending": "Under review",
+        "approved": "Passed",
+        "rejected": "Not passed — you may apply again"
+      }
+    }
+  },
+  "tasks": {
+    "loadFailed": "Failed to load tasks",
+    "empty": "No tasks available right now",
+    "loginHint": "Sign in to see task progress and claim rewards",
+    "reward": "+{points} points",
+    "progress": "Progress {progress}/{target}",
+    "season": "Season {season}",
+    "claimed": "Claimed",
+    "claim": "Claim reward",
+    "claiming": "Claiming…",
+    "unfinished": "Incomplete",
+    "claimFailed": "Failed to claim the reward. Please try again later.",
+    "tab": {
+      "weekly": "Weekly tasks",
+      "seasonal": "Seasonal tasks"
+    },
+    "cycle": {
+      "weekly": "Resets every Monday at 00:00",
+      "seasonal": "Resets on the first day of each quarter at 00:00"
+    }
+  },
+  "developer": {
+    "openAccess": "Developer access is fully open at this stage. The application entry is used for later qualification registration and quota management.",
+    "restricted": "Developer access is now review-based. Please submit an application and wait for approval.",
+    "applyEntry": "Submit developer application",
+    "statusEntry": "View application status",
+    "account": {
+      "title": "Become a Developer",
+      "description": "Developer qualification is application-based. Once approved you can enter the developer console.",
+      "become": "Become a Developer",
+      "openStatus": "View developer status",
+      "enterConsole": "Open developer console",
+      "state": {
+        "pending": "Pending review",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "withdrawn": "Withdrawn"
+      }
+    },
+    "messages": {
+      "submitted": "Application submitted, please wait for review",
+      "withdrawn": "Application withdrawn",
+      "approved": "Application approved",
+      "rejected": "Application rejected"
+    },
+    "capabilities": {
+      "sdk": {
+        "title": "SDK",
+        "text": "Official package wrapping community APIs, simplifying auth, requests and error handling."
+      },
+      "adapter-protocol": {
+        "title": "Adapter Protocol",
+        "text": "A unified data and event adaptation spec so third-party platforms and tools can integrate community capabilities."
+      }
+    },
+    "apply": {
+      "intro": "Developer qualification is application-based. Once approved you can enter the developer console.",
+      "required": "Please fill in the project name, description, contact and reason",
+      "failed": "Failed to submit the application, please try again later",
+      "urlInvalid": "The project link must start with http:// or https://",
+      "rulesRequired": "Please read and accept the developer guidelines first",
+      "alreadyApproved": "You are already a certified developer; no need to apply again.",
+      "alreadyPending": "You already have an application pending review. Please wait for the result.",
+      "orgOwnerNotice": "As an organization owner you already have developer access — no application is required.",
+      "projectName": "Project name",
+      "projectNamePlaceholder": "Enter the project or tool name",
+      "projectType": "Project type",
+      "projectTypeOptions": {
+        "launcher": "Launcher",
+        "tool": "Tool",
+        "website": "Website",
+        "plugin": "Plugin",
+        "other": "Other"
+      },
+      "projectDesc": "Project description",
+      "projectDescPlaceholder": "Briefly describe what the project does and who it targets",
+      "projectUrl": "Project link",
+      "projectUrlPlaceholder": "https://example.com",
+      "optional": "(optional)",
+      "contact": "Contact",
+      "contactPlaceholder": "Email, community account or other reachable contact",
+      "expectedQuota": "Expected call volume",
+      "expectedQuotaOptions": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      },
+      "reason": "Reason for applying",
+      "reasonPlaceholder": "Explain the concrete scenarios and plans for using community capabilities",
+      "agreeRules": "I have read and agree to the developer guidelines",
+      "submit": "Submit application",
+      "submitting": "Submitting…",
+      "cancel": "Cancel",
+      "submittedNotice": "The application has been sent to the organization owners for review. Please wait patiently.",
+      "reviewHint": "Applications are sent to any organization owner; approval by any one of them is sufficient."
+    },
+    "status": {
+      "loadFailed": "Failed to load the application status",
+      "notApplied": "You have not submitted a developer application yet.",
+      "orgOwnerNotice": "As an organization owner you already have developer access — no application is required.",
+      "stateLabel": "Application status",
+      "projectName": "Project name",
+      "projectType": "Project type",
+      "projectDesc": "Project description",
+      "projectUrl": "Project link",
+      "contact": "Contact",
+      "expectedQuota": "Expected call volume",
+      "reason": "Reason for applying",
+      "submittedAt": "Submitted at",
+      "reviewer": "Reviewer",
+      "reviewComment": "Review comment",
+      "notProvided": "Not provided",
+      "notReviewed": "Not reviewed yet",
+      "withdraw": "Withdraw application",
+      "withdrawing": "Withdrawing…",
+      "withdrawConfirm": "Withdraw this application? You can submit a new one afterwards.",
+      "withdrawFailed": "Failed to withdraw, please try again later",
+      "reapply": "Apply again",
+      "history": "Application history",
+      "state": {
+        "pending": "Pending review",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "withdrawn": "Withdrawn"
+      }
+    },
+    "review": {
+      "all": "All",
+      "empty": "No matching applications",
+      "loadFailed": "Failed to load the application list, please try again later",
+      "approve": "Approve",
+      "reject": "Reject",
+      "commentPlaceholder": "Review comment (optional, up to 500 characters)",
+      "selfTip": "You cannot review your own application"
+    },
+    "errors": {
+      "badRequest": "Invalid request parameters",
+      "projectNameInvalid": "Project name is required and must be at most 60 characters",
+      "projectTypeInvalid": "Invalid project type",
+      "projectDescInvalid": "Project description is required and must be at most 1000 characters",
+      "projectUrlInvalid": "The project link must start with http:// or https:// and be at most 200 characters",
+      "contactInvalid": "Contact is required and must be at most 120 characters",
+      "quotaInvalid": "Invalid expected call volume",
+      "reasonInvalid": "The reason is required and must be at most 500 characters",
+      "rulesRequired": "Please read and accept the developer guidelines",
+      "applyPending": "You already have an application pending review. Please wait for the result",
+      "alreadyDeveloper": "You are already a certified developer; no need to apply again",
+      "notApplied": "You have not submitted a developer application yet",
+      "applyNotFound": "Developer application not found",
+      "applyReviewed": "This application has already been reviewed and cannot be processed again",
+      "notReapplyable": "The current application status does not allow reapplying",
+      "withdrawNotAllowed": "Only pending applications can be withdrawn"
+    }
+  },
+  "agreement": {
+    "loadFailed": "Failed to load the user agreement. Please try again later.",
+    "registerHint": "Please read to the bottom, then tick the consent box to continue registration.",
+    "tocTitle": "ON THIS PAGE",
+    "version": "Version {version}",
+    "acceptLabel": "I have read and agree to the iGCraftLit User Agreement",
+    "reached": "Finished reading — accept the rules",
+    "scrollHint": "Please scroll to the bottom",
+    "acceptAction": "Finished reading — accept the rules"
   },
   "leaderboard": {
     "sortTotal": "Total points",
@@ -1580,6 +1863,7 @@
     "title": "Minecraft Resources",
     "description": "Mods, texture packs, maps, skins and more — all in one place",
     "upload": "Upload",
+    "gameVersions": "Java Edition",
     "editTitle": "Edit resource",
     "backToList": "Back to resources",
     "all": "All",
@@ -1668,6 +1952,155 @@
       "versionInvalid": "An invalid MC version was provided",
       "loaderInvalid": "An invalid loader was provided",
       "platformInvalid": "An invalid platform was provided"
+    }
+  },
+  "game": {
+    "versionsTitle": "Vanilla game",
+    "versionsDescription": "Browse the Minecraft Java Edition version library: grouped by year, filter by type, search by keyword, then pick a mod loader and install in one click",
+    "searchPlaceholder": "Search version…",
+    "filterType": "Version type",
+    "all": "All",
+    "sizeLabel": "Total size",
+    "sizeComputing": "Calculating",
+    "yearGroup": "{year}",
+    "yearUnknown": "Unknown year",
+    "comingSoon": "Coming soon",
+    "loaderLabel": "Mod loader",
+    "loaderVersionLabel": "Fabric Loader version",
+    "loaderLoading": "Fetching Fabric versions…",
+    "loaderUnavailable": "No Fabric Loader version available",
+    "loaderDefaultVersion": "{version} (latest stable)",
+    "loaderNames": {
+      "none": "Vanilla",
+      "fabric": "Fabric",
+      "forge": "Forge",
+      "neoforge": "NeoForge"
+    },
+    "loader": {
+      "noneDescription": "The official game without any mod loader",
+      "fabricDescription": "Lightweight mod loader, fast to install and widely compatible",
+      "forgeDescription": "Classic mod loader, coming soon",
+      "neoforgeDescription": "The modern fork of Forge, coming soon"
+    },
+    "versionTypes": {
+      "release": "Release",
+      "snapshot": "Snapshot",
+      "old_beta": "Old Beta",
+      "old_alpha": "Old Alpha"
+    },
+    "installed": "Installed",
+    "notInstalled": "Not installed",
+    "detail": "View details",
+    "download": "Download",
+    "stateLoading": "Loading…",
+    "empty": "No matching versions",
+    "emptyDescription": "Try adjusting the filters or changing the keyword",
+    "notFound": "This version does not exist or has not been synced yet",
+    "taskNotFound": "The installation task does not exist or has been removed",
+    "backToVersions": "Back to versions",
+    "versionInfo": "Version information",
+    "versionLabel": "Version",
+    "typeLabel": "Type",
+    "releaseTimeLabel": "Release time",
+    "notesLabel": "Release notes",
+    "unspecified": "Not provided",
+    "installTitle": "Install Minecraft {version}",
+    "installDescription": "The backend will download, verify, extract and assemble everything automatically — no need to think about libraries or assets",
+    "installPath": "Install directory",
+    "installPathPlaceholder": "Leave empty to use the default directory",
+    "installPathHint": "The path must be absolute and cannot be a drive root or a system directory; a .minecraft folder is created under the chosen directory and each version gets its own subdirectory, so nothing is overwritten",
+    "installFinalPathLabel": "Final install location",
+    "installFinalPathDefault": "Default location (.minecraft/<version> in your home directory)",
+    "versionDirLabel": "Version directory",
+    "installedConflict": "Minecraft {version} is already installed. You can overwrite it (re-verify and download missing or corrupted files), go to the install manager to repair it, or cancel.",
+    "overwriteInstall": "Overwrite install",
+    "overwriteConfirm": "Minecraft {version} is already installed. Overwrite it? Intact files are skipped; missing or corrupted files are downloaded again.",
+    "cancel": "Cancel",
+    "browse": "Browse",
+    "startInstall": "Start download",
+    "progressTitle": "Installing Minecraft {version}",
+    "progressFiles": "Files {done} / {total}",
+    "speedLabel": "Speed {speed}/s",
+    "remainingUnknown": "Remaining: calculating",
+    "remainingSeconds": "Remaining: {seconds}s",
+    "remainingMinutes": "Remaining: {minutes}m {seconds}s",
+    "cancelInstall": "Cancel installation",
+    "cancelConfirm": "Cancel this installation? Downloaded files are kept so it can resume later.",
+    "canceledHint": "The installation was canceled. Completed files will be skipped on the next run.",
+    "cancelAndPurge": "Cancel & clean up",
+    "cancelAndPurgeConfirm": "Cancel this installation and delete the downloaded files? This version's install directory (including libraries and assets) will be removed entirely. This cannot be undone.",
+    "canceledPurgedHint": "The installation was canceled and all files downloaded this time were removed.",
+    "purge": "Clean up files",
+    "purgeConfirm": "Delete the files downloaded by this task? This version's install directory will be removed entirely and the task record is deleted as well.",
+    "completedDescription": "Installation complete — the game is ready to launch.",
+    "manageInstalled": "Manage installed versions",
+    "installDirLabel": "Install directory",
+    "updatedAtLabel": "Updated",
+    "installedTitle": "Minecraft install manager",
+    "installedDescription": "See in-progress downloads and installed versions, verify file integrity, repair missing files or remove a version",
+    "tasksTitle": "Download tasks",
+    "tasksDescription": "In-progress and unfinished downloads are listed here — view progress or cancel",
+    "viewProgress": "View progress",
+    "installedEmpty": "No versions installed yet",
+    "installedEmptyDescription": "Head to the version library, pick a version, a mod loader and an install directory",
+    "verify": "Verify",
+    "repair": "Repair",
+    "remove": "Remove",
+    "removeConfirm": "Remove {version}? Its install directory (including libraries and assets) will be deleted entirely; other versions are unaffected.",
+    "verifyResult": "{total} files in total, {ok} intact, {missing} missing or corrupted",
+    "stage": {
+      "manifest": "Fetching version info",
+      "client": "Downloading client",
+      "json": "Downloading version config",
+      "libraries": "Downloading libraries",
+      "natives": "Downloading and extracting natives",
+      "assets": "Downloading assets",
+      "fabric": "Installing Fabric",
+      "verify": "Verifying files",
+      "assemble": "Assembling directory",
+      "done": "Installation complete"
+    },
+    "status": {
+      "pending": "Queued",
+      "running": "Downloading",
+      "completed": "Completed",
+      "failed": "Failed",
+      "canceled": "Canceled"
+    },
+    "messages": {
+      "started": "Installation task created",
+      "canceled": "Installation canceled",
+      "canceledAndPurged": "Installation canceled and downloaded files removed",
+      "purged": "The task's remaining files were removed",
+      "repairing": "Repairing installation",
+      "removed": "Installation removed"
+    },
+    "errors": {
+      "taskCompleted": "This version is already installed; remove it from the installed list instead",
+      "versionNotFound": "Version not found",
+      "versionRequired": "Please specify a version to install",
+      "alreadyInstalling": "An installation for this version is already in progress",
+      "installFailed": "Installation failed, please try again later",
+      "taskNotFound": "Installation task not found",
+      "taskRunning": "The task is running; wait for it to finish or cancel it first",
+      "pickerUnsupported": "The native folder picker is not supported on this system; enter the path manually",
+      "pickerFailed": "Failed to open the folder picker; enter the path manually",
+      "pathRequired": "Please provide an install path",
+      "pathNotAbsolute": "The install path must be absolute",
+      "pathAtRoot": "The install path cannot be a drive root",
+      "pathForbidden": "The install path cannot be a system directory",
+      "pathNotWritable": "The install path is not writable; choose another directory",
+      "manifestFailed": "Failed to fetch the Minecraft version manifest",
+      "versionJsonFailed": "Failed to fetch the version configuration",
+      "versionNotInManifest": "This version is not present in the official manifest",
+      "rateLimited": "Too many requests; backing off and retrying automatically",
+      "downloadFailed": "File download failed",
+      "hashMismatch": "File verification failed; downloading again",
+      "canceled": "Installation canceled",
+      "partialFailed": "Some files failed to download; you can repair later",
+      "fabricUnreachable": "Could not reach the Fabric metadata service, please try again later",
+      "fabricLoaderEmpty": "No Fabric Loader is available for this version",
+      "fabricProfileInvalid": "Failed to parse the Fabric profile, please try again later"
     }
   }
 }

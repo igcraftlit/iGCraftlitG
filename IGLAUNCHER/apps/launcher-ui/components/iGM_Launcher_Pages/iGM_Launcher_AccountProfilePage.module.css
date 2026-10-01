@@ -1,0 +1,155 @@
+/*
+ * 文件路径：apps/launcher-ui/components/iGM_Launcher_Pages/iGM_Launcher_AccountProfilePage.module.css
+ * 所属层：前端 / 页面层样式
+ * 路由：G_Account_Profile（/accountProfile）
+ * 模块：iGM_Launcher_AccountProfilePage
+ * 作用：皮肤头部像素化预览、身份信息列表、拥有权与令牌状态行
+ *
+ * 皮肤裁剪说明：Minecraft 皮肤纹理为 64x64，头部正面位于 (8,8)-(16,16)。
+ * 容器 128px + background-size 800%（即 1024px）时缩放比为 16 倍，
+ * 因此偏移量取 -(8*16) = -128px，正好裁出头部正面。
+ */
+
+.page {
+  max-width: 860px;
+}
+
+.card {
+  margin-top: 14px;
+}
+
+.cardTitle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+/* 皮肤与身份 */
+.skinRow {
+  display: flex;
+  gap: 22px;
+  align-items: flex-start;
+}
+
+.skinHead {
+  flex-shrink: 0;
+  width: 128px;
+  height: 128px;
+  border-radius: var(--igm-radius-lg);
+  border: 1px solid var(--igm-border);
+  background-color: var(--igm-surface-subtle);
+  background-repeat: no-repeat;
+  background-size: 800%;
+  background-position: -128px -128px;
+  image-rendering: pixelated;
+}
+
+.skinFallback {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 128px;
+  height: 128px;
+  border-radius: var(--igm-radius-lg);
+  border: 1px solid var(--igm-border);
+  background-color: var(--igm-surface-subtle);
+  color: var(--igm-text-subtle);
+}
+
+.skinBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.playerName {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--igm-text);
+  word-break: break-all;
+}
+
+/* 元信息列表 */
+.metaList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-border);
+  background-color: var(--igm-surface-subtle);
+}
+
+.metaLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+.metaValue {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--igm-text);
+  word-break: break-all;
+  text-align: right;
+}
+
+/* 状态行与操作 */
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.hint {
+  margin-top: 12px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+.notFoundLine {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--igm-danger);
+}
+
+@media (max-width: 760px) {
+  .skinRow {
+    flex-direction: column;
+  }
+}

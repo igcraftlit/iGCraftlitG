@@ -1,0 +1,296 @@
+/*
+ * 文件路径：apps/launcher-download/src/app/[locale]/iGM_LauncherDl_Home.module.css
+ * 所属层：前端 / 页面样式层
+ * 路由：/{locale}（主页面）
+ * 模块：iGM_LauncherDl_Downloader
+ * 作用：主页面样式——Hero、版本信息卡、功能介绍网格、组织署名卡
+ * 内容：极简风格，单一强调色；Launcher 渐变为唯一彩色元素（按需求给定）
+ */
+
+/* 核心逻辑 */
+
+.page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 20px 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+}
+
+/* ===== Hero ===== */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  padding: 72px 0 8px;
+}
+
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: 1px solid var(--igm-border);
+  border-radius: 999px;
+  font-size: 12.5px;
+  color: var(--igm-text-muted);
+  background: var(--igm-surface);
+}
+
+.heroTitle {
+  font-family: var(--font-cinzel), var(--igm-font-sans);
+  font-size: 46px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--igm-text);
+}
+
+/* Launcher 渐变文字：按需求给定，唯一彩色元素 */
+.launcherText {
+  background: linear-gradient(90deg, #6d8eff, #a78bfa, #6d8eff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.heroSubtitle {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--igm-text);
+}
+
+.heroDescription {
+  max-width: 620px;
+  font-size: 14.5px;
+  line-height: 1.75;
+  color: var(--igm-text-muted);
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* ===== 按钮 ===== */
+.primaryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: 1px solid var(--igm-accent);
+  border-radius: var(--igm-radius);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--igm-accent-contrast);
+  background: var(--igm-accent);
+  transition:
+    background-color var(--igm-motion-nav) var(--igm-motion-ease),
+    border-color var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.primaryButton:hover {
+  background: var(--igm-accent-hover);
+  border-color: var(--igm-accent-hover);
+}
+
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--igm-text);
+  background: var(--igm-surface);
+  transition:
+    border-color var(--igm-motion-nav) var(--igm-motion-ease),
+    box-shadow var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.secondaryButton:hover {
+  border-color: var(--igm-border-strong);
+  box-shadow: var(--igm-shadow);
+}
+
+/* ===== 通用区块 ===== */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sectionHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.sectionDesc {
+  max-width: 640px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+/* ===== 版本信息卡 ===== */
+.versionCard {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  background: var(--igm-surface);
+  box-shadow: var(--igm-shadow);
+}
+
+.versionGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px 28px;
+  flex: 1 1 480px;
+}
+
+.versionItem {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.versionItem dt {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--igm-text-subtle);
+}
+
+.versionItem dd {
+  font-size: 14.5px;
+  color: var(--igm-text);
+  word-break: break-word;
+}
+
+.versionValue {
+  font-weight: 600;
+}
+
+.versionFile {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+}
+
+.versionPending {
+  color: var(--igm-text-subtle);
+}
+
+/* ===== 功能介绍网格 ===== */
+.featureGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.featureCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  background: var(--igm-surface);
+  box-shadow: var(--igm-shadow);
+  transition:
+    border-color var(--igm-motion-nav) var(--igm-motion-ease),
+    box-shadow var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.featureCard:hover {
+  border-color: var(--igm-border-strong);
+  box-shadow: var(--igm-shadow-hover);
+}
+
+.featureIcon {
+  display: flex;
+  color: var(--igm-accent);
+}
+
+.featureTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.featureDesc {
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+/* ===== 组织署名卡 ===== */
+.orgCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  padding: 36px 24px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  background: var(--igm-surface-subtle);
+}
+
+.orgBadge {
+  padding: 5px 14px;
+  border: 1px solid var(--igm-border);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--igm-text);
+  background: var(--igm-surface);
+}
+
+.orgTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.orgDesc {
+  max-width: 640px;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--igm-text-muted);
+}
+
+@media (max-width: 640px) {
+  .hero {
+    padding-top: 48px;
+  }
+
+  .heroTitle {
+    font-size: 32px;
+  }
+
+  .versionCard {
+    align-items: stretch;
+  }
+}

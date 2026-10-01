@@ -1,0 +1,24 @@
+{
+  "name": "igm-launcher-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "description": "iGM Launcher monorepo (Electrobun + Bun + Rust + Next.js static export)",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun run --cwd apps/launcher-ui dev",
+    "build:ui": "bun run --cwd apps/launcher-ui build",
+    "sync:ui": "bun run --cwd apps/shell sync:ui",
+    "shell:dev": "bun run --cwd apps/shell dev",
+    "build:app": "bun run build:ui && bun run sync:ui && bun run --cwd apps/shell build",
+    "portable": "bun run --cwd apps/shell portable",
+    "sync:installer": "bun run --cwd apps/installer sync:ui && bun run --cwd apps/installer sync:payload",
+    "build:installer": "bun run build:ui && bun run sync:ui && bun run --cwd apps/shell build && bun run portable && bun run sync:installer && bun run --cwd apps/installer build",
+    "typecheck": "bun run --cwd apps/launcher-ui typecheck && bun run --cwd apps/shell typecheck && bun run --cwd apps/installer typecheck"
+  },
+  "devDependencies": {
+    "typescript": "5.9.2"
+  }
+}

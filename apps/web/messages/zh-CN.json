@@ -44,12 +44,21 @@
     "statsDetail": "数据详情",
     "minecraft": "Minecraft 资源",
     "minecraftUpload": "发布 MC 资源",
+    "minecraftVersions": "版本资料库",
+    "gameInstalled": "安装管理",
     "feed": "动态",
     "friends": "好友",
     "userRelations": "关注与粉丝",
     "messages": "私信",
     "messageSettings": "私信隐私",
-    "becomeDeveloper": "成为开发者"
+    "becomeDeveloper": "成为开发者",
+    "developer": "开发者",
+    "developerApply": "开发者申请",
+    "developerStatus": "申请状态",
+    "developerReview": "申请审核",
+    "userAgreement": "用户管理规定",
+    "levels": "等级与考核",
+    "tasks": "任务中心"
   },
   "topbar": {
     "menu": "菜单",
@@ -78,7 +87,9 @@
     "cardProfileTitle": "个人主页",
     "cardProfileDesc": "查看个人资料与账号设置",
     "cardAdminTitle": "管理后台",
-    "cardAdminDesc": "进入站点管理与维护功能"
+    "cardAdminDesc": "进入站点管理与维护功能",
+    "cardLauncherTitle": "iGM Launcher",
+    "cardLauncherDesc": "下载 iGM CraftCeon Launcher，管理实例、Java 与游戏资源"
   },
   "landing": {
     "brand": "iGCraftLit",
@@ -226,6 +237,34 @@
       "title": "每日签到",
       "description": "连续签到赢取额外积分"
     },
+    "levels": {
+      "title": "等级与考核",
+      "description": "共 10 个等级，达到积分要求且通过考核即可升级"
+    },
+    "tasks": {
+      "title": "任务中心",
+      "description": "每周任务与每季任务，完成并领取积分与限定勋章"
+    },
+    "developer": {
+      "title": "开发者",
+      "description": "通过 SDK 与适配器协议接入 iGCraftLit Community"
+    },
+    "developerApply": {
+      "title": "开发者申请",
+      "description": "填写用途、项目名称、联系方式与预期调用量，提交后由组织所有者审核"
+    },
+    "developerStatus": {
+      "title": "申请状态",
+      "description": "查看开发者申请状态与接入资格"
+    },
+    "developerReview": {
+      "title": "开发者申请审核",
+      "description": "审核开发者申请，通过或拒绝并填写审核意见；通过后申请人即可进入开发者接入界面"
+    },
+    "userAgreement": {
+      "title": "用户管理规定",
+      "description": "iGCraftLit Community 用户管理规定全文（十四篇）"
+    },
     "authLogin": {
       "title": "登录",
       "description": "登录 iGCraftLit Community 账户"
@@ -341,6 +380,26 @@
     "minecraftDetail": {
       "title": "Minecraft 资源详情",
       "description": "查看资源介绍、兼容性、更新日志并下载文件"
+    },
+    "minecraftVersions": {
+      "title": "原版游戏与版本资料库",
+      "description": "浏览 Minecraft Java Edition 各版本，按年份分组、按类型筛选，查看完整大小并进入下载"
+    },
+    "minecraftVersionDetail": {
+      "title": "Minecraft 本体版本详情",
+      "description": "查看 Minecraft 版本信息与完整大小并进入下载"
+    },
+    "gameInstall": {
+      "title": "确认安装 Minecraft 本体",
+      "description": "选择模组加载器与安装目录后即可开始自动下载与组装"
+    },
+    "gameProgress": {
+      "title": "Minecraft 本体安装进度",
+      "description": "查看当前阶段、总进度、下载速度与预计剩余时间"
+    },
+    "gameInstalled": {
+      "title": "已安装的 Minecraft 版本",
+      "description": "查看、校验、修复或移除已安装的 Minecraft 游戏本体"
     }
   },
   "placeholder": {
@@ -436,7 +495,9 @@
       "resetTokenInvalid": "重置链接无效或已过期",
       "generic": "操作失败，请稍后再试",
       "network": "无法连接本地后端服务",
-      "requestTimeout": "请求超时，请稍后再试"
+      "requestTimeout": "请求超时，请稍后再试",
+      "agreementRequired": "请先阅读并同意《iGCraftLit 用户管理规定》",
+      "ipConsentRequired": "请先同意授权查询 IP 后再完成注册"
     },
     "messages": {
       "registered": "注册成功",
@@ -527,14 +588,14 @@
       }
     },
     "wizard": {
-      "stepSubtitle1": "输入用户名",
-      "stepSubtitle2": "填写邮箱",
-      "stepSubtitle3": "设置密码",
-      "stepSubtitle4": "阅读并同意用户管理规定",
+      "stepSubtitle1": "填写用户名与邮箱",
+      "stepSubtitle2": "设置密码",
+      "stepSubtitle3": "阅读并同意用户管理规定",
+      "stepSubtitle4": "确认位置验证授权",
       "stepSubtitle5": "验证你的邮箱",
       "next": "下一步",
       "back": "上一步",
-      "agreeAndContinue": "已完成阅读，同意并继续",
+      "agreeAndContinue": "已完成阅读，选择遵守规定",
       "rulesFullPage": "查看完整规定页面",
       "codeSentTo": "我们已向 {email} 发送了验证码，请输入邮件中的 6 位验证码",
       "codePlaceholder": "请输入 6 位验证码",
@@ -542,9 +603,14 @@
       "backToEdit": "返回修改",
       "welcomeBack": "欢迎回来，{name}",
       "stepLabel": "第 {current} 步，共 {total} 步",
-      "step4Intro": "注册前请先阅读《iGCraftLit 用户管理规定》。请点击下方按钮前往独立页面查看全文，阅读并同意后返回本向导。",
+      "step3Intro": "请先完整阅读《iGCraftLit 用户管理规定》。点击下方按钮前往独立页面查看全文，滚动到底部并勾选同意后返回本向导。",
+      "step4Intro": "为保障账号安全与区域统计，系统需查询你的 IP 粗略位置。请确认下方信息并明确同意授权后再完成注册。",
       "viewRules": "阅读《用户管理规定》",
-      "acceptedInfo": "已阅读并同意规定 · IP：{ip} · {time}"
+      "acceptedInfo": "已阅读并同意规定 · 版本 {version} · {time}",
+      "ipDetecting": "正在检测 IP 位置…",
+      "ipNotice": "检测到你的 IP：{ip}（仅用于账号安全与区域统计）",
+      "ipDetectFailed": "IP 位置检测失败，仍可继续注册，位置信息将留空",
+      "ipConsentLabel": "我已阅读并同意授权系统查询 IP，用于账户安全与区域统计"
     }
   },
   "community": {
@@ -770,7 +836,10 @@
       "reply": "回复",
       "activity": "活动",
       "resource": "资源",
-      "system": "系统"
+      "system": "系统",
+      "friend_request": "好友申请",
+      "friend_accept": "好友已通过",
+      "message": "私信"
     },
     "settings": {
       "title": "通知偏好设置",
@@ -1002,7 +1071,8 @@
     "backHome": "返回首页"
   },
   "footer": {
-    "copyright": "© {year} iGCraftLit Community"
+    "copyright": "© {year} iGCraftLit Community",
+    "devPortal": "iGM CLI Download API 开发者门户"
   },
   "points": {
     "loadFailed": "积分数据加载失败",
@@ -1054,14 +1124,227 @@
     "loginHint": "登录后可查看你的勋章获得情况",
     "loadFailed": "勋章数据加载失败",
     "grantedAt": "获得于 {date}",
+    "rarityCount": "共 {count} 枚",
+    "rarity": {
+      "common": "普通勋章",
+      "rare": "稀有勋章",
+      "legendary": "传说勋章"
+    },
+    "rarityHint": {
+      "common": "日常任务、签到与活跃获得",
+      "rare": "季度任务、考核通过、组织贡献获得",
+      "legendary": "特别贡献、官方授予、重大成就获得"
+    },
     "conditions": {
       "posts_count": "发布 {value} 篇帖子",
       "comments_count": "发表 {value} 条评论",
       "resources_count": "上传 {value} 个资源",
       "checkin_days": "累计签到 {value} 天",
       "likes_received": "累计获得 {value} 次点赞",
-      "points_total": "累计获得 {value} 积分"
+      "points_total": "累计获得 {value} 积分",
+      "seasonal_tasks": "完成 {value} 个季度任务",
+      "exams_passed": "通过 {value} 次等级考核",
+      "manual": "由管理员人工授予"
     }
+  },
+  "levels": {
+    "loadFailed": "等级数据加载失败",
+    "range": "{min} - {max} 累计积分",
+    "rangeFrom": "{min} 累计积分及以上",
+    "order": "Lv.{order}",
+    "tagCurrent": "当前等级",
+    "tagExam": "需考核",
+    "progress": {
+      "title": "我的升级进度",
+      "points": "累计积分 {points}",
+      "current": "当前等级：{name}",
+      "noLevel": "尚未达到任何等级",
+      "reached": "已达到 {name} 的积分要求，还需通过考核",
+      "toNext": "距离 {name} 还需 {points} 积分",
+      "maxed": "已达到最高等级"
+    },
+    "exam": {
+      "title": "申请 {name} 等级考核",
+      "pending": "你的考核申请正在审核中，请耐心等待。",
+      "approved": "你已通过该等级考核。",
+      "hint": "考核内容涵盖社区规范、技术能力与社区贡献，通过后正式升级。",
+      "placeholder": "简要说明你的社区贡献与申请理由（可选）",
+      "submit": "提交考核申请",
+      "submitting": "提交中…",
+      "submitted": "考核申请已提交，请等待管理员审核",
+      "submitFailed": "考核申请提交失败，请稍后再试",
+      "history": "考核记录",
+      "record": "{name}",
+      "status": {
+        "pending": "审核中",
+        "approved": "已通过",
+        "rejected": "未通过，可再次申请"
+      }
+    }
+  },
+  "tasks": {
+    "loadFailed": "任务数据加载失败",
+    "empty": "当前暂无任务",
+    "loginHint": "登录后可查看任务进度与领取奖励",
+    "reward": "+{points} 积分",
+    "progress": "进度 {progress}/{target}",
+    "season": "赛季 {season}",
+    "claimed": "已领取",
+    "claim": "领取奖励",
+    "claiming": "领取中…",
+    "unfinished": "未完成",
+    "claimFailed": "奖励领取失败，请稍后再试",
+    "tab": {
+      "weekly": "每周任务",
+      "seasonal": "每季任务"
+    },
+    "cycle": {
+      "weekly": "每周一 00:00 重置",
+      "seasonal": "每季度首日 00:00 重置"
+    }
+  },
+  "developer": {
+    "openAccess": "当前阶段开发者调用完全放开；申请入口用于后续资质登记与配额管理。",
+    "restricted": "开发者调用已进入审核制，请先提交申请并等待审核通过。",
+    "applyEntry": "提交开发者申请",
+    "statusEntry": "查看申请状态",
+    "account": {
+      "title": "成为开发者",
+      "description": "开发者资格为申请制，通过审核后即可进入开发者接入界面。",
+      "become": "成为开发者",
+      "openStatus": "查看开发者状态",
+      "enterConsole": "进入开发者接入界面",
+      "state": {
+        "pending": "待审核",
+        "approved": "已通过",
+        "rejected": "已拒绝",
+        "withdrawn": "已撤回"
+      }
+    },
+    "messages": {
+      "submitted": "申请已提交，请等待审核",
+      "withdrawn": "申请已撤回",
+      "approved": "申请已通过",
+      "rejected": "申请已被拒绝"
+    },
+    "capabilities": {
+      "sdk": {
+        "title": "SDK",
+        "text": "封装社区接口的官方开发包，简化鉴权、请求与错误处理流程。"
+      },
+      "adapter-protocol": {
+        "title": "适配器协议",
+        "text": "统一的数据与事件适配规范，便于第三方平台与工具接入社区能力。"
+      }
+    },
+    "apply": {
+      "intro": "开发者资格为申请制，通过审核后即可进入开发者接入界面。",
+      "required": "请填写项目名称、项目描述、联系方式与申请理由",
+      "failed": "申请提交失败，请稍后再试",
+      "urlInvalid": "项目链接需以 http:// 或 https:// 开头",
+      "rulesRequired": "请先阅读并勾选同意开发者规范",
+      "alreadyApproved": "你已成为认证开发者，无需重复申请。",
+      "alreadyPending": "你已有一条待审核的申请，请等待审核结果。",
+      "orgOwnerNotice": "你作为组织所有者已具备开发者接入资格，无需提交申请。",
+      "projectName": "项目名称",
+      "projectNamePlaceholder": "请输入项目或工具名称",
+      "projectType": "项目类型",
+      "projectTypeOptions": {
+        "launcher": "启动器",
+        "tool": "工具",
+        "website": "网站",
+        "plugin": "插件",
+        "other": "其他"
+      },
+      "projectDesc": "项目描述",
+      "projectDescPlaceholder": "简要说明项目的功能与目标用户",
+      "projectUrl": "项目链接",
+      "projectUrlPlaceholder": "https://example.com",
+      "optional": "（可选）",
+      "contact": "联系方式",
+      "contactPlaceholder": "邮箱、社区账号或其他可联系方式",
+      "expectedQuota": "预期调用量",
+      "expectedQuotaOptions": {
+        "low": "低",
+        "medium": "中",
+        "high": "高"
+      },
+      "reason": "申请理由",
+      "reasonPlaceholder": "说明接入社区能力的具体场景与计划",
+      "agreeRules": "我已阅读并同意开发者规范",
+      "submit": "提交申请",
+      "submitting": "提交中…",
+      "cancel": "取消",
+      "submittedNotice": "申请已发送至组织所有者审核，请耐心等待。",
+      "reviewHint": "申请提交后发送给任意一位组织所有者，任一位同意即可通过。"
+    },
+    "status": {
+      "loadFailed": "申请状态加载失败",
+      "notApplied": "你还没有提交过开发者申请。",
+      "orgOwnerNotice": "你作为组织所有者已具备开发者接入资格，无需提交申请。",
+      "stateLabel": "申请状态",
+      "projectName": "项目名称",
+      "projectType": "项目类型",
+      "projectDesc": "项目描述",
+      "projectUrl": "项目链接",
+      "contact": "联系方式",
+      "expectedQuota": "预期调用量",
+      "reason": "申请理由",
+      "submittedAt": "提交时间",
+      "reviewer": "审核人",
+      "reviewComment": "审核意见",
+      "notProvided": "未填写",
+      "notReviewed": "尚未审核",
+      "withdraw": "撤回申请",
+      "withdrawing": "撤回中…",
+      "withdrawConfirm": "确认撤回该申请？撤回后可重新提交。",
+      "withdrawFailed": "撤回失败，请稍后再试",
+      "reapply": "重新申请",
+      "history": "申请记录",
+      "state": {
+        "pending": "待审核",
+        "approved": "已通过",
+        "rejected": "已拒绝",
+        "withdrawn": "已撤回"
+      }
+    },
+    "review": {
+      "all": "全部",
+      "empty": "没有匹配的申请",
+      "loadFailed": "申请列表加载失败，请稍后重试",
+      "approve": "通过",
+      "reject": "拒绝",
+      "commentPlaceholder": "审核意见（可选，最多 500 字）",
+      "selfTip": "不能审核自己的申请"
+    },
+    "errors": {
+      "badRequest": "请求参数有误",
+      "projectNameInvalid": "项目名称不能为空且不超过 60 个字符",
+      "projectTypeInvalid": "项目类型不合法",
+      "projectDescInvalid": "项目描述不能为空且不超过 1000 个字符",
+      "projectUrlInvalid": "项目链接需以 http:// 或 https:// 开头且不超过 200 个字符",
+      "contactInvalid": "联系方式不能为空且不超过 120 个字符",
+      "quotaInvalid": "预期调用量不合法",
+      "reasonInvalid": "申请理由不能为空且不超过 500 个字符",
+      "rulesRequired": "请先阅读并同意开发者规范",
+      "applyPending": "你已有一条待审核的申请，请等待审核结果",
+      "alreadyDeveloper": "你已成为认证开发者，无需重复申请",
+      "notApplied": "你还没有提交过开发者申请",
+      "applyNotFound": "未找到该开发者申请",
+      "applyReviewed": "该申请已被审核，无法重复处理",
+      "notReapplyable": "当前申请状态不支持重新申请",
+      "withdrawNotAllowed": "仅待审核的申请可以撤回"
+    }
+  },
+  "agreement": {
+    "loadFailed": "管理规定加载失败，请稍后重试",
+    "registerHint": "请完整阅读至底部，勾选同意后方可继续注册。",
+    "tocTitle": "ON THIS PAGE",
+    "version": "版本 {version}",
+    "acceptLabel": "我已阅读并同意《iGCraftLit 用户管理规定》",
+    "reached": "已完成阅读，选择遵守规定",
+    "scrollHint": "请滚动阅读至底部",
+    "acceptAction": "已完成阅读，选择遵守规定"
   },
   "leaderboard": {
     "sortTotal": "总积分",
@@ -1580,6 +1863,7 @@
     "title": "Minecraft 资源分区",
     "description": "模组、材质包、地图、皮肤等 Minecraft 资源一站下载",
     "upload": "发布资源",
+    "gameVersions": "游戏本体",
     "editTitle": "编辑资源",
     "backToList": "返回资源分区",
     "all": "全部",
@@ -1668,6 +1952,155 @@
       "versionInvalid": "存在不合法的 MC 版本",
       "loaderInvalid": "存在不合法的加载器",
       "platformInvalid": "存在不合法的平台"
+    }
+  },
+  "game": {
+    "versionsTitle": "原版游戏",
+    "versionsDescription": "浏览 Minecraft Java Edition 版本资料库：按年份分组、按类型筛选、关键词搜索，选择模组加载器后一键下载安装",
+    "searchPlaceholder": "搜索版本号…",
+    "filterType": "版本类型",
+    "all": "全部",
+    "sizeLabel": "完整大小",
+    "sizeComputing": "计算中",
+    "yearGroup": "{year} 年",
+    "yearUnknown": "未知年份",
+    "comingSoon": "敬请期待",
+    "loaderLabel": "模组加载器",
+    "loaderVersionLabel": "Fabric Loader 版本",
+    "loaderLoading": "正在获取 Fabric 版本…",
+    "loaderUnavailable": "暂无可用的 Fabric Loader 版本",
+    "loaderDefaultVersion": "{version}（最新稳定版）",
+    "loaderNames": {
+      "none": "原版",
+      "fabric": "Fabric",
+      "forge": "Forge",
+      "neoforge": "NeoForge"
+    },
+    "loader": {
+      "noneDescription": "官方原版游戏，不含任何模组加载器",
+      "fabricDescription": "轻量模组加载器，安装快、兼容广",
+      "forgeDescription": "经典模组加载器，敬请期待",
+      "neoforgeDescription": "Forge 的现代分支，敬请期待"
+    },
+    "versionTypes": {
+      "release": "正式版 Release",
+      "snapshot": "快照 Snapshot",
+      "old_beta": "远古 Beta",
+      "old_alpha": "远古 Alpha"
+    },
+    "installed": "已安装",
+    "notInstalled": "未安装",
+    "detail": "查看详情",
+    "download": "下载",
+    "stateLoading": "正在加载…",
+    "empty": "没有符合条件的版本",
+    "emptyDescription": "试试调整筛选条件或更换关键词",
+    "notFound": "版本不存在或尚未同步",
+    "taskNotFound": "安装任务不存在或已被移除",
+    "backToVersions": "返回版本列表",
+    "versionInfo": "版本信息",
+    "versionLabel": "版本号",
+    "typeLabel": "类型",
+    "releaseTimeLabel": "发布时间",
+    "notesLabel": "版本说明",
+    "unspecified": "未提供",
+    "installTitle": "安装 Minecraft {version}",
+    "installDescription": "确认后由后端自动完成下载、校验、解压与组装，你无需了解 libraries、assets 等细节",
+    "installPath": "安装目录",
+    "installPathPlaceholder": "留空则使用默认目录",
+    "installPathHint": "路径需为绝对路径，且不能是磁盘根目录或系统目录；将在所选目录下自动创建 .minecraft，并按版本建立独立子目录，互不覆盖",
+    "installFinalPathLabel": "最终安装位置",
+    "installFinalPathDefault": "默认位置（用户主目录下的 .minecraft/版本目录）",
+    "versionDirLabel": "版本目录",
+    "installedConflict": "Minecraft {version} 已安装。可覆盖安装（重新校验并补齐缺失或损坏文件）、前往已安装管理执行修复，或取消本次操作。",
+    "overwriteInstall": "覆盖安装",
+    "overwriteConfirm": "Minecraft {version} 已安装，确定覆盖安装吗？已完整的文件会被跳过，缺失或损坏的文件将重新下载。",
+    "cancel": "取消",
+    "browse": "浏览",
+    "startInstall": "开始下载",
+    "progressTitle": "正在安装 Minecraft {version}",
+    "progressFiles": "文件 {done} / {total}",
+    "speedLabel": "速度 {speed}/s",
+    "remainingUnknown": "预计剩余：计算中",
+    "remainingSeconds": "预计剩余：{seconds} 秒",
+    "remainingMinutes": "预计剩余：{minutes} 分 {seconds} 秒",
+    "cancelInstall": "取消安装",
+    "cancelConfirm": "确定取消本次安装吗？已下载的文件会保留，下次可继续。",
+    "canceledHint": "安装已取消，已完成的文件会在下次安装时自动跳过。",
+    "cancelAndPurge": "取消并清除",
+    "cancelAndPurgeConfirm": "确定取消本次安装并清除已下载的文件吗？该版本的安装目录（含依赖库与资源）会被整体移除，此操作不可撤销。",
+    "canceledPurgedHint": "安装已取消，本次下载的文件已全部清除。",
+    "purge": "清除残余",
+    "purgeConfirm": "确定清除该任务已下载的残余文件吗？该任务的版本目录会被整体移除，任务记录也会一并删除。",
+    "completedDescription": "已安装完成，可直接启动游戏。",
+    "manageInstalled": "管理已安装版本",
+    "installDirLabel": "安装目录",
+    "updatedAtLabel": "更新时间",
+    "installedTitle": "Minecraft 安装管理",
+    "installedDescription": "查看进行中的下载任务与已安装版本，校验文件完整性、修复缺失文件或移除版本",
+    "tasksTitle": "下载任务",
+    "tasksDescription": "这里列出进行中与未完成的下载任务，可查看进度或取消",
+    "viewProgress": "查看进度",
+    "installedEmpty": "还没有安装任何版本",
+    "installedEmptyDescription": "前往版本资料库选择版本、加载器与安装目录",
+    "verify": "校验",
+    "repair": "修复",
+    "remove": "删除",
+    "removeConfirm": "确定删除 {version} 吗？将整体移除该版本的安装目录（含依赖库与资源），其它版本不受影响。",
+    "verifyResult": "共 {total} 个文件，正常 {ok} 个，缺失或损坏 {missing} 个",
+    "stage": {
+      "manifest": "获取版本信息",
+      "client": "下载客户端",
+      "json": "下载版本配置",
+      "libraries": "下载依赖库",
+      "natives": "下载并解压 natives",
+      "assets": "下载游戏资源",
+      "fabric": "安装 Fabric",
+      "verify": "校验文件",
+      "assemble": "组装目录",
+      "done": "安装完成"
+    },
+    "status": {
+      "pending": "排队中",
+      "running": "下载中",
+      "completed": "已完成",
+      "failed": "失败",
+      "canceled": "已取消"
+    },
+    "messages": {
+      "started": "安装任务已创建",
+      "canceled": "安装已取消",
+      "canceledAndPurged": "已取消安装并清除已下载的文件",
+      "purged": "已清除该任务的残余文件",
+      "repairing": "正在修复安装",
+      "removed": "已删除该版本的安装"
+    },
+    "errors": {
+      "taskCompleted": "该版本已安装完成，请在已安装列表中移除",
+      "versionNotFound": "版本不存在",
+      "versionRequired": "请指定要安装的版本",
+      "alreadyInstalling": "该版本已有安装任务在进行中",
+      "installFailed": "安装失败，请稍后重试",
+      "taskNotFound": "安装任务不存在",
+      "taskRunning": "任务正在运行，请先等待完成或取消",
+      "pickerUnsupported": "当前系统不支持原生文件夹选择器，请手动填写路径",
+      "pickerFailed": "打开文件夹选择器失败，请手动填写路径",
+      "pathRequired": "请填写安装路径",
+      "pathNotAbsolute": "安装路径必须是绝对路径",
+      "pathAtRoot": "安装路径不能是磁盘根目录",
+      "pathForbidden": "安装路径不能是系统目录",
+      "pathNotWritable": "安装路径不可写，请更换目录",
+      "manifestFailed": "获取 Minecraft 版本清单失败",
+      "versionJsonFailed": "获取版本配置失败",
+      "versionNotInManifest": "官方清单中不存在该版本",
+      "rateLimited": "请求过于频繁，已自动退避重试",
+      "downloadFailed": "文件下载失败",
+      "hashMismatch": "文件校验失败，已重新下载",
+      "canceled": "安装已取消",
+      "partialFailed": "部分文件下载失败，可稍后修复",
+      "fabricUnreachable": "无法连接 Fabric 元数据服务，请稍后重试",
+      "fabricLoaderEmpty": "该版本暂无可用的 Fabric Loader",
+      "fabricProfileInvalid": "Fabric 配置解析失败，请稍后重试"
     }
   }
 }

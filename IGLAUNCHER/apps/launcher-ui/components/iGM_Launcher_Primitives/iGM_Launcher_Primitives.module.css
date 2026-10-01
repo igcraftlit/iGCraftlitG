@@ -1,0 +1,143 @@
+/*
+ * 文件路径：apps/launcher-ui/components/iGM_Launcher_Primitives/iGM_Launcher_Primitives.module.css
+ * 所属层：前端 / 基础 UI 原语层样式
+ * 路由：全局
+ * 模块：iGM_Launcher_Primitives
+ * 作用：页面标题、卡片、徽章、按钮与占位说明的样式
+ * 内容：极简表面、细描边、单一强调色，禁止渐变与装饰图形
+ */
+
+/* 页面标题 */
+.pageHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.pageHeadingText {
+  min-width: 0;
+}
+
+.pageTitle {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--igm-text);
+}
+
+.pageDescription {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--igm-text-muted);
+}
+
+.pageActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* 卡片 */
+.card {
+  background-color: var(--igm-surface);
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  box-shadow: var(--igm-shadow);
+  padding: 18px;
+}
+
+/* 徽章 */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 18px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.badgeNeutral {
+  color: var(--igm-text-muted);
+  background-color: var(--igm-surface-subtle);
+  border-color: var(--igm-border);
+}
+
+.badgeAccent {
+  color: var(--igm-accent);
+  background-color: var(--igm-accent-soft);
+}
+
+.badgeSuccess {
+  color: var(--igm-success);
+  background-color: var(--igm-success-soft);
+}
+
+.badgeMuted {
+  color: var(--igm-text-subtle);
+  background-color: transparent;
+  border-color: var(--igm-border);
+}
+
+/* 按钮 */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: var(--igm-radius);
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.button:disabled {
+  opacity: 0.55;
+}
+
+.buttonPrimary {
+  background-color: var(--igm-accent);
+  color: var(--igm-accent-contrast);
+}
+
+.buttonPrimary:hover:not(:disabled) {
+  background-color: var(--igm-accent-hover);
+}
+
+.buttonSecondary {
+  background-color: var(--igm-surface);
+  border-color: var(--igm-border-strong);
+  color: var(--igm-text);
+}
+
+.buttonSecondary:hover:not(:disabled) {
+  background-color: var(--igm-surface-subtle);
+}
+
+.buttonGhost {
+  background-color: transparent;
+  color: var(--igm-text-muted);
+}
+
+.buttonGhost:hover:not(:disabled) {
+  background-color: var(--igm-surface-subtle);
+  color: var(--igm-text);
+}
+
+/* 占位说明 */
+.placeholderNote {
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}

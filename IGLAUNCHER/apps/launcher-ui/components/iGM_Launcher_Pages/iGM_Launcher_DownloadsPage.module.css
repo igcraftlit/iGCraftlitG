@@ -1,0 +1,126 @@
+/*
+ * 文件路径：apps/launcher-ui/components/iGM_Launcher_Pages/iGM_Launcher_DownloadsPage.module.css
+ * 所属层：前端 / 页面层样式
+ * 路由：G_Downloads（/downloads）
+ * 模块：iGM_Launcher_DownloadsPage
+ * 作用：搜索框、分类 chips、资源卡片栅格
+ */
+
+.page {
+  max-width: 1080px;
+}
+
+/* 搜索框 */
+.searchBox {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  color: var(--igm-text-subtle);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  height: 38px;
+  padding: 0 14px 0 36px;
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-border-strong);
+  background-color: var(--igm-surface);
+  font-size: 13px;
+  outline: none;
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.searchInput:focus {
+  border-color: var(--igm-accent);
+}
+
+/* 分类 chips */
+.categoryRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.chip {
+  height: 30px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border-strong);
+  background-color: var(--igm-surface);
+  color: var(--igm-text-muted);
+  font-size: 12px;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease,
+    border-color 140ms ease;
+}
+
+.chip:hover {
+  color: var(--igm-text);
+  background-color: var(--igm-surface-subtle);
+}
+
+.chipActive {
+  color: var(--igm-accent);
+  border-color: var(--igm-accent);
+  background-color: var(--igm-accent-soft);
+}
+
+/* 热门资源 */
+.sectionTitle {
+  margin: 22px 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.resourceCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.resourceIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--igm-radius);
+  background-color: var(--igm-surface-subtle);
+  border: 1px solid var(--igm-border);
+  color: var(--igm-text-muted);
+}
+
+.resourceBody {
+  flex: 1;
+}
+
+.resourceName {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.resourceDesc {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+.downloadButton {
+  align-self: flex-start;
+}

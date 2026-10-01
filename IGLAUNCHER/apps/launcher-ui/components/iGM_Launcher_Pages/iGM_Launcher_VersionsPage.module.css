@@ -1,0 +1,194 @@
+/*
+ * 文件路径：apps/launcher-ui/components/iGM_Launcher_Pages/iGM_Launcher_VersionsPage.module.css
+ * 所属层：前端 / 页面层样式
+ * 路由：G_Versions（SPA 页 id：versions）
+ * 模块：iGM_Launcher_VersionsPage
+ * 作用：版本库页面的同步状态条、版本类型筛选胶囊、年份分组与版本卡片栅格（极简风格）
+ */
+
+.page {
+  max-width: 1080px;
+}
+
+/* 同步状态条 */
+.statusCard {
+  margin-top: 4px;
+  padding: 14px 18px;
+}
+
+/* 版本类型筛选：与网站版本资料库的筛选胶囊一致 */
+.filterCard {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 14px 18px;
+}
+
+.filterLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border);
+  background-color: var(--igm-surface-subtle);
+  font-size: 12px;
+  color: var(--igm-text-muted);
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+
+.chip:hover {
+  color: var(--igm-text);
+}
+
+.chipActive {
+  border-color: var(--igm-accent);
+  background-color: var(--igm-accent-soft);
+  color: var(--igm-accent);
+}
+
+.chipCount {
+  font-size: 11px;
+  color: var(--igm-text-subtle);
+}
+
+.chipActive .chipCount {
+  color: var(--igm-accent);
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.statusLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.statusMeta {
+  font-size: 12px;
+  color: var(--igm-text-muted);
+}
+
+/* 年份分组 */
+.yearGroup {
+  margin-top: 20px;
+}
+
+.yearTitle {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--igm-text);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--igm-border);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(232px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+/* 版本卡片 */
+.versionCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+}
+
+.versionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.versionName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--igm-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.versionMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.metaItem dt {
+  color: var(--igm-text-subtle);
+}
+
+.metaItem dd {
+  color: var(--igm-text-muted);
+}
+
+.versionActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 28px;
+}
+
+/* 空状态 */
+.emptyCard {
+  margin-top: 16px;
+  padding: 24px;
+}
+
+.emptyTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.emptyDesc {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--igm-text-muted);
+  max-width: 520px;
+}
+
+.emptyCard button {
+  margin-top: 14px;
+}

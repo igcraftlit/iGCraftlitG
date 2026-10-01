@@ -1,0 +1,128 @@
+/*
+ * 文件路径：apps/launcher-ui/components/iGM_Launcher_Sidebar/iGM_Launcher_Sidebar.module.css
+ * 所属层：前端 / 侧边栏层样式
+ * 路由：全局
+ * 模块：iGM_Launcher_Sidebar
+ * 作用：分组导航、当前页高亮、占位禁用态、图标轨折叠样式
+ * 内容：宽度由 AppShell 网格列宽控制；折叠态隐藏文字与分组标题
+ */
+
+.sidebar {
+  grid-area: sidebar;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--igm-surface);
+  border-right: 1px solid var(--igm-border);
+  overflow: hidden;
+}
+
+.nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 10px;
+}
+
+.navGroup {
+  margin-bottom: 14px;
+}
+
+.groupTitle {
+  padding: 4px 8px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--igm-text-subtle);
+}
+
+.railDivider {
+  display: block;
+  width: 28px;
+  height: 1px;
+  margin: 8px auto;
+  background-color: var(--igm-border);
+}
+
+.groupItems {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* 单个导航项 */
+.navItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: var(--igm-radius);
+  color: var(--igm-text-muted);
+  font-size: 13px;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease;
+}
+
+a.navItem:hover {
+  background-color: var(--igm-surface-subtle);
+  color: var(--igm-text);
+}
+
+.navItemActive {
+  background-color: var(--igm-accent-soft);
+  color: var(--igm-accent);
+  font-weight: 500;
+}
+
+.navItemActive:hover {
+  color: var(--igm-accent);
+}
+
+/* 「启动」动作项与占位项样式已随模块七移除（启动入口收敛到实例管理页） */
+
+.navIcon {
+  flex-shrink: 0;
+}
+
+.navLabel {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 图标轨形态 */
+.sidebarRail .navItem {
+  justify-content: center;
+  padding: 0;
+  margin-left: auto;
+  margin-right: auto;
+  width: 40px;
+}
+
+/* 折叠开关 */
+.collapseButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 14px;
+  border-top: 1px solid var(--igm-border);
+  color: var(--igm-text-subtle);
+  font-size: 12px;
+  width: 100%;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease;
+}
+
+.collapseButton:hover {
+  background-color: var(--igm-surface-subtle);
+  color: var(--igm-text);
+}
+
+.sidebarRail .collapseButton {
+  justify-content: center;
+  padding: 0;
+}

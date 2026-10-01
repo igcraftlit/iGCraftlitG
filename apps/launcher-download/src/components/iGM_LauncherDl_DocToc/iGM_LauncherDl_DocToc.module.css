@@ -1,0 +1,78 @@
+/*
+ * 文件路径：apps/launcher-download/src/components/iGM_LauncherDl_DocToc/iGM_LauncherDl_DocToc.module.css
+ * 所属层：前端 / 组件样式层
+ * 路由：/docs、/docs/install、/docs/faq 全部文档页
+ * 模块：iGM_LauncherDl_Downloader
+ * 作用：右侧目录样式——ON THIS PAGE 大写小标题、左侧竖向引导线、
+ *       当前章节深色竖线 + 文字加深加粗（无背景色）、子层级缩进；
+ *       另有窄屏顶部横向胶囊变体 top
+ */
+
+/* ===== rail：桌面右侧竖排 ===== */
+.rail {
+  display: block;
+  width: 100%;
+}
+
+.title {
+  margin-bottom: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--igm-text-subtle);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  /* 整条竖向引导线 */
+  border-left: 1px solid var(--igm-border);
+}
+
+.link {
+  position: relative;
+  display: block;
+  width: 100%;
+  margin-left: -1px;
+  padding: 7px 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: left;
+  color: var(--igm-text-muted);
+  background: none;
+  border-left: 2px solid transparent;
+  transition:
+    color 0.15s var(--igm-motion-ease),
+    border-color 0.15s var(--igm-motion-ease);
+}
+
+.link:hover {
+  color: var(--igm-text);
+}
+
+/* 子章节缩进 */
+.level2 {
+  padding-left: 26px;
+  font-size: 12.5px;
+}
+
+/* 当前章节：深色竖线 + 文字加深加粗，无背景色 */
+.active,
+.active:hover {
+  color: var(--igm-text);
+  font-weight: 600;
+  border-left-color: var(--igm-text);
+}
+
+/* ===== top：窄屏顶部横向折叠（胶囊条，可横向滑动） ===== */
+.top {
+  display: block;
+}
+
+/* ===== 无障碍：尊重系统减少动效偏好 ===== */
+@media (prefers-reduced-motion: reduce) {
+  .link {
+    transition: none;
+  }
+}

@@ -1,0 +1,379 @@
+/*
+ * 文件路径：apps/launcher-ui/components/iGM_Installer/iGM_Installer_Wizard.module.css
+ * 所属层：前端 / 安装向导层样式
+ * 路由：G_Installer
+ * 模块：iGM_Installer_Wizard
+ * 作用：安装程序四步向导的窗口骨架、步骤指示、面板与进度条样式
+ * 内容：极简表面与单一强调色，无渐变与装饰动画；全部尺寸走 --igm- 设计令牌
+ */
+
+/* 类型定义 */
+/* （样式文件无类型） */
+
+/* 核心逻辑 */
+
+/* 窗口骨架：标题栏 / 步骤指示 / 内容 / 底部操作区四段纵向布局 */
+.window {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-width: 720px;
+  min-height: 520px;
+  background-color: var(--igm-bg);
+}
+
+/* 标题栏：整条为窗口拖动区 */
+.titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 52px;
+  padding: 0 0 0 18px;
+  border-bottom: 1px solid var(--igm-border);
+  background-color: var(--igm-surface);
+  -webkit-app-region: drag;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  user-select: none;
+}
+
+.logo {
+  display: block;
+  flex-shrink: 0;
+}
+
+.brandName {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--igm-text);
+  white-space: nowrap;
+}
+
+.titlebarRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  -webkit-app-region: no-drag;
+}
+
+.version {
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+  user-select: none;
+}
+
+/* 步骤指示 */
+.steps {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 14px 28px;
+  border-bottom: 1px solid var(--igm-border);
+  background-color: var(--igm-surface);
+}
+
+.stepItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+  user-select: none;
+}
+
+.stepItemActive {
+  color: var(--igm-text);
+}
+
+.stepItemDone {
+  color: var(--igm-text-muted);
+}
+
+.stepIndex {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border-strong);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stepItemActive .stepIndex {
+  border-color: var(--igm-accent);
+  color: var(--igm-accent);
+}
+
+.stepItemDone .stepIndex {
+  border-color: var(--igm-success);
+  color: var(--igm-success);
+}
+
+.stepLabel {
+  white-space: nowrap;
+}
+
+/* 内容区 */
+.body {
+  flex: 1;
+  overflow: auto;
+  padding: 26px 28px;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.panelTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--igm-text);
+}
+
+.panelDesc {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--igm-text-muted);
+}
+
+/* 步骤一：语言选择 */
+.localeList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.localeCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  background-color: var(--igm-surface);
+  color: var(--igm-text);
+  text-align: left;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.localeCard:hover {
+  border-color: var(--igm-border-strong);
+}
+
+.localeCardActive {
+  border-color: var(--igm-accent);
+  background-color: var(--igm-accent-soft);
+  color: var(--igm-accent);
+}
+
+.localeLabel {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.localeCode {
+  font-size: 11px;
+  color: var(--igm-text-subtle);
+}
+
+.localeCardActive .localeCode {
+  color: var(--igm-accent);
+}
+
+/* 步骤二：用户管理规定 */
+.terms {
+  max-height: 320px;
+  margin-top: 18px;
+  padding: 16px 18px;
+  overflow-y: auto;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  background-color: var(--igm-surface);
+}
+
+.termSection + .termSection {
+  margin-top: 16px;
+}
+
+.termTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.termBody {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+.termContact {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--igm-border);
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+.agreeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--igm-text);
+  cursor: pointer;
+}
+
+.agreeRowLocked {
+  color: var(--igm-text-subtle);
+  cursor: not-allowed;
+}
+
+.agreeInput {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  accent-color: var(--igm-accent);
+}
+
+.agreeInput:disabled {
+  cursor: not-allowed;
+}
+
+.scrollHint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+/* 步骤三：安装位置与进度 */
+.fieldLabel {
+  margin-top: 22px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--igm-text);
+}
+
+.fieldRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.field {
+  flex: 1;
+  min-width: 0;
+}
+
+.progressCard {
+  margin-top: 20px;
+}
+
+.progressHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.progressPhase {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--igm-text);
+}
+
+.progressFailed {
+  font-size: 13px;
+  color: var(--igm-danger);
+}
+
+.progressPercent {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--igm-text-muted);
+}
+
+.progressTrack {
+  position: relative;
+  height: 6px;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background-color: var(--igm-surface-subtle);
+}
+
+.progressBar {
+  height: 100%;
+  border-radius: 999px;
+  background-color: var(--igm-accent);
+  transition: width 200ms ease;
+}
+
+.progressBarFailed {
+  background-color: var(--igm-danger);
+}
+
+.progressMeta {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--igm-text-muted);
+}
+
+.progressFile {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 步骤四：完成 */
+.doneDir {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius);
+  background-color: var(--igm-surface);
+  font-size: 12px;
+  color: var(--igm-text-muted);
+  word-break: break-all;
+}
+
+/* 底部操作区 */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 28px;
+  border-top: 1px solid var(--igm-border);
+  background-color: var(--igm-surface);
+}
+
+/* 导出 */
+/* （样式文件无导出） */

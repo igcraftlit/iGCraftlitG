@@ -44,12 +44,21 @@
     "statsDetail": "統計詳細",
     "minecraft": "Minecraft リソース",
     "minecraftUpload": "MC リソース投稿",
+    "minecraftVersions": "バージョン資料室",
+    "gameInstalled": "インストール管理",
     "feed": "フィード",
     "friends": "フレンド",
     "userRelations": "フォローとフォロワー",
     "messages": "メッセージ",
     "messageSettings": "メッセージプライバシー",
-    "becomeDeveloper": "開発者になる"
+    "becomeDeveloper": "開発者になる",
+    "developer": "開発者",
+    "developerApply": "開発者申請",
+    "developerStatus": "申請状況",
+    "developerReview": "申請審査",
+    "userAgreement": "利用規約",
+    "levels": "レベルと審査",
+    "tasks": "タスクセンター"
   },
   "topbar": {
     "menu": "メニュー",
@@ -78,7 +87,9 @@
     "cardProfileTitle": "プロフィール",
     "cardProfileDesc": "プロフィールとアカウント設定を確認",
     "cardAdminTitle": "管理画面",
-    "cardAdminDesc": "サイト管理とメンテナンス機能へ"
+    "cardAdminDesc": "サイト管理とメンテナンス機能へ",
+    "cardLauncherTitle": "iGM Launcher",
+    "cardLauncherDesc": "iGM CraftCeon Launcher をダウンロードし、インスタンス・Java・ゲームリソースを管理"
   },
   "landing": {
     "brand": "iGCraftLit",
@@ -226,6 +237,34 @@
       "title": "毎日チェックイン",
       "description": "連続チェックインでボーナスポイントを獲得"
     },
+    "levels": {
+      "title": "レベルと審査",
+      "description": "全 10 レベル。必要ポイントに達し、審査に合格すると昇格します"
+    },
+    "tasks": {
+      "title": "タスクセンター",
+      "description": "ウィークリータスクとシーズンタスク。達成してポイントと限定バッジを獲得"
+    },
+    "developer": {
+      "title": "開発者",
+      "description": "SDK とアダプタープロトコルで iGCraftLit Community に接続"
+    },
+    "developerApply": {
+      "title": "開発者申請",
+      "description": "用途、プロジェクト名、連絡先、予想呼び出し量を入力し、組織オーナーが審査します"
+    },
+    "developerStatus": {
+      "title": "申請状況",
+      "description": "開発者申請の状況と接続資格を確認"
+    },
+    "developerReview": {
+      "title": "開発者申請の審査",
+      "description": "開発者申請を審査し、コメント付きで承認または却下します。承認後、申請者は開発者コンソールにアクセスできます"
+    },
+    "userAgreement": {
+      "title": "利用規約",
+      "description": "iGCraftLit Community 利用規約の全文（十四篇）"
+    },
     "authLogin": {
       "title": "ログイン",
       "description": "iGCraftLit Community アカウントにログイン"
@@ -341,6 +380,26 @@
     "minecraftDetail": {
       "title": "Minecraft リソース詳細",
       "description": "説明、対応環境、更新履歴を確認してダウンロード"
+    },
+    "minecraftVersions": {
+      "title": "バニラゲームとバージョン資料室",
+      "description": "Minecraft Java Edition の各バージョンを年ごとに閲覧。種類で絞り込み、合計サイズを確認してダウンロードへ"
+    },
+    "minecraftVersionDetail": {
+      "title": "Minecraft 本体バージョン詳細",
+      "description": "バージョン情報と合計サイズを確認してダウンロードへ"
+    },
+    "gameInstall": {
+      "title": "Minecraft 本体のインストール確認",
+      "description": "Mod ローダーとインストール先フォルダを選ぶと自動ダウンロードと組み立てが始まります"
+    },
+    "gameProgress": {
+      "title": "Minecraft 本体のインストール進捗",
+      "description": "現在の段階・全体の進捗・速度・残り時間の目安を表示します"
+    },
+    "gameInstalled": {
+      "title": "インストール済みの Minecraft バージョン",
+      "description": "インストール済み本体の確認・検証・修復・削除を行います"
     }
   },
   "placeholder": {
@@ -436,7 +495,9 @@
       "resetTokenInvalid": "リセットリンクが無効または期限切れです",
       "generic": "操作に失敗しました。後でもう一度お試しください",
       "network": "ローカルのバックエンドに接続できません",
-      "requestTimeout": "リクエストがタイムアウトしました。後でもう一度お試しください"
+      "requestTimeout": "リクエストがタイムアウトしました。後でもう一度お試しください",
+      "agreementRequired": "先に iGCraftLit 利用規約を読んで同意してください",
+      "ipConsentRequired": "登録を完了する前に IP 照会への同意が必要です"
     },
     "messages": {
       "registered": "登録が完了しました",
@@ -527,14 +588,14 @@
       }
     },
     "wizard": {
-      "stepSubtitle1": "ユーザー名を入力",
-      "stepSubtitle2": "メールアドレスを入力",
-      "stepSubtitle3": "パスワードを設定",
-      "stepSubtitle4": "利用規約を読んで同意",
+      "stepSubtitle1": "ユーザー名とメールアドレス",
+      "stepSubtitle2": "パスワードを設定",
+      "stepSubtitle3": "利用規約を読んで同意",
+      "stepSubtitle4": "位置情報照会への同意",
       "stepSubtitle5": "メールアドレスを認証",
       "next": "次へ",
       "back": "戻る",
-      "agreeAndContinue": "読み終えました。同意して続行",
+      "agreeAndContinue": "読み終えました。規約を守ることに同意します",
       "rulesFullPage": "規約の全文を見る",
       "codeSentTo": "{email} に認証コードを送信しました。メール内の 6 桁のコードを入力してください",
       "codePlaceholder": "6 桁の認証コードを入力",
@@ -542,9 +603,14 @@
       "backToEdit": "入力に戻る",
       "welcomeBack": "おかえりなさい、{name}",
       "stepLabel": "ステップ {current} / {total}",
-      "step4Intro": "登録の前に『iGCraftLit 利用規約』をお読みください。下のボタンから別ページで全文を確認し、同意してからウィザードに戻ります。",
+      "step3Intro": "まず『iGCraftLit 利用規約』を最後までお読みください。下のボタンから別ページで全文を開き、最下部までスクロールして同意にチェックを入れてからウィザードに戻ります。",
+      "step4Intro": "アカウントの安全と地域統計のため、システムは IP によるおおよその位置を照会します。下の内容を確認し、明確に同意してから登録を完了してください。",
       "viewRules": "利用規約を読む",
-      "acceptedInfo": "規約を読み同意しました · IP：{ip} · {time}"
+      "acceptedInfo": "規約を読み同意しました · バージョン {version} · {time}",
+      "ipDetecting": "IP 位置を検出しています…",
+      "ipNotice": "検出された IP：{ip}（アカウントの安全と地域統計にのみ使用）",
+      "ipDetectFailed": "IP 位置の検出に失敗しました。登録は続行でき、位置情報は空になります",
+      "ipConsentLabel": "アカウントの安全と地域統計のため、システムによる IP 照会に同意します"
     }
   },
   "community": {
@@ -770,7 +836,10 @@
       "reply": "返信",
       "activity": "イベント",
       "resource": "リソース",
-      "system": "システム"
+      "system": "システム",
+      "friend_request": "フレンド申請",
+      "friend_accept": "フレンド承認",
+      "message": "メッセージ"
     },
     "settings": {
       "title": "通知の設定",
@@ -1002,7 +1071,8 @@
     "backHome": "ホームに戻る"
   },
   "footer": {
-    "copyright": "© {year} iGCraftLit Community"
+    "copyright": "© {year} iGCraftLit Community",
+    "devPortal": "iGM CLI Download API 開発者ポータル"
   },
   "points": {
     "loadFailed": "ポイントデータの読み込みに失敗しました",
@@ -1054,14 +1124,227 @@
     "loginHint": "ログインするとバッジの獲得状況を確認できます",
     "loadFailed": "バッジデータの読み込みに失敗しました",
     "grantedAt": "{date} に獲得",
+    "rarityCount": "全 {count} 個",
+    "rarity": {
+      "common": "ノーマルバッジ",
+      "rare": "レアバッジ",
+      "legendary": "レジェンドバッジ"
+    },
+    "rarityHint": {
+      "common": "デイリータスク、チェックイン、アクティブ活動で獲得",
+      "rare": "シーズンタスク、審査合格、組織への貢献で獲得",
+      "legendary": "特別な貢献、公式授与、重大な功績で獲得"
+    },
     "conditions": {
       "posts_count": "投稿を {value} 件公開",
       "comments_count": "コメントを {value} 件投稿",
       "resources_count": "リソースを {value} 件アップロード",
       "checkin_days": "累計 {value} 日チェックイン",
       "likes_received": "累計 {value} いいねを獲得",
-      "points_total": "累計 {value} ポイントを獲得"
+      "points_total": "累計 {value} ポイントを獲得",
+      "seasonal_tasks": "シーズンタスクを {value} 件達成",
+      "exams_passed": "レベル審査に {value} 回合格",
+      "manual": "管理者による手動授与"
     }
+  },
+  "levels": {
+    "loadFailed": "レベルデータの読み込みに失敗しました",
+    "range": "{min} - {max} 累計ポイント",
+    "rangeFrom": "{min} 累計ポイント以上",
+    "order": "Lv.{order}",
+    "tagCurrent": "現在のレベル",
+    "tagExam": "審査が必要",
+    "progress": {
+      "title": "昇格の進捗",
+      "points": "累計ポイント {points}",
+      "current": "現在のレベル：{name}",
+      "noLevel": "まだどのレベルにも達していません",
+      "reached": "{name} の必要ポイントに達しましたが、審査に合格する必要があります",
+      "toNext": "{name} まであと {points} ポイント",
+      "maxed": "最高レベルに到達しました"
+    },
+    "exam": {
+      "title": "{name} レベル審査を申請",
+      "pending": "審査申請は確認中です。しばらくお待ちください。",
+      "approved": "このレベル審査に合格しています。",
+      "hint": "審査はコミュニティ規範、技術力、コミュニティへの貢献を含みます。合格すると正式に昇格します。",
+      "placeholder": "あなたの貢献と申請理由を簡単に記入（任意）",
+      "submit": "審査を申請する",
+      "submitting": "送信中…",
+      "submitted": "審査申請を送信しました。管理者の確認をお待ちください",
+      "submitFailed": "審査申請の送信に失敗しました。後でもう一度お試しください",
+      "history": "審査履歴",
+      "record": "{name}",
+      "status": {
+        "pending": "確認中",
+        "approved": "合格",
+        "rejected": "不合格 — 再申請できます"
+      }
+    }
+  },
+  "tasks": {
+    "loadFailed": "タスクデータの読み込みに失敗しました",
+    "empty": "現在タスクはありません",
+    "loginHint": "ログインするとタスクの進捗と報酬の受け取りを確認できます",
+    "reward": "+{points} ポイント",
+    "progress": "進捗 {progress}/{target}",
+    "season": "シーズン {season}",
+    "claimed": "受取済み",
+    "claim": "報酬を受け取る",
+    "claiming": "受け取り中…",
+    "unfinished": "未達成",
+    "claimFailed": "報酬の受け取りに失敗しました。後でもう一度お試しください",
+    "tab": {
+      "weekly": "ウィークリータスク",
+      "seasonal": "シーズンタスク"
+    },
+    "cycle": {
+      "weekly": "毎週月曜 00:00 にリセット",
+      "seasonal": "各四半期の初日 00:00 にリセット"
+    }
+  },
+  "developer": {
+    "openAccess": "現段階では開発者向けの呼び出しは完全に開放されています。申請入口は今後の資格登録と割当管理に使用します。",
+    "restricted": "開発者向けの呼び出しは審査制になりました。先に申請を提出し、承認をお待ちください。",
+    "applyEntry": "開発者申請を提出",
+    "statusEntry": "申請状況を確認",
+    "account": {
+      "title": "開発者になる",
+      "description": "開発者資格は申請制です。審査に通過すると開発者コンソールにアクセスできます。",
+      "become": "開発者になる",
+      "openStatus": "開発者ステータスを確認",
+      "enterConsole": "開発者コンソールを開く",
+      "state": {
+        "pending": "審査中",
+        "approved": "承認済み",
+        "rejected": "却下",
+        "withdrawn": "取り下げ済み"
+      }
+    },
+    "messages": {
+      "submitted": "申請を提出しました。審査をお待ちください",
+      "withdrawn": "申請を取り下げました",
+      "approved": "申請が承認されました",
+      "rejected": "申請が却下されました"
+    },
+    "capabilities": {
+      "sdk": {
+        "title": "SDK",
+        "text": "コミュニティ API をまとめた公式開発パッケージで、認証・リクエスト・エラー処理を簡素化します。"
+      },
+      "adapter-protocol": {
+        "title": "アダプタープロトコル",
+        "text": "データとイベントの統一的な適配仕様で、サードパーティのプラットフォームやツールがコミュニティ機能に接続できます。"
+      }
+    },
+    "apply": {
+      "intro": "開発者資格は申請制です。審査に通過すると開発者コンソールにアクセスできます。",
+      "required": "プロジェクト名・説明・連絡先・申請理由を入力してください",
+      "failed": "申請の送信に失敗しました。しばらくしてからお試しください",
+      "urlInvalid": "プロジェクトのリンクは http:// または https:// で始まる必要があります",
+      "rulesRequired": "先に開発者規範を読み、同意にチェックしてください",
+      "alreadyApproved": "すでに認定開発者です。重複して申請する必要はありません。",
+      "alreadyPending": "審査中の申請がすでにあります。結果をお待ちください。",
+      "orgOwnerNotice": "組織オーナーはすでに開発者接続資格を持っているため、申請は不要です。",
+      "projectName": "プロジェクト名",
+      "projectNamePlaceholder": "プロジェクトまたはツール名を入力",
+      "projectType": "プロジェクト種別",
+      "projectTypeOptions": {
+        "launcher": "ランチャー",
+        "tool": "ツール",
+        "website": "ウェブサイト",
+        "plugin": "プラグイン",
+        "other": "その他"
+      },
+      "projectDesc": "プロジェクトの説明",
+      "projectDescPlaceholder": "プロジェクトの機能と対象ユーザーを簡単に説明してください",
+      "projectUrl": "プロジェクトのリンク",
+      "projectUrlPlaceholder": "https://example.com",
+      "optional": "（任意）",
+      "contact": "連絡先",
+      "contactPlaceholder": "メール、コミュニティアカウント、その他の連絡手段",
+      "expectedQuota": "予想呼び出し量",
+      "expectedQuotaOptions": {
+        "low": "低",
+        "medium": "中",
+        "high": "高"
+      },
+      "reason": "申請理由",
+      "reasonPlaceholder": "コミュニティ機能を利用する具体的な場面と計画を説明してください",
+      "agreeRules": "開発者規範を読み、同意します",
+      "submit": "申請を提出",
+      "submitting": "送信中…",
+      "cancel": "キャンセル",
+      "submittedNotice": "申請は組織オーナーの審査に送信されました。しばらくお待ちください。",
+      "reviewHint": "申請は任意の組織オーナーに送信され、いずれか一人が同意すれば承認されます。"
+    },
+    "status": {
+      "loadFailed": "申請状況の読み込みに失敗しました",
+      "notApplied": "まだ開発者申請を提出していません。",
+      "orgOwnerNotice": "組織オーナーはすでに開発者接続資格を持っているため、申請は不要です。",
+      "stateLabel": "申請状況",
+      "projectName": "プロジェクト名",
+      "projectType": "プロジェクト種別",
+      "projectDesc": "プロジェクトの説明",
+      "projectUrl": "プロジェクトのリンク",
+      "contact": "連絡先",
+      "expectedQuota": "予想呼び出し量",
+      "reason": "申請理由",
+      "submittedAt": "提出日時",
+      "reviewer": "審査担当",
+      "reviewComment": "審査コメント",
+      "notProvided": "未入力",
+      "notReviewed": "未審査",
+      "withdraw": "申請を取り下げる",
+      "withdrawing": "取り下げ中…",
+      "withdrawConfirm": "この申請を取り下げますか？取り下げ後は再提出できます。",
+      "withdrawFailed": "取り下げに失敗しました。しばらくしてからお試しください",
+      "reapply": "再申請",
+      "history": "申請履歴",
+      "state": {
+        "pending": "審査中",
+        "approved": "承認済み",
+        "rejected": "却下",
+        "withdrawn": "取り下げ済み"
+      }
+    },
+    "review": {
+      "all": "すべて",
+      "empty": "該当する申請はありません",
+      "loadFailed": "申請一覧の読み込みに失敗しました。しばらくしてからお試しください",
+      "approve": "承認",
+      "reject": "却下",
+      "commentPlaceholder": "審査コメント（任意、最大 500 文字）",
+      "selfTip": "自分の申請は審査できません"
+    },
+    "errors": {
+      "badRequest": "リクエストパラメータが不正です",
+      "projectNameInvalid": "プロジェクト名は必須で、60 文字以内で入力してください",
+      "projectTypeInvalid": "プロジェクト種別が不正です",
+      "projectDescInvalid": "プロジェクトの説明は必須で、1000 文字以内で入力してください",
+      "projectUrlInvalid": "プロジェクトのリンクは http:// または https:// で始まり、200 文字以内で入力してください",
+      "contactInvalid": "連絡先は必須で、120 文字以内で入力してください",
+      "quotaInvalid": "予想呼び出し量が不正です",
+      "reasonInvalid": "申請理由は必須で、500 文字以内で入力してください",
+      "rulesRequired": "先に開発者規範を読み、同意してください",
+      "applyPending": "審査中の申請がすでにあります。結果をお待ちください",
+      "alreadyDeveloper": "すでに認定開発者です。重複して申請する必要はありません",
+      "notApplied": "まだ開発者申請を提出していません",
+      "applyNotFound": "該当する開発者申請が見つかりません",
+      "applyReviewed": "この申請は審査済みのため、再度処理できません",
+      "notReapplyable": "現在の申請状況では再申請できません",
+      "withdrawNotAllowed": "審査中の申請のみ取り下げできます"
+    }
+  },
+  "agreement": {
+    "loadFailed": "利用規約の読み込みに失敗しました。後でもう一度お試しください",
+    "registerHint": "最下部まで読み、同意にチェックすると登録を続行できます。",
+    "tocTitle": "ON THIS PAGE",
+    "version": "バージョン {version}",
+    "acceptLabel": "『iGCraftLit 利用規約』を読み、同意します",
+    "reached": "読み終えました。規約を守ることに同意します",
+    "scrollHint": "最下部までスクロールしてください",
+    "acceptAction": "読み終えました。規約を守ることに同意します"
   },
   "leaderboard": {
     "sortTotal": "合計ポイント",
@@ -1580,6 +1863,7 @@
     "title": "Minecraft リソース",
     "description": "Mod、テクスチャパック、マップ、スキンなどを一か所で",
     "upload": "投稿",
+    "gameVersions": "ゲーム本体",
     "editTitle": "リソースを編集",
     "backToList": "リソース一覧に戻る",
     "all": "すべて",
@@ -1668,6 +1952,155 @@
       "versionInvalid": "不正な MC バージョンが含まれています",
       "loaderInvalid": "不正なローダーが含まれています",
       "platformInvalid": "不正なプラットフォームが含まれています"
+    }
+  },
+  "game": {
+    "versionsTitle": "バニラゲーム",
+    "versionsDescription": "Minecraft Java Edition のバージョン資料室を閲覧：年ごとに分類、種類で絞り込み、キーワード検索。Mod ローダーを選んでワンクリックでインストールできます",
+    "searchPlaceholder": "バージョン番号を検索…",
+    "filterType": "バージョン種別",
+    "all": "すべて",
+    "sizeLabel": "合計サイズ",
+    "sizeComputing": "計算中",
+    "yearGroup": "{year} 年",
+    "yearUnknown": "年不明",
+    "comingSoon": "近日対応",
+    "loaderLabel": "Mod ローダー",
+    "loaderVersionLabel": "Fabric Loader バージョン",
+    "loaderLoading": "Fabric のバージョンを取得中…",
+    "loaderUnavailable": "利用可能な Fabric Loader がありません",
+    "loaderDefaultVersion": "{version}（最新安定版）",
+    "loaderNames": {
+      "none": "バニラ",
+      "fabric": "Fabric",
+      "forge": "Forge",
+      "neoforge": "NeoForge"
+    },
+    "loader": {
+      "noneDescription": "公式のバニラゲーム。Mod ローダーは含みません",
+      "fabricDescription": "軽量な Mod ローダー。導入が速く互換性も広い",
+      "forgeDescription": "定番の Mod ローダー。近日対応",
+      "neoforgeDescription": "Forge の現行派生。近日対応"
+    },
+    "versionTypes": {
+      "release": "正式版 Release",
+      "snapshot": "スナップショット Snapshot",
+      "old_beta": "旧 Beta",
+      "old_alpha": "旧 Alpha"
+    },
+    "installed": "インストール済み",
+    "notInstalled": "未インストール",
+    "detail": "詳細を見る",
+    "download": "ダウンロード",
+    "stateLoading": "読み込み中…",
+    "empty": "条件に一致するバージョンがありません",
+    "emptyDescription": "絞り込み条件やキーワードを変えてお試しください",
+    "notFound": "バージョンが存在しないか、まだ同期されていません",
+    "taskNotFound": "インストールタスクが存在しないか、削除されています",
+    "backToVersions": "バージョン一覧へ戻る",
+    "versionInfo": "バージョン情報",
+    "versionLabel": "バージョン",
+    "typeLabel": "種類",
+    "releaseTimeLabel": "公開日",
+    "notesLabel": "リリースノート",
+    "unspecified": "未提供",
+    "installTitle": "Minecraft {version} をインストール",
+    "installDescription": "確認後はバックエンドがダウンロード・検証・展開・組み立てを自動で行います。libraries や assets を意識する必要はありません",
+    "installPath": "インストール先フォルダ",
+    "installPathPlaceholder": "空欄の場合は既定のフォルダを使用します",
+    "installPathHint": "絶対パスで指定し、ドライブ直下やシステムフォルダは指定できません。選択したフォルダ配下に .minecraft を自動で作成し、バージョンごとに独立したサブフォルダを作るため上書きされません",
+    "installFinalPathLabel": "最終インストール先",
+    "installFinalPathDefault": "既定の場所（ホームディレクトリ配下の .minecraft/バージョンフォルダ）",
+    "versionDirLabel": "バージョンフォルダ",
+    "installedConflict": "Minecraft {version} はインストール済みです。上書きインストール（再検証して欠損・破損ファイルを補完）、インストール管理での修復、または中止を選べます。",
+    "overwriteInstall": "上書きインストール",
+    "overwriteConfirm": "Minecraft {version} はインストール済みです。上書きしますか？完全なファイルはスキップされ、欠損・破損ファイルのみ再ダウンロードされます。",
+    "cancel": "キャンセル",
+    "browse": "参照",
+    "startInstall": "ダウンロード開始",
+    "progressTitle": "Minecraft {version} をインストール中",
+    "progressFiles": "ファイル {done} / {total}",
+    "speedLabel": "速度 {speed}/s",
+    "remainingUnknown": "残り時間：計算中",
+    "remainingSeconds": "残り時間：約 {seconds} 秒",
+    "remainingMinutes": "残り時間：約 {minutes} 分 {seconds} 秒",
+    "cancelInstall": "インストールを中止",
+    "cancelConfirm": "このインストールを中止しますか？ダウンロード済みのファイルは保持され、次回続きから再開できます。",
+    "canceledHint": "インストールを中止しました。完了済みのファイルは次回自動でスキップされます。",
+    "cancelAndPurge": "中止して削除",
+    "cancelAndPurgeConfirm": "インストールを中止し、ダウンロード済みのファイルを削除しますか？このバージョンのインストールフォルダ（ライブラリ・アセットを含む）が完全に削除されます。この操作は元に戻せません。",
+    "canceledPurgedHint": "インストールを中止し、今回ダウンロードしたファイルをすべて削除しました。",
+    "purge": "残留を削除",
+    "purgeConfirm": "このタスクでダウンロードしたファイルを削除しますか？このタスクのバージョンフォルダが完全に削除され、タスク記録も削除されます。",
+    "completedDescription": "インストールが完了しました。すぐに起動できます。",
+    "manageInstalled": "インストール済みを管理",
+    "installDirLabel": "インストール先",
+    "updatedAtLabel": "更新日時",
+    "installedTitle": "Minecraft インストール管理",
+    "installedDescription": "進行中のダウンロードとインストール済みバージョンを確認し、整合性の検証・欠損ファイルの修復・削除ができます",
+    "tasksTitle": "ダウンロードタスク",
+    "tasksDescription": "進行中および未完了のダウンロードを表示します。進捗の確認やキャンセルができます",
+    "viewProgress": "進捗を見る",
+    "installedEmpty": "まだバージョンがインストールされていません",
+    "installedEmptyDescription": "バージョン資料室でバージョン・ローダー・インストール先フォルダを選択してください",
+    "verify": "検証",
+    "repair": "修復",
+    "remove": "削除",
+    "removeConfirm": "{version} を削除しますか？このバージョンのインストールフォルダ（ライブラリ・アセットを含む）を完全に削除します。他のバージョンには影響しません。",
+    "verifyResult": "全 {total} ファイル、正常 {ok}、欠損または破損 {missing}",
+    "stage": {
+      "manifest": "バージョン情報を取得",
+      "client": "クライアントをダウンロード",
+      "json": "バージョン構成をダウンロード",
+      "libraries": "ライブラリをダウンロード",
+      "natives": "natives をダウンロードして展開",
+      "assets": "アセットをダウンロード",
+      "fabric": "Fabric をインストール",
+      "verify": "ファイルを検証",
+      "assemble": "フォルダを組み立て",
+      "done": "インストール完了"
+    },
+    "status": {
+      "pending": "待機中",
+      "running": "ダウンロード中",
+      "completed": "完了",
+      "failed": "失敗",
+      "canceled": "中止"
+    },
+    "messages": {
+      "started": "インストールタスクを作成しました",
+      "canceled": "インストールを中止しました",
+      "canceledAndPurged": "インストールを中止し、ダウンロード済みファイルを削除しました",
+      "purged": "このタスクの残留ファイルを削除しました",
+      "repairing": "インストールを修復中",
+      "removed": "このバージョンのインストールを削除しました"
+    },
+    "errors": {
+      "taskCompleted": "このバージョンはインストール済みです。インストール済み一覧から削除してください",
+      "versionNotFound": "バージョンが存在しません",
+      "versionRequired": "インストールするバージョンを指定してください",
+      "alreadyInstalling": "このバージョンのインストールが既に進行中です",
+      "installFailed": "インストールに失敗しました。しばらくして再試行してください",
+      "taskNotFound": "インストールタスクが存在しません",
+      "taskRunning": "タスクが実行中です。完了または中止を待ってください",
+      "pickerUnsupported": "このシステムはネイティブのフォルダ選択に対応していません。パスを手入力してください",
+      "pickerFailed": "フォルダ選択を開けませんでした。パスを手入力してください",
+      "pathRequired": "インストール先を入力してください",
+      "pathNotAbsolute": "インストール先は絶対パスで指定してください",
+      "pathAtRoot": "インストール先にドライブ直下は指定できません",
+      "pathForbidden": "インストール先にシステムフォルダは指定できません",
+      "pathNotWritable": "インストール先に書き込めません。別のフォルダを指定してください",
+      "manifestFailed": "Minecraft のバージョン一覧を取得できませんでした",
+      "versionJsonFailed": "バージョン構成を取得できませんでした",
+      "versionNotInManifest": "公式一覧にこのバージョンが存在しません",
+      "rateLimited": "リクエストが多すぎます。自動でバックオフして再試行します",
+      "downloadFailed": "ファイルのダウンロードに失敗しました",
+      "hashMismatch": "ファイル検証に失敗したため再ダウンロードします",
+      "canceled": "インストールを中止しました",
+      "partialFailed": "一部のファイルのダウンロードに失敗しました。後で修復できます",
+      "fabricUnreachable": "Fabric メタデータサービスに接続できません。しばらくしてからお試しください",
+      "fabricLoaderEmpty": "このバージョンで利用可能な Fabric Loader がありません",
+      "fabricProfileInvalid": "Fabric プロファイルの解析に失敗しました。しばらくしてからお試しください"
     }
   }
 }

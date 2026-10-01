@@ -1,0 +1,114 @@
+/*
+ * 文件路径：apps/launcher-ui/components/iGM_Launcher_Forms/iGM_Launcher_FormControls.module.css
+ * 所属层：前端 / 表单原语层样式
+ * 路由：全局
+ * 模块：iGM_Launcher_FormControls
+ * 作用：字段容器、输入框、下拉、多行文本与分段切换样式
+ * 内容：与模块一设置页保持同一套表面色、细描边与圆角令牌
+ */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--igm-text-muted);
+}
+
+.hint {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--igm-text-subtle);
+}
+
+/* 输入控件 */
+.control {
+  width: 100%;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-border-strong);
+  background-color: var(--igm-surface);
+  color: var(--igm-text);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease;
+}
+
+.control::placeholder {
+  color: var(--igm-text-subtle);
+}
+
+.control:hover {
+  border-color: var(--igm-accent);
+}
+
+.control:focus-visible {
+  border-color: var(--igm-accent);
+  box-shadow: 0 0 0 3px var(--igm-accent-soft);
+}
+
+.select {
+  appearance: none;
+  cursor: pointer;
+  padding-right: 26px;
+  /* 极简下拉箭头：纯 CSS 三角，不使用图标字体或 emoji */
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position:
+    calc(100% - 15px) center,
+    calc(100% - 10px) center;
+  background-size:
+    5px 5px,
+    5px 5px;
+  background-repeat: no-repeat;
+}
+
+.textarea {
+  height: auto;
+  padding: 8px 10px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+/* 分段切换 */
+.segmented {
+  display: inline-flex;
+  padding: 2px;
+  gap: 2px;
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-border);
+  background-color: var(--igm-surface-subtle);
+}
+
+.segment {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 11px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--igm-text-muted);
+  transition:
+    background-color 140ms ease,
+    color 140ms ease;
+}
+
+.segment:hover {
+  color: var(--igm-text);
+}
+
+.segmentActive {
+  background-color: var(--igm-surface);
+  color: var(--igm-accent);
+  box-shadow: var(--igm-shadow);
+}
