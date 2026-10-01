@@ -9,7 +9,8 @@
     "commands": "コマンド",
     "sdk": "SDK",
     "api": "API",
-    "docs": "ドキュメント"
+    "docs": "ドキュメント",
+    "oauth": "OAuth 連携"
   },
   "hero": {
     "title": "iGM CLI Download API",
@@ -96,6 +97,18 @@
     },
     "commands": {
       "title": "コマンド"
+    },
+    "oauthApply": {
+      "title": "OAuth アプリ連携",
+      "description": "サードパーティサイトが iGCraftLit アカウントでログインできるよう申請し、アプリ情報・リダイレクト URI・必要なスコープを入力します"
+    },
+    "oauthApps": {
+      "title": "マイ OAuth アプリ",
+      "description": "申請した OAuth アプリの確認、client_secret の再発行、連携ログの照会"
+    },
+    "oauthDocs": {
+      "title": "OAuth 連携ドキュメント",
+      "description": "OAuth 2.0 + OpenID Connect 連携ガイド：フロー、エンドポイント、スコープ、サンプルコード、エラーコード、セキュリティ推奨事項"
     }
   },
   "common": {
@@ -362,7 +375,12 @@
         "title": "アダプター概要",
         "body": "アダプターはランチャーと iGM ダウンロードエンジンをつなぐ架け橋です。ランチャーはアダプタープロトコルまたは SDK を通じてリソースのダウンロード要求を iGM ダウンロードエンジンに渡し、エンジンはバックグラウンドで要求・転送・検証・保存を行い、進捗をイベントストリームでランチャーに返します。ターミナルは表示されず、ユーザーインターフェースを妨げません。",
         "goalsTitle": "設計目標",
-        "goals": ["軽量", "言語非依存", "クロスプラットフォーム", "拡張可能"]
+        "goals": [
+          "軽量",
+          "言語非依存",
+          "クロスプラットフォーム",
+          "拡張可能"
+        ]
       },
       "compare": {
         "title": "連携方式の比較",
@@ -376,15 +394,25 @@
             "name": "SDK 組み込み",
             "form": "C ABI 動的ライブラリ",
             "langs": "C、C++、Zig、Rust、Go など C ABI をサポートする言語",
-            "pros": ["追加プロセスなし。最高の性能で、ターミナルも一切表示されない", "エンジンを直接リンクし、呼び出し経路が最短"],
-            "cons": ["プラットフォームごとに動的ライブラリのビルドが必要"]
+            "pros": [
+              "追加プロセスなし。最高の性能で、ターミナルも一切表示されない",
+              "エンジンを直接リンクし、呼び出し経路が最短"
+            ],
+            "cons": [
+              "プラットフォームごとに動的ライブラリのビルドが必要"
+            ]
           },
           {
             "name": "アダプタープロトコル",
             "form": "HTTP + WebSocket",
             "langs": "HTTP リクエストを送信できるすべての言語",
-            "pros": ["コードの組み込み不要で言語・プラットフォーム非依存", "サービスを独立して更新でき、ランチャーの再ビルドが不要"],
-            "cons": ["ローカルサービスの常駐が必要で、ネットワークと接続を処理する必要がある"]
+            "pros": [
+              "コードの組み込み不要で言語・プラットフォーム非依存",
+              "サービスを独立して更新でき、ランチャーの再ビルドが不要"
+            ],
+            "cons": [
+              "ローカルサービスの常駐が必要で、ネットワークと接続を処理する必要がある"
+            ]
           }
         ],
         "table": {
@@ -392,11 +420,31 @@
           "sdkCol": "SDK 組み込み",
           "protoCol": "アダプタープロトコル",
           "rows": [
-            { "dim": "言語要件", "sdk": "C ABI 対応", "proto": "任意" },
-            { "dim": "追加プロセス", "sdk": "なし", "proto": "ローカルサービス" },
-            { "dim": "性能", "sdk": "最高", "proto": "良好" },
-            { "dim": "導入コスト", "sdk": "中", "proto": "低" },
-            { "dim": "ターミナル表示", "sdk": "なし", "proto": "なし" }
+            {
+              "dim": "言語要件",
+              "sdk": "C ABI 対応",
+              "proto": "任意"
+            },
+            {
+              "dim": "追加プロセス",
+              "sdk": "なし",
+              "proto": "ローカルサービス"
+            },
+            {
+              "dim": "性能",
+              "sdk": "最高",
+              "proto": "良好"
+            },
+            {
+              "dim": "導入コスト",
+              "sdk": "中",
+              "proto": "低"
+            },
+            {
+              "dim": "ターミナル表示",
+              "sdk": "なし",
+              "proto": "なし"
+            }
           ]
         }
       },
@@ -470,6 +518,301 @@
         "q4": "アダプターの問題はどこに報告すればよいですか？",
         "a4": "igcraftlit@outlook.com（.NET）または igcraftlit@163.com（.CN）へメールするか、https://igcraftlit.com からフィードバックをお送りください。件名に「アダプター」と明記すると問題をより早く特定できます。"
       }
+    }
+  },
+  "oauth": {
+    "session": {
+      "loginExpired": "ログインの有効期限が切れました。再度ログインしてください",
+      "tokenExpired": "認可の有効期限が切れました。再度ログインしてください",
+      "reloginHint": "アカウントの安全のため、再度ログインしてから操作を続けてください。",
+      "relogin": "再度ログイン",
+      "dismiss": "閉じる"
+    },
+    "errors": {
+      "invalidClient": "クライアントの検証に失敗しました。client_id を確認してください",
+      "invalidClientSecret": "client_secret が正しくありません",
+      "clientNotApproved": "このアプリは未承認または無効化されています",
+      "invalidCode": "認可コードが無効です",
+      "codeUsed": "認可コードは既に使用されています",
+      "codeExpired": "認可コードの有効期限が切れました。再度認可を開始してください",
+      "invalidGrant": "認可資格情報が無効です",
+      "refreshExpired": "リフレッシュトークンが失効しました。再度認可してください",
+      "invalidRedirectUri": "リダイレクト URI が登録値と一致しません",
+      "pkceFailed": "PKCE の検証に失敗しました",
+      "userUnavailable": "ユーザーが存在しないか現在利用できません",
+      "invalidScope": "要求されたスコープが無効です",
+      "invalidToken": "アクセストークンが無効または期限切れです",
+      "unsupportedResponseType": "サポートされていない response_type です",
+      "unsupportedGrantType": "サポートされていない grant_type です",
+      "unsupportedPkce": "code_challenge_method=S256 のみ対応しています",
+      "flowExpired": "認可リクエストが失効しました。再度開始してください",
+      "badRequest": "リクエストパラメータが不正です",
+      "nameInvalid": "アプリ名の形式が正しくありません",
+      "descriptionInvalid": "アプリの説明の形式が正しくありません",
+      "redirectInvalid": "リダイレクト URI の形式が正しくありません",
+      "redirectInsecure": "リダイレクト URI は HTTPS を使用する必要があります",
+      "purposeInvalid": "利用目的の形式が正しくありません",
+      "contactInvalid": "連絡先の形式が正しくありません",
+      "agreeRequired": "先に連携規約に同意してください",
+      "appNotFound": "アプリが見つかりません",
+      "withdrawNotAllowed": "現在の状態では取り消せません",
+      "appNotApproved": "アプリはまだ承認されていません",
+      "appReviewed": "この申請は既に審査済みです"
+    },
+    "clientTypes": {
+      "web": "ウェブアプリ",
+      "desktop": "デスクトップアプリ",
+      "mobile": "モバイルアプリ",
+      "service": "サーバーサイドサービス",
+      "other": "その他"
+    },
+    "scopes": {
+      "openid": "基本識別 openid",
+      "profile": "公開プロフィール profile",
+      "email": "メールアドレス email",
+      "org": "組織認証情報 org"
+    },
+    "scopeHints": {
+      "openid": "安定したユーザー識別子 sub（iGMUid）を返します",
+      "profile": "表示名とアバター URL を返します",
+      "email": "アカウントに紐づくメールアドレスを返します",
+      "org": "審査を通過した組織認証情報を返します"
+    },
+    "status": {
+      "pending": "審査待ち",
+      "approved": "承認済み",
+      "rejected": "拒否済み",
+      "disabled": "無効化済み",
+      "withdrawn": "取消済み"
+    },
+    "logActions": {
+      "apply": "申請を送信",
+      "withdraw": "申請を取消",
+      "secretReset": "シークレットを再発行",
+      "approve": "承認",
+      "reject": "拒否",
+      "delete": "アプリを削除",
+      "authorize": "ユーザーが認可",
+      "deny": "ユーザーが拒否",
+      "token": "トークン発行",
+      "refresh": "トークン更新",
+      "revoke": "トークン取消",
+      "consentRevoke": "認可を取消"
+    },
+    "apply": {
+      "intro": "サードパーティサイトが iGCraftLit アカウントでログインできるようにします：アプリ情報を送信し、審査通過後に client_id と client_secret が発行されます。",
+      "name": "アプリ名",
+      "namePlaceholder": "例：iGM コミュニティヘルパー",
+      "type": "アプリの種類",
+      "description": "アプリの説明",
+      "descriptionPlaceholder": "アプリの用途と主な機能を簡単に説明してください",
+      "redirectUris": "リダイレクト URI",
+      "redirectUrisPlaceholder": "https://example.com/oauth/callback",
+      "redirectUrisHint": "1 行に 1 つ、HTTPS のみ；複数指定可能で、認可リクエストと完全に一致する必要があります",
+      "scopes": "要求するスコープ",
+      "purpose": "利用目的",
+      "purposePlaceholder": "ユーザーが認可した情報をどのように利用するか説明してください",
+      "contact": "連絡先",
+      "contactPlaceholder": "メールアドレスなど連絡可能な方法",
+      "agreeRules": "OAuth 連携規約およびユーザー情報保護要件を読み、同意します",
+      "required": "必須項目をすべて入力してください",
+      "redirectRequired": "リダイレクト URI を最低 1 つ入力してください",
+      "redirectInsecure": "リダイレクト URI は HTTPS を使用する必要があります",
+      "rulesRequired": "先に連携規約に同意してください",
+      "submit": "申請を送信",
+      "submitting": "送信中…",
+      "cancel": "キャンセル",
+      "failed": "送信に失敗しました。しばらくしてから再試行してください",
+      "submittedNotice": "申請を送信しました。管理者の審査をお待ちください。承認後は「マイ OAuth アプリ」で client_id を確認し client_secret を取得できます。",
+      "viewApps": "マイ OAuth アプリへ",
+      "reviewHint": "審査はサイト管理者が行います；承認後に client_secret が一度だけ発行されるため、大切に保管してください"
+    },
+    "apps": {
+      "intro": "申請した OAuth アプリの確認、client_secret の再発行、連携ログの照会ができます。",
+      "newApply": "新しいアプリ連携を申請",
+      "empty": "OAuth アプリ連携の申請はまだありません",
+      "loadFailed": "アプリ一覧の読み込みに失敗しました。しばらくしてから再試行してください",
+      "typeLabel": "アプリの種類",
+      "clientId": "client_id",
+      "descriptionLabel": "アプリの説明",
+      "scopes": "スコープ",
+      "redirectUris": "リダイレクト URI",
+      "purpose": "利用目的",
+      "contact": "連絡先",
+      "createdAt": "送信日時",
+      "reviewComment": "審査コメント",
+      "secretOnce": "client_secret は今回のみ表示され、閉じるか更新すると再度確認できません。直ちに安全に保管してください",
+      "copy": "コピー",
+      "copied": "コピーしました",
+      "resetSecret": "client_secret を再発行",
+      "resetConfirm": "再発行すると旧シークレットは直ちに無効となり、旧シークレットを使うサードパーティはトークンを取得できなくなります。続行しますか？",
+      "withdraw": "申請を取消",
+      "withdrawConfirm": "この審査待ちの申請を取り消しますか？",
+      "viewLogs": "連携ログを表示",
+      "hideLogs": "ログを閉じる",
+      "logsEmpty": "連携ログはまだありません",
+      "logsTitle": "連携ログ"
+    },
+    "admin": {
+      "all": "すべて",
+      "empty": "現在の絞り込み条件に一致するアプリはありません",
+      "loadFailed": "アプリ一覧の読み込みに失敗しました。しばらくしてから再試行してください",
+      "applicant": "申請者",
+      "comment": "審査コメント",
+      "commentPlaceholder": "承認または拒否の説明（任意）。申請者に表示されます",
+      "approve": "承認",
+      "reject": "拒否",
+      "disable": "無効化",
+      "enable": "有効化",
+      "delete": "削除",
+      "approved": "申請を承認しました。直ちに client_secret をコピーして申請者へ渡してください",
+      "rejected": "申請を拒否しました",
+      "disabled": "アプリを無効化し、発行済みのすべてのトークンを取り消しました",
+      "enabled": "アプリを再度有効化しました",
+      "deleted": "アプリとその認可データを削除しました",
+      "disableConfirm": "無効化するとアプリはトークンを取得できなくなり、発行済みのトークンもすべて取り消されます。続行しますか？",
+      "deleteConfirm": "削除するとアプリの認可コード・トークン・同意記録もすべて削除され、元に戻せません。続行しますか？",
+      "secretOnce": "client_secret は今回のみ表示されます。直ちにコピーして申請者へ渡してください。閉じると再度確認できません"
+    },
+    "authorized": {
+      "intro": "以下のサードパーティアプリはあなたの認可を受けています。信頼しなくなったアプリは取り消せます。",
+      "empty": "認可したサードパーティアプリはありません",
+      "loadFailed": "認可済みアプリの読み込みに失敗しました。しばらくしてから再試行してください",
+      "grantedAt": "認可日時",
+      "revoke": "認可を取消",
+      "revokeConfirm": "取り消すとアプリは直ちにアクセスできなくなり、再度ユーザーの認可を案内する必要があります。続行しますか？",
+      "revoked": "認可を取り消しました"
+    },
+    "consent": {
+      "intro": "サードパーティアプリがあなたの iGCraftLit アカウント情報へのアクセスを求めています。認可するか確認してください。",
+      "clientId": "アプリ識別子",
+      "scopesTitle": "このアプリは以下の情報を取得します",
+      "warning": "認可すると、アプリは上記スコープ内の情報を読み取れます。信頼できるアプリのみ認可してください。「認可済みアプリ」でいつでも取り消せます。",
+      "approve": "認可する",
+      "deny": "拒否",
+      "loginRequired": "まだログインしていません。先に iGCraftLit アカウントでログインしてから認可を続けてください",
+      "goLogin": "ログインして続行",
+      "redirecting": "サードパーティアプリへ戻っています…",
+      "flowExpired": "認可リクエストは無効または期限切れです。サードパーティアプリから再度ログインを開始してください"
+    },
+    "docs": {
+      "intro": "サードパーティサイトが iGCraftLit アカウントでログインできるようにします：OAuth 2.0 認可コードフロー + OpenID Connect。",
+      "tocTitle": "このページの目次",
+      "sections": [
+        {
+          "id": "flow",
+          "title": "連携フロー",
+          "paragraphs": [
+            "iGCraftLit は標準の OAuth 2.0 認可コードフローを採用し OpenID Connect をサポートするため、サードパーティサイトがユーザーのパスワードを扱うことはありません。"
+          ],
+          "bullets": [
+            "開発者プラットフォームでリダイレクト URI と必要なスコープを記入してアプリ連携を申請し、管理者の審査を待ちます。",
+            "審査通過後に client_id と client_secret を取得します。client_secret は一度しか表示されないため、サーバー側で安全に保管してください。",
+            "ユーザーのブラウザを client_id、redirect_uri、response_type=code、scope、state を付けて https://api.igcraftlit.com/oauth/authorize へリダイレクトします。",
+            "ユーザーがログインして認可すると、ブラウザは一度限りの authorization code を付けて redirect_uri へ戻ります。",
+            "サーバーは code を使って /oauth/token を呼び、access_token、refresh_token、id_token を取得します。",
+            "access_token で /oauth/userinfo を呼びユーザー情報を取得します。期限切れ後は refresh_token で更新します。"
+          ]
+        },
+        {
+          "id": "endpoints",
+          "title": "エンドポイント",
+          "bullets": [
+            "GET /oauth/authorize — 認可を開始。パラメータ：client_id、redirect_uri、response_type=code、scope、state、任意で code_challenge と code_challenge_method=S256",
+            "POST /oauth/token — トークン交換。grant_type=authorization_code と grant_type=refresh_token をサポート。リクエスト本文は application/x-www-form-urlencoded",
+            "GET /oauth/userinfo — ヘッダー Authorization: Bearer <access_token> でユーザー情報を取得",
+            "POST /oauth/revoke — パラメータ token と任意の token_type_hint でトークンを取り消し",
+            "GET /.well-known/openid-configuration — OIDC ディスカバリドキュメント",
+            "GET /oauth/jwks.json — 署名公開鍵セット（ES256、ECDSA P-256）"
+          ]
+        },
+        {
+          "id": "scopes",
+          "title": "スコープ",
+          "paragraphs": [
+            "申請していないスコープは userinfo レスポンスに含まれません。サードパーティはユーザーが明示的に同意した公開情報のみ取得できます。"
+          ],
+          "bullets": [
+            "openid（必須）— ユーザー固有識別子 sub を返します。値は iGMUid です",
+            "profile — name（表示名）と picture（アバター URL）を返します",
+            "email — email（アカウントに紐づくメールアドレス）を返します",
+            "org — org（審査を通過した組織認証情報）を返します"
+          ]
+        },
+        {
+          "id": "pkce",
+          "title": "PKCE",
+          "paragraphs": [
+            "公開クライアント（デスクトップアプリ、モバイルアプリ、SPA）は認可コードの傍受を防ぐため PKCE（RFC 7636）を使用する必要があります。"
+          ],
+          "bullets": [
+            "認可開始時に code_verifier（43〜128 文字のランダム文字列）を生成し、code_challenge = BASE64URL(SHA256(code_verifier)) を計算します。",
+            "認可リクエストに code_challenge と code_challenge_method=S256 を付けます。",
+            "トークン交換時に元の code_verifier を送り、サーバーがその SHA256 結果と code_challenge の一致を検証します。",
+            "本サービスは S256 のみ対応し、plain は受け付けません。"
+          ]
+        },
+        {
+          "id": "sample",
+          "title": "サンプルコード",
+          "paragraphs": [
+            "認可コードをトークンに交換しユーザー情報を取得する最小例（Node.js 18 以降）。"
+          ],
+          "code": "// 1. トークン交換\nconst tokenRes = await fetch(\"https://api.igcraftlit.com/oauth/token\", {\n  method: \"POST\",\n  headers: { \"Content-Type\": \"application/x-www-form-urlencoded\" },\n  body: new URLSearchParams({\n    grant_type: \"authorization_code\",\n    code: AUTHORIZATION_CODE,\n    redirect_uri: \"https://example.com/oauth/callback\",\n    client_id: CLIENT_ID,\n    client_secret: CLIENT_SECRET,\n    code_verifier: CODE_VERIFIER,\n  }),\n});\nconst tokens = await tokenRes.json();\n\n// 2. ユーザー情報を取得\nconst userRes = await fetch(\"https://api.igcraftlit.com/oauth/userinfo\", {\n  headers: { Authorization: `Bearer ${tokens.access_token}` },\n});\nconst profile = await userRes.json();"
+        },
+        {
+          "id": "tokens",
+          "title": "トークンの有効期限",
+          "paragraphs": [
+            "すべてのトークンは期限切れ後に自動的に無効となり、サーバーは更新を拒否します。認可の取消や管理者によるアプリの無効化は、発行済みのすべてのトークンを直ちに無効にします。"
+          ],
+          "bullets": [
+            "authorization code — 一度限り、有効期限 5 分、使用後は直ちに無効",
+            "access_token — 短命、既定 1 時間",
+            "refresh_token — 長命、最長で 2 四半期（約 180 日）。期限後はユーザーに再度認可フローを案内する必要があります",
+            "id_token — access_token と同じ期間有効で、認可時点のみ有効"
+          ]
+        },
+        {
+          "id": "errors",
+          "title": "エラーコード",
+          "paragraphs": [
+            "エラーレスポンスは RFC 6749 第 5.2 節に従い、JSON で error、error_description（ローカライズ可能なテキストキー）、任意の state を返します。"
+          ],
+          "bullets": [
+            "invalid_client — client_id または client_secret が正しくありません",
+            "invalid_grant — 認可コードが無効・使用済み・期限切れ、または refresh_token が失効しています",
+            "invalid_scope — 要求した scope が登録済みのアプリと一致しません",
+            "invalid_request — 必須パラメータの欠落または形式エラー",
+            "unsupported_grant_type — サポートされていないグラント種別です",
+            "invalid_token — access_token が無効または期限切れです",
+            "access_denied — ユーザーが今回の認可を拒否しました"
+          ]
+        },
+        {
+          "id": "security",
+          "title": "セキュリティ推奨事項",
+          "bullets": [
+            "すべてのエンドポイントは HTTPS でアクセスし、リダイレクト URI は登録値と厳密に一致させる必要があります。",
+            "client_secret はサーバー側にのみ保管し、フロントエンドコード・ブラウザストレージ・公開リポジトリへ書き込まないでください。",
+            "認可リクエストにはランダムな state を含め、コールバック時に検証して CSRF を防ぎます。",
+            "公開クライアントは PKCE S256 を有効にしてください。",
+            "refresh_token は安全に保管し、漏洩した場合は「マイ OAuth アプリ」で直ちに client_secret を再発行してください。",
+            "業務に必要な最小限の scope のみを申請してください。"
+          ]
+        },
+        {
+          "id": "frontend",
+          "title": "フロントエンドの 401 処理",
+          "bullets": [
+            "リクエストインターセプターで 401 Unauthorized を統一的に処理します。",
+            "401 を検知したら、ローカルに保存した access_token と refresh_token を直ちに削除します。",
+            "ユーザーには人間が読める多言語のメッセージ（例：「ログインの有効期限が切れました。再度ログインしてください」）を表示し、生のエラーキーを表示しないでください。",
+            "通知後、ログインページまたは認可フローの再開へユーザーを導きます。",
+            "refresh_token が期限切れ（最長 2 四半期）の場合は自動更新せず、再認可が必要です。"
+          ]
+        }
+      ]
     }
   }
 }

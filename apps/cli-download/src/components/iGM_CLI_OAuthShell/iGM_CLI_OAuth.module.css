@@ -1,0 +1,585 @@
+/*
+ * 文件路径：apps/cli-download/src/components/iGM_CLI_OAuthShell/iGM_CLI_OAuth.module.css
+ * 所属层：前端 / 组件样式层
+ * 路由：/oauth/apply、/oauth/apps、/oauth/docs
+ * 模块：iGM_CLI_OAuthShell
+ * 作用：OAuth 分区共享样式单一事实来源——页头、页签、表单原语、卡片、
+ *       状态徽标、日志、文档排版；全部配色取自全局明暗主题变量
+ */
+
+/* ===== 页面容器 ===== */
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 48px 20px 80px;
+}
+
+.pageHead {
+  padding-bottom: 18px;
+}
+
+.pageTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--igm-text);
+}
+
+.pageTitleIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border-radius: 9px;
+  background: var(--igm-accent-soft);
+  color: var(--igm-accent);
+}
+
+.pageDesc {
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+/* ===== 分区页签 ===== */
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--igm-border);
+}
+
+.tab {
+  padding: 7px 14px;
+  border-radius: var(--igm-radius);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--igm-text-muted);
+  transition: color var(--igm-motion-nav) var(--igm-motion-ease),
+    background var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.tab:hover {
+  color: var(--igm-text);
+  background: var(--igm-surface-subtle);
+}
+
+.tabActive {
+  color: var(--igm-accent);
+  background: var(--igm-accent-soft);
+}
+
+.body {
+  margin-top: 24px;
+}
+
+/* ===== 表单 ===== */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--igm-border-strong);
+  border-radius: var(--igm-radius);
+  background: var(--igm-surface);
+  color: var(--igm-text);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--igm-accent);
+  box-shadow: 0 0 0 3px var(--igm-accent-soft);
+}
+
+.hint {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--igm-text-subtle);
+}
+
+.scopeGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.checkRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--igm-text);
+}
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  flex: 0 0 auto;
+  accent-color: var(--igm-accent);
+}
+
+.scopeName {
+  font-weight: 500;
+}
+
+.scopeHint {
+  display: block;
+  font-size: 12.5px;
+  color: var(--igm-text-subtle);
+}
+
+/* ===== 提示条 ===== */
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 11px 13px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius);
+  background: var(--igm-surface-subtle);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--igm-text-muted);
+}
+
+.noteIcon {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--igm-accent);
+}
+
+.alert {
+  padding: 11px 13px;
+  border-radius: var(--igm-radius);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.alertError {
+  border: 1px solid var(--igm-danger);
+  color: var(--igm-danger);
+  background: rgba(220, 38, 38, 0.06);
+}
+
+/* ===== 按钮 ===== */
+.actionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.primaryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border-radius: var(--igm-radius);
+  background: var(--igm-accent);
+  color: var(--igm-accent-contrast);
+  font-size: 13.5px;
+  font-weight: 600;
+  transition: background var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.primaryButton:hover {
+  background: var(--igm-accent-hover);
+}
+
+.primaryButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ghostButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border: 1px solid var(--igm-border-strong);
+  border-radius: var(--igm-radius);
+  color: var(--igm-text-muted);
+  font-size: 13.5px;
+  transition: color var(--igm-motion-nav) var(--igm-motion-ease),
+    border-color var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.ghostButton:hover {
+  color: var(--igm-text);
+  border-color: var(--igm-text-subtle);
+}
+
+.ghostButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.copyButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1px solid var(--igm-border-strong);
+  border-radius: var(--igm-radius);
+  color: var(--igm-text-muted);
+  font-size: 12.5px;
+}
+
+.copyButton:hover {
+  color: var(--igm-text);
+  border-color: var(--igm-text-subtle);
+}
+
+/* ===== 状态卡片 ===== */
+.statusCard {
+  padding: 18px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  background: var(--igm-surface);
+}
+
+.statusText {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--igm-text);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.appHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.appName {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--igm-text);
+  word-break: break-word;
+}
+
+.badge {
+  flex: 0 0 auto;
+  padding: 3px 10px;
+  border: 1px solid var(--igm-border-strong);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--igm-text-muted);
+}
+
+.badgePending {
+  border-color: var(--igm-accent);
+  color: var(--igm-accent);
+  background: var(--igm-accent-soft);
+}
+
+.badgeApproved {
+  border-color: var(--igm-success);
+  color: var(--igm-success);
+}
+
+.badgeRejected {
+  border-color: var(--igm-danger);
+  color: var(--igm-danger);
+}
+
+.statusRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 3px;
+  padding: 6px 0;
+  border-top: 1px solid var(--igm-border);
+}
+
+.statusLabel {
+  font-size: 12.5px;
+  color: var(--igm-text-subtle);
+}
+
+.statusValue {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--igm-text);
+  word-break: break-word;
+}
+
+.keyRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.keyBox {
+  flex: 1 1 220px;
+  padding: 8px 11px;
+  border: 1px dashed var(--igm-border-strong);
+  border-radius: var(--igm-radius);
+  background: var(--igm-surface-subtle);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  color: var(--igm-text);
+  word-break: break-all;
+}
+
+.stateBox,
+.emptyBox {
+  padding: 20px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius);
+  background: var(--igm-surface-subtle);
+  font-size: 13.5px;
+  color: var(--igm-text-muted);
+  text-align: center;
+}
+
+.stateBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.spinner {
+  animation: igm-cli-oauth-spin 0.9s linear infinite;
+}
+
+@keyframes igm-cli-oauth-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.gate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 32px 20px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  background: var(--igm-surface);
+  text-align: center;
+}
+
+.gateIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--igm-accent-soft);
+  color: var(--igm-accent);
+}
+
+.gateText {
+  max-width: 420px;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+.logBox {
+  margin-top: 12px;
+  padding-top: 4px;
+  border-top: 1px solid var(--igm-border);
+}
+
+.logRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  padding: 7px 0;
+  font-size: 12.5px;
+  color: var(--igm-text-muted);
+}
+
+.logAction {
+  color: var(--igm-text);
+  font-weight: 500;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.pagerButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  border: 1px solid var(--igm-border-strong);
+  border-radius: var(--igm-radius);
+  font-size: 12.5px;
+  color: var(--igm-text-muted);
+}
+
+.pagerButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagerText {
+  font-size: 12.5px;
+  color: var(--igm-text-subtle);
+}
+
+/* ===== 文档排版 ===== */
+.docLayout {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.docBody {
+  min-width: 0;
+}
+
+.docSection {
+  scroll-margin-top: 84px;
+}
+
+.docSection + .docSection {
+  margin-top: 36px;
+  padding-top: 8px;
+}
+
+.docH2 {
+  margin-bottom: 12px;
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--igm-text);
+}
+
+.docP {
+  margin: 8px 0;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--igm-text);
+}
+
+.docList {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin: 10px 0;
+  padding-left: 22px;
+  list-style: disc;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--igm-text);
+}
+
+.docList li::marker {
+  color: var(--igm-text-subtle);
+}
+
+.codeBlock {
+  margin: 14px 0;
+  padding: 14px 16px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius);
+  background: var(--igm-surface-subtle);
+  overflow-x: auto;
+}
+
+.codePre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text);
+  white-space: pre;
+}
+
+/* 窄屏默认隐藏桌面 rail，显示顶部目录 */
+.tocRail {
+  display: none;
+}
+
+.tocTop {
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .statusRow {
+    grid-template-columns: 140px minmax(0, 1fr);
+    gap: 16px;
+    align-items: baseline;
+  }
+}
+
+@media (min-width: 1024px) {
+  .tocTop {
+    display: none;
+  }
+
+  .docLayout {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 40px;
+  }
+
+  .docBody {
+    flex: 1;
+  }
+
+  .tocRail {
+    display: block;
+    position: sticky;
+    top: 84px;
+    width: 200px;
+    flex: 0 0 auto;
+  }
+}

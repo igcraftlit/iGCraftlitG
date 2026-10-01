@@ -9,7 +9,8 @@
     "commands": "命令",
     "sdk": "SDK",
     "api": "API",
-    "docs": "文档"
+    "docs": "文档",
+    "oauth": "OAuth 接入"
   },
   "hero": {
     "title": "iGM CLI Download API",
@@ -96,6 +97,18 @@
     },
     "commands": {
       "title": "命令"
+    },
+    "oauthApply": {
+      "title": "接入 OAuth 应用",
+      "description": "申请让第三方网站接入 iGCraftLit 账号登录，填写应用信息、回调地址与所需权限范围"
+    },
+    "oauthApps": {
+      "title": "我的 OAuth 应用",
+      "description": "查看已提交的 OAuth 应用、重置 client_secret 并查询接入日志"
+    },
+    "oauthDocs": {
+      "title": "OAuth 接入文档",
+      "description": "OAuth 2.0 + OpenID Connect 接入指南：流程、端点、scope、示例代码、错误码与安全建议"
     }
   },
   "common": {
@@ -362,7 +375,12 @@
         "title": "适配器总览",
         "body": "适配器是启动器与 iGM 下载引擎之间的桥梁。启动器通过适配器协议或 SDK，把资源下载请求交给 iGM 下载引擎，引擎在后台完成请求、传输、校验、落盘，并把进度通过事件流返回给启动器。整个过程不弹终端、不干扰用户界面。",
         "goalsTitle": "设计目标",
-        "goals": ["轻量", "跨语言", "跨平台", "可扩展"]
+        "goals": [
+          "轻量",
+          "跨语言",
+          "跨平台",
+          "可扩展"
+        ]
       },
       "compare": {
         "title": "接入方式对比",
@@ -376,15 +394,25 @@
             "name": "SDK 嵌入",
             "form": "C ABI 动态库",
             "langs": "C、C++、Zig、Rust、Go 等支持 C ABI 的语言",
-            "pros": ["无额外进程，性能最好，天然无终端", "直接链接引擎，调用链路最短"],
-            "cons": ["每个平台需要编译对应动态库"]
+            "pros": [
+              "无额外进程，性能最好，天然无终端",
+              "直接链接引擎，调用链路最短"
+            ],
+            "cons": [
+              "每个平台需要编译对应动态库"
+            ]
           },
           {
             "name": "适配器协议",
             "form": "HTTP + WebSocket",
             "langs": "任何能发 HTTP 请求的语言",
-            "pros": ["跨语言、跨平台，无需引入代码", "服务可独立升级，启动器无需重新编译"],
-            "cons": ["需要本地服务常驻，需处理网络与连接"]
+            "pros": [
+              "跨语言、跨平台，无需引入代码",
+              "服务可独立升级，启动器无需重新编译"
+            ],
+            "cons": [
+              "需要本地服务常驻，需处理网络与连接"
+            ]
           }
         ],
         "table": {
@@ -392,11 +420,31 @@
           "sdkCol": "SDK 嵌入",
           "protoCol": "适配器协议",
           "rows": [
-            { "dim": "语言要求", "sdk": "支持 C ABI", "proto": "任意" },
-            { "dim": "额外进程", "sdk": "无", "proto": "有本地服务" },
-            { "dim": "性能", "sdk": "最高", "proto": "良好" },
-            { "dim": "接入成本", "sdk": "中", "proto": "低" },
-            { "dim": "终端弹窗", "sdk": "无", "proto": "无" }
+            {
+              "dim": "语言要求",
+              "sdk": "支持 C ABI",
+              "proto": "任意"
+            },
+            {
+              "dim": "额外进程",
+              "sdk": "无",
+              "proto": "有本地服务"
+            },
+            {
+              "dim": "性能",
+              "sdk": "最高",
+              "proto": "良好"
+            },
+            {
+              "dim": "接入成本",
+              "sdk": "中",
+              "proto": "低"
+            },
+            {
+              "dim": "终端弹窗",
+              "sdk": "无",
+              "proto": "无"
+            }
           ]
         }
       },
@@ -470,6 +518,301 @@
         "q4": "如何反馈适配器问题？",
         "a4": "可通过邮件 igcraftlit@outlook.com（.Net）或 igcraftlit@163.com（.CN）联系团队，也可访问官网 https://igcraftlit.com 提交反馈，邮件标题注明「适配器」可更快定位问题。"
       }
+    }
+  },
+  "oauth": {
+    "session": {
+      "loginExpired": "登录已过期，请重新登录",
+      "tokenExpired": "授权已失效，请重新登录",
+      "reloginHint": "为保障账号安全，请重新登录后继续操作。",
+      "relogin": "重新登录",
+      "dismiss": "关闭"
+    },
+    "errors": {
+      "invalidClient": "客户端校验失败，请检查 client_id 是否正确",
+      "invalidClientSecret": "client_secret 不正确",
+      "clientNotApproved": "该应用未通过审核或已被禁用",
+      "invalidCode": "授权码无效",
+      "codeUsed": "授权码已被使用",
+      "codeExpired": "授权码已过期，请重新发起授权",
+      "invalidGrant": "授权凭据无效",
+      "refreshExpired": "刷新令牌已失效，请重新授权",
+      "invalidRedirectUri": "回调地址与登记值不匹配",
+      "pkceFailed": "PKCE 校验失败",
+      "userUnavailable": "用户不存在或当前不可用",
+      "invalidScope": "请求的权限范围无效",
+      "invalidToken": "访问令牌无效或已过期",
+      "unsupportedResponseType": "不支持的响应类型",
+      "unsupportedGrantType": "不支持的授权类型",
+      "unsupportedPkce": "仅支持 code_challenge_method=S256",
+      "flowExpired": "授权请求已失效，请重新发起",
+      "badRequest": "请求参数有误",
+      "nameInvalid": "应用名称格式不正确",
+      "descriptionInvalid": "应用描述格式不正确",
+      "redirectInvalid": "回调地址格式不正确",
+      "redirectInsecure": "回调地址必须使用 HTTPS",
+      "purposeInvalid": "用途说明格式不正确",
+      "contactInvalid": "联系方式格式不正确",
+      "agreeRequired": "请先同意接入规范",
+      "appNotFound": "未找到该应用",
+      "withdrawNotAllowed": "当前状态不可撤回",
+      "appNotApproved": "应用尚未通过审核",
+      "appReviewed": "该申请已审核完成"
+    },
+    "clientTypes": {
+      "web": "网页应用",
+      "desktop": "桌面应用",
+      "mobile": "移动应用",
+      "service": "服务端应用",
+      "other": "其他"
+    },
+    "scopes": {
+      "openid": "基础身份 openid",
+      "profile": "公开资料 profile",
+      "email": "邮箱地址 email",
+      "org": "组织认证信息 org"
+    },
+    "scopeHints": {
+      "openid": "返回稳定的用户标识 sub（iGMUid）",
+      "profile": "返回昵称与头像地址",
+      "email": "返回账号绑定的邮箱地址",
+      "org": "返回已通过审核的组织认证信息"
+    },
+    "status": {
+      "pending": "待审核",
+      "approved": "已通过",
+      "rejected": "已拒绝",
+      "disabled": "已禁用",
+      "withdrawn": "已撤回"
+    },
+    "logActions": {
+      "apply": "提交申请",
+      "withdraw": "撤回申请",
+      "secretReset": "重置密钥",
+      "approve": "审核通过",
+      "reject": "审核拒绝",
+      "delete": "删除应用",
+      "authorize": "用户授权",
+      "deny": "用户拒绝",
+      "token": "签发令牌",
+      "refresh": "刷新令牌",
+      "revoke": "撤销令牌",
+      "consentRevoke": "撤销授权"
+    },
+    "apply": {
+      "intro": "让第三方网站接入 iGCraftLit 账号登录：填写应用信息并提交，审核通过后发放 client_id 与 client_secret。",
+      "name": "应用名称",
+      "namePlaceholder": "例如：iGM 社区助手",
+      "type": "应用类型",
+      "description": "应用描述",
+      "descriptionPlaceholder": "简要说明应用的用途与主要功能",
+      "redirectUris": "回调地址 redirect_uri",
+      "redirectUrisPlaceholder": "https://example.com/oauth/callback",
+      "redirectUrisHint": "每行一个，必须为 HTTPS；支持多条，需与授权请求严格一致",
+      "scopes": "申请权限范围 scope",
+      "purpose": "使用用途",
+      "purposePlaceholder": "说明你将如何使用用户授权的信息",
+      "contact": "联系方式",
+      "contactPlaceholder": "邮箱或其他可联系到你的方式",
+      "agreeRules": "我已阅读并同意 OAuth 接入规范与用户信息保护要求",
+      "required": "请完整填写必填项",
+      "redirectRequired": "请至少填写一条回调地址",
+      "redirectInsecure": "回调地址必须使用 HTTPS",
+      "rulesRequired": "请先勾选同意接入规范",
+      "submit": "提交申请",
+      "submitting": "提交中…",
+      "cancel": "取消",
+      "failed": "提交失败，请稍后重试",
+      "submittedNotice": "申请已提交，待管理员审核。通过后可在「我的 OAuth 应用」查看 client_id 并获取 client_secret。",
+      "viewApps": "前往我的 OAuth 应用",
+      "reviewHint": "审核由站点管理员处理；通过后会一次性发放 client_secret，请妥善保管"
+    },
+    "apps": {
+      "intro": "查看你提交的 OAuth 应用，重置 client_secret 并查询接入日志。",
+      "newApply": "新建应用接入",
+      "empty": "你还没有提交过 OAuth 应用接入申请",
+      "loadFailed": "应用列表加载失败，请稍后重试",
+      "typeLabel": "应用类型",
+      "clientId": "client_id",
+      "descriptionLabel": "应用描述",
+      "scopes": "权限范围",
+      "redirectUris": "回调地址",
+      "purpose": "使用用途",
+      "contact": "联系方式",
+      "createdAt": "提交时间",
+      "reviewComment": "审核意见",
+      "secretOnce": "client_secret 仅在本次展示，关闭或刷新后无法再次查看，请立即妥善保存",
+      "copy": "复制",
+      "copied": "已复制",
+      "resetSecret": "重置 client_secret",
+      "resetConfirm": "重置后旧密钥立即失效，使用旧密钥的第三方将无法换取令牌。确定继续吗？",
+      "withdraw": "撤回申请",
+      "withdrawConfirm": "确定撤回该待审核申请吗？",
+      "viewLogs": "查看接入日志",
+      "hideLogs": "收起日志",
+      "logsEmpty": "暂无接入日志",
+      "logsTitle": "接入日志"
+    },
+    "admin": {
+      "all": "全部",
+      "empty": "当前筛选条件下没有应用",
+      "loadFailed": "应用列表加载失败，请稍后重试",
+      "applicant": "申请人",
+      "comment": "审核意见",
+      "commentPlaceholder": "可填写通过或拒绝的说明，将展示给申请人",
+      "approve": "通过",
+      "reject": "拒绝",
+      "disable": "禁用",
+      "enable": "启用",
+      "delete": "删除",
+      "approved": "已通过该应用申请，请立即复制并转交 client_secret",
+      "rejected": "已拒绝该应用申请",
+      "disabled": "已禁用该应用，并撤销其已签发的全部令牌",
+      "enabled": "已重新启用该应用",
+      "deleted": "已删除该应用及其授权数据",
+      "disableConfirm": "禁用后该应用无法再换取令牌，且已签发的令牌将被撤销。确定继续吗？",
+      "deleteConfirm": "删除后将同时清理该应用的授权码、令牌与同意记录，且不可恢复。确定继续吗？",
+      "secretOnce": "client_secret 仅在本次展示，请立即复制并转交申请人，关闭后无法再次查看"
+    },
+    "authorized": {
+      "intro": "以下第三方应用已获得你的授权，可撤销不再信任的应用。",
+      "empty": "你还没有授权任何第三方应用",
+      "loadFailed": "已授权应用加载失败，请稍后重试",
+      "grantedAt": "授权时间",
+      "revoke": "撤销授权",
+      "revokeConfirm": "撤销后该应用将立即失去访问权限，需重新引导你授权。确定继续吗？",
+      "revoked": "已撤销该应用的授权"
+    },
+    "consent": {
+      "intro": "第三方应用正在请求访问你的 iGCraftLit 账号信息，请确认是否授权。",
+      "clientId": "应用标识",
+      "scopesTitle": "该应用将获取以下信息",
+      "warning": "授权后该应用可读取上述范围内的信息，请仅授权你信任的应用。你可随时在「已授权应用」中撤销授权。",
+      "approve": "同意授权",
+      "deny": "拒绝",
+      "loginRequired": "你尚未登录，请先登录 iGCraftLit 账号后再继续授权",
+      "goLogin": "登录后继续",
+      "redirecting": "正在返回第三方应用…",
+      "flowExpired": "授权请求已失效或已过期，请重新从第三方应用发起登录"
+    },
+    "docs": {
+      "intro": "让第三方网站接入 iGCraftLit 账号登录：OAuth 2.0 授权码流程 + OpenID Connect。",
+      "tocTitle": "本页目录",
+      "sections": [
+        {
+          "id": "flow",
+          "title": "接入流程",
+          "paragraphs": [
+            "iGCraftLit 采用标准 OAuth 2.0 授权码流程（Authorization Code）并支持 OpenID Connect，第三方网站无需接触用户密码。"
+          ],
+          "bullets": [
+            "在开发者平台提交应用接入申请，填写回调地址与所需 scope，等待管理员审核。",
+            "审核通过后获得 client_id 与 client_secret；client_secret 仅展示一次，请安全保存于服务端。",
+            "将用户浏览器引导至 https://api.igcraftlit.com/oauth/authorize，携带 client_id、redirect_uri、response_type=code、scope 与 state。",
+            "用户登录并同意授权后，浏览器回跳至 redirect_uri 并携带一次性的 authorization code。",
+            "服务端以 code 调用 /oauth/token 换取 access_token、refresh_token 与 id_token。",
+            "凭 access_token 调用 /oauth/userinfo 获取用户信息；access_token 过期后用 refresh_token 续期。"
+          ]
+        },
+        {
+          "id": "endpoints",
+          "title": "端点",
+          "bullets": [
+            "GET /oauth/authorize — 发起授权，参数：client_id、redirect_uri、response_type=code、scope、state，可选 code_challenge 与 code_challenge_method=S256",
+            "POST /oauth/token — 换取令牌，支持 grant_type=authorization_code 与 grant_type=refresh_token，请求体为 application/x-www-form-urlencoded",
+            "GET /oauth/userinfo — 读取用户信息，请求头 Authorization: Bearer <access_token>",
+            "POST /oauth/revoke — 撤销令牌，参数 token 与可选的 token_type_hint",
+            "GET /.well-known/openid-configuration — OIDC 发现文档",
+            "GET /oauth/jwks.json — 签名公钥集（ES256，ECDSA P-256）"
+          ]
+        },
+        {
+          "id": "scopes",
+          "title": "Scope 说明",
+          "paragraphs": [
+            "未申请的 scope 不会出现在 userinfo 响应中；第三方只能获取用户明确同意的公开信息。"
+          ],
+          "bullets": [
+            "openid（必选）— 返回用户唯一标识 sub，取值为 iGMUid",
+            "profile — 返回 name（昵称）与 picture（头像地址）",
+            "email — 返回 email（账号绑定邮箱）",
+            "org — 返回 org（已通过审核的组织认证信息）"
+          ]
+        },
+        {
+          "id": "pkce",
+          "title": "PKCE",
+          "paragraphs": [
+            "公开客户端（桌面应用、移动应用、单页应用）必须使用 PKCE（RFC 7636）以防范授权码拦截。"
+          ],
+          "bullets": [
+            "发起授权时生成 code_verifier（43 至 128 位随机字符串），并计算 code_challenge = BASE64URL(SHA256(code_verifier))。",
+            "授权请求携带 code_challenge 与 code_challenge_method=S256。",
+            "换取令牌时携带原始 code_verifier，服务端校验其 SHA256 结果与 code_challenge 是否一致。",
+            "本服务仅支持 S256，不接受 plain。"
+          ]
+        },
+        {
+          "id": "sample",
+          "title": "示例代码",
+          "paragraphs": [
+            "以下为授权码换取令牌与读取用户信息的最小示例（Node.js 18 及以上）。"
+          ],
+          "code": "// 1. 换取令牌\nconst tokenRes = await fetch(\"https://api.igcraftlit.com/oauth/token\", {\n  method: \"POST\",\n  headers: { \"Content-Type\": \"application/x-www-form-urlencoded\" },\n  body: new URLSearchParams({\n    grant_type: \"authorization_code\",\n    code: AUTHORIZATION_CODE,\n    redirect_uri: \"https://example.com/oauth/callback\",\n    client_id: CLIENT_ID,\n    client_secret: CLIENT_SECRET,\n    code_verifier: CODE_VERIFIER,\n  }),\n});\nconst tokens = await tokenRes.json();\n\n// 2. 读取用户信息\nconst userRes = await fetch(\"https://api.igcraftlit.com/oauth/userinfo\", {\n  headers: { Authorization: `Bearer ${tokens.access_token}` },\n});\nconst profile = await userRes.json();"
+        },
+        {
+          "id": "tokens",
+          "title": "令牌有效时长",
+          "paragraphs": [
+            "所有令牌到期后自动失效，服务端拒绝续期；撤销授权或管理员禁用应用会立即失效其全部已签发令牌。"
+          ],
+          "bullets": [
+            "authorization code — 一次性使用，有效期 5 分钟，使用后立即失效",
+            "access_token — 短有效期，默认 1 小时",
+            "refresh_token — 长有效期，最长不超过两个季度（约 180 天）；到期后必须重新引导用户走授权流程",
+            "id_token — 与 access_token 同期有效，仅在授权时刻有效"
+          ]
+        },
+        {
+          "id": "errors",
+          "title": "错误码",
+          "paragraphs": [
+            "错误响应遵循 RFC 6749 第 5.2 节，返回 JSON：error、error_description（可本地化的文案键）与可选的 state。"
+          ],
+          "bullets": [
+            "invalid_client — client_id 或 client_secret 不正确",
+            "invalid_grant — 授权码无效、已使用或已过期，或 refresh_token 已失效",
+            "invalid_scope — 请求的 scope 与应用登记不一致",
+            "invalid_request — 缺少必填参数或参数格式错误",
+            "unsupported_grant_type — 不支持的授权类型",
+            "invalid_token — access_token 无效或已过期",
+            "access_denied — 用户拒绝了本次授权"
+          ]
+        },
+        {
+          "id": "security",
+          "title": "安全建议",
+          "bullets": [
+            "所有端点必须通过 HTTPS 访问，回调地址须严格匹配登记值。",
+            "client_secret 仅存于服务端，禁止写入前端代码、浏览器存储或公开仓库。",
+            "授权请求必须携带随机 state 并在回调时校验，防止 CSRF。",
+            "公开客户端必须启用 PKCE S256。",
+            "refresh_token 应妥善保管，发现泄露时立即在「我的 OAuth 应用」中重置 client_secret。",
+            "仅申请业务必需的最小 scope。"
+          ]
+        },
+        {
+          "id": "frontend",
+          "title": "前端 401 处理建议",
+          "bullets": [
+            "统一在请求拦截器中处理 401 Unauthorized。",
+            "捕获 401 后立即清除本地保存的 access_token 与 refresh_token。",
+            "向用户展示多语言的人类可读提示（如「登录已过期，请重新登录」），禁止直接展示错误键值。",
+            "提示后引导用户跳转至登录页或重新发起授权流程。",
+            "refresh_token 已过期（最长两个季度）时不得自动续期，必须重新授权。"
+          ]
+        }
+      ]
     }
   }
 }

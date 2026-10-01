@@ -9,7 +9,8 @@
     "commands": "Commands",
     "sdk": "SDK",
     "api": "API",
-    "docs": "Docs"
+    "docs": "Docs",
+    "oauth": "OAuth"
   },
   "hero": {
     "title": "iGM CLI Download API",
@@ -96,6 +97,18 @@
     },
     "commands": {
       "title": "Commands"
+    },
+    "oauthApply": {
+      "title": "OAuth App Access",
+      "description": "Apply to let a third-party site sign users in with iGCraftLit accounts; provide app details, redirect URIs and requested scopes"
+    },
+    "oauthApps": {
+      "title": "My OAuth Apps",
+      "description": "View submitted OAuth apps, reset the client_secret and inspect access logs"
+    },
+    "oauthDocs": {
+      "title": "OAuth Documentation",
+      "description": "OAuth 2.0 + OpenID Connect integration guide: flow, endpoints, scopes, sample code, error codes and security advice"
     }
   },
   "common": {
@@ -362,7 +375,12 @@
         "title": "Adapter Overview",
         "body": "The adapter is the bridge between a launcher and the iGM download engine. Through the adapter protocol or the SDK, a launcher hands resource download requests to the iGM engine, which performs requesting, transfer, verification, and disk writing in the background, and reports progress back to the launcher through an event stream. No terminal window pops up and the user interface is never interrupted.",
         "goalsTitle": "Design goals",
-        "goals": ["Lightweight", "Cross-language", "Cross-platform", "Extensible"]
+        "goals": [
+          "Lightweight",
+          "Cross-language",
+          "Cross-platform",
+          "Extensible"
+        ]
       },
       "compare": {
         "title": "Integration Options",
@@ -376,15 +394,25 @@
             "name": "SDK embedding",
             "form": "C ABI dynamic library",
             "langs": "C, C++, Zig, Rust, Go, and other languages with C ABI support",
-            "pros": ["No extra process; best performance; naturally terminal-free", "Links the engine directly for the shortest call path"],
-            "cons": ["A platform-specific dynamic library build is required per platform"]
+            "pros": [
+              "No extra process; best performance; naturally terminal-free",
+              "Links the engine directly for the shortest call path"
+            ],
+            "cons": [
+              "A platform-specific dynamic library build is required per platform"
+            ]
           },
           {
             "name": "Adapter protocol",
             "form": "HTTP + WebSocket",
             "langs": "Any language that can send HTTP requests",
-            "pros": ["Cross-language and cross-platform with no embedded code", "The service can be upgraded independently without rebuilding the launcher"],
-            "cons": ["A local resident service is required; networking and connections must be handled"]
+            "pros": [
+              "Cross-language and cross-platform with no embedded code",
+              "The service can be upgraded independently without rebuilding the launcher"
+            ],
+            "cons": [
+              "A local resident service is required; networking and connections must be handled"
+            ]
           }
         ],
         "table": {
@@ -392,11 +420,31 @@
           "sdkCol": "SDK embedding",
           "protoCol": "Adapter protocol",
           "rows": [
-            { "dim": "Language requirement", "sdk": "C ABI support", "proto": "Any" },
-            { "dim": "Extra process", "sdk": "None", "proto": "Local service" },
-            { "dim": "Performance", "sdk": "Highest", "proto": "Good" },
-            { "dim": "Integration cost", "sdk": "Medium", "proto": "Low" },
-            { "dim": "Terminal popup", "sdk": "None", "proto": "None" }
+            {
+              "dim": "Language requirement",
+              "sdk": "C ABI support",
+              "proto": "Any"
+            },
+            {
+              "dim": "Extra process",
+              "sdk": "None",
+              "proto": "Local service"
+            },
+            {
+              "dim": "Performance",
+              "sdk": "Highest",
+              "proto": "Good"
+            },
+            {
+              "dim": "Integration cost",
+              "sdk": "Medium",
+              "proto": "Low"
+            },
+            {
+              "dim": "Terminal popup",
+              "sdk": "None",
+              "proto": "None"
+            }
           ]
         }
       },
@@ -470,6 +518,301 @@
         "q4": "How do I report an adapter issue?",
         "a4": "Email the team at igcraftlit@outlook.com (.NET) or igcraftlit@163.com (.CN), or submit feedback at https://igcraftlit.com. Putting \"Adapter\" in the subject line helps us locate the issue faster."
       }
+    }
+  },
+  "oauth": {
+    "session": {
+      "loginExpired": "Your session has expired, please sign in again",
+      "tokenExpired": "Your authorization has expired, please sign in again",
+      "reloginHint": "For account security, please sign in again to continue.",
+      "relogin": "Sign in again",
+      "dismiss": "Dismiss"
+    },
+    "errors": {
+      "invalidClient": "Client verification failed, please check the client_id",
+      "invalidClientSecret": "The client_secret is incorrect",
+      "clientNotApproved": "This application is not approved or has been disabled",
+      "invalidCode": "The authorization code is invalid",
+      "codeUsed": "The authorization code has already been used",
+      "codeExpired": "The authorization code has expired, please start authorization again",
+      "invalidGrant": "The authorization credentials are invalid",
+      "refreshExpired": "The refresh token is no longer valid, please authorize again",
+      "invalidRedirectUri": "The redirect URI does not match the registered value",
+      "pkceFailed": "PKCE verification failed",
+      "userUnavailable": "The user does not exist or is currently unavailable",
+      "invalidScope": "The requested scope is invalid",
+      "invalidToken": "The access token is invalid or has expired",
+      "unsupportedResponseType": "Unsupported response type",
+      "unsupportedGrantType": "Unsupported grant type",
+      "unsupportedPkce": "Only code_challenge_method=S256 is supported",
+      "flowExpired": "The authorization request has expired, please start again",
+      "badRequest": "Invalid request parameters",
+      "nameInvalid": "The application name format is invalid",
+      "descriptionInvalid": "The application description format is invalid",
+      "redirectInvalid": "The redirect URI format is invalid",
+      "redirectInsecure": "Redirect URIs must use HTTPS",
+      "purposeInvalid": "The intended use format is invalid",
+      "contactInvalid": "The contact format is invalid",
+      "agreeRequired": "Please accept the integration rules first",
+      "appNotFound": "Application not found",
+      "withdrawNotAllowed": "This application cannot be withdrawn in its current state",
+      "appNotApproved": "The application has not been approved yet",
+      "appReviewed": "This application has already been reviewed"
+    },
+    "clientTypes": {
+      "web": "Web application",
+      "desktop": "Desktop application",
+      "mobile": "Mobile application",
+      "service": "Server-side service",
+      "other": "Other"
+    },
+    "scopes": {
+      "openid": "Basic identity openid",
+      "profile": "Public profile profile",
+      "email": "Email address email",
+      "org": "Organization verification org"
+    },
+    "scopeHints": {
+      "openid": "Returns the stable user identifier sub (iGMUid)",
+      "profile": "Returns display name and avatar URL",
+      "email": "Returns the email bound to the account",
+      "org": "Returns approved organization verification info"
+    },
+    "status": {
+      "pending": "Pending review",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "disabled": "Disabled",
+      "withdrawn": "Withdrawn"
+    },
+    "logActions": {
+      "apply": "Application submitted",
+      "withdraw": "Application withdrawn",
+      "secretReset": "Secret reset",
+      "approve": "Approved",
+      "reject": "Rejected",
+      "delete": "Application deleted",
+      "authorize": "User authorized",
+      "deny": "User denied",
+      "token": "Token issued",
+      "refresh": "Token refreshed",
+      "revoke": "Token revoked",
+      "consentRevoke": "Authorization revoked"
+    },
+    "apply": {
+      "intro": "Let third-party sites sign users in with iGCraftLit accounts: submit your application details and receive a client_id and client_secret once approved.",
+      "name": "Application name",
+      "namePlaceholder": "For example: iGM Community Helper",
+      "type": "Application type",
+      "description": "Description",
+      "descriptionPlaceholder": "Briefly describe the purpose and main features of your application",
+      "redirectUris": "Redirect URIs",
+      "redirectUrisPlaceholder": "https://example.com/oauth/callback",
+      "redirectUrisHint": "One per line, HTTPS only; multiple entries allowed and must match the authorization request exactly",
+      "scopes": "Requested scopes",
+      "purpose": "Intended use",
+      "purposePlaceholder": "Explain how you will use the information the user authorizes",
+      "contact": "Contact",
+      "contactPlaceholder": "Email or another way to reach you",
+      "agreeRules": "I have read and agree to the OAuth integration rules and user data protection requirements",
+      "required": "Please complete all required fields",
+      "redirectRequired": "Please provide at least one redirect URI",
+      "redirectInsecure": "Redirect URIs must use HTTPS",
+      "rulesRequired": "Please accept the integration rules first",
+      "submit": "Submit application",
+      "submitting": "Submitting…",
+      "cancel": "Cancel",
+      "failed": "Submission failed, please try again later",
+      "submittedNotice": "Your application has been submitted and is awaiting review. Once approved you can view the client_id and obtain the client_secret in \"My OAuth Apps\".",
+      "viewApps": "Go to My OAuth Apps",
+      "reviewHint": "Reviews are handled by site administrators; the client_secret is issued only once, so keep it safe"
+    },
+    "apps": {
+      "intro": "Review the OAuth applications you submitted, reset the client_secret and inspect integration logs.",
+      "newApply": "Register a new application",
+      "empty": "You have not submitted any OAuth application yet",
+      "loadFailed": "Failed to load applications, please try again later",
+      "typeLabel": "Application type",
+      "clientId": "client_id",
+      "descriptionLabel": "Description",
+      "scopes": "Scopes",
+      "redirectUris": "Redirect URIs",
+      "purpose": "Intended use",
+      "contact": "Contact",
+      "createdAt": "Submitted at",
+      "reviewComment": "Review comment",
+      "secretOnce": "The client_secret is shown only once and cannot be viewed again after closing or refreshing — save it immediately",
+      "copy": "Copy",
+      "copied": "Copied",
+      "resetSecret": "Reset client_secret",
+      "resetConfirm": "The old secret becomes invalid immediately after resetting, and third parties using it will no longer be able to exchange tokens. Continue?",
+      "withdraw": "Withdraw application",
+      "withdrawConfirm": "Withdraw this pending application?",
+      "viewLogs": "View integration logs",
+      "hideLogs": "Hide logs",
+      "logsEmpty": "No integration logs yet",
+      "logsTitle": "Integration logs"
+    },
+    "admin": {
+      "all": "All",
+      "empty": "No applications match the current filter",
+      "loadFailed": "Failed to load applications, please try again later",
+      "applicant": "Applicant",
+      "comment": "Review comment",
+      "commentPlaceholder": "Optional note on approval or rejection, shown to the applicant",
+      "approve": "Approve",
+      "reject": "Reject",
+      "disable": "Disable",
+      "enable": "Enable",
+      "delete": "Delete",
+      "approved": "Application approved — copy and hand over the client_secret now",
+      "rejected": "Application rejected",
+      "disabled": "Application disabled and all its issued tokens revoked",
+      "enabled": "Application re-enabled",
+      "deleted": "Application and its authorization data deleted",
+      "disableConfirm": "Once disabled, the application can no longer exchange tokens and all issued tokens will be revoked. Continue?",
+      "deleteConfirm": "Deleting will also remove the application's authorization codes, tokens and consents, and cannot be undone. Continue?",
+      "secretOnce": "The client_secret is shown only once — copy and hand it to the applicant now, as it cannot be viewed again after closing"
+    },
+    "authorized": {
+      "intro": "The following third-party applications have your authorization. You can revoke any you no longer trust.",
+      "empty": "You have not authorized any third-party application",
+      "loadFailed": "Failed to load authorized applications, please try again later",
+      "grantedAt": "Authorized at",
+      "revoke": "Revoke authorization",
+      "revokeConfirm": "After revoking, the application loses access immediately and must guide you through authorization again. Continue?",
+      "revoked": "Authorization revoked"
+    },
+    "consent": {
+      "intro": "A third-party application is requesting access to your iGCraftLit account information. Please confirm whether to authorize it.",
+      "clientId": "Application ID",
+      "scopesTitle": "This application will receive the following information",
+      "warning": "Once authorized, the application can read the information within the scopes above. Only authorize applications you trust. You can revoke authorization at any time in \"Authorized Apps\".",
+      "approve": "Authorize",
+      "deny": "Deny",
+      "loginRequired": "You are not signed in. Please sign in with your iGCraftLit account before continuing.",
+      "goLogin": "Sign in to continue",
+      "redirecting": "Returning to the third-party application…",
+      "flowExpired": "This authorization request is invalid or has expired. Please start the sign-in again from the third-party application."
+    },
+    "docs": {
+      "intro": "Let third-party sites sign users in with iGCraftLit accounts: the OAuth 2.0 authorization code flow with OpenID Connect.",
+      "tocTitle": "On this page",
+      "sections": [
+        {
+          "id": "flow",
+          "title": "Integration flow",
+          "paragraphs": [
+            "iGCraftLit uses the standard OAuth 2.0 authorization code flow with OpenID Connect support, so third-party sites never handle user passwords."
+          ],
+          "bullets": [
+            "Submit an application on the developer platform with your redirect URIs and required scopes, then wait for administrator review.",
+            "Once approved you receive a client_id and client_secret; the client_secret is shown only once, so keep it safe on your server.",
+            "Redirect the user's browser to https://api.igcraftlit.com/oauth/authorize with client_id, redirect_uri, response_type=code, scope and state.",
+            "After the user signs in and consents, the browser returns to redirect_uri with a one-time authorization code.",
+            "Your server calls /oauth/token with the code to obtain an access_token, refresh_token and id_token.",
+            "Use the access_token to call /oauth/userinfo; when it expires, refresh it with the refresh_token."
+          ]
+        },
+        {
+          "id": "endpoints",
+          "title": "Endpoints",
+          "bullets": [
+            "GET /oauth/authorize — start authorization; parameters: client_id, redirect_uri, response_type=code, scope, state, with optional code_challenge and code_challenge_method=S256",
+            "POST /oauth/token — exchange tokens; supports grant_type=authorization_code and grant_type=refresh_token, with an application/x-www-form-urlencoded body",
+            "GET /oauth/userinfo — read user information with the header Authorization: Bearer <access_token>",
+            "POST /oauth/revoke — revoke a token with the parameter token and an optional token_type_hint",
+            "GET /.well-known/openid-configuration — OIDC discovery document",
+            "GET /oauth/jwks.json — signing public keys (ES256, ECDSA P-256)"
+          ]
+        },
+        {
+          "id": "scopes",
+          "title": "Scopes",
+          "paragraphs": [
+            "Scopes you did not request will not appear in the userinfo response; third parties can only obtain the public information the user explicitly consents to."
+          ],
+          "bullets": [
+            "openid (required) — returns the unique user identifier sub, whose value is the iGMUid",
+            "profile — returns name (display name) and picture (avatar URL)",
+            "email — returns email (the account-bound email address)",
+            "org — returns org (approved organization verification info)"
+          ]
+        },
+        {
+          "id": "pkce",
+          "title": "PKCE",
+          "paragraphs": [
+            "Public clients (desktop, mobile and single-page applications) must use PKCE (RFC 7636) to prevent authorization code interception."
+          ],
+          "bullets": [
+            "When starting authorization, generate a code_verifier (a 43 to 128 character random string) and compute code_challenge = BASE64URL(SHA256(code_verifier)).",
+            "Send code_challenge and code_challenge_method=S256 with the authorization request.",
+            "When exchanging the token, send the original code_verifier; the server verifies its SHA256 result against code_challenge.",
+            "This service supports S256 only and does not accept plain."
+          ]
+        },
+        {
+          "id": "sample",
+          "title": "Sample code",
+          "paragraphs": [
+            "A minimal example of exchanging the code for tokens and reading user information (Node.js 18+)."
+          ],
+          "code": "// 1. Exchange the code for tokens\nconst tokenRes = await fetch(\"https://api.igcraftlit.com/oauth/token\", {\n  method: \"POST\",\n  headers: { \"Content-Type\": \"application/x-www-form-urlencoded\" },\n  body: new URLSearchParams({\n    grant_type: \"authorization_code\",\n    code: AUTHORIZATION_CODE,\n    redirect_uri: \"https://example.com/oauth/callback\",\n    client_id: CLIENT_ID,\n    client_secret: CLIENT_SECRET,\n    code_verifier: CODE_VERIFIER,\n  }),\n});\nconst tokens = await tokenRes.json();\n\n// 2. Read user information\nconst userRes = await fetch(\"https://api.igcraftlit.com/oauth/userinfo\", {\n  headers: { Authorization: `Bearer ${tokens.access_token}` },\n});\nconst profile = await userRes.json();"
+        },
+        {
+          "id": "tokens",
+          "title": "Token lifetimes",
+          "paragraphs": [
+            "All tokens expire automatically and the server refuses renewal; revoking authorization or an administrator disabling the application immediately invalidates every issued token."
+          ],
+          "bullets": [
+            "authorization code — one-time use, valid for 5 minutes, invalidated immediately after use",
+            "access_token — short-lived, 1 hour by default",
+            "refresh_token — long-lived, at most two quarters (about 180 days); after that the user must be guided through authorization again",
+            "id_token — valid for the same period as the access_token, valid only at the moment of authorization"
+          ]
+        },
+        {
+          "id": "errors",
+          "title": "Error codes",
+          "paragraphs": [
+            "Error responses follow RFC 6749 section 5.2 and return JSON: error, error_description (a localizable text key) and an optional state."
+          ],
+          "bullets": [
+            "invalid_client — the client_id or client_secret is incorrect",
+            "invalid_grant — the authorization code is invalid, already used or expired, or the refresh_token is no longer valid",
+            "invalid_scope — the requested scope does not match the registered application",
+            "invalid_request — a required parameter is missing or malformed",
+            "unsupported_grant_type — the grant type is not supported",
+            "invalid_token — the access_token is invalid or expired",
+            "access_denied — the user denied this authorization"
+          ]
+        },
+        {
+          "id": "security",
+          "title": "Security recommendations",
+          "bullets": [
+            "All endpoints must be accessed over HTTPS and redirect URIs must exactly match the registered values.",
+            "The client_secret must stay on your server; never put it in frontend code, browser storage or public repositories.",
+            "Authorization requests must carry a random state that is verified on callback to prevent CSRF.",
+            "Public clients must enable PKCE S256.",
+            "Keep the refresh_token safe; if it leaks, reset the client_secret immediately in \"My OAuth Apps\".",
+            "Request only the minimum scopes your business needs."
+          ]
+        },
+        {
+          "id": "frontend",
+          "title": "Frontend 401 handling",
+          "bullets": [
+            "Handle 401 Unauthorized in a unified request interceptor.",
+            "On catching a 401, immediately clear the locally stored access_token and refresh_token.",
+            "Show users a human-readable, localized message (such as \"Your session has expired, please sign in again\"); never display raw error keys.",
+            "After the notice, guide the user to the sign-in page or restart the authorization flow.",
+            "When the refresh_token has expired (at most two quarters), do not auto-renew — authorization is required again."
+          ]
+        }
+      ]
     }
   }
 }

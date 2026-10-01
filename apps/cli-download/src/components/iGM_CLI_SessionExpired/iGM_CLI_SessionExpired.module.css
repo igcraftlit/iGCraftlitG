@@ -1,0 +1,117 @@
+/*
+ * 文件路径：apps/cli-download/src/components/iGM_CLI_SessionExpired/iGM_CLI_SessionExpired.module.css
+ * 所属层：前端 / 组件样式层
+ * 路由：/oauth/* 全部页面
+ * 模块：iGM_CLI_OAuthSession
+ * 作用：会话过期提示模态框样式——遮罩、卡片、图标、按钮，随明暗主题变量切换
+ */
+
+/* ===== 遮罩 ===== */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.42);
+}
+
+/* ===== 对话框 ===== */
+.dialog {
+  width: 100%;
+  max-width: 420px;
+  padding: 20px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  background: var(--igm-surface);
+  box-shadow: var(--igm-shadow-hover);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  background: var(--igm-accent-soft);
+  color: var(--igm-accent);
+}
+
+.title {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--igm-text);
+}
+
+.close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  border-radius: 6px;
+  color: var(--igm-text-subtle);
+}
+
+.close:hover {
+  color: var(--igm-text);
+  background: var(--igm-surface-subtle);
+}
+
+.hint {
+  margin: 12px 0 18px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.reloginButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border-radius: var(--igm-radius);
+  background: var(--igm-accent);
+  color: var(--igm-accent-contrast);
+  font-size: 13.5px;
+  font-weight: 600;
+  transition: background var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.reloginButton:hover {
+  background: var(--igm-accent-hover);
+}
+
+.dismissButton {
+  padding: 9px 14px;
+  border: 1px solid var(--igm-border-strong);
+  border-radius: var(--igm-radius);
+  color: var(--igm-text-muted);
+  font-size: 13.5px;
+  transition: color var(--igm-motion-nav) var(--igm-motion-ease),
+    border-color var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.dismissButton:hover {
+  color: var(--igm-text);
+  border-color: var(--igm-text-subtle);
+}

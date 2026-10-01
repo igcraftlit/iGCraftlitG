@@ -9,7 +9,8 @@
     "commands": "命令",
     "sdk": "SDK",
     "api": "API",
-    "docs": "文件"
+    "docs": "文件",
+    "oauth": "OAuth 接入"
   },
   "hero": {
     "title": "iGM CLI Download API",
@@ -96,6 +97,18 @@
     },
     "commands": {
       "title": "命令"
+    },
+    "oauthApply": {
+      "title": "接入 OAuth 應用",
+      "description": "申請讓第三方網站接入 iGCraftLit 帳號登入，填寫應用資訊、回呼位址與所需權限範圍"
+    },
+    "oauthApps": {
+      "title": "我的 OAuth 應用",
+      "description": "查看已提交的 OAuth 應用、重設 client_secret 並查詢接入日誌"
+    },
+    "oauthDocs": {
+      "title": "OAuth 接入文件",
+      "description": "OAuth 2.0 + OpenID Connect 接入指南：流程、端點、scope、範例程式碼、錯誤碼與安全建議"
     }
   },
   "common": {
@@ -362,7 +375,12 @@
         "title": "介面卡總覽",
         "body": "介面卡是啟動器與 iGM 下載引擎之間的橋樑。啟動器透過介面卡協定或 SDK，把資源下載請求交給 iGM 下載引擎，引擎在背景完成請求、傳輸、校驗、落盤，並把進度透過事件流回傳給啟動器。整個過程不彈終端、不干擾使用者介面。",
         "goalsTitle": "設計目標",
-        "goals": ["輕量", "跨語言", "跨平台", "可擴展"]
+        "goals": [
+          "輕量",
+          "跨語言",
+          "跨平台",
+          "可擴展"
+        ]
       },
       "compare": {
         "title": "接入方式對比",
@@ -376,15 +394,25 @@
             "name": "SDK 嵌入",
             "form": "C ABI 動態函式庫",
             "langs": "C、C++、Zig、Rust、Go 等支援 C ABI 的語言",
-            "pros": ["無額外行程，效能最佳，天然無終端", "直接連結引擎，呼叫鏈路最短"],
-            "cons": ["每個平台需要編譯對應動態函式庫"]
+            "pros": [
+              "無額外行程，效能最佳，天然無終端",
+              "直接連結引擎，呼叫鏈路最短"
+            ],
+            "cons": [
+              "每個平台需要編譯對應動態函式庫"
+            ]
           },
           {
             "name": "介面卡協定",
             "form": "HTTP + WebSocket",
             "langs": "任何能發送 HTTP 請求的語言",
-            "pros": ["跨語言、跨平台，無需引入程式碼", "服務可獨立升級，啟動器無需重新編譯"],
-            "cons": ["需要本機服務常駐，需處理網路與連線"]
+            "pros": [
+              "跨語言、跨平台，無需引入程式碼",
+              "服務可獨立升級，啟動器無需重新編譯"
+            ],
+            "cons": [
+              "需要本機服務常駐，需處理網路與連線"
+            ]
           }
         ],
         "table": {
@@ -392,11 +420,31 @@
           "sdkCol": "SDK 嵌入",
           "protoCol": "介面卡協定",
           "rows": [
-            { "dim": "語言要求", "sdk": "支援 C ABI", "proto": "任意" },
-            { "dim": "額外行程", "sdk": "無", "proto": "有本機服務" },
-            { "dim": "效能", "sdk": "最高", "proto": "良好" },
-            { "dim": "接入成本", "sdk": "中", "proto": "低" },
-            { "dim": "終端彈窗", "sdk": "無", "proto": "無" }
+            {
+              "dim": "語言要求",
+              "sdk": "支援 C ABI",
+              "proto": "任意"
+            },
+            {
+              "dim": "額外行程",
+              "sdk": "無",
+              "proto": "有本機服務"
+            },
+            {
+              "dim": "效能",
+              "sdk": "最高",
+              "proto": "良好"
+            },
+            {
+              "dim": "接入成本",
+              "sdk": "中",
+              "proto": "低"
+            },
+            {
+              "dim": "終端彈窗",
+              "sdk": "無",
+              "proto": "無"
+            }
           ]
         }
       },
@@ -470,6 +518,301 @@
         "q4": "如何回報介面卡問題？",
         "a4": "可透過郵件 igcraftlit@outlook.com（.Net）或 igcraftlit@163.com（.CN）聯絡團隊，也可至官網 https://igcraftlit.com 提交回報，郵件標題註明「介面卡」可更快定位問題。"
       }
+    }
+  },
+  "oauth": {
+    "session": {
+      "loginExpired": "登入已過期，請重新登入",
+      "tokenExpired": "授權已失效，請重新登入",
+      "reloginHint": "為保障帳號安全，請重新登入後繼續操作。",
+      "relogin": "重新登入",
+      "dismiss": "關閉"
+    },
+    "errors": {
+      "invalidClient": "用戶端驗證失敗，請檢查 client_id 是否正確",
+      "invalidClientSecret": "client_secret 不正確",
+      "clientNotApproved": "該應用未通過審核或已被停用",
+      "invalidCode": "授權碼無效",
+      "codeUsed": "授權碼已被使用",
+      "codeExpired": "授權碼已過期，請重新發起授權",
+      "invalidGrant": "授權憑證無效",
+      "refreshExpired": "重新整理權杖已失效，請重新授權",
+      "invalidRedirectUri": "回呼網址與登記值不符",
+      "pkceFailed": "PKCE 驗證失敗",
+      "userUnavailable": "使用者不存在或目前無法使用",
+      "invalidScope": "請求的權限範圍無效",
+      "invalidToken": "存取權杖無效或已過期",
+      "unsupportedResponseType": "不支援的回應類型",
+      "unsupportedGrantType": "不支援的授權類型",
+      "unsupportedPkce": "僅支援 code_challenge_method=S256",
+      "flowExpired": "授權請求已失效，請重新發起",
+      "badRequest": "請求參數有誤",
+      "nameInvalid": "應用名稱格式不正確",
+      "descriptionInvalid": "應用說明格式不正確",
+      "redirectInvalid": "回呼網址格式不正確",
+      "redirectInsecure": "回呼網址必須使用 HTTPS",
+      "purposeInvalid": "用途說明格式不正確",
+      "contactInvalid": "聯絡方式格式不正確",
+      "agreeRequired": "請先同意接入規範",
+      "appNotFound": "找不到該應用",
+      "withdrawNotAllowed": "目前狀態不可撤回",
+      "appNotApproved": "應用尚未通過審核",
+      "appReviewed": "該申請已完成審核"
+    },
+    "clientTypes": {
+      "web": "網頁應用",
+      "desktop": "桌面應用",
+      "mobile": "行動應用",
+      "service": "伺服器端應用",
+      "other": "其他"
+    },
+    "scopes": {
+      "openid": "基礎身分 openid",
+      "profile": "公開資料 profile",
+      "email": "電子郵件 email",
+      "org": "組織認證資訊 org"
+    },
+    "scopeHints": {
+      "openid": "回傳穩定的使用者識別碼 sub（iGMUid）",
+      "profile": "回傳暱稱與頭像位址",
+      "email": "回傳帳號綁定的電子郵件",
+      "org": "回傳已通過審核的組織認證資訊"
+    },
+    "status": {
+      "pending": "待審核",
+      "approved": "已通過",
+      "rejected": "已拒絕",
+      "disabled": "已停用",
+      "withdrawn": "已撤回"
+    },
+    "logActions": {
+      "apply": "提交申請",
+      "withdraw": "撤回申請",
+      "secretReset": "重設金鑰",
+      "approve": "審核通過",
+      "reject": "審核拒絕",
+      "delete": "刪除應用",
+      "authorize": "使用者授權",
+      "deny": "使用者拒絕",
+      "token": "簽發權杖",
+      "refresh": "更新權杖",
+      "revoke": "撤銷權杖",
+      "consentRevoke": "撤銷授權"
+    },
+    "apply": {
+      "intro": "讓第三方網站接入 iGCraftLit 帳號登入：填寫應用資訊並提交，審核通過後發放 client_id 與 client_secret。",
+      "name": "應用名稱",
+      "namePlaceholder": "例如：iGM 社群助手",
+      "type": "應用類型",
+      "description": "應用說明",
+      "descriptionPlaceholder": "簡要說明應用的用途與主要功能",
+      "redirectUris": "回呼位址 redirect_uri",
+      "redirectUrisPlaceholder": "https://example.com/oauth/callback",
+      "redirectUrisHint": "每行一個，必須為 HTTPS；支援多條，需與授權請求嚴格一致",
+      "scopes": "申請權限範圍 scope",
+      "purpose": "使用用途",
+      "purposePlaceholder": "說明你將如何使用使用者授權的資訊",
+      "contact": "聯絡方式",
+      "contactPlaceholder": "電子郵件或其他可聯絡到你的方式",
+      "agreeRules": "我已閱讀並同意 OAuth 接入規範與使用者資訊保護要求",
+      "required": "請完整填寫必填欄位",
+      "redirectRequired": "請至少填寫一條回呼位址",
+      "redirectInsecure": "回呼位址必須使用 HTTPS",
+      "rulesRequired": "請先勾選同意接入規範",
+      "submit": "提交申請",
+      "submitting": "提交中…",
+      "cancel": "取消",
+      "failed": "提交失敗，請稍後再試",
+      "submittedNotice": "申請已提交，待管理員審核。通過後可在「我的 OAuth 應用」查看 client_id 並取得 client_secret。",
+      "viewApps": "前往我的 OAuth 應用",
+      "reviewHint": "審核由站點管理員處理；通過後會一次性發放 client_secret，請妥善保管"
+    },
+    "apps": {
+      "intro": "查看你提交的 OAuth 應用，重設 client_secret 並查詢接入日誌。",
+      "newApply": "新增應用接入",
+      "empty": "你還沒有提交過 OAuth 應用接入申請",
+      "loadFailed": "應用清單載入失敗，請稍後再試",
+      "typeLabel": "應用類型",
+      "clientId": "client_id",
+      "descriptionLabel": "應用說明",
+      "scopes": "權限範圍",
+      "redirectUris": "回呼位址",
+      "purpose": "使用用途",
+      "contact": "聯絡方式",
+      "createdAt": "提交時間",
+      "reviewComment": "審核意見",
+      "secretOnce": "client_secret 僅在本次顯示，關閉或重新整理後無法再次查看，請立即妥善保存",
+      "copy": "複製",
+      "copied": "已複製",
+      "resetSecret": "重設 client_secret",
+      "resetConfirm": "重設後舊金鑰立即失效，使用舊金鑰的第三方將無法換取權杖。確定繼續嗎？",
+      "withdraw": "撤回申請",
+      "withdrawConfirm": "確定撤回該待審核申請嗎？",
+      "viewLogs": "查看接入日誌",
+      "hideLogs": "收合日誌",
+      "logsEmpty": "尚無接入日誌",
+      "logsTitle": "接入日誌"
+    },
+    "admin": {
+      "all": "全部",
+      "empty": "目前篩選條件下沒有應用",
+      "loadFailed": "應用清單載入失敗，請稍後再試",
+      "applicant": "申請人",
+      "comment": "審核意見",
+      "commentPlaceholder": "可填寫通過或拒絕的說明，將顯示給申請人",
+      "approve": "通過",
+      "reject": "拒絕",
+      "disable": "停用",
+      "enable": "啟用",
+      "delete": "刪除",
+      "approved": "已通過該應用申請，請立即複製並轉交 client_secret",
+      "rejected": "已拒絕該應用申請",
+      "disabled": "已停用該應用，並撤銷其已簽發的全部權杖",
+      "enabled": "已重新啟用該應用",
+      "deleted": "已刪除該應用及其授權資料",
+      "disableConfirm": "停用後該應用無法再換取權杖，且已簽發的權杖將被撤銷。確定繼續嗎？",
+      "deleteConfirm": "刪除後將同時清理該應用的授權碼、權杖與同意紀錄，且無法復原。確定繼續嗎？",
+      "secretOnce": "client_secret 僅在本次顯示，請立即複製並轉交申請人，關閉後無法再次查看"
+    },
+    "authorized": {
+      "intro": "以下第三方應用已獲得你的授權，可撤銷不再信任的應用。",
+      "empty": "你還沒有授權任何第三方應用",
+      "loadFailed": "已授權應用載入失敗，請稍後再試",
+      "grantedAt": "授權時間",
+      "revoke": "撤銷授權",
+      "revokeConfirm": "撤銷後該應用將立即失去存取權限，需重新引導你授權。確定繼續嗎？",
+      "revoked": "已撤銷該應用的授權"
+    },
+    "consent": {
+      "intro": "第三方應用正在請求存取你的 iGCraftLit 帳號資訊，請確認是否授權。",
+      "clientId": "應用識別碼",
+      "scopesTitle": "該應用將取得以下資訊",
+      "warning": "授權後該應用可讀取上述範圍內的資訊，請僅授權你信任的應用。你可隨時在「已授權應用」中撤銷授權。",
+      "approve": "同意授權",
+      "deny": "拒絕",
+      "loginRequired": "你尚未登入，請先登入 iGCraftLit 帳號後再繼續授權",
+      "goLogin": "登入後繼續",
+      "redirecting": "正在返回第三方應用…",
+      "flowExpired": "授權請求已失效或已過期，請重新從第三方應用發起登入"
+    },
+    "docs": {
+      "intro": "讓第三方網站接入 iGCraftLit 帳號登入：OAuth 2.0 授權碼流程 + OpenID Connect。",
+      "tocTitle": "本頁目錄",
+      "sections": [
+        {
+          "id": "flow",
+          "title": "接入流程",
+          "paragraphs": [
+            "iGCraftLit 採用標準 OAuth 2.0 授權碼流程（Authorization Code）並支援 OpenID Connect，第三方網站無需接觸使用者密碼。"
+          ],
+          "bullets": [
+            "在開發者平台提交應用接入申請，填寫回呼位址與所需 scope，等待管理員審核。",
+            "審核通過後取得 client_id 與 client_secret；client_secret 僅顯示一次，請安全保存於伺服器端。",
+            "將使用者瀏覽器引導至 https://api.igcraftlit.com/oauth/authorize，攜帶 client_id、redirect_uri、response_type=code、scope 與 state。",
+            "使用者登入並同意授權後，瀏覽器回跳至 redirect_uri 並攜帶一次性的 authorization code。",
+            "伺服器端以 code 呼叫 /oauth/token 換取 access_token、refresh_token 與 id_token。",
+            "憑 access_token 呼叫 /oauth/userinfo 取得使用者資訊；access_token 過期後用 refresh_token 續期。"
+          ]
+        },
+        {
+          "id": "endpoints",
+          "title": "端點",
+          "bullets": [
+            "GET /oauth/authorize — 發起授權，參數：client_id、redirect_uri、response_type=code、scope、state，可選 code_challenge 與 code_challenge_method=S256",
+            "POST /oauth/token — 換取權杖，支援 grant_type=authorization_code 與 grant_type=refresh_token，請求主體為 application/x-www-form-urlencoded",
+            "GET /oauth/userinfo — 讀取使用者資訊，請求標頭 Authorization: Bearer <access_token>",
+            "POST /oauth/revoke — 撤銷權杖，參數 token 與可選的 token_type_hint",
+            "GET /.well-known/openid-configuration — OIDC 發現文件",
+            "GET /oauth/jwks.json — 簽章公鑰集（ES256，ECDSA P-256）"
+          ]
+        },
+        {
+          "id": "scopes",
+          "title": "Scope 說明",
+          "paragraphs": [
+            "未申請的 scope 不會出現在 userinfo 回應中；第三方只能取得使用者明確同意的公開資訊。"
+          ],
+          "bullets": [
+            "openid（必選）— 回傳使用者唯一識別碼 sub，取值為 iGMUid",
+            "profile — 回傳 name（暱稱）與 picture（頭像位址）",
+            "email — 回傳 email（帳號綁定電子郵件）",
+            "org — 回傳 org（已通過審核的組織認證資訊）"
+          ]
+        },
+        {
+          "id": "pkce",
+          "title": "PKCE",
+          "paragraphs": [
+            "公開客戶端（桌面應用、行動應用、單頁應用）必須使用 PKCE（RFC 7636）以防范授權碼攔截。"
+          ],
+          "bullets": [
+            "發起授權時產生 code_verifier（43 至 128 位隨機字串），並計算 code_challenge = BASE64URL(SHA256(code_verifier))。",
+            "授權請求攜帶 code_challenge 與 code_challenge_method=S256。",
+            "換取權杖時攜帶原始 code_verifier，伺服器端校驗其 SHA256 結果與 code_challenge 是否一致。",
+            "本服務僅支援 S256，不接受 plain。"
+          ]
+        },
+        {
+          "id": "sample",
+          "title": "範例程式碼",
+          "paragraphs": [
+            "以下為授權碼換取權杖與讀取使用者資訊的最小範例（Node.js 18 以上）。"
+          ],
+          "code": "// 1. 換取權杖\nconst tokenRes = await fetch(\"https://api.igcraftlit.com/oauth/token\", {\n  method: \"POST\",\n  headers: { \"Content-Type\": \"application/x-www-form-urlencoded\" },\n  body: new URLSearchParams({\n    grant_type: \"authorization_code\",\n    code: AUTHORIZATION_CODE,\n    redirect_uri: \"https://example.com/oauth/callback\",\n    client_id: CLIENT_ID,\n    client_secret: CLIENT_SECRET,\n    code_verifier: CODE_VERIFIER,\n  }),\n});\nconst tokens = await tokenRes.json();\n\n// 2. 讀取使用者資訊\nconst userRes = await fetch(\"https://api.igcraftlit.com/oauth/userinfo\", {\n  headers: { Authorization: `Bearer ${tokens.access_token}` },\n});\nconst profile = await userRes.json();"
+        },
+        {
+          "id": "tokens",
+          "title": "權杖有效時長",
+          "paragraphs": [
+            "所有權杖到期後自動失效，伺服器端拒絕續期；撤銷授權或管理員停用應用會立即失效其全部已簽發權杖。"
+          ],
+          "bullets": [
+            "authorization code — 一次性使用，有效期 5 分鐘，使用後立即失效",
+            "access_token — 短有效期，預設 1 小時",
+            "refresh_token — 長有效期，最長不超過兩個季度（約 180 天）；到期後必須重新引導使用者走授權流程",
+            "id_token — 與 access_token 同期有效，僅在授權時刻有效"
+          ]
+        },
+        {
+          "id": "errors",
+          "title": "錯誤碼",
+          "paragraphs": [
+            "錯誤回應遵循 RFC 6749 第 5.2 節，回傳 JSON：error、error_description（可本地化的文案鍵）與可選的 state。"
+          ],
+          "bullets": [
+            "invalid_client — client_id 或 client_secret 不正確",
+            "invalid_grant — 授權碼無效、已使用或已過期，或 refresh_token 已失效",
+            "invalid_scope — 請求的 scope 與應用登記不一致",
+            "invalid_request — 缺少必填參數或參數格式錯誤",
+            "unsupported_grant_type — 不支援的授權類型",
+            "invalid_token — access_token 無效或已過期",
+            "access_denied — 使用者拒絕了本次授權"
+          ]
+        },
+        {
+          "id": "security",
+          "title": "安全建議",
+          "bullets": [
+            "所有端點必須透過 HTTPS 存取，回呼位址須嚴格符合登記值。",
+            "client_secret 僅存於伺服器端，禁止寫入前端程式碼、瀏覽器儲存或公開儲存庫。",
+            "授權請求必須攜帶隨機 state 並在回呼時校驗，防止 CSRF。",
+            "公開客戶端必須啟用 PKCE S256。",
+            "refresh_token 應妥善保管，發現洩漏時立即在「我的 OAuth 應用」中重設 client_secret。",
+            "僅申請業務必需的最小 scope。"
+          ]
+        },
+        {
+          "id": "frontend",
+          "title": "前端 401 處理建議",
+          "bullets": [
+            "統一在請求攔截器中處理 401 Unauthorized。",
+            "捕獲 401 後立即清除本地保存的 access_token 與 refresh_token。",
+            "向使用者顯示多語言的人類可讀提示（如「登入已過期，請重新登入」），禁止直接顯示錯誤鍵值。",
+            "提示後引導使用者跳轉至登入頁或重新發起授權流程。",
+            "refresh_token 已過期（最長兩個季度）時不得自動續期，必須重新授權。"
+          ]
+        }
+      ]
     }
   }
 }
