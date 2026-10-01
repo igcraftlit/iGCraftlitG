@@ -6,7 +6,8 @@
  * 作用：统一读取本地后端运行所需的环境配置
  * 内容：服务端口、SQLite 文件路径、CORS 白名单、认证会话参数、
  *       邮箱验证码与重置令牌时效、基础限流参数、163 邮箱 SMTP 邮件配置、
- *       模块四本地文件上传存储配置、模块十七 Minecraft 本体下载配置
+ *       模块四本地文件上传存储配置、模块十七 Minecraft 本体下载配置、
+ *       模块二十第三方资源（Modrinth）接入配置
  */
 
 // 导入依赖 //
@@ -106,6 +107,54 @@ export interface iGM_GameConfig {
   cooldownMs: number;
 }
 
+/**
+ * 模块二十：第三方资源（Modrinth）接入与下载配置
+ * 说明：本模块仅支持 Fabric 加载器与 Modrinth 平台，资源文件不落本站服务器存储
+ */
+export interface iGM_ThirdPartyConfig {
+  /** Modrinth API 基础地址 */
+  modrinthApiUrl: string;
+  /** 请求 User-Agent（Modrinth 要求标识调用方与联系方式） */
+  userAgent: string;
+  /** 请求间隔下限（毫秒）——两次上游请求之间的随机间隔，避免被识别为网络攻击 */
+  minRequestIntervalMs: number;
+  /** 请求间隔上限（毫秒） */
+  maxRequestIntervalMs: number;
+  /** 429/503 指数退避的最大重试次数 */
+  maxRetries: number;
+  /** 单次上游请求超时（毫秒） */
+  timeoutMs: number;
+  /** 元数据缓存有效期（毫秒），过期后重新向上游拉取 */
+  cacheTtlMs: number;
+  /** 默认下载目录（调用方未指定 target 时使用） */
+  defaultDownloadDir: string;
+  /** 单文件大小上限（字节），超过直接拒绝，防止误下超大文件 */
+  maxFileSize: number;
+}
+
+/**
+ * 模块二十一：OAuth 2.0 + OpenID Connect 身份提供方配置
+ * 说明：第三方网站通过本站账号登录；令牌有效期遵循既定规则
+ */
+export interface iGM_OAuthConfig {
+  /** 签发方标识（iss），同时作为 OIDC 发现文档的 issuer */
+  issuer: string;
+  /** 前端授权同意页路径（后端 /oauth/authorize 校验后跳转到此页） */
+  consentPath: string;
+  /** access_token 有效期（秒），默认 1 小时 */
+  accessTokenTtlSeconds: number;
+  /** refresh_token 最长有效期（秒），默认 180 天（两个季度） */
+  refreshTokenTtlSeconds: number;
+  /** 授权码有效期（秒），默认 5 分钟 */
+  codeTtlSeconds: number;
+  /** 授权流签名 Cookie 名称 */
+  flowCookieName: string;
+  /** 授权流签名 Cookie 有效期（秒），默认 10 分钟 */
+  flowTtlSeconds: number;
+  /** 是否允许 http 回调地址（仅本地开发放行 localhost） */
+  allowHttpRedirect: boolean;
+}
+
 export interface iGM_AppConfig {
   /** 后端监听端口 */
   port: number;
@@ -125,6 +174,10 @@ export interface iGM_AppConfig {
   upload: iGM_UploadConfig;
   /** 模块十七：Minecraft 本体下载配置 */
   game: iGM_GameConfig;
+  /** 模块二十：第三方资源（Modrinth）接入与下载配置 */
+  thirdParty: iGM_ThirdPartyConfig;
+  /** 模块二十一：OAuth 2.0 + OIDC 身份提供方配置 */
+  oauth: iGM_OAuthConfig;
 }
 
 // 核心逻辑 //
@@ -140,6 +193,8 @@ export const iGM_Config: iGM_AppConfig = {
   corsOrigins: [
     "https://igcraftlit.com",
     "https://www.igcraftlit.com",
+    // 模块二十一：开发者平台（iGM CLI / OAuth 接入）独立站点，需携带会话 Cookie 调用本站接口
+    "https://cli.igcraftlit.com",
     "http://localhost:3000",
   ],
   version: "0.5.0",
@@ -215,6 +270,20 @@ export const iGM_Config: iGM_AppConfig = {
     gameWrite: { windowMs: 60 * 1000, max: 30 },
     // 模块十七：原生文件夹选择器——1 分钟内最多 10 次
     gameFolderPick: { windowMs: 60 * 1000, max: 10 },
+    // 模块二十：第三方资源搜索/详情（会触发上游请求）——1 分钟内最多 60 次
+    thirdPartySearch: { windowMs: 60 * 1000, max: 60 },
+    // 模块二十：第三方资源下载任务创建——10 分钟内最多 20 次
+    thirdPartyDownload: { windowMs: 10 * 60 * 1000, max: 20 },
+    // 模块二十：下载任务控制（暂停/取消/重试/删除）——1 分钟内最多 60 次
+    thirdPartyTask: { windowMs: 60 * 1000, max: 60 },
+    // 模块二十一：OAuth 令牌端点（授权码换令牌 / 刷新）——1 分钟内最多 60 次
+    oauthToken: { windowMs: 60 * 1000, max: 60 },
+    // 模块二十一：授权端点与授权决策——1 分钟内最多 30 次
+    oauthAuthorize: { windowMs: 60 * 1000, max: 30 },
+    // 模块二十一：应用申请 / 重新申请——10 分钟内最多 5 次
+    oauthAppWrite: { windowMs: 10 * 60 * 1000, max: 5 },
+    // 模块二十一：用户信息 / 撤销端点——1 分钟内最多 60 次
+    oauthUserinfo: { windowMs: 60 * 1000, max: 60 },
   },
   mail: {
     // 163 邮箱 SMTP：465 端口隐式 SSL；密码使用客户端授权码（非登录密码），
@@ -283,6 +352,47 @@ export const iGM_Config: iGM_AppConfig = {
     maxRetries: 5,
     maxConsecutiveFailures: 10,
     cooldownMs: 60 * 1000,
+  },
+  thirdParty: {
+    // Modrinth 公开 API（无需 API Key）
+    modrinthApiUrl:
+      process.env.IGM_MODRINTH_API_URL ?? "https://api.modrinth.com/v2",
+    // Modrinth 要求携带可识别调用方的 User-Agent
+    userAgent:
+      process.env.IGM_MODRINTH_USER_AGENT ??
+      "iGM-CraftCeon/1.0 (contact: igcraftlit@outlook.com)",
+    // 请求间隔 100~300 毫秒随机，避免被识别为网络攻击
+    minRequestIntervalMs: Number(process.env.IGM_MODRINTH_MIN_INTERVAL_MS ?? 100),
+    maxRequestIntervalMs: Number(process.env.IGM_MODRINTH_MAX_INTERVAL_MS ?? 300),
+    maxRetries: Number(process.env.IGM_MODRINTH_MAX_RETRIES ?? 5),
+    timeoutMs: Number(process.env.IGM_MODRINTH_TIMEOUT_MS ?? 15000),
+    // 元数据缓存 10 分钟，减少对上游的重复请求
+    cacheTtlMs: Number(process.env.IGM_MODRINTH_CACHE_TTL_MS ?? 10 * 60 * 1000),
+    // 默认下载目录：仓库根目录下的 downloads（调用方可指定 target 覆盖）
+    defaultDownloadDir:
+      process.env.IGM_THIRD_PARTY_DOWNLOAD_DIR ??
+      resolve(import.meta.dir, "../../../downloads"),
+    // 单文件上限 2GB，超过直接拒绝
+    maxFileSize: Number(process.env.IGM_THIRD_PARTY_MAX_FILE_SIZE ?? 2 * 1024 * 1024 * 1024),
+  },
+  oauth: {
+    // 签发方：线路上后端位于 api.igcraftlit.com；本地开发回退 localhost:3001
+    issuer: process.env.IGM_OAUTH_ISSUER ?? "https://api.igcraftlit.com",
+    // 后端 /oauth/authorize 校验通过后跳转的前端授权同意页
+    consentPath: "/G_OAuthAuthorize",
+    // access_token 短有效期：1 小时
+    accessTokenTtlSeconds: Number(process.env.IGM_OAUTH_ACCESS_TTL ?? 60 * 60),
+    // refresh_token 最长两个季度（约 180 天），到期必须重新授权
+    refreshTokenTtlSeconds: Number(
+      process.env.IGM_OAUTH_REFRESH_TTL ?? 180 * 24 * 60 * 60,
+    ),
+    // 授权码一次性、5 分钟有效
+    codeTtlSeconds: Number(process.env.IGM_OAUTH_CODE_TTL ?? 5 * 60),
+    flowCookieName: "iGM_OAuthFlow",
+    flowTtlSeconds: Number(process.env.IGM_OAUTH_FLOW_TTL ?? 10 * 60),
+    // 仅本地开发允许 http 回调（限 localhost / 127.0.0.1）
+    allowHttpRedirect:
+      (process.env.IGM_OAUTH_ALLOW_HTTP ?? "true") === "true",
   },
 };
 

@@ -47,6 +47,12 @@ import { G_Developer } from "./iGM_Routes/G_Developer";
 // 模块十七：Minecraft 游戏本体下载与自动组装
 import { G_Game } from "./iGM_Routes/G_Game";
 import { iGM_GameError } from "./iGM_Services/iGM_GameService";
+// 模块二十：第三方资源（Modrinth，仅 Fabric 兼容）与下载进度同步
+import { G_ThirdParty } from "./iGM_Routes/G_ThirdParty";
+import { iGM_ThirdPartyError } from "./iGM_Services/iGM_ThirdPartyService";
+// 模块二十一：OAuth 2.0 + OpenID Connect 身份提供方
+import { G_OAuth } from "./iGM_Routes/G_OAuth";
+import { iGM_OAuthError } from "./iGM_Services/iGM_OAuthService";
 
 // 类型定义 //
 // （本入口无额外类型，统一响应类型见 iGM_Types/iGM_Response.ts）
@@ -118,6 +124,17 @@ const iGM_Server = new Elysia()
       set.status = error.status;
       return iGM_Fail(error.status, error.message);
     }
+    // 模块二十第三方资源业务错误：上游异常/路径非法/任务冲突/校验失败等
+    if (error instanceof iGM_ThirdPartyError) {
+      set.status = error.status;
+      return iGM_Fail(error.status, error.message);
+    }
+    // 模块二十一 OAuth/OIDC 业务错误：站内端点走统一响应壳
+    // （标准 /oauth/* 端点已在路由内自行转换为 OAuth 规范错误响应）
+    if (error instanceof iGM_OAuthError) {
+      set.status = error.status;
+      return iGM_Fail(error.status, error.message);
+    }
     // 请求体解析失败等客户端错误（沿用模块二通用文案键）
     if (code === "PARSE" || code === "VALIDATION") {
       set.status = 400;
@@ -159,6 +176,10 @@ const iGM_Server = new Elysia()
   .use(G_Developer)
   // 模块十七：Minecraft 游戏本体下载与自动组装
   .use(G_Game)
+  // 模块二十：第三方资源（Modrinth）与下载进度同步
+  .use(G_ThirdParty)
+  // 模块二十一：OAuth 2.0 + OIDC 身份提供方
+  .use(G_OAuth)
   // 根路径占位
   .get("/", () => ({
     success: true,
