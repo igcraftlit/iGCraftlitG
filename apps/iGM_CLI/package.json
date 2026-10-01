@@ -1,6 +1,6 @@
 {
   "name": "igm-cli",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "iGM CLI - iGCraftLit × MuoCeon 联合构建的命令行下载工具，用于检索、下载、更新、卸载 iGCraftLit Community 资源。",
   "type": "module",
   "main": "./build/iGM_CLIMain.js",

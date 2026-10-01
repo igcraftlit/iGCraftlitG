@@ -11,6 +11,7 @@ import {
   statSync
 } from "node:fs";
 import { join as join2 } from "node:path";
+import { createHash } from "node:crypto";
 
 // src/iGM_CLIConfig.ts
 import { existsSync, mkdirSync } from "node:fs";
@@ -83,6 +84,80 @@ async function iGM_CLI_Request(path, options = {}) {
   return parsed;
 }
 
+// src/iGM_CLILauncher.ts
+var iGM_CLI_LauncherReleaseUrl = process.env.IGM_LAUNCHER_RELEASE_URL ?? "https://launcher.igcraftlit.com/release.json";
+async function iGM_CLI_FetchLauncherRelease() {
+  const res = await fetch(iGM_CLI_LauncherReleaseUrl, {
+    headers: { Accept: "application/json" },
+    signal: AbortSignal.timeout(15000)
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  if (!data || typeof data.version !== "string")
+    throw new Error("发布清单格式无效");
+  return data;
+}
+async function iGM_CLI_CommandLauncher(args) {
+  const { downloadDir } = iGM_CLI_GetConfig();
+  let release;
+  try {
+    release = await iGM_CLI_FetchLauncherRelease();
+  } catch (err) {
+    console.error(`获取启动器版本信息失败：${err.message}`);
+    console.error(`发布清单地址：${iGM_CLI_LauncherReleaseUrl}`);
+    process.exitCode = 1;
+    return;
+  }
+  if (args.flags.json === true) {
+    console.log(JSON.stringify(release, null, 2));
+    return;
+  }
+  console.log("iGM CraftCeon Launcher");
+  console.log(`  版本:   ${release.versionLabel ?? release.version}`);
+  console.log(`  平台:   ${release.platform ?? "-"}`);
+  console.log(`  通道:   ${release.channel ?? "-"}`);
+  console.log(`  发布:   ${release.releasedAt ?? "-"}`);
+  console.log(`  文件:   ${release.fileName ?? "-"}`);
+  console.log(`  大小:   ${release.fileSizeLabel ?? "-"}`);
+  console.log(`  SHA256: ${release.sha256 ?? "-"}`);
+  console.log(`  下载:   ${release.downloadUrl ?? "-"}`);
+  if (args.flags.download !== true) {
+    console.log("");
+    console.log("提示：igm launcher --download 下载安装包，igm launcher --json 输出原始清单。");
+    return;
+  }
+  if (typeof release.downloadUrl !== "string") {
+    console.error("下载失败：发布清单未提供下载地址。");
+    process.exitCode = 1;
+    return;
+  }
+  const name = typeof release.fileName === "string" ? release.fileName : `iGM-CraftCeon-Launcher-Setup-${release.version}.zip`;
+  const dest = join2(downloadDir, name);
+  console.log("");
+  console.log(`正在下载 ${name} ...`);
+  try {
+    const res = await fetch(release.downloadUrl);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const buf = Buffer.from(await res.arrayBuffer());
+    writeFileSync(dest, buf);
+    const sha = createHash("sha256").update(buf).digest("hex");
+    console.log(`下载完成：${dest}`);
+    console.log(`实际大小：${(buf.length / 1024 / 1024).toFixed(2)} MB`);
+    console.log(`实际 SHA256：${sha}`);
+    if (typeof release.sha256 === "string") {
+      if (sha === release.sha256) {
+        console.log("校验通过：与发布清单一致。");
+      } else {
+        console.error(`校验不一致：发布清单为 ${release.sha256}`);
+        process.exitCode = 1;
+      }
+    }
+  } catch (err) {
+    console.error(`下载失败：${err.message}`);
+    process.exitCode = 1;
+  }
+}
+
 // src/iGM_CLICommands.ts
 function iGM_CLI_CommandHelp() {
   const help = `
@@ -112,6 +187,11 @@ iGM CLI - iGCraftLit × MuoCeon 联合构建的命令行下载工具
   igm update                       更新所有已安装资源
   igm update <资源>                更新指定资源
 
+启动器:
+  igm launcher                     查看 iGM CraftCeon Launcher 版本与校验信息
+  igm launcher --json              输出发布清单原始 JSON
+  igm launcher --download          下载当前版本安装包（zip）
+
 项目管理:
   igm init                         初始化 igm.json 配置文件
   igm login                        登录 iGCraftLit 账号
@@ -128,16 +208,18 @@ iGM CLI - iGCraftLit × MuoCeon 联合构建的命令行下载工具
   IGM_API_BASE     覆盖 API 基础地址（默认 https://api.igcraftlit.com）
   IGM_CACHE_DIR    覆盖缓存目录
   IGM_TOKEN        直接指定登录 token
+  IGM_LAUNCHER_RELEASE_URL  覆盖启动器发布清单地址（默认 https://launcher.igcraftlit.com/release.json）
 
 示例:
   igm search sodium --version=1.20.1 --loader=fabric
   igm install sodium --dir=./mods
+  igm launcher
   igm init && igm add lithium
 `;
   console.log(help);
 }
 function iGM_CLI_CommandVersion() {
-  console.log("igm-cli 0.1.3");
+  console.log("igm-cli 0.1.4");
 }
 async function iGM_CLI_CommandSearch(args) {
   const keyword = args.positional[0];
@@ -535,6 +617,9 @@ async function iGM_CLI_Main() {
       return;
     case "update":
       iGM_CLI_CommandUpdate(parsed);
+      return;
+    case "launcher":
+      await iGM_CLI_CommandLauncher(parsed);
       return;
     case "init":
       iGM_CLI_CommandInit();

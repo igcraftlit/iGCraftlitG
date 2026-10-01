@@ -32,7 +32,6 @@
     "fileSize": "ファイルサイズ",
     "sha256": "SHA256",
     "fileName": "ファイル",
-    "pending": "ビルド後に記載",
     "download": "ダウンロード",
     "installGuide": "インストール手順"
   },
@@ -75,7 +74,8 @@
     "sha256": "SHA256",
     "downloadBtn": "Windows x64 版をダウンロード",
     "installGuide": "インストール手順を見る",
-    "note": "インストーラーはまだビルド中です。公開後、利用可能なダウンロード先と検証値がここに表示されます。"
+    "note": "ダウンロードされるのは zip アーカイブで、インストーラーの起動ファイルとペイロードが含まれます。同じフォルダに展開し、iGM Installer-Setup.exe を実行してインストールしてください。",
+    "cliHint": "iGM CLI でもバージョンと検証値を確認できます："
   },
   "releases": {
     "title": "バージョン一覧",
@@ -86,7 +86,6 @@
     "fileSize": "ファイルサイズ",
     "sha256": "SHA256",
     "file": "ファイル",
-    "pending": "ビルド後に記載",
     "downloadAction": "ダウンロード",
     "viewChangelog": "更新履歴を見る"
   },
@@ -147,8 +146,9 @@
       "steps": {
         "title": "インストール手順",
         "items": [
-          "ダウンロードページから iGM CraftCeon Launcher のインストーラーを取得します。",
-          "インストーラーをダブルクリックし、ウィザードでインストール先を選んで完了します。",
+          "ダウンロードページから iGM CraftCeon Launcher のパッケージ（zip アーカイブ）を取得します。",
+          "同じフォルダに展開し、インストーラーの起動ファイルとペイロードを取り出します。",
+          "iGM Installer-Setup.exe を実行し、ウィザードでインストール先を選んで完了します。",
           "初回起動時に言語とデータディレクトリを選択します。",
           "Java 管理で対応バージョンの実行環境を確認または導入します。",
           "インスタンスを作成または読み込み、ゲームを起動します。"
@@ -158,7 +158,7 @@
         "title": "検証と起動",
         "lead": "ダウンロード後、PowerShell でインストーラーの完全性を検証できます：",
         "codeLabel": "powershell",
-        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.1.2.exe -Algorithm SHA256",
+        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.1.2.zip -Algorithm SHA256",
         "after": "計算結果をダウンロードページの SHA256 と比較し、一致すればファイルは完全です。"
       },
       "notes": {

@@ -32,7 +32,6 @@
     "fileSize": "文件大小",
     "sha256": "SHA256",
     "fileName": "文件",
-    "pending": "待构建后填入",
     "download": "下载",
     "installGuide": "安装说明"
   },
@@ -75,7 +74,8 @@
     "sha256": "SHA256",
     "downloadBtn": "下载 Windows x64",
     "installGuide": "查看安装指南",
-    "note": "安装包尚在构建流程中，发布后此处将提供可用的下载地址与校验值。"
+    "note": "下载得到的是 zip 归档，内含安装引导程序与载荷文件；请解压到同一目录后运行 iGM Installer-Setup.exe 完成安装。",
+    "cliHint": "也可用 iGM CLI 查看版本与校验信息："
   },
   "releases": {
     "title": "版本列表",
@@ -86,7 +86,6 @@
     "fileSize": "文件大小",
     "sha256": "SHA256",
     "file": "文件",
-    "pending": "待构建后填入",
     "downloadAction": "下载",
     "viewChangelog": "查看更新日志"
   },
@@ -147,8 +146,9 @@
       "steps": {
         "title": "安装步骤",
         "items": [
-          "从下载页获取 iGM CraftCeon Launcher 安装包。",
-          "双击安装包，按向导选择安装目录并完成安装。",
+          "从下载页获取 iGM CraftCeon Launcher 安装包（zip 归档）。",
+          "解压归档到同一目录，得到安装引导程序与载荷文件。",
+          "运行 iGM Installer-Setup.exe，按向导选择安装目录并完成安装。",
           "首次启动时选择语言与数据目录。",
           "在 Java 管理中确认或安装对应版本的运行时。",
           "创建或导入实例后即可启动游戏。"
@@ -158,7 +158,7 @@
         "title": "校验与启动",
         "lead": "下载完成后，可在 PowerShell 中校验安装包完整性：",
         "codeLabel": "powershell",
-        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.1.2.exe -Algorithm SHA256",
+        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.1.2.zip -Algorithm SHA256",
         "after": "将计算结果与下载页给出的 SHA256 比对，一致则表示文件完整。"
       },
       "notes": {

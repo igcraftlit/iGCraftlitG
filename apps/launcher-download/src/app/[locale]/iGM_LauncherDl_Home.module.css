@@ -198,10 +198,6 @@
   font-size: 13px;
 }
 
-.versionPending {
-  color: var(--igm-text-subtle);
-}
-
 /* ===== 功能介绍网格 ===== */
 .featureGrid {
   display: grid;

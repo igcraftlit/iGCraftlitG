@@ -3,21 +3,24 @@
  * 所属层：前端 / 页面层
  * 路由：/{locale}/download
  * 模块：iGM_LauncherDl_Downloader
- * 作用：下载页——展示平台、版本、文件、大小、SHA256 与下载入口（占位，不产生真实下载）
- * 内容：纯静态 SSG 服务端页面，文案全部来自语言包；安装说明入口跳转 /docs/install
+ * 作用：下载页——展示平台、版本、文件、大小、SHA256 与真实下载入口
+ * 内容：纯静态 SSG 服务端页面，文案全部来自语言包；安装说明入口跳转 /docs/install；
+ *       下载地址与校验值取自发布清单 public/release.json（GitHub Releases 归档直链）
  */
 
 // 导入依赖 //
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BookOpen, Download, Monitor } from "lucide-react";
+import { BookOpen, Download, Monitor, Terminal } from "lucide-react";
 import { iGM_LauncherDl_GetMessages } from "../../../i18n/iGM_LauncherDl_Messages";
 import { iGM_LauncherDl_IsLocale } from "../../../i18n/iGM_LauncherDl_Locales";
 import { iGM_LauncherDl_LocalePath } from "../../../i18n/iGM_LauncherDl_LocalePath";
 import {
   iGM_LauncherDl_DownloadHref,
   iGM_LauncherDl_FileName,
+  iGM_LauncherDl_FileSizeLabel,
   iGM_LauncherDl_Platform,
+  iGM_LauncherDl_Sha256,
   iGM_LauncherDl_VersionLabel,
 } from "../../../i18n/iGM_LauncherDl_ReleaseInfo";
 import styles from "../iGM_LauncherDl_Page.module.css";
@@ -42,8 +45,8 @@ export default async function iGM_LauncherDl_DownloadPage({
     { label: page.platform, value: iGM_LauncherDl_Platform },
     { label: page.version, value: iGM_LauncherDl_VersionLabel, variant: styles.fieldValueStrong },
     { label: page.file, value: iGM_LauncherDl_FileName, variant: styles.fieldValueMono },
-    { label: page.fileSize, value: messages.version.pending, variant: styles.fieldValuePending },
-    { label: page.sha256, value: messages.version.pending, variant: styles.fieldValuePending },
+    { label: page.fileSize, value: iGM_LauncherDl_FileSizeLabel },
+    { label: page.sha256, value: iGM_LauncherDl_Sha256, variant: styles.fieldValueMono },
   ];
 
   return (
@@ -81,6 +84,11 @@ export default async function iGM_LauncherDl_DownloadPage({
 
         <p className={styles.note}>
           <Monitor size={13} aria-hidden /> {page.note}
+        </p>
+
+        <p className={styles.note}>
+          <Terminal size={13} aria-hidden /> {page.cliHint}{" "}
+          <code className={styles.hintCode}>&gt; igm launcher</code>
         </p>
       </div>
     </div>

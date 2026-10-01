@@ -17,8 +17,10 @@ import { iGM_LauncherDl_LocalePath } from "../../../i18n/iGM_LauncherDl_LocalePa
 import {
   iGM_LauncherDl_DownloadHref,
   iGM_LauncherDl_FileName,
+  iGM_LauncherDl_FileSizeLabel,
   iGM_LauncherDl_Platform,
   iGM_LauncherDl_ReleaseDate,
+  iGM_LauncherDl_Sha256,
   iGM_LauncherDl_VersionLabel,
 } from "../../../i18n/iGM_LauncherDl_ReleaseInfo";
 import styles from "../iGM_LauncherDl_Page.module.css";
@@ -43,8 +45,8 @@ export default async function iGM_LauncherDl_ReleasesPage({
     { label: page.platform, value: iGM_LauncherDl_Platform },
     { label: page.releasedAt, value: iGM_LauncherDl_ReleaseDate },
     { label: page.file, value: iGM_LauncherDl_FileName, variant: styles.fieldValueMono },
-    { label: page.fileSize, value: page.pending, variant: styles.fieldValuePending },
-    { label: page.sha256, value: page.pending, variant: styles.fieldValuePending },
+    { label: page.fileSize, value: iGM_LauncherDl_FileSizeLabel },
+    { label: page.sha256, value: iGM_LauncherDl_Sha256, variant: styles.fieldValueMono },
   ];
 
   return (

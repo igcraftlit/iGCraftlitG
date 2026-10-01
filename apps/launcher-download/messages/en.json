@@ -32,7 +32,6 @@
     "fileSize": "File size",
     "sha256": "SHA256",
     "fileName": "File",
-    "pending": "To be filled after the build",
     "download": "Download",
     "installGuide": "Installation guide"
   },
@@ -75,7 +74,8 @@
     "sha256": "SHA256",
     "downloadBtn": "Download for Windows x64",
     "installGuide": "View installation guide",
-    "note": "The installer is still being built. Once released, a working download address and checksum will appear here."
+    "note": "The download is a zip archive containing the installer bootstrapper and its payload. Extract it into one folder, then run iGM Installer-Setup.exe to install.",
+    "cliHint": "You can also read the version and checksum with iGM CLI:"
   },
   "releases": {
     "title": "Releases",
@@ -86,7 +86,6 @@
     "fileSize": "File size",
     "sha256": "SHA256",
     "file": "File",
-    "pending": "To be filled after the build",
     "downloadAction": "Download",
     "viewChangelog": "View changelog"
   },
@@ -147,8 +146,9 @@
       "steps": {
         "title": "Installation steps",
         "items": [
-          "Get the iGM CraftCeon Launcher installer from the download page.",
-          "Double-click the installer, choose an install directory, and finish the wizard.",
+          "Get the iGM CraftCeon Launcher package from the download page (zip archive).",
+          "Extract the archive into one folder to get the installer bootstrapper and its payload.",
+          "Run iGM Installer-Setup.exe, choose an install directory, and finish the wizard.",
           "On first launch, choose the language and data directory.",
           "Confirm or install the matching runtime in Java management.",
           "Create or import an instance, then launch the game."
@@ -158,7 +158,7 @@
         "title": "Verification and launch",
         "lead": "After downloading, verify the installer integrity in PowerShell:",
         "codeLabel": "powershell",
-        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.1.2.exe -Algorithm SHA256",
+        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.1.2.zip -Algorithm SHA256",
         "after": "Compare the result with the SHA256 shown on the download page; a match means the file is intact."
       },
       "notes": {

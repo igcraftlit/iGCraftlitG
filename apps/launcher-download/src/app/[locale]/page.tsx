@@ -5,7 +5,7 @@
  * 模块：iGM_LauncherDl_Downloader
  * 作用：iGM CraftCeon Launcher 主页面——Hero、版本信息、功能介绍、组织署名
  * 内容：纯静态 SSG 服务端组件，文案全部来自语言包；
- *       Launcher 使用 .launcherText 渐变；下载为占位地址，不产生真实下载
+ *       Launcher 使用 .launcherText 渐变；下载走发布清单 public/release.json 的归档直链
  */
 
 // 导入依赖 //
@@ -24,8 +24,10 @@ import { iGM_LauncherDl_IsLocale } from "../../i18n/iGM_LauncherDl_Locales";
 import {
   iGM_LauncherDl_FileName,
   iGM_LauncherDl_DownloadHref,
+  iGM_LauncherDl_FileSizeLabel,
   iGM_LauncherDl_Platform,
   iGM_LauncherDl_ReleaseDate,
+  iGM_LauncherDl_Sha256,
   iGM_LauncherDl_VersionLabel,
 } from "../../i18n/iGM_LauncherDl_ReleaseInfo";
 import { iGM_LauncherDl_LocalePath } from "../../i18n/iGM_LauncherDl_LocalePath";
@@ -122,15 +124,11 @@ export default async function iGM_LauncherDl_HomePage({
             </div>
             <div className={styles.versionItem}>
               <dt>{messages.version.fileSize}</dt>
-              <dd className={styles.versionPending}>
-                {messages.version.pending}
-              </dd>
+              <dd>{iGM_LauncherDl_FileSizeLabel}</dd>
             </div>
             <div className={styles.versionItem}>
               <dt>{messages.version.sha256}</dt>
-              <dd className={styles.versionPending}>
-                {messages.version.pending}
-              </dd>
+              <dd className={styles.versionFile}>{iGM_LauncherDl_Sha256}</dd>
             </div>
             <div className={styles.versionItem}>
               <dt>{messages.version.fileName}</dt>
