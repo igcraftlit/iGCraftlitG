@@ -17,10 +17,26 @@
     "description": "極簡、高效、可擴展的檔案下載介面服務。"
   },
   "sections": {
-    "quickstart": "快速開始",
-    "commands": "命令列表",
-    "sdk": "SDK",
-    "adapter": "介面卡協定"
+    "quickstart": {
+      "title": "快速開始",
+      "desc": "透過 npm 或 bun 安裝 iGM CLI，數分鐘內完成下載環境準備。",
+      "cta": "查看安裝指南"
+    },
+    "commands": {
+      "title": "命令列表",
+      "desc": "igm 命令一覽：資源搜尋、安裝、更新、刪除與專案管理。",
+      "cta": "查看命令手冊"
+    },
+    "sdk": {
+      "title": "SDK",
+      "desc": "以 C ABI 動態函式庫將 iGM 下載引擎嵌入啟動器行程，無額外程序、無終端機彈窗。",
+      "cta": "查看 SDK 嵌入文件"
+    },
+    "adapter": {
+      "title": "介面卡協定",
+      "desc": "透過 HTTP + WebSocket 接入下載引擎，即時接收進度事件，跨語言、跨平台。",
+      "cta": "查看介面卡文件"
+    }
   },
   "placeholder": "內容即將上線，敬請期待。",
   "footer": {
@@ -46,8 +62,28 @@
     "docsFaq": {
       "title": "常見問題"
     },
+    "docsAdapter": {
+      "title": "介面卡指南"
+    },
+    "docsAdapterOverview": {
+      "title": "介面卡總覽"
+    },
+    "docsAdapterSdk": {
+      "title": "SDK 嵌入"
+    },
+    "docsAdapterProtocol": {
+      "title": "介面卡協定（HTTP + WebSocket）"
+    },
+    "docsAdapterProgress": {
+      "title": "進度事件流"
+    },
+    "docsAdapterFaq": {
+      "title": "介面卡常見問題"
+    },
     "sdk": {
-      "title": "SDK"
+      "title": "SDK",
+      "hint": "SDK 能力已做為介面卡文件的一部分提供：平台動態函式庫、核心匯出函式與 C++ / Zig 呼叫範例均在介面卡章節。",
+      "viewDoc": "查看 SDK 嵌入文件"
     },
     "api": {
       "title": "API",
@@ -79,7 +115,14 @@
       "install": "安裝",
       "commands": "命令參考",
       "config": "設定",
-      "faq": "常見問題"
+      "faq": "常見問題",
+      "adapterGroup": "介面卡",
+      "adapterGuide": "介面卡完整指南",
+      "adapterOverview": "總覽",
+      "adapterSdk": "SDK 嵌入",
+      "adapterProtocol": "介面卡協定",
+      "adapterProgress": "進度事件",
+      "adapterFaq": "常見問題"
     },
     "tocTitle": "ON THIS PAGE",
     "leads": {
@@ -87,7 +130,13 @@
       "install": "本章說明 iGM CLI 的使用資格與各平台安裝方式。",
       "commands": "本章列出基礎命令、資源檢索、安裝下載與專案管理的全部命令。",
       "config": "本章介紹 igm.json 設定檔、快取目錄、鏡像源與多語言輸出。",
-      "faq": "本章彙整使用 iGM CLI 時的常見問題與解答。"
+      "faq": "本章彙整使用 iGM CLI 時的常見問題與解答。",
+      "adapterFull": "本文件涵蓋介面卡總覽、兩種接入方式、C ABI SDK、HTTP + WebSocket 協定、進度事件流與無終端彈窗要點，可透過右側目錄快速跳轉章節。",
+      "adapterOverview": "本章說明介面卡的定位與設計目標，並對比 SDK 嵌入與介面卡協定兩種接入方式。",
+      "adapterSdk": "本章介紹 C ABI 動態函式庫的平台產物、核心匯出函式、進度結構與 C++ / Zig 呼叫範例。",
+      "adapterProtocol": "本章說明 REST + WebSocket 介面卡協定的介面前綴、任務建立、進度查詢、即時推送與取消介面。",
+      "adapterProgress": "本章定義統一進度事件結構與全部事件類型，並列出無終端彈窗的平台要點。",
+      "adapterFaq": "本章彙整介面卡登入、SDK 語言支援、斷點續傳與問題回報的常見問答。"
     },
     "index": {
       "title": "文件中心",
@@ -103,6 +152,8 @@
       "configDesc": "igm.json 設定檔、快取目錄、鏡像源與多語言輸出設定。",
       "faqTitle": "常見問題",
       "faqDesc": "請求限制、工作階段歷程、商用授權與問題回報管道。",
+      "adapterTitle": "介面卡文件",
+      "adapterDesc": "SDK 嵌入與介面卡協定：總覽、C ABI、HTTP + WebSocket、進度事件流與無終端接入要點。",
       "moreTitle": "其他",
       "mainSiteTitle": "返回主站",
       "mainSiteDesc": "造訪 iGCraftLit Community 官網 igcraftlit.com。"
@@ -304,6 +355,120 @@
         "website": "團隊官網",
         "email": "聯絡郵箱",
         "built": "iGCraftLit × MuoCeon 聯合構建"
+      }
+    },
+    "adapter": {
+      "overview": {
+        "title": "介面卡總覽",
+        "body": "介面卡是啟動器與 iGM 下載引擎之間的橋樑。啟動器透過介面卡協定或 SDK，把資源下載請求交給 iGM 下載引擎，引擎在背景完成請求、傳輸、校驗、落盤，並把進度透過事件流回傳給啟動器。整個過程不彈終端、不干擾使用者介面。",
+        "goalsTitle": "設計目標",
+        "goals": ["輕量", "跨語言", "跨平台", "可擴展"]
+      },
+      "compare": {
+        "title": "接入方式對比",
+        "lead": "啟動器可選擇兩種接入方式：SDK 嵌入與介面卡協定，可依語言堆疊與交付型態自行權衡。",
+        "fieldForm": "型態",
+        "fieldLangs": "適用語言",
+        "fieldPros": "優點",
+        "fieldCons": "缺點",
+        "options": [
+          {
+            "name": "SDK 嵌入",
+            "form": "C ABI 動態函式庫",
+            "langs": "C、C++、Zig、Rust、Go 等支援 C ABI 的語言",
+            "pros": ["無額外行程，效能最佳，天然無終端", "直接連結引擎，呼叫鏈路最短"],
+            "cons": ["每個平台需要編譯對應動態函式庫"]
+          },
+          {
+            "name": "介面卡協定",
+            "form": "HTTP + WebSocket",
+            "langs": "任何能發送 HTTP 請求的語言",
+            "pros": ["跨語言、跨平台，無需引入程式碼", "服務可獨立升級，啟動器無需重新編譯"],
+            "cons": ["需要本機服務常駐，需處理網路與連線"]
+          }
+        ],
+        "table": {
+          "dimCol": "維度",
+          "sdkCol": "SDK 嵌入",
+          "protoCol": "介面卡協定",
+          "rows": [
+            { "dim": "語言要求", "sdk": "支援 C ABI", "proto": "任意" },
+            { "dim": "額外行程", "sdk": "無", "proto": "有本機服務" },
+            { "dim": "效能", "sdk": "最高", "proto": "良好" },
+            { "dim": "接入成本", "sdk": "中", "proto": "低" },
+            { "dim": "終端彈窗", "sdk": "無", "proto": "無" }
+          ]
+        }
+      },
+      "sdk": {
+        "title": "SDK 嵌入（C ABI）",
+        "lead": "SDK 以動態函式庫形式提供，隨平台分發對應產物，標頭檔為 igm_downloader.h：",
+        "libsTitle": "平台產物",
+        "exportsTitle": "核心匯出函式",
+        "structTitle": "進度結構",
+        "cppTitle": "C++ 呼叫範例",
+        "zigTitle": "Zig 呼叫範例"
+      },
+      "protocol": {
+        "title": "介面卡協定（HTTP + WebSocket）",
+        "lead": "介面卡協定使用 REST + WebSocket，所有介面以統一前綴提供：",
+        "prefixLabel": "介面前綴",
+        "create": {
+          "title": "建立下載任務",
+          "desc": "提交資源識別碼、版本、載入器與目標目錄，成功後回傳任務 ID，供後續查詢與訂閱。",
+          "reqTitle": "請求體",
+          "respTitle": "回應"
+        },
+        "query": {
+          "title": "查詢任務進度",
+          "desc": "依任務 ID 輪詢目前下載狀態、已下載位元組數、總位元組數、百分比、速度與預計剩餘秒數。",
+          "respTitle": "回應"
+        },
+        "ws": {
+          "title": "即時進度推送",
+          "desc": "建立 WebSocket 連線後，伺服器透過事件流持續推送該任務的進度事件，無需輪詢。"
+        },
+        "cancel": {
+          "title": "取消任務",
+          "desc": "通知引擎中止傳輸並清理暫存分片，任務隨後進入取消狀態。"
+        }
+      },
+      "events": {
+        "title": "進度事件流定義",
+        "lead": "所有進度事件使用統一結構，WebSocket 推送與任務查詢介面均回傳該結構：",
+        "typesTitle": "事件類型",
+        "types": {
+          "start": "任務開始",
+          "progress": "傳輸中",
+          "pause": "暫停",
+          "resume": "恢復",
+          "retry": "重試",
+          "complete": "完成",
+          "error": "失敗"
+        }
+      },
+      "terminal": {
+        "title": "無終端彈窗要點",
+        "items": [
+          "SDK 嵌入：函式庫在啟動器行程內執行，天然無終端。",
+          "介面卡協定：本機服務需使用平台 API 隱藏視窗。"
+        ],
+        "win": "Windows：CreateProcess 加上 CREATE_NO_WINDOW。",
+        "unix": "Linux / macOS：fork + setsid，不分配 TTY。",
+        "forbid": "禁止呼叫 system、popen、exec 執行 CLI，否則一定彈終端。"
+      },
+      "faq": {
+        "title": "常見問題",
+        "hint": "以下為介面卡接入常見問題概覽，詳細解答請見本頁。",
+        "viewAll": "查看全部解答",
+        "q1": "介面卡需要登入嗎？",
+        "a1": "下載公開資源無需登入；下載私有資源或需要同步下載記錄時，需於請求中攜帶 iGCraftLit 帳號權杖，權杖與 igm login 使用同一帳號體系。",
+        "q2": "SDK 支援哪些語言？",
+        "a2": "SDK 基於 C ABI，所有能連結動態函式庫的語言均可使用，包括 C、C++、Zig、Rust、Go 等；不支援 C ABI 的語言請改用 HTTP + WebSocket 介面卡協定。",
+        "q3": "介面卡協定是否支援斷點續傳？",
+        "a3": "支援。傳輸中斷後可憑任務 ID 查詢任務狀態並繼續任務，引擎會跳過已通過雜湊校驗的分片，並於自動重試時推送 retry 事件。",
+        "q4": "如何回報介面卡問題？",
+        "a4": "可透過郵件 igcraftlit@outlook.com（.Net）或 igcraftlit@163.com（.CN）聯絡團隊，也可至官網 https://igcraftlit.com 提交回報，郵件標題註明「介面卡」可更快定位問題。"
       }
     }
   }

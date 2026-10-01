@@ -17,10 +17,26 @@
     "description": "极简、高效、可扩展的文件下载接口服务。"
   },
   "sections": {
-    "quickstart": "快速开始",
-    "commands": "命令列表",
-    "sdk": "SDK",
-    "adapter": "适配器协议"
+    "quickstart": {
+      "title": "快速开始",
+      "desc": "通过 npm 或 bun 安装 iGM CLI，数分钟内完成下载环境准备。",
+      "cta": "查看安装指南"
+    },
+    "commands": {
+      "title": "命令列表",
+      "desc": "igm 命令一览：资源搜索、安装、更新、删除与项目管理。",
+      "cta": "查看命令手册"
+    },
+    "sdk": {
+      "title": "SDK",
+      "desc": "以 C ABI 动态库将 iGM 下载引擎嵌入启动器进程，无额外进程、无终端弹窗。",
+      "cta": "查看 SDK 嵌入文档"
+    },
+    "adapter": {
+      "title": "适配器协议",
+      "desc": "通过 HTTP + WebSocket 接入下载引擎，实时接收进度事件，跨语言、跨平台。",
+      "cta": "查看适配器文档"
+    }
   },
   "placeholder": "内容即将上线，敬请期待。",
   "footer": {
@@ -46,8 +62,28 @@
     "docsFaq": {
       "title": "常见问题"
     },
+    "docsAdapter": {
+      "title": "适配器指南"
+    },
+    "docsAdapterOverview": {
+      "title": "适配器总览"
+    },
+    "docsAdapterSdk": {
+      "title": "SDK 嵌入"
+    },
+    "docsAdapterProtocol": {
+      "title": "适配器协议（HTTP + WebSocket）"
+    },
+    "docsAdapterProgress": {
+      "title": "进度事件流"
+    },
+    "docsAdapterFaq": {
+      "title": "适配器常见问题"
+    },
     "sdk": {
-      "title": "SDK"
+      "title": "SDK",
+      "hint": "SDK 能力已作为适配器文档的一部分提供：平台动态库、核心导出函数与 C++ / Zig 调用示例均在适配器章节。",
+      "viewDoc": "查看 SDK 嵌入文档"
     },
     "api": {
       "title": "API",
@@ -79,7 +115,14 @@
       "install": "安装",
       "commands": "命令参考",
       "config": "配置",
-      "faq": "常见问题"
+      "faq": "常见问题",
+      "adapterGroup": "适配器",
+      "adapterGuide": "适配器完整指南",
+      "adapterOverview": "总览",
+      "adapterSdk": "SDK 嵌入",
+      "adapterProtocol": "适配器协议",
+      "adapterProgress": "进度事件",
+      "adapterFaq": "常见问题"
     },
     "tocTitle": "ON THIS PAGE",
     "leads": {
@@ -87,7 +130,13 @@
       "install": "本章说明 iGM CLI 的使用资格与各平台安装方式。",
       "commands": "本章列出基础命令、资源检索、安装下载与项目管理的全部命令。",
       "config": "本章介绍 igm.json 配置文件、缓存目录、镜像源与多语言输出。",
-      "faq": "本章汇总使用 iGM CLI 时的常见问题与解答。"
+      "faq": "本章汇总使用 iGM CLI 时的常见问题与解答。",
+      "adapterFull": "本文档涵盖适配器总览、两种接入方式、C ABI SDK、HTTP + WebSocket 协议、进度事件流与无终端弹窗要点，可通过右侧目录快速跳转章节。",
+      "adapterOverview": "本章说明适配器的定位与设计目标，并对比 SDK 嵌入与适配器协议两种接入方式。",
+      "adapterSdk": "本章介绍 C ABI 动态库的平台产物、核心导出函数、进度结构与 C++ / Zig 调用示例。",
+      "adapterProtocol": "本章说明 REST + WebSocket 适配器协议的接口前缀、任务创建、进度查询、实时推送与取消接口。",
+      "adapterProgress": "本章定义统一进度事件结构与全部事件类型，并列出无终端弹窗的平台要点。",
+      "adapterFaq": "本章汇总适配器登录、SDK 语言支持、断点续传与问题反馈的常见问答。"
     },
     "index": {
       "title": "文档中心",
@@ -103,6 +152,8 @@
       "configDesc": "igm.json 配置文件、缓存目录、镜像源与多语言输出设置。",
       "faqTitle": "常见问题",
       "faqDesc": "请求限制、会话历史、商用授权与问题反馈渠道。",
+      "adapterTitle": "适配器文档",
+      "adapterDesc": "SDK 嵌入与适配器协议：总览、C ABI、HTTP + WebSocket、进度事件流与无终端接入要点。",
       "moreTitle": "其他",
       "mainSiteTitle": "返回主站",
       "mainSiteDesc": "访问 iGCraftLit Community 官网 igcraftlit.com。"
@@ -304,6 +355,120 @@
         "website": "团队官网",
         "email": "联系邮箱",
         "built": "iGCraftLit × MuoCeon 联合构建"
+      }
+    },
+    "adapter": {
+      "overview": {
+        "title": "适配器总览",
+        "body": "适配器是启动器与 iGM 下载引擎之间的桥梁。启动器通过适配器协议或 SDK，把资源下载请求交给 iGM 下载引擎，引擎在后台完成请求、传输、校验、落盘，并把进度通过事件流返回给启动器。整个过程不弹终端、不干扰用户界面。",
+        "goalsTitle": "设计目标",
+        "goals": ["轻量", "跨语言", "跨平台", "可扩展"]
+      },
+      "compare": {
+        "title": "接入方式对比",
+        "lead": "启动器可选择两种接入方式：SDK 嵌入与适配器协议，可按语言栈与交付形态自行权衡。",
+        "fieldForm": "形态",
+        "fieldLangs": "适用语言",
+        "fieldPros": "优点",
+        "fieldCons": "缺点",
+        "options": [
+          {
+            "name": "SDK 嵌入",
+            "form": "C ABI 动态库",
+            "langs": "C、C++、Zig、Rust、Go 等支持 C ABI 的语言",
+            "pros": ["无额外进程，性能最好，天然无终端", "直接链接引擎，调用链路最短"],
+            "cons": ["每个平台需要编译对应动态库"]
+          },
+          {
+            "name": "适配器协议",
+            "form": "HTTP + WebSocket",
+            "langs": "任何能发 HTTP 请求的语言",
+            "pros": ["跨语言、跨平台，无需引入代码", "服务可独立升级，启动器无需重新编译"],
+            "cons": ["需要本地服务常驻，需处理网络与连接"]
+          }
+        ],
+        "table": {
+          "dimCol": "维度",
+          "sdkCol": "SDK 嵌入",
+          "protoCol": "适配器协议",
+          "rows": [
+            { "dim": "语言要求", "sdk": "支持 C ABI", "proto": "任意" },
+            { "dim": "额外进程", "sdk": "无", "proto": "有本地服务" },
+            { "dim": "性能", "sdk": "最高", "proto": "良好" },
+            { "dim": "接入成本", "sdk": "中", "proto": "低" },
+            { "dim": "终端弹窗", "sdk": "无", "proto": "无" }
+          ]
+        }
+      },
+      "sdk": {
+        "title": "SDK 嵌入（C ABI）",
+        "lead": "SDK 以动态库形式提供，随平台分发对应产物，头文件为 igm_downloader.h：",
+        "libsTitle": "平台产物",
+        "exportsTitle": "核心导出函数",
+        "structTitle": "进度结构",
+        "cppTitle": "C++ 调用示例",
+        "zigTitle": "Zig 调用示例"
+      },
+      "protocol": {
+        "title": "适配器协议（HTTP + WebSocket）",
+        "lead": "适配器协议使用 REST + WebSocket，所有接口以统一前缀提供：",
+        "prefixLabel": "接口前缀",
+        "create": {
+          "title": "创建下载任务",
+          "desc": "提交资源标识、版本、加载器与目标目录，成功后返回任务 ID，用于后续查询与订阅。",
+          "reqTitle": "请求体",
+          "respTitle": "响应"
+        },
+        "query": {
+          "title": "查询任务进度",
+          "desc": "按任务 ID 轮询当前下载状态、已下载字节数、总字节数、百分比、速度与预计剩余秒数。",
+          "respTitle": "响应"
+        },
+        "ws": {
+          "title": "实时进度推送",
+          "desc": "建立 WebSocket 连接后，服务端通过事件流持续推送该任务的进度事件，无需轮询。"
+        },
+        "cancel": {
+          "title": "取消任务",
+          "desc": "通知引擎中止传输并清理临时分片，任务随后进入取消状态。"
+        }
+      },
+      "events": {
+        "title": "进度事件流定义",
+        "lead": "所有进度事件使用统一结构，WebSocket 推送与任务查询接口均返回该结构：",
+        "typesTitle": "事件类型",
+        "types": {
+          "start": "任务开始",
+          "progress": "传输中",
+          "pause": "暂停",
+          "resume": "恢复",
+          "retry": "重试",
+          "complete": "完成",
+          "error": "失败"
+        }
+      },
+      "terminal": {
+        "title": "无终端弹窗要点",
+        "items": [
+          "SDK 嵌入：库在启动器进程内运行，天然无终端。",
+          "适配器协议：本地服务需用平台 API 隐藏窗口。"
+        ],
+        "win": "Windows：CreateProcess 加 CREATE_NO_WINDOW。",
+        "unix": "Linux / macOS：fork + setsid，不分配 TTY。",
+        "forbid": "禁止调用 system、popen、exec 去跑 CLI，否则一定弹终端。"
+      },
+      "faq": {
+        "title": "常见问题",
+        "hint": "以下为适配器接入常见问题概览，详细解答请见本页。",
+        "viewAll": "查看全部解答",
+        "q1": "适配器需要登录吗？",
+        "a1": "下载公开资源无需登录；下载私有资源或需要同步下载记录时，需在请求中携带 iGCraftLit 账号令牌，令牌与 igm login 使用同一账号体系。",
+        "q2": "SDK 支持哪些语言？",
+        "a2": "SDK 基于 C ABI，所有能链接动态库的语言均可使用，包括 C、C++、Zig、Rust、Go 等；不支持 C ABI 的语言请改用 HTTP + WebSocket 适配器协议。",
+        "q3": "适配器协议是否支持断点续传？",
+        "a3": "支持。传输中断后可凭任务 ID 查询任务状态并继续任务，引擎会跳过已通过哈希校验的分片，并在自动重试时推送 retry 事件。",
+        "q4": "如何反馈适配器问题？",
+        "a4": "可通过邮件 igcraftlit@outlook.com（.Net）或 igcraftlit@163.com（.CN）联系团队，也可访问官网 https://igcraftlit.com 提交反馈，邮件标题注明「适配器」可更快定位问题。"
       }
     }
   }

@@ -3,7 +3,7 @@
  * 所属层：前端 / 页面内容组件层
  * 路由：/docs
  * 模块：iGM_CLI_Downloader
- * 作用：文档中心首页——文档分区卡片导航（完整指南/安装/命令/配置/FAQ）+ 返回主站
+ * 作用：文档中心首页——文档分区卡片导航（完整指南/安装/命令/配置/FAQ/适配器）+ 返回主站
  * 内容：统一 iGM_CLI_DocLayout 布局（无右侧目录），卡片图标使用 lucide-react，
  *       文案全部来自 next-intl 语言包
  */
@@ -18,6 +18,7 @@ import {
   ArrowRight,
   ArrowUpRight,
   BookOpen,
+  Cable,
   Download,
   Globe,
   HelpCircle,
@@ -34,14 +35,21 @@ interface iGM_CLI_DocCard {
   /** 站内路径（不带语言前缀） */
   href: string;
   /** 语言包标题键（docs.index.*） */
-  titleKey: "guideTitle" | "installTitle" | "commandsTitle" | "configTitle" | "faqTitle";
+  titleKey:
+    | "guideTitle"
+    | "installTitle"
+    | "commandsTitle"
+    | "configTitle"
+    | "faqTitle"
+    | "adapterTitle";
   /** 语言包描述键（docs.index.*） */
   descKey:
     | "guideDesc"
     | "installDesc"
     | "commandsDesc"
     | "configDesc"
-    | "faqDesc";
+    | "faqDesc"
+    | "adapterDesc";
   /** lucide-react 图标组件 */
   icon: ComponentType<{ size?: number; strokeWidth?: number; "aria-hidden"?: boolean }>;
 }
@@ -78,6 +86,12 @@ const iGM_CLI_DocCards: iGM_CLI_DocCard[] = [
     titleKey: "faqTitle",
     descKey: "faqDesc",
     icon: HelpCircle,
+  },
+  {
+    href: "/docs/adapter",
+    titleKey: "adapterTitle",
+    descKey: "adapterDesc",
+    icon: Cable,
   },
 ];
 

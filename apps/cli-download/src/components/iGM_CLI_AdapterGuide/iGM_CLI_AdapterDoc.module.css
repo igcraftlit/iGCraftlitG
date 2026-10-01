@@ -1,0 +1,288 @@
+/*
+ * 文件路径：apps/cli-download/src/components/iGM_CLI_AdapterGuide/iGM_CLI_AdapterDoc.module.css
+ * 所属层：前端 / 组件样式层
+ * 路由：/docs/adapter/* 全部适配器文档页
+ * 模块：iGM_CLI_Downloader
+ * 作用：适配器正文专属排版——设计目标标签、接入方式双卡片、对比表、
+ *       平台产物行、接口方法徽章与路径、事件类型表、无终端告警条；
+ *       通用章节/段落/列表/问答/联系方式排版复用 iGM_CLI_DocContent.module.css；
+ *       所有锚点设置 scroll-margin-top 避让吸顶头部
+ */
+
+/* ===== 设计目标标签 ===== */
+.goalList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.goalChip {
+  padding: 5px 13px;
+  border: 1px solid var(--igm-border);
+  border-radius: 999px;
+  background: var(--igm-surface);
+  font-size: 13px;
+  color: var(--igm-text);
+}
+
+/* ===== 接入方式对比：双卡片 ===== */
+.optionGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  margin: 14px 0 4px;
+}
+
+.optionCard {
+  padding: 16px 18px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  background: var(--igm-surface);
+  scroll-margin-top: 84px;
+}
+
+.optionTitle {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--igm-text);
+}
+
+.optionField {
+  margin-top: 10px;
+  font-size: 13.5px;
+  line-height: 1.7;
+}
+
+.optionFieldLabel {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--igm-text-subtle);
+}
+
+.optionFieldValue {
+  color: var(--igm-text);
+}
+
+/* 卡片内优缺点列表收窄间距 */
+.optionField ul {
+  margin: 2px 0 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--igm-text);
+}
+
+.optionField ul::marker,
+.optionField ul li::marker {
+  color: var(--igm-text-subtle);
+}
+
+/* ===== 对比表 ===== */
+.tableWrap {
+  margin-top: 14px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius);
+  background: var(--igm-surface);
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 420px;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.th {
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--igm-text);
+  background: var(--igm-surface-subtle);
+  border-bottom: 1px solid var(--igm-border);
+  white-space: nowrap;
+}
+
+.td {
+  padding: 10px 14px;
+  line-height: 1.6;
+  color: var(--igm-text);
+  border-bottom: 1px solid var(--igm-border);
+}
+
+.table tr:last-child .td {
+  border-bottom: none;
+}
+
+.tdDim {
+  color: var(--igm-text-muted);
+  white-space: nowrap;
+}
+
+/* ===== SDK 平台产物行 ===== */
+.libList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0 4px;
+  padding: 0;
+  list-style: none;
+}
+
+.libRow {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 13.5px;
+  color: var(--igm-text-muted);
+}
+
+.libPlatform {
+  flex: 0 0 auto;
+  min-width: 64px;
+  font-size: 13px;
+}
+
+.libFile {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas,
+    "Liberation Mono", monospace;
+  font-size: 12.5px;
+  padding: 2px 7px;
+  border: 1px solid var(--igm-border);
+  border-radius: 6px;
+  background: var(--igm-surface-subtle);
+  color: var(--igm-text);
+  word-break: break-all;
+}
+
+/* ===== 协议接口：方法徽章 + 路径 ===== */
+.endpointLine {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+}
+
+.methodBadge {
+  flex: 0 0 auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border: 1px solid var(--igm-border);
+  border-radius: 6px;
+  background: var(--igm-surface-subtle);
+  color: var(--igm-text);
+}
+
+.apiPath {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas,
+    "Liberation Mono", monospace;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--igm-text);
+  word-break: break-all;
+}
+
+.prefixLine {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 8px 0 4px;
+  font-size: 13px;
+  color: var(--igm-text-muted);
+}
+
+.codeGap {
+  margin-top: 10px;
+}
+
+/* ===== 进度事件类型表 ===== */
+.eventList {
+  margin: 10px 0 4px;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius);
+  background: var(--igm-surface);
+  overflow: hidden;
+}
+
+.eventRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  padding: 9px 14px;
+}
+
+.eventRow + .eventRow {
+  border-top: 1px solid var(--igm-border);
+}
+
+.eventName {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas,
+    "Liberation Mono", monospace;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.eventDesc {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--igm-text-muted);
+}
+
+/* ===== 无终端告警条 ===== */
+.warningBox {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--igm-border);
+  border-left: 2px solid var(--igm-text);
+  border-radius: var(--igm-radius);
+  background: var(--igm-surface-subtle);
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--igm-text);
+}
+
+.platformHintList {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 10px 0 0;
+  padding-left: 22px;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--igm-text);
+  list-style: disc;
+}
+
+.platformHintList li::marker {
+  color: var(--igm-text-subtle);
+}
+
+/* ===== 响应式：桌面双卡片 / 事件双列 ===== */
+@media (min-width: 768px) {
+  .optionGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .eventRow {
+    grid-template-columns: 130px minmax(0, 1fr);
+    gap: 14px;
+    align-items: baseline;
+  }
+}

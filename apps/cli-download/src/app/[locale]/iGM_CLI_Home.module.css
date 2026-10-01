@@ -104,6 +104,87 @@
   box-shadow: var(--igm-shadow-hover);
 }
 
+/* ===== 内容入口卡片列表 ===== */
+.entryList {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 20px 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.entryCard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 22px 24px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  background: var(--igm-surface);
+  color: inherit;
+  text-decoration: none;
+  scroll-margin-top: 84px;
+  transition:
+    border-color var(--igm-motion-nav) var(--igm-motion-ease),
+    box-shadow var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.entryCard:hover {
+  border-color: var(--igm-border-strong);
+  box-shadow: var(--igm-shadow-hover);
+}
+
+.entryIcon {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-accent-soft);
+  color: var(--igm-accent);
+}
+
+.entryBody {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.entryTitle {
+  font-size: 16.5px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.entryDesc {
+  margin-top: 4px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--igm-text-subtle);
+}
+
+.entryCta {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--igm-accent);
+  white-space: nowrap;
+}
+
+.entryCta svg {
+  transition: transform var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.entryCard:hover .entryCta svg {
+  transform: translateX(3px);
+}
+
 /* 平板适配 */
 @media (max-width: 1024px) {
   .hero {
@@ -123,5 +204,16 @@
 
   .heroTitle {
     font-size: 28px;
+  }
+
+  .entryList {
+    padding: 0 16px 64px;
+  }
+
+  .entryCard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 18px;
   }
 }

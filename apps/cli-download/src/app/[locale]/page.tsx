@@ -3,16 +3,25 @@
  * 所属层：前端 / 页面层
  * 路由：/{locale}
  * 模块：iGM_CLI_Downloader
- * 作用：iGM CLI Download API 主页面——Hero + 各内容区块占位
+ * 作用：iGM CLI Download API 主页面——Hero + 四个内容入口卡片
  * 内容：顶部导航与页脚由 [locale]/layout.tsx 提供；
- *       快速开始、命令列表、SDK、适配器协议区块本阶段仅保留占位标题
+ *       快速开始→安装文档、命令列表→命令手册、SDK→适配器 SDK 嵌入章、
+ *       适配器协议→适配器完整文档；全部为客户端路由静态链接
  */
 
 // 导入依赖 //
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Terminal, Zap, ListOrdered, Package, Plug, BookOpen } from "lucide-react";
-import { iGM_CLI_PlaceholderSection as IGM_CLI_PlaceholderSection } from "../../components/iGM_CLI_PlaceholderSection/iGM_CLI_PlaceholderSection";
+import {
+  Terminal,
+  Zap,
+  ListOrdered,
+  Package,
+  Plug,
+  BookOpen,
+  ArrowRight,
+  type LucideIcon,
+} from "lucide-react";
 import { iGM_CLI_GetMessages } from "../../i18n/iGM_CLI_Messages";
 import { iGM_CLI_IsLocale } from "../../i18n/iGM_CLI_Locales";
 import { iGM_CLI_LocalePath } from "../../i18n/iGM_CLI_LocalePath";
@@ -21,6 +30,21 @@ import styles from "./iGM_CLI_Home.module.css";
 // 类型定义 //
 interface iGM_CLI_HomePageProps {
   params: Promise<{ locale: string }>;
+}
+
+interface iGM_CLI_HomeEntry {
+  /** 区块锚点 ID（供顶部导航锚点跳转） */
+  id: "quickstart" | "commands" | "sdk" | "adapter";
+  /** lucide-react 区块图标 */
+  icon: LucideIcon;
+  /** 不带语言前缀的站内文档路径 */
+  href: string;
+  /** 区块文案（标题/简介/按钮） */
+  text: {
+    title: string;
+    desc: string;
+    cta: string;
+  };
 }
 
 // 核心逻辑 //
@@ -37,15 +61,43 @@ export async function generateMetadata({
   };
 }
 
-/** 主页面：Hero + 占位区块 */
+/** 主页面：Hero + 四个文档入口卡片 */
 export default async function iGM_CLI_HomePage({ params }: iGM_CLI_HomePageProps) {
   const { locale: raw } = await params;
   const locale = iGM_CLI_IsLocale(raw) ? raw : "zh-CN";
   const messages = iGM_CLI_GetMessages(locale);
 
+  /** 首页入口卡片配置：顺序即展示顺序 */
+  const entries: iGM_CLI_HomeEntry[] = [
+    {
+      id: "quickstart",
+      icon: Zap,
+      href: "/docs/cli/install",
+      text: messages.sections.quickstart,
+    },
+    {
+      id: "commands",
+      icon: ListOrdered,
+      href: "/docs/cli/commands",
+      text: messages.sections.commands,
+    },
+    {
+      id: "sdk",
+      icon: Package,
+      href: "/docs/adapter/sdk",
+      text: messages.sections.sdk,
+    },
+    {
+      id: "adapter",
+      icon: Plug,
+      href: "/docs/adapter",
+      text: messages.sections.adapter,
+    },
+  ];
+
   return (
     <>
-      {/* Hero 区：大标题 + 副标题 + 一句话简介占位 */}
+      {/* Hero 区：大标题 + 副标题 + 一句话简介 */}
       <section className={styles.hero}>
         <span className={styles.heroIcon}>
           <Terminal size={28} aria-hidden />
@@ -57,7 +109,7 @@ export default async function iGM_CLI_HomePage({ params }: iGM_CLI_HomePageProps
         <p className={styles.heroSubtitle}>{messages.hero.subtitle}</p>
         <p className={styles.heroDescription}>{messages.hero.description}</p>
 
-        {/* Hero 跳转按钮：快速开始锚点 + 文档页 */}
+        {/* Hero 跳转按钮：快速开始锚点 + 文档中心 */}
         <div className={styles.heroActions}>
           <Link
             href={`${iGM_CLI_LocalePath("/", locale)}#quickstart`}
@@ -76,33 +128,32 @@ export default async function iGM_CLI_HomePage({ params }: iGM_CLI_HomePageProps
         </div>
       </section>
 
-      {/* 快速开始区块：占位，暂不填充安装命令 */}
-      <IGM_CLI_PlaceholderSection
-        id="quickstart"
-        title={messages.sections.quickstart}
-        icon={<Zap size={20} aria-hidden />}
-      />
-
-      {/* 命令列表区块：占位，暂不填充具体命令 */}
-      <IGM_CLI_PlaceholderSection
-        id="commands"
-        title={messages.sections.commands}
-        icon={<ListOrdered size={20} aria-hidden />}
-      />
-
-      {/* SDK 区块：占位 */}
-      <IGM_CLI_PlaceholderSection
-        id="sdk"
-        title={messages.sections.sdk}
-        icon={<Package size={20} aria-hidden />}
-      />
-
-      {/* 适配器协议区块：占位 */}
-      <IGM_CLI_PlaceholderSection
-        id="adapter"
-        title={messages.sections.adapter}
-        icon={<Plug size={20} aria-hidden />}
-      />
+      {/* 内容入口卡片：快速开始 / 命令 / SDK / 适配器协议（整卡可点） */}
+      <div className={styles.entryList}>
+        {entries.map((entry) => {
+          const EntryIcon = entry.icon;
+          return (
+            <Link
+              key={entry.id}
+              id={entry.id}
+              href={iGM_CLI_LocalePath(entry.href, locale)}
+              className={styles.entryCard}
+            >
+              <span className={styles.entryIcon}>
+                <EntryIcon size={18} aria-hidden />
+              </span>
+              <div className={styles.entryBody}>
+                <h2 className={styles.entryTitle}>{entry.text.title}</h2>
+                <p className={styles.entryDesc}>{entry.text.desc}</p>
+              </div>
+              <span className={styles.entryCta}>
+                {entry.text.cta}
+                <ArrowRight size={15} aria-hidden />
+              </span>
+            </Link>
+          );
+        })}
+      </div>
     </>
   );
 }

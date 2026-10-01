@@ -40,6 +40,40 @@
   font-size: 14px;
 }
 
+.hint {
+  max-width: 480px;
+  margin-top: -6px;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+.actionLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 4px;
+  padding: 9px 18px;
+  border-radius: var(--igm-radius);
+  background: var(--igm-accent);
+  color: var(--igm-accent-contrast);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.actionLink:hover {
+  background: var(--igm-accent-hover);
+}
+
+.actionLink svg {
+  transition: transform var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.actionLink:hover svg {
+  transform: translateX(3px);
+}
+
 .backLink {
   display: inline-flex;
   align-items: center;
