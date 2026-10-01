@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS iGM_Categories (
 -- ===== 标签表：名称大小写不敏感唯一，slug 用于 URL 筛选 =====
 CREATE TABLE IF NOT EXISTS iGM_Tags (
   iGM_Id   TEXT PRIMARY KEY,
-  iGM_Name TEXT NOT NULL UNIQUE COLLATE NOCASE,
+  iGM_Name TEXT NOT NULL UNIQUE,
   iGM_Slug TEXT NOT NULL UNIQUE
 );
 
@@ -111,7 +111,7 @@ CREATE INDEX IF NOT EXISTS iGM_Idx_PostTags_Tag ON iGM_PostTags (iGM_TagId);
 
 -- ===== 官方分类种子（固定 ID，迁移幂等） =====
 -- 前端按 slug 优先匹配语言包 community.categories.<slug>，匹配不到时显示 iGM_Name
-INSERT OR IGNORE INTO iGM_Categories (iGM_Id, iGM_Name, iGM_Slug, iGM_SortOrder) VALUES
+INSERT INTO iGM_Categories (iGM_Id, iGM_Name, iGM_Slug, iGM_SortOrder) VALUES
   ('cat-general',   '综合讨论', 'general',   0),
   ('cat-guide',     '教程攻略', 'guide',     1),
   ('cat-showcase',  '作品展示', 'showcase',  2),

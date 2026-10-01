@@ -55,10 +55,10 @@ function iGM_ReadActivityInput(body: unknown): iGM_ActivityInput {
 }
 
 /* ---------- 活动列表 ---------- */
-function iGM_HandleList(ctx: iGM_RouteContext) {
+async function iGM_HandleList(ctx: iGM_RouteContext) {
   const { page, pageSize } = iGM_PageQuery(ctx);
   return iGM_Ok(
-    iGM_ListActivitiesService(iGM_CurrentUser(ctx), {
+    await iGM_ListActivitiesService(await iGM_CurrentUser(ctx), {
       status: iGM_Query(ctx.query, "status") || undefined,
       search: iGM_Query(ctx.query, "search") || undefined,
       page,
@@ -68,30 +68,36 @@ function iGM_HandleList(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 活动详情 ---------- */
-function iGM_HandleDetail(ctx: iGM_RouteContext) {
+async function iGM_HandleDetail(ctx: iGM_RouteContext) {
   const activityId = iGM_Query(ctx.query, "activityId");
   if (!activityId) throw new iGM_ContentError("activity.errors.notFound", 404);
-  const detail = iGM_GetActivityDetailService(iGM_CurrentUser(ctx), activityId);
+  const detail = await iGM_GetActivityDetailService(
+    await iGM_CurrentUser(ctx),
+    activityId,
+  );
   if (!detail) throw new iGM_ContentError("activity.errors.notFound", 404);
   return iGM_Ok({ activity: detail });
 }
 
 /* ---------- 创建活动 ---------- */
-function iGM_HandleCreate(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleCreate(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "activityWrite", `user:${user.iGM_Id}`);
-  const detail = iGM_CreateActivityService(user, iGM_ReadActivityInput(ctx.body));
+  const detail = await iGM_CreateActivityService(
+    user,
+    iGM_ReadActivityInput(ctx.body),
+  );
   ctx.set.status = 201;
   return iGM_Ok({ activity: detail }, "activity.messages.created");
 }
 
 /* ---------- 编辑活动 ---------- */
-function iGM_HandleEdit(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleEdit(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "activityWrite", `user:${user.iGM_Id}`);
   const activityId = iGM_Field(ctx.body, "activityId").trim();
   if (!activityId) throw new iGM_ContentError("activity.errors.notFound", 404);
-  const detail = iGM_UpdateActivityService(
+  const detail = await iGM_UpdateActivityService(
     user,
     activityId,
     iGM_ReadActivityInput(ctx.body),
@@ -100,22 +106,22 @@ function iGM_HandleEdit(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 删除活动 ---------- */
-function iGM_HandleDelete(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleDelete(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "activityWrite", `user:${user.iGM_Id}`);
   const activityId = iGM_Query(ctx.query, "activityId");
   if (!activityId) throw new iGM_ContentError("activity.errors.notFound", 404);
-  iGM_DeleteActivityService(user, activityId);
+  await iGM_DeleteActivityService(user, activityId);
   return iGM_Ok({ deleted: true }, "activity.messages.deleted");
 }
 
 /* ---------- 报名活动 ---------- */
-function iGM_HandleRegister(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleRegister(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "activityRegister", `user:${user.iGM_Id}`);
   const activityId = iGM_Field(ctx.body, "activityId").trim();
   if (!activityId) throw new iGM_ContentError("activity.errors.notFound", 404);
-  const detail = iGM_RegisterActivityService(
+  const detail = await iGM_RegisterActivityService(
     user,
     activityId,
     iGM_RequestLocale(ctx),
@@ -124,20 +130,20 @@ function iGM_HandleRegister(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 取消报名 ---------- */
-function iGM_HandleCancel(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleCancel(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "activityRegister", `user:${user.iGM_Id}`);
   const activityId = iGM_Field(ctx.body, "activityId").trim();
   if (!activityId) throw new iGM_ContentError("activity.errors.notFound", 404);
-  const detail = iGM_CancelRegistrationService(user, activityId);
+  const detail = await iGM_CancelRegistrationService(user, activityId);
   return iGM_Ok({ activity: detail }, "activity.messages.cancelled");
 }
 
 /* ---------- 报名列表 ---------- */
-function iGM_HandleRegistrations(ctx: iGM_RouteContext) {
+async function iGM_HandleRegistrations(ctx: iGM_RouteContext) {
   const activityId = iGM_Query(ctx.query, "activityId");
   if (!activityId) throw new iGM_ContentError("activity.errors.notFound", 404);
-  return iGM_Ok({ items: iGM_ListRegistrationsService(activityId) });
+  return iGM_Ok({ items: await iGM_ListRegistrationsService(activityId) });
 }
 
 /**

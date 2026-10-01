@@ -18,22 +18,22 @@ import type { iGM_PostImageRow } from "../iGM_Types/iGM_Community";
 
 // 核心逻辑 //
 /** 读取帖子全部配图（按展示顺序升序） */
-export function iGM_ListPostImages(postId: string): iGM_PostImageRow[] {
-  return iGM_Db
+export async function iGM_ListPostImages(postId: string): Promise<iGM_PostImageRow[]> {
+  return (await iGM_Db
     .query(
       `SELECT * FROM iGM_PostImages
         WHERE iGM_PostId = ?
         ORDER BY iGM_SortOrder ASC, iGM_Id ASC`,
     )
-    .all(postId) as iGM_PostImageRow[];
+    .all(postId)) as iGM_PostImageRow[];
 }
 
 /** 统计帖子配图数量 */
-export function iGM_CountPostImages(postId: string): number {
+export async function iGM_CountPostImages(postId: string): Promise<number> {
   return (
-    iGM_Db
+    (await iGM_Db
       .query(`SELECT COUNT(*) AS iGM_Count FROM iGM_PostImages WHERE iGM_PostId = ?`)
-      .get(postId) as { iGM_Count: number }
+      .get(postId)) as { iGM_Count: number }
   ).iGM_Count;
 }
 
@@ -41,12 +41,12 @@ export function iGM_CountPostImages(postId: string): number {
  * 整组替换帖子配图：先删除全部关联，再按数组下标写入顺序。
  * 去重后保留首次出现的位置；空数组表示清空配图。
  */
-export function iGM_ReplacePostImages(
+export async function iGM_ReplacePostImages(
   postId: string,
   fileIds: string[],
   now: string,
-): void {
-  iGM_Db.run(`DELETE FROM iGM_PostImages WHERE iGM_PostId = ?`, [postId]);
+): Promise<void> {
+  await iGM_Db.run(`DELETE FROM iGM_PostImages WHERE iGM_PostId = ?`, [postId]);
   const unique: string[] = [];
   for (const fileId of fileIds) {
     const trimmed = fileId?.trim();
@@ -57,9 +57,9 @@ export function iGM_ReplacePostImages(
     `INSERT INTO iGM_PostImages (iGM_Id, iGM_PostId, iGM_FileId, iGM_SortOrder, iGM_CreatedAt)
      VALUES (?, ?, ?, ?, ?)`,
   );
-  unique.forEach((fileId, index) => {
-    insert.run(iGM_RandomUuid(), postId, fileId, index, now);
-  });
+  for (const [index, fileId] of unique.entries()) {
+    await insert.run(iGM_RandomUuid(), postId, fileId, index, now);
+  }
 }
 
 // 导出 //

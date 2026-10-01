@@ -9,8 +9,8 @@
 -- 用户表：账户、角色、状态与邮箱验证标记
 CREATE TABLE IF NOT EXISTS iGM_Users (
   iGM_Id           TEXT PRIMARY KEY,
-  iGM_Username     TEXT NOT NULL UNIQUE COLLATE NOCASE,
-  iGM_Email        TEXT NOT NULL UNIQUE COLLATE NOCASE,
+  iGM_Username     TEXT NOT NULL UNIQUE,
+  iGM_Email        TEXT NOT NULL UNIQUE,
   iGM_PasswordHash TEXT NOT NULL,
   iGM_Role         TEXT NOT NULL DEFAULT 'user',
   iGM_Status       TEXT NOT NULL DEFAULT 'active',

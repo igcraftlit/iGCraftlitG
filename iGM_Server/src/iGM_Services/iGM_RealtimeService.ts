@@ -83,52 +83,60 @@ const iGM_HeartbeatTimeoutMs = 120 * 1000;
 const iGM_SweepIntervalMs = 60 * 1000;
 
 /** 向单个连接发送 JSON 消息（发送失败即视为死连接，静默移除） */
-function iGM_SendTo(connectionId: string, message: iGM_ServerMessage): void {
+async function iGM_SendTo(
+  connectionId: string,
+  message: iGM_ServerMessage,
+): Promise<void> {
   const entry = iGM_Connections.get(connectionId);
   if (!entry) return;
   try {
     entry.handle.send(JSON.stringify(message));
   } catch {
     iGM_Connections.delete(connectionId);
-    iGM_DeleteOnlineUserByConnection(connectionId);
+    await iGM_DeleteOnlineUserByConnection(connectionId);
   }
 }
 
 /** 构建在线用户公开列表（按用户去重，附带认证组织徽标） */
-export function iGM_BuildOnlineList(): iGM_OnlineUserDto[] {
-  return iGM_ListOnlineUsers().map((row) => ({
-    userId: row.iGM_UserId,
-    username: row.iGM_Username,
-    displayName: row.iGM_DisplayName,
-    avatar: row.iGM_Avatar,
-    verifiedOrg: iGM_ResolveUserOrgBadge(row.iGM_VerifiedOrgId, row.iGM_Email),
-    connectedAt: row.iGM_ConnectedAt,
-  }));
+export async function iGM_BuildOnlineList(): Promise<iGM_OnlineUserDto[]> {
+  return Promise.all(
+    (await iGM_ListOnlineUsers()).map(async (row) => ({
+      userId: row.iGM_UserId,
+      username: row.iGM_Username,
+      displayName: row.iGM_DisplayName,
+      avatar: row.iGM_Avatar,
+      verifiedOrg: await iGM_ResolveUserOrgBadge(
+        row.iGM_VerifiedOrgId,
+        row.iGM_Email,
+      ),
+      connectedAt: row.iGM_ConnectedAt,
+    })),
+  );
 }
 
 /** 向全部连接广播最新在线用户列表 */
-export function iGM_BroadcastOnlineList(): void {
-  const users = iGM_BuildOnlineList();
+export async function iGM_BroadcastOnlineList(): Promise<void> {
+  const users = await iGM_BuildOnlineList();
   const message: iGM_ServerMessage = {
     type: "onlineList",
     count: users.length,
     users,
   };
   for (const connectionId of iGM_Connections.keys()) {
-    iGM_SendTo(connectionId, message);
+    await iGM_SendTo(connectionId, message);
   }
 }
 
 /** 登记新连接：落库 + 内存注册 + 广播在线列表 + 下行欢迎帧 */
-export function iGM_RegisterConnection(input: {
+export async function iGM_RegisterConnection(input: {
   userId: string;
   connectionId: string;
   handle: iGM_WsHandle;
   ipAddress: string | null;
   userAgent: string | null;
-}): void {
+}): Promise<void> {
   const now = new Date().toISOString();
-  iGM_InsertOnlineUser({
+  await iGM_InsertOnlineUser({
     userId: input.userId,
     connectionId: input.connectionId,
     now,
@@ -139,41 +147,43 @@ export function iGM_RegisterConnection(input: {
     userId: input.userId,
     handle: input.handle,
   });
-  iGM_SendTo(input.connectionId, {
+  await iGM_SendTo(input.connectionId, {
     type: "welcome",
     connectionId: input.connectionId,
   });
-  iGM_BroadcastOnlineList();
+  await iGM_BroadcastOnlineList();
 }
 
 /** 注销连接：移除内存注册与数据库记录，并广播在线列表 */
-export function iGM_UnregisterConnection(connectionId: string): void {
+export async function iGM_UnregisterConnection(
+  connectionId: string,
+): Promise<void> {
   const removed = iGM_Connections.delete(connectionId);
-  const deleted = iGM_DeleteOnlineUserByConnection(connectionId);
+  const deleted = await iGM_DeleteOnlineUserByConnection(connectionId);
   if (removed || deleted) {
-    iGM_BroadcastOnlineList();
+    await iGM_BroadcastOnlineList();
   }
 }
 
 /** 处理客户端心跳：更新最后心跳时间并回 pong */
-export function iGM_Heartbeat(connectionId: string): void {
+export async function iGM_Heartbeat(connectionId: string): Promise<void> {
   if (!iGM_Connections.has(connectionId)) return;
-  iGM_TouchOnlineUser(connectionId, new Date().toISOString());
-  iGM_SendTo(connectionId, { type: "pong" });
+  await iGM_TouchOnlineUser(connectionId, new Date().toISOString());
+  await iGM_SendTo(connectionId, { type: "pong" });
 }
 
 /**
  * 向指定用户的全部在线连接推送实时通知
  * 由 iGM_NotificationService 在站内通知写库成功后调用（fire-and-forget）
  */
-export function iGM_PushNotificationToUser(
+export async function iGM_PushNotificationToUser(
   userId: string,
   notification: iGM_NotificationDto,
-): void {
+): Promise<void> {
   const message: iGM_ServerMessage = { type: "notification", notification };
   for (const [connectionId, entry] of iGM_Connections) {
     if (entry.userId === userId) {
-      iGM_SendTo(connectionId, message);
+      await iGM_SendTo(connectionId, message);
     }
   }
 }
@@ -181,13 +191,13 @@ export function iGM_PushNotificationToUser(
 /* ---------- 模块十：私信实时推送 ---------- */
 
 /** 向指定用户的全部在线连接推送私信实时事件（新消息/撤回/已读） */
-export function iGM_PushMessageEventToUser(
+export async function iGM_PushMessageEventToUser(
   userId: string,
   event: iGM_MessageRealtimeEvent,
-): void {
+): Promise<void> {
   for (const [connectionId, entry] of iGM_Connections) {
     if (entry.userId === userId) {
-      iGM_SendTo(connectionId, event);
+      await iGM_SendTo(connectionId, event);
     }
   }
 }
@@ -201,9 +211,9 @@ export function iGM_IsUserOnline(userId: string): boolean {
 }
 
 /** 清扫心跳超时的僵尸连接：先关闭连接（触发 close 注销），再兜底删行 */
-function iGM_SweepStaleConnections(): void {
+async function iGM_SweepStaleConnections(): Promise<void> {
   const cutoff = new Date(Date.now() - iGM_HeartbeatTimeoutMs).toISOString();
-  const staleIds = iGM_DeleteStaleOnlineUsers(cutoff);
+  const staleIds = await iGM_DeleteStaleOnlineUsers(cutoff);
   if (staleIds.length === 0) return;
   for (const connectionId of staleIds) {
     const entry = iGM_Connections.get(connectionId);
@@ -215,7 +225,7 @@ function iGM_SweepStaleConnections(): void {
     }
   }
   console.log(`[iGM_Realtime] 清扫心跳超时连接 ${staleIds.length} 条`);
-  iGM_BroadcastOnlineList();
+  await iGM_BroadcastOnlineList();
 }
 
 // 启动周期清扫计时器（unref 避免阻塞进程退出）

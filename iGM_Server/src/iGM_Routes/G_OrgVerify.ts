@@ -42,13 +42,13 @@ import {
 
 // 核心逻辑 //
 /* ---------- 受信任组织列表（公开） ---------- */
-function iGM_HandleOrganizations() {
-  return iGM_Ok({ items: iGM_ListTrustedOrgsService() });
+async function iGM_HandleOrganizations() {
+  return iGM_Ok({ items: await iGM_ListTrustedOrgsService() });
 }
 
 /* ---------- 公开组织详情（G_OrgDetails，支持 id 或 slug） ---------- */
-function iGM_HandleOrgDetail(ctx: iGM_RouteContext) {
-  const organization = iGM_GetOrganizationDetailService({
+async function iGM_HandleOrgDetail(ctx: iGM_RouteContext) {
+  const organization = await iGM_GetOrganizationDetailService({
     id: iGM_Query(ctx.query, "orgId") || null,
     slug: iGM_Query(ctx.query, "slug") || null,
   });
@@ -56,19 +56,19 @@ function iGM_HandleOrgDetail(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 我的组织详情（登录，附负责人标记） ---------- */
-function iGM_HandleMyOrg(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
-  return iGM_Ok(iGM_GetMyOrgService(user));
+async function iGM_HandleMyOrg(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
+  return iGM_Ok(await iGM_GetMyOrgService(user));
 }
 
 /* ---------- 提交认证申请 ---------- */
-function iGM_HandleSubmit(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleSubmit(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "orgVerifyWrite", `user:${user.iGM_Id}:${iGM_ClientIp(ctx)}`);
   const orgId = iGM_Field(ctx.body, "orgId");
   const reason = iGM_Field(ctx.body, "reason");
   const proofRaw = iGM_Field(ctx.body, "proof");
-  const verification = iGM_SubmitVerificationService(
+  const verification = await iGM_SubmitVerificationService(
     user,
     { orgId, reason, proof: proofRaw || null },
     iGM_RequestLocale(ctx),
@@ -77,42 +77,42 @@ function iGM_HandleSubmit(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 我的申请记录 ---------- */
-function iGM_HandleMine(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
-  return iGM_Ok({ items: iGM_ListMyVerificationsService(user) });
+async function iGM_HandleMine(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
+  return iGM_Ok({ items: await iGM_ListMyVerificationsService(user) });
 }
 
 /* ---------- 取消待审核申请 ---------- */
-function iGM_HandleCancel(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleCancel(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "orgVerifyWrite", `user:${user.iGM_Id}:${iGM_ClientIp(ctx)}`);
   const verificationId = iGM_Field(ctx.body, "verificationId");
   if (!verificationId.trim()) {
     throw new iGM_OrgVerifyError("orgVerify.errors.badRequest", 422);
   }
-  iGM_CancelVerificationService(user, verificationId);
+  await iGM_CancelVerificationService(user, verificationId);
   return iGM_Ok({ verificationId }, "orgVerify.messages.cancelled");
 }
 
 /* ---------- 退出已认证组织 ---------- */
-function iGM_HandleLeave(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleLeave(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "orgVerifyWrite", `user:${user.iGM_Id}:${iGM_ClientIp(ctx)}`);
   const reasonRaw = iGM_Field(ctx.body, "reason");
-  iGM_LeaveOrgService(user, reasonRaw || null, iGM_RequestLocale(ctx));
+  await iGM_LeaveOrgService(user, reasonRaw || null, iGM_RequestLocale(ctx));
   return iGM_Ok(null, "orgVerify.messages.left");
 }
 
 /* ---------- 负责人编辑“关于组织” ---------- */
-function iGM_HandleUpdateAbout(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleUpdateAbout(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "orgVerifyWrite", `user:${user.iGM_Id}:${iGM_ClientIp(ctx)}`);
   const orgId = iGM_Field(ctx.body, "orgId");
   const aboutContent = iGM_Field(ctx.body, "aboutContent");
   if (!orgId.trim()) {
     throw new iGM_OrgVerifyError("orgVerify.errors.badRequest", 422);
   }
-  const organization = iGM_UpdateOrgAboutService(user, orgId, aboutContent);
+  const organization = await iGM_UpdateOrgAboutService(user, orgId, aboutContent);
   return iGM_Ok({ organization }, "orgVerify.messages.aboutUpdated");
 }
 

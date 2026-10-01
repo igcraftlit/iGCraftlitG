@@ -4,7 +4,7 @@
  * 路由：全局
  * 模块：iGM_Config
  * 作用：统一读取本地后端运行所需的环境配置
- * 内容：服务端口、SQLite 文件路径、CORS 白名单、认证会话参数、
+ * 内容：服务端口、PostgreSQL 连接串、CORS 白名单、认证会话参数、
  *       邮箱验证码与重置令牌时效、基础限流参数、163 邮箱 SMTP 邮件配置、
  *       模块四本地文件上传存储配置、模块十七 Minecraft 本体下载配置、
  *       模块二十第三方资源（Modrinth）接入配置
@@ -158,8 +158,8 @@ export interface iGM_OAuthConfig {
 export interface iGM_AppConfig {
   /** 后端监听端口 */
   port: number;
-  /** 本地原生 SQLite 数据库文件路径 */
-  databasePath: string;
+  /** PostgreSQL 连接串（本地 Docker 容器） */
+  databaseUrl: string;
   /** CORS 允许来源白名单 */
   corsOrigins: string[];
   /** 服务版本号 */
@@ -187,9 +187,10 @@ export interface iGM_AppConfig {
  */
 export const iGM_Config: iGM_AppConfig = {
   port: Number(process.env.IGM_PORT ?? 3001),
-  databasePath:
-    process.env.IGM_DATABASE_PATH ??
-    resolve(import.meta.dir, "../../../database/igcraftlit.sqlite"),
+  // 本地 Docker 中的 PostgreSQL；生产/其他环境通过 DATABASE_URL 覆盖
+  databaseUrl:
+    process.env.DATABASE_URL ??
+    "postgresql://iguser:igpassword@localhost:5432/igcraftlit",
   corsOrigins: [
     "https://igcraftlit.com",
     "https://www.igcraftlit.com",

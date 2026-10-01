@@ -88,21 +88,23 @@ function iGM_ReadVersionQuery(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 版本列表 ---------- */
-function iGM_HandleVersions(ctx: iGM_RouteContext) {
-  return iGM_Ok(iGM_ListGameVersions(iGM_CurrentUser(ctx), iGM_ReadVersionQuery(ctx)));
+async function iGM_HandleVersions(ctx: iGM_RouteContext) {
+  return iGM_Ok(
+    await iGM_ListGameVersions(await iGM_CurrentUser(ctx), iGM_ReadVersionQuery(ctx)),
+  );
 }
 
 /* ---------- 版本详情 ---------- */
-function iGM_HandleVersionDetail(ctx: iGM_RouteContext) {
+async function iGM_HandleVersionDetail(ctx: iGM_RouteContext) {
   const versionId = iGM_Query(ctx.query, "versionId");
   return iGM_Ok({
-    version: iGM_GetGameVersion(iGM_CurrentUser(ctx), versionId),
+    version: await iGM_GetGameVersion(await iGM_CurrentUser(ctx), versionId),
   });
 }
 
 /* ---------- 模组加载器列表 ---------- */
-function iGM_HandleLoaders() {
-  return iGM_Ok({ items: iGM_ListGameLoaders() });
+async function iGM_HandleLoaders() {
+  return iGM_Ok({ items: await iGM_ListGameLoaders() });
 }
 
 /* ---------- Fabric Loader 版本列表 ---------- */
@@ -112,7 +114,7 @@ async function iGM_HandleFabricLoaders() {
 
 /* ---------- 创建安装任务 ---------- */
 async function iGM_HandleInstall(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "gameInstall", `user:${user.iGM_Id}`);
   const install = await iGM_StartGameInstall(user, {
     version: iGM_Field(ctx.body, "version"),
@@ -125,15 +127,15 @@ async function iGM_HandleInstall(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 查询任务进度 ---------- */
-function iGM_HandleInstallStatus(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleInstallStatus(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const taskId = iGM_Param(ctx as iGM_GameContext, "taskId");
-  return iGM_Ok({ install: iGM_GetGameInstall(user, taskId) });
+  return iGM_Ok({ install: await iGM_GetGameInstall(user, taskId) });
 }
 
 /* ---------- 取消任务（可选一并清除已下载的残余文件） ---------- */
 async function iGM_HandleCancel(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "gameWrite", `user:${user.iGM_Id}`);
   const taskId = iGM_Param(ctx as iGM_GameContext, "taskId");
   const purge = iGM_BoolField(ctx.body, "purge");
@@ -145,7 +147,7 @@ async function iGM_HandleCancel(ctx: iGM_RouteContext) {
 
 /* ---------- 清除未完成任务的残余文件 ---------- */
 async function iGM_HandlePurgeTask(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "gameWrite", `user:${user.iGM_Id}`);
   const taskId = iGM_Param(ctx as iGM_GameContext, "taskId");
   return iGM_Ok(
@@ -155,41 +157,41 @@ async function iGM_HandlePurgeTask(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 安装任务列表（进行中/失败/已取消） ---------- */
-function iGM_HandleInstalls(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleInstalls(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   return iGM_Ok({
-    items: iGM_ListGameInstalls(user, iGM_Query(ctx.query, "status") || undefined),
+    items: await iGM_ListGameInstalls(user, iGM_Query(ctx.query, "status") || undefined),
   });
 }
 
 /* ---------- 已安装版本列表 ---------- */
-function iGM_HandleInstalled(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
-  return iGM_Ok({ items: iGM_ListInstalledGameVersions(user) });
+async function iGM_HandleInstalled(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
+  return iGM_Ok({ items: await iGM_ListInstalledGameVersions(user) });
 }
 
 /* ---------- 校验安装完整性 ---------- */
 async function iGM_HandleVerify(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "gameWrite", `user:${user.iGM_Id}`);
   const installId = iGM_Param(ctx as iGM_GameContext, "installId");
   return iGM_Ok({ result: await iGM_VerifyGameInstall(user, installId) });
 }
 
 /* ---------- 修复安装 ---------- */
-function iGM_HandleRepair(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleRepair(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "gameWrite", `user:${user.iGM_Id}`);
   const installId = iGM_Param(ctx as iGM_GameContext, "installId");
   return iGM_Ok(
-    { install: iGM_RepairGameInstall(user, installId) },
+    { install: await iGM_RepairGameInstall(user, installId) },
     "game.messages.repairing",
   );
 }
 
 /* ---------- 删除已安装版本 ---------- */
 async function iGM_HandleRemove(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "gameWrite", `user:${user.iGM_Id}`);
   const installId = iGM_Param(ctx as iGM_GameContext, "installId");
   return iGM_Ok(
@@ -200,7 +202,7 @@ async function iGM_HandleRemove(ctx: iGM_RouteContext) {
 
 /* ---------- 原生文件夹选择器 ---------- */
 async function iGM_HandlePickFolder(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "gameFolderPick", `user:${user.iGM_Id}`);
   return iGM_Ok({ path: await iGM_PickFolder() });
 }
@@ -211,12 +213,12 @@ async function iGM_HandlePickFolder(ctx: iGM_RouteContext) {
  * 握手守卫：Origin 白名单 + 连接限流 + 会话鉴权 + 任务归属校验
  * 校验失败即拒绝 upgrade，客户端收到对应 HTTP 错误
  */
-function iGM_GameWsBeforeHandle(context: {
+async function iGM_GameWsBeforeHandle(context: {
   request: Request;
   server: iGM_NetworkServer | null;
   set: { status: number; headers: Record<string, string> };
   params?: Record<string, string>;
-}): void {
+}): Promise<void> {
   const origin = context.request.headers.get("Origin") ?? "";
   if (!iGM_Config.corsOrigins.includes(origin)) {
     throw new iGM_AuthError("auth.errors.forbidden", 403);
@@ -228,12 +230,12 @@ function iGM_GameWsBeforeHandle(context: {
     context.set.headers["Retry-After"] = String(limit.retryAfterSeconds);
     throw new iGM_AuthError("auth.errors.tooManyRequests", 429);
   }
-  const user = iGM_ResolveRequestUser(context.request);
+  const user = await iGM_ResolveRequestUser(context.request);
   if (!user) throw new iGM_AuthError("auth.errors.unauthorized", 401);
 
   const taskId = context.params?.taskId ?? "";
   // 任务归属校验：非本人任务直接拒绝
-  iGM_GetGameInstall(user, taskId);
+  await iGM_GetGameInstall(user, taskId);
 
   const extra = context as unknown as iGM_GameWsExtra;
   extra.iGM_WsUser = user;
@@ -260,7 +262,7 @@ export const G_Game = new Elysia({ name: "G_Game" })
     beforeHandle: iGM_GameWsBeforeHandle as never,
 
     // 连接建立：下发当前任务快照并订阅后续进度事件
-    open(ws) {
+    async open(ws) {
       const data = ws.data as unknown as iGM_GameWsExtra & {
         params?: Record<string, string>;
       };
@@ -274,7 +276,7 @@ export const G_Game = new Elysia({ name: "G_Game" })
       ws.send(
         JSON.stringify({
           type: "snapshot",
-          install: iGM_GetGameInstall(user, taskId),
+          install: await iGM_GetGameInstall(user, taskId),
         }),
       );
       data.iGM_WsUnsubscribe = iGM_SubscribeTask(taskId, (event) => {

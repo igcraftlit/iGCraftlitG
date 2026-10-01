@@ -44,12 +44,12 @@ import {
 
 // 核心逻辑 //
 /* ---------- 帖子详情 ---------- */
-function iGM_HandleDetail(ctx: iGM_RouteContext) {
+async function iGM_HandleDetail(ctx: iGM_RouteContext) {
   const postId = iGM_Query(ctx.query, "postId");
   if (!postId) {
     throw new iGM_ContentError("community.errors.postNotFound", 404);
   }
-  const post = iGM_GetPostDetail(iGM_CurrentUser(ctx), postId);
+  const post = await iGM_GetPostDetail(await iGM_CurrentUser(ctx), postId);
   if (!post) {
     throw new iGM_ContentError("community.errors.postNotFound", 404);
   }
@@ -57,8 +57,8 @@ function iGM_HandleDetail(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 编辑帖子 ---------- */
-function iGM_HandleEditPost(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleEditPost(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "createPost", `user:${user.iGM_Id}`);
 
   const postId = iGM_Field(ctx.body, "postId").trim();
@@ -66,7 +66,7 @@ function iGM_HandleEditPost(ctx: iGM_RouteContext) {
     throw new iGM_ContentError("community.errors.postNotFound", 404);
   }
   const categoryId = iGM_Field(ctx.body, "categoryId").trim();
-  const post = iGM_UpdatePostService(user, postId, {
+  const post = await iGM_UpdatePostService(user, postId, {
     title: iGM_Field(ctx.body, "title"),
     content: iGM_Field(ctx.body, "content"),
     categoryId: categoryId.length > 0 ? categoryId : null,
@@ -79,19 +79,19 @@ function iGM_HandleEditPost(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 删除帖子 ---------- */
-function iGM_HandleDeletePost(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleDeletePost(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const postId = iGM_Query(ctx.query, "postId");
   if (!postId) {
     throw new iGM_ContentError("community.errors.postNotFound", 404);
   }
-  iGM_DeletePostService(user, postId);
+  await iGM_DeletePostService(user, postId);
   return iGM_Ok({ deleted: true }, "community.messages.postDeleted");
 }
 
 /* ---------- 隐藏/恢复帖子 ---------- */
-function iGM_HandleSetPostStatus(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleSetPostStatus(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const postId = iGM_Field(ctx.body, "postId").trim();
   const status = iGM_Field(ctx.body, "status");
   if (!postId) {
@@ -100,23 +100,26 @@ function iGM_HandleSetPostStatus(ctx: iGM_RouteContext) {
   if (status !== "published" && status !== "hidden") {
     throw new iGM_ContentError("community.errors.badRequest", 400);
   }
-  const post = iGM_SetPostStatusService(user, postId, status);
+  const post = await iGM_SetPostStatusService(user, postId, status);
   return iGM_Ok({ post }, "community.messages.postUpdated");
 }
 
 /* ---------- 评论列表 ---------- */
-function iGM_HandleComments(ctx: iGM_RouteContext) {
+async function iGM_HandleComments(ctx: iGM_RouteContext) {
   const postId = iGM_Query(ctx.query, "postId");
   if (!postId) {
     throw new iGM_ContentError("community.errors.postNotFound", 404);
   }
-  const items = iGM_ListPostCommentsService(iGM_CurrentUser(ctx), postId);
+  const items = await iGM_ListPostCommentsService(
+    await iGM_CurrentUser(ctx),
+    postId,
+  );
   return iGM_Ok({ items });
 }
 
 /* ---------- 发表评论/回复 ---------- */
-function iGM_HandleCreateComment(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleCreateComment(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "createComment", `user:${user.iGM_Id}`);
 
   const postId = iGM_Field(ctx.body, "postId").trim();
@@ -124,7 +127,7 @@ function iGM_HandleCreateComment(ctx: iGM_RouteContext) {
   if (!postId) {
     throw new iGM_ContentError("community.errors.postNotFound", 404);
   }
-  const comment = iGM_CreateCommentService(
+  const comment = await iGM_CreateCommentService(
     user,
     postId,
     parentId.length > 0 ? parentId : null,
@@ -136,13 +139,13 @@ function iGM_HandleCreateComment(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 编辑评论 ---------- */
-function iGM_HandleEditComment(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleEditComment(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const commentId = iGM_Field(ctx.body, "commentId").trim();
   if (!commentId) {
     throw new iGM_ContentError("community.errors.commentNotFound", 404);
   }
-  const comment = iGM_UpdateCommentService(
+  const comment = await iGM_UpdateCommentService(
     user,
     commentId,
     iGM_Field(ctx.body, "content"),
@@ -151,19 +154,19 @@ function iGM_HandleEditComment(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 删除评论 ---------- */
-function iGM_HandleDeleteComment(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleDeleteComment(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const commentId = iGM_Query(ctx.query, "commentId");
   if (!commentId) {
     throw new iGM_ContentError("community.errors.commentNotFound", 404);
   }
-  iGM_DeleteCommentService(user, commentId);
+  await iGM_DeleteCommentService(user, commentId);
   return iGM_Ok({ deleted: true }, "community.messages.commentDeleted");
 }
 
 /* ---------- 隐藏/恢复评论（协管员及以上） ---------- */
-function iGM_HandleSetCommentStatus(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleSetCommentStatus(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const commentId = iGM_Field(ctx.body, "commentId").trim();
   const status = iGM_Field(ctx.body, "status");
   if (!commentId) {
@@ -172,13 +175,13 @@ function iGM_HandleSetCommentStatus(ctx: iGM_RouteContext) {
   if (status !== "visible" && status !== "hidden") {
     throw new iGM_ContentError("community.errors.badRequest", 400);
   }
-  const comment = iGM_SetCommentStatusService(user, commentId, status);
+  const comment = await iGM_SetCommentStatusService(user, commentId, status);
   return iGM_Ok({ comment }, "community.messages.commentUpdated");
 }
 
 /* ---------- 点赞/取消点赞（帖子或评论） ---------- */
-function iGM_HandleLike(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleLike(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "interact", `user:${user.iGM_Id}`);
 
   const targetType = iGM_Field(ctx.body, "targetType");
@@ -187,12 +190,12 @@ function iGM_HandleLike(ctx: iGM_RouteContext) {
   if (!iGM_IsLikeTargetType(targetType) || !targetId) {
     throw new iGM_ContentError("community.errors.badRequest", 400);
   }
-  return iGM_Ok(iGM_ToggleLikeService(user, targetType, targetId, liked));
+  return iGM_Ok(await iGM_ToggleLikeService(user, targetType, targetId, liked));
 }
 
 /* ---------- 收藏/取消收藏帖子 ---------- */
-function iGM_HandleFavorite(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleFavorite(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "interact", `user:${user.iGM_Id}`);
 
   const postId = iGM_Field(ctx.body, "postId").trim();
@@ -200,7 +203,7 @@ function iGM_HandleFavorite(ctx: iGM_RouteContext) {
   if (!postId) {
     throw new iGM_ContentError("community.errors.postNotFound", 404);
   }
-  return iGM_Ok(iGM_ToggleFavoriteService(user, postId, favorited));
+  return iGM_Ok(await iGM_ToggleFavoriteService(user, postId, favorited));
 }
 
 /**

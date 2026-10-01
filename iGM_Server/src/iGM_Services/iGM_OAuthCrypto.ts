@@ -126,13 +126,13 @@ async function iGM_ImportSigningKey(row: iGM_OAuthKeyRow): Promise<iGM_SigningKe
 /** 确保存在 OIDC 签名密钥：首次调用时生成并落库 */
 export async function iGM_EnsureSigningKey(): Promise<iGM_SigningKey> {
   if (iGM_CachedSigningKey) return iGM_CachedSigningKey;
-  const existing = iGM_FindActiveOAuthKey("oidc");
+  const existing = await iGM_FindActiveOAuthKey("oidc");
   if (existing) {
     iGM_CachedSigningKey = await iGM_ImportSigningKey(existing);
     return iGM_CachedSigningKey;
   }
   const generated = await iGM_GenerateSigningKey();
-  iGM_InsertOAuthKey({
+  await iGM_InsertOAuthKey({
     id: crypto.randomUUID(),
     kind: "oidc",
     kid: generated.kid,
@@ -141,7 +141,7 @@ export async function iGM_EnsureSigningKey(): Promise<iGM_SigningKey> {
     privateJwk: JSON.stringify(generated.privateJwk),
     now: new Date().toISOString(),
   });
-  const row = iGM_FindActiveOAuthKey("oidc");
+  const row = await iGM_FindActiveOAuthKey("oidc");
   if (!row) throw new Error("iGM_EnsureSigningKey：密钥写入失败");
   iGM_CachedSigningKey = await iGM_ImportSigningKey(row);
   return iGM_CachedSigningKey;
@@ -150,7 +150,7 @@ export async function iGM_EnsureSigningKey(): Promise<iGM_SigningKey> {
 /** 读取 JWKS 公钥集（含历史启用密钥，便于密钥轮换平滑过渡；首次访问即生成签名密钥） */
 export async function iGM_GetJwks(): Promise<{ keys: iGM_JwksKey[] }> {
   await iGM_EnsureSigningKey();
-  const rows = iGM_ListActiveOAuthKeys("oidc");
+  const rows = await iGM_ListActiveOAuthKeys("oidc");
   const keys = rows.map((row) => {
     const jwk = JSON.parse(row.iGM_PublicJwk) as Record<string, string>;
     return {
@@ -217,15 +217,15 @@ export function iGM_VerifyPkce(
 let iGM_CachedCookieSecret: string | null = null;
 
 /** 读取（必要时生成）256 位 Cookie 签名密钥 */
-function iGM_GetCookieSecret(): string {
+async function iGM_GetCookieSecret(): Promise<string> {
   if (iGM_CachedCookieSecret) return iGM_CachedCookieSecret;
-  const existing = iGM_FindActiveOAuthKey("cookie");
+  const existing = await iGM_FindActiveOAuthKey("cookie");
   if (existing) {
     iGM_CachedCookieSecret = existing.iGM_PrivateJwk;
     return iGM_CachedCookieSecret;
   }
   const secret = iGM_RandomHex(32);
-  iGM_InsertOAuthKey({
+  await iGM_InsertOAuthKey({
     id: crypto.randomUUID(),
     kind: "cookie",
     kid: iGM_RandomHex(8),
@@ -239,26 +239,28 @@ function iGM_GetCookieSecret(): string {
 }
 
 /** HMAC-SHA256 签名，返回 base64url */
-function iGM_Hmac(payload: string): string {
-  const hasher = new Bun.CryptoHasher("sha256", iGM_GetCookieSecret());
+async function iGM_Hmac(payload: string): Promise<string> {
+  const hasher = new Bun.CryptoHasher("sha256", await iGM_GetCookieSecret());
   hasher.update(payload);
   return iGM_Base64Url(new Uint8Array(hasher.digest()));
 }
 
 /** 对载荷签名，返回 `base64url(json).base64url(hmac)` */
-export function iGM_SignCookiePayload(payload: Record<string, unknown>): string {
+export async function iGM_SignCookiePayload(
+  payload: Record<string, unknown>,
+): Promise<string> {
   const encoded = iGM_Base64Url(JSON.stringify(payload));
-  return `${encoded}.${iGM_Hmac(encoded)}`;
+  return `${encoded}.${await iGM_Hmac(encoded)}`;
 }
 
 /** 校验并解析签名载荷；签名不合法或已过期返回 null */
-export function iGM_VerifyCookiePayload<T extends { exp?: number }>(
+export async function iGM_VerifyCookiePayload<T extends { exp?: number }>(
   token: string | null,
-): T | null {
+): Promise<T | null> {
   if (!token) return null;
   const [encoded, signature] = token.split(".");
   if (!encoded || !signature) return null;
-  if (iGM_Hmac(encoded) !== signature) return null;
+  if ((await iGM_Hmac(encoded)) !== signature) return null;
   try {
     const payload = JSON.parse(iGM_Base64UrlDecode(encoded)) as T;
     if (typeof payload.exp === "number" && payload.exp < Date.now()) return null;

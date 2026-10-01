@@ -5,6 +5,7 @@ out
 .dev.vars*
 *.sqlite
 *.sqlite-journal
+*.sqlite.*
 uploads/
 .DS_Store
 .trae/

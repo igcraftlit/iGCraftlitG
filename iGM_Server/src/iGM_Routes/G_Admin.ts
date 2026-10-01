@@ -61,29 +61,29 @@ import {
 
 // 核心逻辑 //
 /* ---------- 数据概览 ---------- */
-function iGM_HandleOverview(ctx: iGM_RouteContext) {
-  iGM_RequireRole(iGM_CurrentUser(ctx), "moderator");
-  return iGM_Ok(iGM_GetOverviewService());
+async function iGM_HandleOverview(ctx: iGM_RouteContext) {
+  iGM_RequireRole(await iGM_CurrentUser(ctx), "moderator");
+  return iGM_Ok(await iGM_GetOverviewService());
 }
 
 /* ---------- 用户列表 ---------- */
-function iGM_HandleUsers(ctx: iGM_RouteContext) {
-  iGM_RequireRole(iGM_CurrentUser(ctx), "moderator");
+async function iGM_HandleUsers(ctx: iGM_RouteContext) {
+  iGM_RequireRole(await iGM_CurrentUser(ctx), "moderator");
   const page = Number(iGM_Query(ctx.query, "page", "1"));
   const pageSize = Number(iGM_Query(ctx.query, "pageSize", "10"));
-  return iGM_Ok(iGM_ListUsersService(iGM_Query(ctx.query, "query"), page, pageSize));
+  return iGM_Ok(await iGM_ListUsersService(iGM_Query(ctx.query, "query"), page, pageSize));
 }
 
 /* ---------- 封禁 / 解封 ---------- */
-function iGM_HandleUserStatus(ctx: iGM_RouteContext) {
-  const admin = iGM_RequireRole(iGM_CurrentUser(ctx), "admin");
+async function iGM_HandleUserStatus(ctx: iGM_RouteContext) {
+  const admin = iGM_RequireRole(await iGM_CurrentUser(ctx), "admin");
   iGM_EnforceRateLimit(ctx, "adminWrite", `user:${admin.iGM_Id}:${iGM_ClientIp(ctx)}`);
   const userId = iGM_Field(ctx.body, "userId").trim();
   const suspend = iGM_Field(ctx.body, "status").trim() === "suspended";
   if (!userId) {
     throw new iGM_AdminError("admin.errors.userNotFound", 404);
   }
-  iGM_SetUserStatusService(admin, userId, suspend ? "suspended" : "active");
+  await iGM_SetUserStatusService(admin, userId, suspend ? "suspended" : "active");
   return iGM_Ok(
     { userId, status: suspend ? "suspended" : "active" },
     suspend ? "admin.messages.userBanned" : "admin.messages.userUnbanned",
@@ -91,37 +91,37 @@ function iGM_HandleUserStatus(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 修改角色 ---------- */
-function iGM_HandleUserRole(ctx: iGM_RouteContext) {
-  const admin = iGM_RequireRole(iGM_CurrentUser(ctx), "admin");
+async function iGM_HandleUserRole(ctx: iGM_RouteContext) {
+  const admin = iGM_RequireRole(await iGM_CurrentUser(ctx), "admin");
   iGM_EnforceRateLimit(ctx, "adminWrite", `user:${admin.iGM_Id}:${iGM_ClientIp(ctx)}`);
   const userId = iGM_Field(ctx.body, "userId").trim();
   const role = iGM_Field(ctx.body, "role").trim();
   if (!userId || (role !== "user" && role !== "moderator" && role !== "admin")) {
     throw new iGM_AdminError("admin.errors.badRequest", 422);
   }
-  iGM_SetUserRoleService(admin, userId, role);
+  await iGM_SetUserRoleService(admin, userId, role);
   return iGM_Ok({ userId, role }, "admin.messages.roleUpdated");
 }
 
 /* ---------- 删除用户账号（模块七第三轮：管理员直接删除，无需验证码） ---------- */
-function iGM_HandleUserDelete(ctx: iGM_RouteContext) {
-  const admin = iGM_RequireRole(iGM_CurrentUser(ctx), "admin");
+async function iGM_HandleUserDelete(ctx: iGM_RouteContext) {
+  const admin = iGM_RequireRole(await iGM_CurrentUser(ctx), "admin");
   iGM_EnforceRateLimit(ctx, "adminWrite", `user:${admin.iGM_Id}:${iGM_ClientIp(ctx)}`);
   const userId = iGM_Field(ctx.body, "userId").trim();
   if (!userId) {
     throw new iGM_AdminError("admin.errors.userNotFound", 404);
   }
-  iGM_DeleteUserService(admin, userId, iGM_RequestLocale(ctx));
+  await iGM_DeleteUserService(admin, userId, iGM_RequestLocale(ctx));
   return iGM_Ok({ userId }, "admin.messages.userDeleted");
 }
 
 /* ---------- 内容列表 ---------- */
-function iGM_HandleContents(ctx: iGM_RouteContext) {
-  iGM_RequireRole(iGM_CurrentUser(ctx), "moderator");
+async function iGM_HandleContents(ctx: iGM_RouteContext) {
+  iGM_RequireRole(await iGM_CurrentUser(ctx), "moderator");
   const page = Number(iGM_Query(ctx.query, "page", "1"));
   const pageSize = Number(iGM_Query(ctx.query, "pageSize", "10"));
   return iGM_Ok(
-    iGM_ListContentsService(
+    await iGM_ListContentsService(
       iGM_Query(ctx.query, "type", "post"),
       iGM_Query(ctx.query, "search") || null,
       iGM_Query(ctx.query, "status") || null,
@@ -132,8 +132,8 @@ function iGM_HandleContents(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 内容审核（隐藏/恢复/删除） ---------- */
-function iGM_HandleReview(ctx: iGM_RouteContext) {
-  const admin = iGM_RequireRole(iGM_CurrentUser(ctx), "moderator");
+async function iGM_HandleReview(ctx: iGM_RouteContext) {
+  const admin = iGM_RequireRole(await iGM_CurrentUser(ctx), "moderator");
   iGM_EnforceRateLimit(ctx, "adminWrite", `user:${admin.iGM_Id}:${iGM_ClientIp(ctx)}`);
   const type = iGM_Field(ctx.body, "type").trim();
   const contentId = iGM_Field(ctx.body, "contentId").trim();
@@ -145,23 +145,23 @@ function iGM_HandleReview(ctx: iGM_RouteContext) {
   ) {
     throw new iGM_AdminError("admin.errors.badRequest", 422);
   }
-  iGM_ReviewContentService(admin, type, contentId, action);
+  await iGM_ReviewContentService(admin, type, contentId, action);
   return iGM_Ok({ type, contentId, action }, "admin.messages.contentReviewed");
 }
 
 /* ---------- 举报列表 ---------- */
-function iGM_HandleReports(ctx: iGM_RouteContext) {
-  iGM_RequireRole(iGM_CurrentUser(ctx), "moderator");
+async function iGM_HandleReports(ctx: iGM_RouteContext) {
+  iGM_RequireRole(await iGM_CurrentUser(ctx), "moderator");
   const page = Number(iGM_Query(ctx.query, "page", "1"));
   const pageSize = Number(iGM_Query(ctx.query, "pageSize", "10"));
   return iGM_Ok(
-    iGM_ListReportsService(iGM_Query(ctx.query, "status") || null, page, pageSize),
+    await iGM_ListReportsService(iGM_Query(ctx.query, "status") || null, page, pageSize),
   );
 }
 
 /* ---------- 处理举报 ---------- */
-function iGM_HandleReport(ctx: iGM_RouteContext) {
-  const admin = iGM_RequireRole(iGM_CurrentUser(ctx), "moderator");
+async function iGM_HandleReport(ctx: iGM_RouteContext) {
+  const admin = iGM_RequireRole(await iGM_CurrentUser(ctx), "moderator");
   iGM_EnforceRateLimit(ctx, "adminWrite", `user:${admin.iGM_Id}:${iGM_ClientIp(ctx)}`);
   const reportId = iGM_Field(ctx.body, "reportId").trim();
   const decision = iGM_Field(ctx.body, "decision").trim();
@@ -173,7 +173,7 @@ function iGM_HandleReport(ctx: iGM_RouteContext) {
   ) {
     throw new iGM_AdminError("admin.errors.badRequest", 422);
   }
-  iGM_HandleReportService(
+  await iGM_HandleReportService(
     admin,
     reportId,
     decision === "resolved" ? "resolved" : "dismissed",
@@ -184,7 +184,7 @@ function iGM_HandleReport(ctx: iGM_RouteContext) {
 
 /* ---------- 测试邮件 ---------- */
 async function iGM_HandleMailTest(ctx: iGM_RouteContext) {
-  const admin = iGM_RequireRole(iGM_CurrentUser(ctx), "admin");
+  const admin = iGM_RequireRole(await iGM_CurrentUser(ctx), "admin");
   iGM_EnforceRateLimit(ctx, "mailTest", `user:${admin.iGM_Id}`);
   const to = iGM_Field(ctx.body, "to");
   await iGM_SendTestMailService(admin, to, iGM_RequestLocale(ctx));
@@ -192,27 +192,27 @@ async function iGM_HandleMailTest(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 操作日志 ---------- */
-function iGM_HandleLogs(ctx: iGM_RouteContext) {
-  iGM_RequireRole(iGM_CurrentUser(ctx), "moderator");
+async function iGM_HandleLogs(ctx: iGM_RouteContext) {
+  iGM_RequireRole(await iGM_CurrentUser(ctx), "moderator");
   const page = Number(iGM_Query(ctx.query, "page", "1"));
   const pageSize = Number(iGM_Query(ctx.query, "pageSize", "20"));
-  return iGM_Ok(iGM_ListLogsService(page, pageSize));
+  return iGM_Ok(await iGM_ListLogsService(page, pageSize));
 }
 
 /* ---------- 系统信息 ---------- */
-function iGM_HandleSettings(ctx: iGM_RouteContext) {
-  iGM_RequireRole(iGM_CurrentUser(ctx), "admin");
-  return iGM_Ok(iGM_GetSettingsService());
+async function iGM_HandleSettings(ctx: iGM_RouteContext) {
+  iGM_RequireRole(await iGM_CurrentUser(ctx), "admin");
+  return iGM_Ok(await iGM_GetSettingsService());
 }
 
 /* ---------- 模块七：组织认证申请列表（admin 全部；负责人仅本组织） ---------- */
-function iGM_HandleOrgVerifications(ctx: iGM_RouteContext) {
+async function iGM_HandleOrgVerifications(ctx: iGM_RouteContext) {
   // 权限在 service 内按 admin / 组织负责人判定，路由层仅要求登录
-  const reviewer = iGM_RequireUser(iGM_CurrentUser(ctx));
+  const reviewer = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const page = Number(iGM_Query(ctx.query, "page", "1"));
   const pageSize = Number(iGM_Query(ctx.query, "pageSize", "10"));
   return iGM_Ok(
-    iGM_AdminListVerificationsService(
+    await iGM_AdminListVerificationsService(
       reviewer,
       iGM_Query(ctx.query, "status") || null,
       iGM_Query(ctx.query, "orgId") || null,
@@ -223,19 +223,19 @@ function iGM_HandleOrgVerifications(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 模块七：组织认证申请详情（admin / 对应组织负责人） ---------- */
-function iGM_HandleOrgVerificationDetail(ctx: iGM_RouteContext) {
-  const reviewer = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleOrgVerificationDetail(ctx: iGM_RouteContext) {
+  const reviewer = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const id = iGM_Query(ctx.query, "id");
   if (!id) throw new iGM_OrgVerifyError("orgVerify.errors.badRequest", 422);
   return iGM_Ok({
-    verification: iGM_AdminGetVerificationService(reviewer, id),
+    verification: await iGM_AdminGetVerificationService(reviewer, id),
   });
 }
 
 /* ---------- 模块七：审核组织认证申请 ---------- */
-function iGM_HandleOrgVerificationReview(ctx: iGM_RouteContext) {
+async function iGM_HandleOrgVerificationReview(ctx: iGM_RouteContext) {
   // 负责人可能是普通角色：仅要求登录，具体 admin/owner 权限由 service 判定
-  const reviewer = iGM_RequireUser(iGM_CurrentUser(ctx));
+  const reviewer = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "adminWrite", `user:${reviewer.iGM_Id}:${iGM_ClientIp(ctx)}`);
   const verificationId = iGM_Field(ctx.body, "verificationId").trim();
   const action = iGM_Field(ctx.body, "action").trim() as iGM_OrgReviewAction;
@@ -243,7 +243,7 @@ function iGM_HandleOrgVerificationReview(ctx: iGM_RouteContext) {
   if (!verificationId || (action !== "approve" && action !== "reject")) {
     throw new iGM_OrgVerifyError("orgVerify.errors.badRequest", 422);
   }
-  iGM_ReviewVerificationService(
+  await iGM_ReviewVerificationService(
     reviewer,
     verificationId,
     action,
@@ -259,18 +259,18 @@ function iGM_HandleOrgVerificationReview(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 模块十五：等级考核申请列表 ---------- */
-function iGM_HandleLevelExams(ctx: iGM_RouteContext) {
-  iGM_RequireRole(iGM_CurrentUser(ctx), "moderator");
+async function iGM_HandleLevelExams(ctx: iGM_RouteContext) {
+  iGM_RequireRole(await iGM_CurrentUser(ctx), "moderator");
   const page = Number(iGM_Query(ctx.query, "page", "1"));
   const pageSize = Number(iGM_Query(ctx.query, "pageSize", "10"));
   return iGM_Ok(
-    iGM_AdminListExamsService(iGM_Query(ctx.query, "status") || null, page, pageSize),
+    await iGM_AdminListExamsService(iGM_Query(ctx.query, "status") || null, page, pageSize),
   );
 }
 
 /* ---------- 模块十五：审核等级考核申请 ---------- */
-function iGM_HandleLevelExamReview(ctx: iGM_RouteContext) {
-  const admin = iGM_RequireRole(iGM_CurrentUser(ctx), "moderator");
+async function iGM_HandleLevelExamReview(ctx: iGM_RouteContext) {
+  const admin = iGM_RequireRole(await iGM_CurrentUser(ctx), "moderator");
   iGM_EnforceRateLimit(ctx, "adminWrite", `user:${admin.iGM_Id}:${iGM_ClientIp(ctx)}`);
   const examId = iGM_Field(ctx.body, "examId").trim();
   const action = iGM_Field(ctx.body, "action").trim();
@@ -278,7 +278,7 @@ function iGM_HandleLevelExamReview(ctx: iGM_RouteContext) {
   if (!examId || (action !== "approve" && action !== "reject")) {
     throw new iGM_AdminError("admin.errors.badRequest", 422);
   }
-  iGM_ReviewExamService(admin.iGM_Id, examId, action, note);
+  await iGM_ReviewExamService(admin.iGM_Id, examId, action, note);
   return iGM_Ok(
     { examId, action },
     action === "approve"
@@ -288,25 +288,25 @@ function iGM_HandleLevelExamReview(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 模块十五：开发者申请列表 ---------- */
-function iGM_HandleDevelopers(ctx: iGM_RouteContext) {
-  iGM_RequireRole(iGM_CurrentUser(ctx), "moderator");
+async function iGM_HandleDevelopers(ctx: iGM_RouteContext) {
+  iGM_RequireRole(await iGM_CurrentUser(ctx), "moderator");
   const page = Number(iGM_Query(ctx.query, "page", "1"));
   const pageSize = Number(iGM_Query(ctx.query, "pageSize", "10"));
   return iGM_Ok(
-    iGM_AdminListDevelopersService(iGM_Query(ctx.query, "status") || null, page, pageSize),
+    await iGM_AdminListDevelopersService(iGM_Query(ctx.query, "status") || null, page, pageSize),
   );
 }
 
 /* ---------- 模块十五：审核开发者申请 ---------- */
-function iGM_HandleDeveloperReview(ctx: iGM_RouteContext) {
-  const admin = iGM_RequireRole(iGM_CurrentUser(ctx), "moderator");
+async function iGM_HandleDeveloperReview(ctx: iGM_RouteContext) {
+  const admin = iGM_RequireRole(await iGM_CurrentUser(ctx), "moderator");
   iGM_EnforceRateLimit(ctx, "adminWrite", `user:${admin.iGM_Id}:${iGM_ClientIp(ctx)}`);
   const developerId = iGM_Field(ctx.body, "developerId").trim();
   const action = iGM_Field(ctx.body, "action").trim();
   if (!developerId || (action !== "approve" && action !== "reject")) {
     throw new iGM_DeveloperError("developer.errors.badRequest", 422);
   }
-  iGM_ReviewDeveloperService(admin.iGM_Id, developerId, action);
+  await iGM_ReviewDeveloperService(admin.iGM_Id, developerId, action);
   return iGM_Ok(
     { developerId, action },
     action === "approve"

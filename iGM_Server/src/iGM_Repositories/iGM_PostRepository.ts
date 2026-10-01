@@ -49,9 +49,11 @@ export interface iGM_PostListResult {
 
 // 核心逻辑 //
 /** 创建帖子行 */
-export function iGM_CreatePost(params: iGM_CreatePostParams): iGM_PostRow {
+export async function iGM_CreatePost(
+  params: iGM_CreatePostParams,
+): Promise<iGM_PostRow> {
   const id = iGM_RandomUuid();
-  iGM_Db.run(
+  await iGM_Db.run(
     `INSERT INTO iGM_Posts
        (iGM_Id, iGM_AuthorId, iGM_Title, iGM_Content,
         iGM_CategoryId, iGM_Status, iGM_CreatedAt, iGM_UpdatedAt)
@@ -66,22 +68,24 @@ export function iGM_CreatePost(params: iGM_CreatePostParams): iGM_PostRow {
       params.now,
     ],
   );
-  const row = iGM_FindPostById(id);
+  const row = await iGM_FindPostById(id);
   if (!row) throw new Error("iGM_CreatePost：创建后查询帖子失败");
   return row;
 }
 
 /** 按主键查询帖子 */
-export function iGM_FindPostById(id: string): iGM_PostRow | null {
+export async function iGM_FindPostById(
+  id: string,
+): Promise<iGM_PostRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(`SELECT * FROM iGM_Posts WHERE iGM_Id = ?`)
-      .get(id) as iGM_PostRow | undefined) ?? null
+      .get(id)) as iGM_PostRow | undefined) ?? null
   );
 }
 
 /** 更新帖子标题、正文与分类，并刷新 updatedAt */
-export function iGM_UpdatePost(
+export async function iGM_UpdatePost(
   postId: string,
   fields: {
     title: string;
@@ -89,8 +93,8 @@ export function iGM_UpdatePost(
     categoryId: string | null;
     now: string;
   },
-): boolean {
-  const result = iGM_Db.run(
+): Promise<boolean> {
+  const result = await iGM_Db.run(
     `UPDATE iGM_Posts
        SET iGM_Title = ?, iGM_Content = ?, iGM_CategoryId = ?, iGM_UpdatedAt = ?
      WHERE iGM_Id = ?`,
@@ -100,12 +104,12 @@ export function iGM_UpdatePost(
 }
 
 /** 更新帖子状态（作者隐藏/恢复，协管员与管理员可管理任意帖子） */
-export function iGM_SetPostStatus(
+export async function iGM_SetPostStatus(
   postId: string,
   status: iGM_PostStatus,
   now: string,
-): boolean {
-  const result = iGM_Db.run(
+): Promise<boolean> {
+  const result = await iGM_Db.run(
     `UPDATE iGM_Posts SET iGM_Status = ?, iGM_UpdatedAt = ? WHERE iGM_Id = ?`,
     [status, now, postId],
   );
@@ -113,8 +117,10 @@ export function iGM_SetPostStatus(
 }
 
 /** 删除帖子行（关联评论/收藏/标签由外键级联，点赞由业务层事务清理） */
-export function iGM_DeletePost(postId: string): boolean {
-  const result = iGM_Db.run(`DELETE FROM iGM_Posts WHERE iGM_Id = ?`, [postId]);
+export async function iGM_DeletePost(postId: string): Promise<boolean> {
+  const result = await iGM_Db.run(`DELETE FROM iGM_Posts WHERE iGM_Id = ?`, [
+    postId,
+  ]);
   return result.changes > 0;
 }
 
@@ -165,57 +171,59 @@ function iGM_BuildFilters(params: iGM_PostListParams): {
 }
 
 /** 按筛选条件分页查询帖子（按创建时间倒序） */
-export function iGM_ListPosts(params: iGM_PostListParams): iGM_PostListResult {
+export async function iGM_ListPosts(
+  params: iGM_PostListParams,
+): Promise<iGM_PostListResult> {
   const { where, bindings } = iGM_BuildFilters(params);
   const offset = (params.page - 1) * params.pageSize;
 
-  const totalRow = iGM_Db
+  const totalRow = (await iGM_Db
     .query(`SELECT COUNT(*) AS iGM_Count FROM iGM_Posts p ${where}`)
-    .get(...bindings) as { iGM_Count: number };
+    .get(...bindings)) as { iGM_Count: number };
 
-  const items = iGM_Db
+  const items = (await iGM_Db
     .query(
       `SELECT p.* FROM iGM_Posts p
        ${where}
        ORDER BY p.iGM_CreatedAt DESC
        LIMIT ? OFFSET ?`,
     )
-    .all(...bindings, params.pageSize, offset) as iGM_PostRow[];
+    .all(...bindings, params.pageSize, offset)) as iGM_PostRow[];
 
   return { items, total: totalRow.iGM_Count };
 }
 
 /** 统计某作者在指定状态集合下的帖子数 */
-export function iGM_CountPostsByAuthor(
+export async function iGM_CountPostsByAuthor(
   authorId: string,
   statuses: iGM_PostStatus[] = ["published"],
-): number {
+): Promise<number> {
   const placeholders = statuses.map(() => "?").join(", ");
-  const row = iGM_Db
+  const row = (await iGM_Db
     .query(
       `SELECT COUNT(*) AS iGM_Count FROM iGM_Posts
         WHERE iGM_AuthorId = ? AND iGM_Status IN (${placeholders})`,
     )
-    .get(authorId, ...statuses) as { iGM_Count: number };
+    .get(authorId, ...statuses)) as { iGM_Count: number };
   return row.iGM_Count;
 }
 
 /** 批量统计一组帖子的可见评论数：postId -> 数量 */
-export function iGM_GetCommentCountsForPosts(
+export async function iGM_GetCommentCountsForPosts(
   postIds: string[],
-): Map<string, number> {
+): Promise<Map<string, number>> {
   const map = new Map<string, number>();
   const unique = Array.from(new Set(postIds)).filter(Boolean);
   if (unique.length === 0) return map;
   const placeholders = unique.map(() => "?").join(", ");
-  const rows = iGM_Db
+  const rows = (await iGM_Db
     .query(
       `SELECT iGM_PostId AS iGM_TargetId, COUNT(*) AS iGM_Count
          FROM iGM_Comments
         WHERE iGM_Status = 'visible' AND iGM_PostId IN (${placeholders})
         GROUP BY iGM_PostId`,
     )
-    .all(...unique) as { iGM_TargetId: string; iGM_Count: number }[];
+    .all(...unique)) as { iGM_TargetId: string; iGM_Count: number }[];
   for (const row of rows) map.set(row.iGM_TargetId, row.iGM_Count);
   return map;
 }

@@ -38,16 +38,16 @@ import {
 
 // 核心逻辑 //
 /* ---------- 分类列表 ---------- */
-function iGM_HandleCategories(ctx: iGM_RouteContext) {
+async function iGM_HandleCategories(ctx: iGM_RouteContext) {
   void ctx;
-  return iGM_Ok({ items: iGM_GetCategories() });
+  return iGM_Ok({ items: await iGM_GetCategories() });
 }
 
 /* ---------- 帖子列表（分类/标签/搜索/分页） ---------- */
-function iGM_HandlePosts(ctx: iGM_RouteContext) {
-  const currentUser = iGM_CurrentUser(ctx);
+async function iGM_HandlePosts(ctx: iGM_RouteContext) {
+  const currentUser = await iGM_CurrentUser(ctx);
   const { page, pageSize } = iGM_PageQuery(ctx);
-  const data = iGM_ListPublishedPosts(currentUser?.iGM_Id ?? null, {
+  const data = await iGM_ListPublishedPosts(currentUser?.iGM_Id ?? null, {
     categorySlug: iGM_Query(ctx.query, "category") || undefined,
     tagSlug: iGM_Query(ctx.query, "tag") || undefined,
     authorId: iGM_Query(ctx.query, "author") || undefined,
@@ -59,12 +59,12 @@ function iGM_HandlePosts(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 发帖 ---------- */
-function iGM_HandleCreatePost(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleCreatePost(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "createPost", `user:${user.iGM_Id}`);
 
   const categoryId = iGM_Field(ctx.body, "categoryId").trim();
-  const post = iGM_CreatePostService(user, {
+  const post = await iGM_CreatePostService(user, {
     title: iGM_Field(ctx.body, "title"),
     content: iGM_Field(ctx.body, "content"),
     categoryId: categoryId.length > 0 ? categoryId : null,
@@ -78,21 +78,21 @@ function iGM_HandleCreatePost(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 指定用户公开资料 ---------- */
-function iGM_HandleProfile(ctx: iGM_RouteContext) {
+async function iGM_HandleProfile(ctx: iGM_RouteContext) {
   const userId = iGM_Query(ctx.query, "userId");
   if (!userId) {
     return iGM_Ok({ profile: null });
   }
-  return iGM_Ok({ profile: iGM_GetPublicProfileService(userId) });
+  return iGM_Ok({ profile: await iGM_GetPublicProfileService(userId) });
 }
 
 /* ---------- 更新本人资料 ---------- */
-function iGM_HandleUpdateProfile(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleUpdateProfile(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "profileUpdate", `user:${user.iGM_Id}`);
 
   // 仅接受白名单字段；空串由业务层归一为 NULL（清空）
-  const updated = iGM_UpdateMyProfileService(user, {
+  const updated = await iGM_UpdateMyProfileService(user, {
     displayName: iGM_Field(ctx.body, "displayName"),
     avatar: iGM_Field(ctx.body, "avatar"),
     bio: iGM_Field(ctx.body, "bio"),
@@ -102,26 +102,26 @@ function iGM_HandleUpdateProfile(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 我的帖子（仅本人，含隐藏帖） ---------- */
-function iGM_HandleMyPosts(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleMyPosts(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const { page, pageSize } = iGM_PageQuery(ctx);
-  return iGM_Ok(iGM_ListMyPostsService(user, page, pageSize));
+  return iGM_Ok(await iGM_ListMyPostsService(user, page, pageSize));
 }
 
 /* ---------- 我的评论（仅本人，含被隐藏评论） ---------- */
-function iGM_HandleMyComments(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleMyComments(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const { page, pageSize } = iGM_PageQuery(ctx);
-  return iGM_Ok(iGM_ListMyCommentsService(user, page, pageSize));
+  return iGM_Ok(await iGM_ListMyCommentsService(user, page, pageSize));
 }
 
 /* ---------- 指定用户公开帖子 ---------- */
-function iGM_HandleUserPosts(ctx: iGM_RouteContext) {
-  const currentUser = iGM_CurrentUser(ctx);
+async function iGM_HandleUserPosts(ctx: iGM_RouteContext) {
+  const currentUser = await iGM_CurrentUser(ctx);
   const userId = iGM_Query(ctx.query, "userId");
   const { page, pageSize } = iGM_PageQuery(ctx);
   return iGM_Ok(
-    iGM_ListUserPostsService(
+    await iGM_ListUserPostsService(
       currentUser?.iGM_Id ?? null,
       userId,
       page,
@@ -131,12 +131,12 @@ function iGM_HandleUserPosts(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 指定用户公开评论 ---------- */
-function iGM_HandleUserComments(ctx: iGM_RouteContext) {
-  const currentUser = iGM_CurrentUser(ctx);
+async function iGM_HandleUserComments(ctx: iGM_RouteContext) {
+  const currentUser = await iGM_CurrentUser(ctx);
   const userId = iGM_Query(ctx.query, "userId");
   const { page, pageSize } = iGM_PageQuery(ctx);
   return iGM_Ok(
-    iGM_ListUserCommentsService(
+    await iGM_ListUserCommentsService(
       currentUser?.iGM_Id ?? null,
       userId,
       page,

@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS iGM_ResourceCategories (
 -- ===== 资源标签表：名称大小写不敏感唯一 =====
 CREATE TABLE IF NOT EXISTS iGM_ResourceTags (
   iGM_Id   TEXT PRIMARY KEY,
-  iGM_Name TEXT NOT NULL UNIQUE COLLATE NOCASE,
+  iGM_Name TEXT NOT NULL UNIQUE,
   iGM_Slug TEXT NOT NULL UNIQUE
 );
 
@@ -153,7 +153,7 @@ CREATE INDEX IF NOT EXISTS iGM_Idx_ResourceTagsMap_Tag
 
 -- ===== 官方资源分类种子（固定 ID，迁移幂等） =====
 -- 前端按 slug 优先匹配语言包 resource.categories.<slug>，匹配不到时显示 iGM_Name
-INSERT OR IGNORE INTO iGM_ResourceCategories (iGM_Id, iGM_Name, iGM_Slug, iGM_SortOrder) VALUES
+INSERT INTO iGM_ResourceCategories (iGM_Id, iGM_Name, iGM_Slug, iGM_SortOrder) VALUES
   ('rcat-mod',      '模组插件', 'mod',      0),
   ('rcat-texture',  '材质光影', 'texture',  1),
   ('rcat-map',      '地图存档', 'map',      2),

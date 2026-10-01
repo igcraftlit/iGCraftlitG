@@ -40,7 +40,7 @@ import {
 // 核心逻辑 //
 /* ---------- 上传文件 ---------- */
 async function iGM_HandleUpload(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "upload", `user:${user.iGM_Id}`);
   const file = iGM_ExtractUploadFile(ctx.body);
   // kind=image 为封面类上传，服务端强制真实图片内容
@@ -51,22 +51,22 @@ async function iGM_HandleUpload(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 我的文件列表 ---------- */
-function iGM_HandleMyFiles(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleMyFiles(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const { page, pageSize } = iGM_PageQuery(ctx);
-  return iGM_Ok(iGM_ListMyFilesService(user, page, pageSize));
+  return iGM_Ok(await iGM_ListMyFilesService(user, page, pageSize));
 }
 
 /* ---------- 文件详情 ---------- */
-function iGM_HandleDetail(ctx: iGM_RouteContext) {
+async function iGM_HandleDetail(ctx: iGM_RouteContext) {
   const fileId = iGM_Query(ctx.query, "fileId");
   if (!fileId) throw new iGM_ContentError("file.errors.notFound", 404);
-  return iGM_Ok({ file: iGM_GetFileDto(fileId) });
+  return iGM_Ok({ file: await iGM_GetFileDto(fileId) });
 }
 
 /* ---------- 删除文件 ---------- */
 async function iGM_HandleDelete(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const fileId = iGM_Query(ctx.query, "fileId");
   if (!fileId) throw new iGM_ContentError("file.errors.notFound", 404);
   await iGM_DeleteFileService(user, fileId);

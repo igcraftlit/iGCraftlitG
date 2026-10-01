@@ -40,50 +40,50 @@ import {
 
 // 核心逻辑 //
 /* ---------- 通知列表（含未读数） ---------- */
-function iGM_HandleList(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleList(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const { page, pageSize } = iGM_PageQuery(ctx);
   const onlyUnread = iGM_Query(ctx.query, "unread") === "true";
   return iGM_Ok(
-    iGM_ListMyNotificationsService(user.iGM_Id, onlyUnread, page, pageSize),
+    await iGM_ListMyNotificationsService(user.iGM_Id, onlyUnread, page, pageSize),
   );
 }
 
 /* ---------- 未读数 ---------- */
-function iGM_HandleUnreadCount(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
-  return iGM_Ok({ unreadCount: iGM_GetUnreadCountService(user.iGM_Id) });
+async function iGM_HandleUnreadCount(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
+  return iGM_Ok({ unreadCount: await iGM_GetUnreadCountService(user.iGM_Id) });
 }
 
 /* ---------- 单条通知详情 ---------- */
-function iGM_HandleDetail(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleDetail(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const notificationId = iGM_Query(ctx.query, "notificationId");
   if (!notificationId) {
     throw new iGM_ContentError("notification.errors.notFound", 404);
   }
   return iGM_Ok({
-    notification: iGM_GetNotificationService(user.iGM_Id, notificationId),
+    notification: await iGM_GetNotificationService(user.iGM_Id, notificationId),
   });
 }
 
 /* ---------- 标记单条已读 ---------- */
-function iGM_HandleMarkRead(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleMarkRead(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const notificationId = iGM_Field(ctx.body, "notificationId").trim();
   if (!notificationId) {
     throw new iGM_ContentError("notification.errors.notFound", 404);
   }
   return iGM_Ok(
-    { notification: iGM_MarkReadService(user.iGM_Id, notificationId) },
+    { notification: await iGM_MarkReadService(user.iGM_Id, notificationId) },
     "notification.messages.markedRead",
   );
 }
 
 /* ---------- 全部已读 ---------- */
-function iGM_HandleMarkAllRead(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
-  const affected = iGM_MarkAllReadService(user.iGM_Id);
+async function iGM_HandleMarkAllRead(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
+  const affected = await iGM_MarkAllReadService(user.iGM_Id);
   return iGM_Ok(
     { affected },
     "notification.messages.allMarkedRead",
@@ -91,27 +91,27 @@ function iGM_HandleMarkAllRead(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 删除通知 ---------- */
-function iGM_HandleDelete(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleDelete(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const notificationId = iGM_Query(ctx.query, "notificationId");
   if (!notificationId) {
     throw new iGM_ContentError("notification.errors.notFound", 404);
   }
-  iGM_DeleteNotificationService(user.iGM_Id, notificationId);
+  await iGM_DeleteNotificationService(user.iGM_Id, notificationId);
   return iGM_Ok({ deleted: true }, "notification.messages.deleted");
 }
 
 /* ---------- 获取通知偏好 ---------- */
-function iGM_HandleGetPreference(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
-  return iGM_Ok({ preference: iGM_GetPreference(user.iGM_Id) });
+async function iGM_HandleGetPreference(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
+  return iGM_Ok({ preference: await iGM_GetPreference(user.iGM_Id) });
 }
 
 /* ---------- 更新通知偏好 ---------- */
-function iGM_HandleUpdatePreference(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleUpdatePreference(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "notificationWrite", `user:${user.iGM_Id}`);
-  const preference = iGM_UpdatePreferenceService(
+  const preference = await iGM_UpdatePreferenceService(
     user.iGM_Id,
     iGM_BoolField(ctx.body, "siteEnabled"),
     iGM_BoolField(ctx.body, "emailEnabled"),

@@ -114,20 +114,22 @@ function iGM_ParseVersionTypes(raw: string | undefined): string[] {
 }
 
 /** 版本分页列表（附带当前用户“是否已安装”标记） */
-export function iGM_ListGameVersions(
+export async function iGM_ListGameVersions(
   user: iGM_UserRow | null,
   query: iGM_GameVersionQuery,
-): iGM_MinecraftVersionListData {
+): Promise<iGM_MinecraftVersionListData> {
   const page = Math.max(1, Number(query.page) || 1);
   const pageSize = Math.min(100, Math.max(1, Number(query.pageSize) || 12));
-  const result = iGM_ListMinecraftVersions({
+  const result = await iGM_ListMinecraftVersions({
     types: iGM_ParseVersionTypes(query.type),
     search: query.search ?? null,
     sort: query.sort === "oldest" ? "oldest" : "newest",
     page,
     pageSize,
   });
-  const installed = user ? iGM_ListInstalledVersions(user.iGM_Id) : new Set<string>();
+  const installed = user
+    ? await iGM_ListInstalledVersions(user.iGM_Id)
+    : new Set<string>();
 
   return {
     items: result.items.map((row) =>
@@ -144,18 +146,18 @@ export function iGM_ListGameVersions(
  * 版本详情；找不到抛 404
  * 说明：先按主键匹配，未命中再按版本号匹配，便于前端以可读的版本号作为地址参数
  */
-export function iGM_GetGameVersion(
+export async function iGM_GetGameVersion(
   user: iGM_UserRow | null,
   versionId: string,
-): iGM_MinecraftVersionDto {
+): Promise<iGM_MinecraftVersionDto> {
   const row =
-    iGM_FindMinecraftVersionById(versionId) ??
-    iGM_FindMinecraftVersionByVersion(versionId);
+    (await iGM_FindMinecraftVersionById(versionId)) ??
+    (await iGM_FindMinecraftVersionByVersion(versionId));
   if (!row) {
     throw new iGM_GameError("game.errors.versionNotFound", 404);
   }
   const installed = user
-    ? iGM_ListInstalledVersions(user.iGM_Id).has(row.iGM_Version)
+    ? (await iGM_ListInstalledVersions(user.iGM_Id)).has(row.iGM_Version)
     : false;
   return iGM_ToMinecraftVersionDto(row, installed);
 }
@@ -197,13 +199,13 @@ export function iGM_SubscribeTask(
 /* ---------- 安装任务 ---------- */
 
 /** 任务进度落库（节流由引擎保证） */
-function iGM_PersistProgress(
+async function iGM_PersistProgress(
   taskId: string,
   event: iGM_GameProgressEvent,
-): void {
+): Promise<void> {
   const now = new Date().toISOString();
   if (event.type === "progress") {
-    iGM_UpdateGameInstallProgress(taskId, {
+    await iGM_UpdateGameInstallProgress(taskId, {
       status: "running",
       progress: event.percent,
       totalFiles: event.totalFiles,
@@ -213,7 +215,7 @@ function iGM_PersistProgress(
     return;
   }
   if (event.type === "start") {
-    iGM_UpdateGameInstallProgress(taskId, {
+    await iGM_UpdateGameInstallProgress(taskId, {
       status: "running",
       totalFiles: event.totalFiles,
       downloadedFiles: 0,
@@ -243,7 +245,7 @@ export async function iGM_StartGameInstall(
   const version = (input.version ?? "").trim();
   if (!version) throw new iGM_GameError("game.errors.versionRequired", 400);
 
-  const versionRow = iGM_FindMinecraftVersionByVersion(version);
+  const versionRow = await iGM_FindMinecraftVersionByVersion(version);
   if (!versionRow) throw new iGM_GameError("game.errors.versionNotFound", 404);
 
   const loader = iGM_NormalizeGameLoader(input.loader ?? "none");
@@ -256,7 +258,7 @@ export async function iGM_StartGameInstall(
     );
   }
 
-  const active = iGM_FindActiveGameInstall(user.iGM_Id, version, loader);
+  const active = await iGM_FindActiveGameInstall(user.iGM_Id, version, loader);
   if (active) throw new iGM_GameError("game.errors.alreadyInstalling", 409);
 
   const versionDir = iGM_ResolveVersionDir(version, loader);
@@ -266,7 +268,7 @@ export async function iGM_StartGameInstall(
   );
 
   const now = new Date().toISOString();
-  const install = iGM_CreateGameInstall({
+  const install = await iGM_CreateGameInstall({
     userId: user.iGM_Id,
     version,
     installDir,
@@ -303,7 +305,7 @@ export async function iGM_StartGameInstall(
 async function iGM_RunTask(runtime: iGM_TaskRuntime): Promise<void> {
   const { taskId } = runtime;
   try {
-    iGM_DeleteGameFiles(taskId);
+    await iGM_DeleteGameFiles(taskId);
 
     await iGM_RunGameInstall({
       taskId,
@@ -313,15 +315,15 @@ async function iGM_RunTask(runtime: iGM_TaskRuntime): Promise<void> {
       loaderVersion: runtime.loaderVersion,
       hooks: {
         signal: runtime.canceled,
-        onEvent: (event) => {
+        onEvent: async (event) => {
           iGM_Dispatch(runtime, event);
-          iGM_PersistProgress(taskId, event);
+          await iGM_PersistProgress(taskId, event);
         },
-        onPlan: (files) => {
-          iGM_InsertGameFiles(taskId, files);
+        onPlan: async (files) => {
+          await iGM_InsertGameFiles(taskId, files);
         },
-        onFileStatus: (path, status) => {
-          iGM_UpdateGameFileStatus(
+        onFileStatus: async (path, status) => {
+          await iGM_UpdateGameFileStatus(
             taskId,
             path,
             status as iGM_GameFileStatus,
@@ -331,7 +333,7 @@ async function iGM_RunTask(runtime: iGM_TaskRuntime): Promise<void> {
       },
     });
 
-    iGM_UpdateGameInstallProgress(taskId, {
+    await iGM_UpdateGameInstallProgress(taskId, {
       status: "completed",
       progress: 100,
       error: null,
@@ -345,7 +347,7 @@ async function iGM_RunTask(runtime: iGM_TaskRuntime): Promise<void> {
       error instanceof iGM_GameError
         ? error.message
         : "game.errors.installFailed";
-    iGM_UpdateGameInstallProgress(taskId, {
+    await iGM_UpdateGameInstallProgress(taskId, {
       status: canceled ? "canceled" : "failed",
       error: canceled ? null : messageKey,
       now: new Date().toISOString(),
@@ -368,11 +370,11 @@ async function iGM_RunTask(runtime: iGM_TaskRuntime): Promise<void> {
 }
 
 /** 查询安装任务（仅任务所有者可见） */
-export function iGM_GetGameInstall(
+export async function iGM_GetGameInstall(
   user: iGM_UserRow,
   taskId: string,
-): iGM_GameInstallDto {
-  const row = iGM_FindGameInstallById(taskId);
+): Promise<iGM_GameInstallDto> {
+  const row = await iGM_FindGameInstallById(taskId);
   if (!row || row.iGM_UserId !== user.iGM_Id) {
     throw new iGM_GameError("game.errors.taskNotFound", 404);
   }
@@ -398,7 +400,7 @@ async function iGM_WaitRuntimeStop(runtime: iGM_TaskRuntime | undefined): Promis
  * 返回该次任务登记的文件数量（供前端提示清理规模）。
  */
 async function iGM_PurgeInstallFiles(row: iGM_GameInstallRow): Promise<number> {
-  const files = iGM_ListGameFiles(row.iGM_Id);
+  const files = await iGM_ListGameFiles(row.iGM_Id);
   if (isAbsolute(row.iGM_InstallDir)) {
     await rm(row.iGM_InstallDir, { recursive: true, force: true }).catch(
       () => undefined,
@@ -416,7 +418,7 @@ export async function iGM_CancelGameInstall(
   taskId: string,
   purge = false,
 ): Promise<iGM_GameInstallDto> {
-  const row = iGM_FindGameInstallById(taskId);
+  const row = await iGM_FindGameInstallById(taskId);
   if (!row || row.iGM_UserId !== user.iGM_Id) {
     throw new iGM_GameError("game.errors.taskNotFound", 404);
   }
@@ -424,23 +426,23 @@ export async function iGM_CancelGameInstall(
   if (runtime?.running) {
     runtime.canceled.aborted = true;
   } else if (!purge) {
-    iGM_UpdateGameInstallProgress(taskId, {
+    await iGM_UpdateGameInstallProgress(taskId, {
       status: "canceled",
       now: new Date().toISOString(),
     });
   }
 
   if (!purge) {
-    return iGM_GetGameInstall(user, taskId);
+    return await iGM_GetGameInstall(user, taskId);
   }
 
   await iGM_WaitRuntimeStop(runtime);
   const dto = iGM_ToGameInstallDto(
-    iGM_FindGameInstallById(taskId) ?? { ...row, iGM_Status: "canceled" },
+    (await iGM_FindGameInstallById(taskId)) ?? { ...row, iGM_Status: "canceled" },
   );
   await iGM_PurgeInstallFiles(row);
-  iGM_DeleteGameFiles(taskId);
-  iGM_DeleteGameInstall(taskId);
+  await iGM_DeleteGameFiles(taskId);
+  await iGM_DeleteGameInstall(taskId);
   return dto;
 }
 
@@ -452,7 +454,7 @@ export async function iGM_RemoveGameTask(
   user: iGM_UserRow,
   taskId: string,
 ): Promise<{ removed: number }> {
-  const row = iGM_FindGameInstallById(taskId);
+  const row = await iGM_FindGameInstallById(taskId);
   if (!row || row.iGM_UserId !== user.iGM_Id) {
     throw new iGM_GameError("game.errors.taskNotFound", 404);
   }
@@ -464,16 +466,16 @@ export async function iGM_RemoveGameTask(
   }
 
   const removed = await iGM_PurgeInstallFiles(row);
-  iGM_DeleteGameFiles(taskId);
-  iGM_DeleteGameInstall(taskId);
+  await iGM_DeleteGameFiles(taskId);
+  await iGM_DeleteGameInstall(taskId);
   return { removed };
 }
 
 /* ---------- 已安装版本管理 ---------- */
 
 /** 列出该用户已安装完成的版本 */
-export function iGM_ListInstalledGameVersions(user: iGM_UserRow): iGM_GameInstallDto[] {
-  return iGM_ListGameInstallsByUser(user.iGM_Id, ["completed"]).map(
+export async function iGM_ListInstalledGameVersions(user: iGM_UserRow): Promise<iGM_GameInstallDto[]> {
+  return (await iGM_ListGameInstallsByUser(user.iGM_Id, ["completed"])).map(
     iGM_ToGameInstallDto,
   );
 }
@@ -491,13 +493,15 @@ function iGM_ParseInstallStatuses(raw: string | undefined): iGM_GameInstallStatu
  * 列出该用户的安装任务（不限状态，或按 status 参数过滤）
  * 供「安装管理」页展示进行中/失败任务，便于查看进度与取消
  */
-export function iGM_ListGameInstalls(
+export async function iGM_ListGameInstalls(
   user: iGM_UserRow,
   status?: string,
-): iGM_GameInstallDto[] {
-  return iGM_ListGameInstallsByUser(
-    user.iGM_Id,
-    iGM_ParseInstallStatuses(status),
+): Promise<iGM_GameInstallDto[]> {
+  return (
+    await iGM_ListGameInstallsByUser(
+      user.iGM_Id,
+      iGM_ParseInstallStatuses(status),
+    )
   ).map(iGM_ToGameInstallDto);
 }
 
@@ -506,11 +510,11 @@ export async function iGM_VerifyGameInstall(
   user: iGM_UserRow,
   installId: string,
 ): Promise<iGM_GameVerifyResult> {
-  const row = iGM_FindGameInstallById(installId);
+  const row = await iGM_FindGameInstallById(installId);
   if (!row || row.iGM_UserId !== user.iGM_Id) {
     throw new iGM_GameError("game.errors.taskNotFound", 404);
   }
-  const files = iGM_ListGameFiles(installId);
+  const files = await iGM_ListGameFiles(installId);
   let ok = 0;
   let missing = 0;
   for (const file of files) {
@@ -540,11 +544,11 @@ export async function iGM_VerifyGameInstall(
 }
 
 /** 修复安装：复位错误状态后重新执行下载（已完整文件由引擎按 SHA1 自动跳过） */
-export function iGM_RepairGameInstall(
+export async function iGM_RepairGameInstall(
   user: iGM_UserRow,
   installId: string,
-): iGM_GameInstallDto {
-  const row = iGM_FindGameInstallById(installId);
+): Promise<iGM_GameInstallDto> {
+  const row = await iGM_FindGameInstallById(installId);
   if (!row || row.iGM_UserId !== user.iGM_Id) {
     throw new iGM_GameError("game.errors.taskNotFound", 404);
   }
@@ -566,14 +570,14 @@ export function iGM_RepairGameInstall(
     running: true,
   };
   iGM_TaskRuntimes.set(installId, runtime);
-  iGM_UpdateGameInstallProgress(installId, {
+  await iGM_UpdateGameInstallProgress(installId, {
     status: "running",
     error: null,
     now: new Date().toISOString(),
   });
 
   void iGM_RunTask(runtime);
-  return iGM_GetGameInstall(user, installId);
+  return await iGM_GetGameInstall(user, installId);
 }
 
 /**
@@ -585,7 +589,7 @@ export async function iGM_RemoveGameInstall(
   user: iGM_UserRow,
   installId: string,
 ): Promise<{ removed: boolean }> {
-  const row = iGM_FindGameInstallById(installId);
+  const row = await iGM_FindGameInstallById(installId);
   if (!row || row.iGM_UserId !== user.iGM_Id) {
     throw new iGM_GameError("game.errors.taskNotFound", 404);
   }
@@ -601,15 +605,15 @@ export async function iGM_RemoveGameInstall(
   }
 
   iGM_TaskRuntimes.delete(installId);
-  iGM_DeleteGameInstall(installId);
+  await iGM_DeleteGameInstall(installId);
   return { removed: true };
 }
 
 /* ---------- 模组加载器 ---------- */
 
 /** 列出模组加载器字典（Forge / NeoForge 置灰由前端按 supported 处理） */
-export function iGM_ListGameLoaders(): iGM_ModLoaderDto[] {
-  return iGM_ListModLoaders().map(iGM_ToModLoaderDto);
+export async function iGM_ListGameLoaders(): Promise<iGM_ModLoaderDto[]> {
+  return (await iGM_ListModLoaders()).map(iGM_ToModLoaderDto);
 }
 
 /**

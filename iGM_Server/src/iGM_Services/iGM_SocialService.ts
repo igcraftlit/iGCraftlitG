@@ -107,14 +107,14 @@ const iGM_DefaultPageSize = 20;
 const iGM_MaxPageSize = 100;
 
 /** 用户行转作者简要 DTO（含认证组织徽标） */
-function iGM_ToAuthorDto(user: iGM_UserRow): iGM_AuthorDto {
+async function iGM_ToAuthorDto(user: iGM_UserRow): Promise<iGM_AuthorDto> {
   return {
     id: user.iGM_Id,
     username: user.iGM_Username,
     displayName: user.iGM_DisplayName,
     avatar: user.iGM_Avatar,
     role: user.iGM_Role,
-    verifiedOrg: iGM_ResolveUserOrgBadge(
+    verifiedOrg: await iGM_ResolveUserOrgBadge(
       user.iGM_VerifiedOrgId ?? null,
       user.iGM_Email,
     ),
@@ -142,8 +142,8 @@ function iGM_ResolvePagination(pageRaw?: number, pageSizeRaw?: number): {
 /* ---------- 通用校验 ---------- */
 
 /** 目标用户必须存在且 active，否则按不存在处理，避免泄露状态 */
-function iGM_RequireActiveTarget(userId: string): iGM_UserRow {
-  const target = iGM_FindUserById(userId);
+async function iGM_RequireActiveTarget(userId: string): Promise<iGM_UserRow> {
+  const target = await iGM_FindUserById(userId);
   if (!target || target.iGM_Status !== "active") {
     throw new iGM_SocialError("social.errors.userNotFound", 404);
   }
@@ -163,44 +163,47 @@ function iGM_RejectSelf(meId: string, targetId: string): void {
  * 判断 me 与 target 之间是否存在任一方向的拉黑。
  * 返回：null 无拉黑；"me" 我拉黑了对方；"target" 对方拉黑了我
  */
-export function iGM_GetBlockDirection(
+export async function iGM_GetBlockDirection(
   meId: string,
   targetId: string,
-): "me" | "target" | null {
-  if (iGM_FindBlock(meId, targetId)) return "me";
-  if (iGM_FindBlock(targetId, meId)) return "target";
+): Promise<"me" | "target" | null> {
+  if (await iGM_FindBlock(meId, targetId)) return "me";
+  if (await iGM_FindBlock(targetId, meId)) return "target";
   return null;
 }
 
 /* ---------- 关系状态汇总 ---------- */
 
 /** 当前登录用户与目标用户的关系汇总（个人主页按钮使用） */
-export function iGM_GetRelationStateService(
+export async function iGM_GetRelationStateService(
   meId: string,
   targetId: string,
-): iGM_RelationStateDto {
-  const following = iGM_FindFollow(meId, targetId) !== null;
-  const followedBy = iGM_FindFollow(targetId, meId) !== null;
-  const blockDirection = iGM_GetBlockDirection(meId, targetId);
+): Promise<iGM_RelationStateDto> {
+  const following = (await iGM_FindFollow(meId, targetId)) !== null;
+  const followedBy = (await iGM_FindFollow(targetId, meId)) !== null;
+  const blockDirection = await iGM_GetBlockDirection(meId, targetId);
 
   return {
     following,
     followedBy,
-    friendState: iGM_ResolveFriendState(meId, targetId),
+    friendState: await iGM_ResolveFriendState(meId, targetId),
     blocked: blockDirection === "me",
     blockedBy: blockDirection === "target",
   };
 }
 
 /** 计算当前用户视角的好友状态 */
-function iGM_ResolveFriendState(meId: string, targetId: string): iGM_FriendState {
-  const outgoing = iGM_FindFriendRow(meId, targetId);
+async function iGM_ResolveFriendState(
+  meId: string,
+  targetId: string,
+): Promise<iGM_FriendState> {
+  const outgoing = await iGM_FindFriendRow(meId, targetId);
   if (outgoing) {
     if (outgoing.iGM_Status === "accepted") return "accepted";
     if (outgoing.iGM_Status === "pending") return "pending_outgoing";
     return "rejected";
   }
-  const incoming = iGM_FindFriendRow(targetId, meId);
+  const incoming = await iGM_FindFriendRow(targetId, meId);
   if (incoming) {
     if (incoming.iGM_Status === "accepted") return "accepted";
     if (incoming.iGM_Status === "pending") return "pending_incoming";
@@ -212,45 +215,45 @@ function iGM_ResolveFriendState(meId: string, targetId: string): iGM_FriendState
 /* ---------- 关注 ---------- */
 
 /** 关注用户：自我、黑名单拦截；已关注为幂等成功 */
-export function iGM_FollowService(
+export async function iGM_FollowService(
   user: iGM_UserRow,
   targetId: string,
-): iGM_RelationStateDto {
+): Promise<iGM_RelationStateDto> {
   iGM_RejectSelf(user.iGM_Id, targetId);
-  iGM_RequireActiveTarget(targetId);
-  if (iGM_GetBlockDirection(user.iGM_Id, targetId)) {
+  await iGM_RequireActiveTarget(targetId);
+  if (await iGM_GetBlockDirection(user.iGM_Id, targetId)) {
     throw new iGM_SocialError("social.errors.blocked", 422);
   }
-  iGM_CreateFollow(user.iGM_Id, targetId, new Date().toISOString());
-  return iGM_GetRelationStateService(user.iGM_Id, targetId);
+  await iGM_CreateFollow(user.iGM_Id, targetId, new Date().toISOString());
+  return await iGM_GetRelationStateService(user.iGM_Id, targetId);
 }
 
 /** 取消关注：幂等成功 */
-export function iGM_UnfollowService(
+export async function iGM_UnfollowService(
   user: iGM_UserRow,
   targetId: string,
-): iGM_RelationStateDto {
+): Promise<iGM_RelationStateDto> {
   iGM_RejectSelf(user.iGM_Id, targetId);
-  iGM_DeleteFollow(user.iGM_Id, targetId);
-  return iGM_GetRelationStateService(user.iGM_Id, targetId);
+  await iGM_DeleteFollow(user.iGM_Id, targetId);
+  return await iGM_GetRelationStateService(user.iGM_Id, targetId);
 }
 
 /* ---------- 好友 ---------- */
 
 /** 发送好友申请：黑名单拦截；已有申请/好友按状态拒绝或允许重新申请 */
-export function iGM_SendFriendRequestService(
+export async function iGM_SendFriendRequestService(
   user: iGM_UserRow,
   targetId: string,
   locale?: string,
-): iGM_FriendRequestDto {
+): Promise<iGM_FriendRequestDto> {
   iGM_RejectSelf(user.iGM_Id, targetId);
-  iGM_RequireActiveTarget(targetId);
-  if (iGM_GetBlockDirection(user.iGM_Id, targetId)) {
+  await iGM_RequireActiveTarget(targetId);
+  if (await iGM_GetBlockDirection(user.iGM_Id, targetId)) {
     throw new iGM_SocialError("social.errors.blocked", 422);
   }
 
   const now = new Date().toISOString();
-  const outgoing = iGM_FindFriendRow(user.iGM_Id, targetId);
+  const outgoing = await iGM_FindFriendRow(user.iGM_Id, targetId);
   if (outgoing) {
     if (outgoing.iGM_Status === "accepted") {
       throw new iGM_SocialError("social.errors.alreadyFriend", 422);
@@ -259,22 +262,22 @@ export function iGM_SendFriendRequestService(
       throw new iGM_SocialError("social.errors.alreadyRequested", 422);
     }
     // rejected：允许重新发起，原行回到 pending
-    iGM_UpdateFriendStatus(outgoing.iGM_Id, "pending", now);
+    await iGM_UpdateFriendStatus(outgoing.iGM_Id, "pending", now);
   } else {
-    const incoming = iGM_FindFriendRow(targetId, user.iGM_Id);
+    const incoming = await iGM_FindFriendRow(targetId, user.iGM_Id);
     if (incoming && incoming.iGM_Status === "accepted") {
       throw new iGM_SocialError("social.errors.alreadyFriend", 422);
     }
     if (incoming && incoming.iGM_Status === "pending") {
       // 对方已先发起申请：直接通过，互为好友
-      iGM_UpdateFriendStatus(incoming.iGM_Id, "accepted", now);
+      await iGM_UpdateFriendStatus(incoming.iGM_Id, "accepted", now);
     } else {
-      iGM_CreateFriendRequest(user.iGM_Id, targetId, now);
+      await iGM_CreateFriendRequest(user.iGM_Id, targetId, now);
     }
   }
 
   // 通知对方收到好友申请（自我触发在通知服务内跳过）
-  iGM_Notify({
+  await iGM_Notify({
     userId: targetId,
     actorId: user.iGM_Id,
     actorName: user.iGM_DisplayName ?? user.iGM_Username,
@@ -284,24 +287,24 @@ export function iGM_SendFriendRequestService(
     locale,
   });
 
-  return iGM_BuildRequestDto(user.iGM_Id, targetId);
+  return await iGM_BuildRequestDto(user.iGM_Id, targetId);
 }
 
 /** 处理好友申请：accept 同意 / reject 拒绝；仅处理收到的 pending 申请 */
-export function iGM_RespondFriendRequestService(
+export async function iGM_RespondFriendRequestService(
   user: iGM_UserRow,
   requestId: string,
   action: "accept" | "reject",
   locale?: string,
-): iGM_FriendRequestDto {
-  const incoming = iGM_ListIncomingRequests(user.iGM_Id).find(
+): Promise<iGM_FriendRequestDto> {
+  const incoming = (await iGM_ListIncomingRequests(user.iGM_Id)).find(
     (row) => row.iGM_Id === requestId,
   );
   if (!incoming) {
     throw new iGM_SocialError("social.errors.requestNotFound", 404);
   }
   const now = new Date().toISOString();
-  iGM_UpdateFriendStatus(
+  await iGM_UpdateFriendStatus(
     incoming.iGM_Id,
     action === "accept" ? "accepted" : "rejected",
     now,
@@ -309,7 +312,7 @@ export function iGM_RespondFriendRequestService(
 
   if (action === "accept") {
     // 通知申请者申请已通过
-    iGM_Notify({
+    await iGM_Notify({
       userId: incoming.iGM_UserId,
       actorId: user.iGM_Id,
       actorName: user.iGM_DisplayName ?? user.iGM_Username,
@@ -320,25 +323,28 @@ export function iGM_RespondFriendRequestService(
     });
   }
 
-  return iGM_BuildRequestDto(user.iGM_Id, incoming.iGM_UserId);
+  return await iGM_BuildRequestDto(user.iGM_Id, incoming.iGM_UserId);
 }
 
 /** 删除好友：解除双方 accepted 关系 */
-export function iGM_RemoveFriendService(
+export async function iGM_RemoveFriendService(
   user: iGM_UserRow,
   friendId: string,
-): void {
+): Promise<void> {
   iGM_RejectSelf(user.iGM_Id, friendId);
-  const removed = iGM_DeleteFriendship(user.iGM_Id, friendId);
+  const removed = await iGM_DeleteFriendship(user.iGM_Id, friendId);
   if (!removed) throw new iGM_SocialError("social.errors.friendNotFound", 404);
 }
 
 /** 组装单条申请 DTO（按当前用户方向） */
-function iGM_BuildRequestDto(meId: string, otherId: string): iGM_FriendRequestDto {
-  const row = iGM_FindFriendEither(meId, otherId);
+async function iGM_BuildRequestDto(
+  meId: string,
+  otherId: string,
+): Promise<iGM_FriendRequestDto> {
+  const row = await iGM_FindFriendEither(meId, otherId);
   if (!row) throw new iGM_SocialError("social.errors.requestNotFound", 404);
-  const requester = iGM_FindUserById(row.iGM_UserId);
-  const recipient = iGM_FindUserById(row.iGM_FriendId);
+  const requester = await iGM_FindUserById(row.iGM_UserId);
+  const recipient = await iGM_FindUserById(row.iGM_FriendId);
   if (!requester || !recipient) {
     throw new iGM_SocialError("social.errors.userNotFound", 404);
   }
@@ -347,8 +353,8 @@ function iGM_BuildRequestDto(meId: string, otherId: string): iGM_FriendRequestDt
     status: row.iGM_Status,
     direction: row.iGM_FriendId === meId ? "incoming" : "outgoing",
     createdAt: row.iGM_CreatedAt,
-    requester: iGM_ToAuthorDto(requester),
-    recipient: iGM_ToAuthorDto(recipient),
+    requester: await iGM_ToAuthorDto(requester),
+    recipient: await iGM_ToAuthorDto(recipient),
   };
 }
 
@@ -358,19 +364,19 @@ function iGM_BuildRequestDto(meId: string, otherId: string): iGM_FriendRequestDt
  * 拉黑用户：拒绝自我；拉黑同时清理双向关注、好友（含 pending 申请），
  * 保证拉黑后双方不存在互动关系；已拉黑为幂等成功
  */
-export function iGM_BlockService(
+export async function iGM_BlockService(
   user: iGM_UserRow,
   targetId: string,
-): void {
+): Promise<void> {
   iGM_RejectSelf(user.iGM_Id, targetId);
-  iGM_RequireActiveTarget(targetId);
+  await iGM_RequireActiveTarget(targetId);
   const now = new Date().toISOString();
-  iGM_CreateBlock(user.iGM_Id, targetId, now);
+  await iGM_CreateBlock(user.iGM_Id, targetId, now);
   // 清理双向关注
-  iGM_DeleteFollow(user.iGM_Id, targetId);
-  iGM_DeleteFollow(targetId, user.iGM_Id);
+  await iGM_DeleteFollow(user.iGM_Id, targetId);
+  await iGM_DeleteFollow(targetId, user.iGM_Id);
   // 清理两人之间的好友与申请行（任意状态、任意方向）
-  iGM_Db.run(
+  await iGM_Db.run(
     `DELETE FROM iGM_Friends
       WHERE (iGM_UserId = ? AND iGM_FriendId = ?)
          OR (iGM_UserId = ? AND iGM_FriendId = ?)`,
@@ -379,102 +385,104 @@ export function iGM_BlockService(
 }
 
 /** 取消拉黑：幂等成功 */
-export function iGM_UnblockService(user: iGM_UserRow, targetId: string): void {
+export async function iGM_UnblockService(
+  user: iGM_UserRow,
+  targetId: string,
+): Promise<void> {
   iGM_RejectSelf(user.iGM_Id, targetId);
-  iGM_DeleteBlock(user.iGM_Id, targetId);
+  await iGM_DeleteBlock(user.iGM_Id, targetId);
 }
 
 /* ---------- 名单查询 ---------- */
 
 /** 关注列表 */
-export function iGM_ListFollowingService(
+export async function iGM_ListFollowingService(
   userId: string,
   pageRaw?: number,
   pageSizeRaw?: number,
-): iGM_RelationListData {
+): Promise<iGM_RelationListData> {
   const { page, pageSize } = iGM_ResolvePagination(pageRaw, pageSizeRaw);
-  const rows = iGM_ListFollowing({
+  const rows = await iGM_ListFollowing({
     userId,
     limit: pageSize,
     offset: (page - 1) * pageSize,
   });
-  const users = iGM_FindUsersByIds(rows.map((row) => row.iGM_FollowingId));
+  const users = await iGM_FindUsersByIds(rows.map((row) => row.iGM_FollowingId));
   const userMap = new Map(users.map((item) => [item.iGM_Id, item]));
+  const total = await iGM_CountFollowing(userId);
+  const followingCount = total;
+  const followerCount = await iGM_CountFollowers(userId);
+  const items: iGM_RelationUserDto[] = [];
+  for (const row of rows) {
+    const u = userMap.get(row.iGM_FollowingId);
+    if (u) items.push({ createdAt: row.iGM_CreatedAt, user: await iGM_ToAuthorDto(u) });
+  }
   return {
-    items: rows
-      .map((row) => {
-        const u = userMap.get(row.iGM_FollowingId);
-        return u
-          ? { createdAt: row.iGM_CreatedAt, user: iGM_ToAuthorDto(u) }
-          : null;
-      })
-      .filter((item): item is iGM_RelationUserDto => item !== null),
-    total: iGM_CountFollowing(userId),
+    items,
+    total,
     page,
     pageSize,
-    totalPages: Math.max(1, Math.ceil(iGM_CountFollowing(userId) / pageSize)),
-    followingCount: iGM_CountFollowing(userId),
-    followerCount: iGM_CountFollowers(userId),
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+    followingCount,
+    followerCount,
   };
 }
 
 /** 粉丝列表 */
-export function iGM_ListFollowersService(
+export async function iGM_ListFollowersService(
   userId: string,
   pageRaw?: number,
   pageSizeRaw?: number,
-): iGM_RelationListData {
+): Promise<iGM_RelationListData> {
   const { page, pageSize } = iGM_ResolvePagination(pageRaw, pageSizeRaw);
-  const rows = iGM_ListFollowers({
+  const rows = await iGM_ListFollowers({
     userId,
     limit: pageSize,
     offset: (page - 1) * pageSize,
   });
-  const users = iGM_FindUsersByIds(rows.map((row) => row.iGM_FollowerId));
+  const users = await iGM_FindUsersByIds(rows.map((row) => row.iGM_FollowerId));
   const userMap = new Map(users.map((item) => [item.iGM_Id, item]));
+  const total = await iGM_CountFollowers(userId);
+  const followingCount = await iGM_CountFollowing(userId);
+  const followerCount = total;
+  const items: iGM_RelationUserDto[] = [];
+  for (const row of rows) {
+    const u = userMap.get(row.iGM_FollowerId);
+    if (u) items.push({ createdAt: row.iGM_CreatedAt, user: await iGM_ToAuthorDto(u) });
+  }
   return {
-    items: rows
-      .map((row) => {
-        const u = userMap.get(row.iGM_FollowerId);
-        return u
-          ? { createdAt: row.iGM_CreatedAt, user: iGM_ToAuthorDto(u) }
-          : null;
-      })
-      .filter((item): item is iGM_RelationUserDto => item !== null),
-    total: iGM_CountFollowers(userId),
+    items,
+    total,
     page,
     pageSize,
-    totalPages: Math.max(1, Math.ceil(iGM_CountFollowers(userId) / pageSize)),
-    followingCount: iGM_CountFollowing(userId),
-    followerCount: iGM_CountFollowers(userId),
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+    followingCount,
+    followerCount,
   };
 }
 
 /** 好友列表（双向 accepted） */
-export function iGM_ListFriendsService(
+export async function iGM_ListFriendsService(
   userId: string,
   pageRaw?: number,
   pageSizeRaw?: number,
-): iGM_FriendListData {
+): Promise<iGM_FriendListData> {
   const { page, pageSize } = iGM_ResolvePagination(pageRaw, pageSizeRaw);
-  const entries = iGM_ListFriends({
+  const entries = await iGM_ListFriends({
     userId,
     limit: pageSize,
     offset: (page - 1) * pageSize,
   });
-  const users = iGM_FindUsersByIds(entries.map((entry) => entry.friendId));
+  const users = await iGM_FindUsersByIds(entries.map((entry) => entry.friendId));
   const userMap = new Map(users.map((item) => [item.iGM_Id, item]));
-  const items = entries
-    .map((entry) => {
-      const u = userMap.get(entry.friendId);
-      return u
-        ? { createdAt: entry.createdAt, friend: iGM_ToAuthorDto(u) }
-        : null;
-    })
-    .filter((item): item is iGM_FriendEntryDto => item !== null);
+  const items: iGM_FriendEntryDto[] = [];
+  for (const entry of entries) {
+    const u = userMap.get(entry.friendId);
+    if (u) items.push({ createdAt: entry.createdAt, friend: await iGM_ToAuthorDto(u) });
+  }
 
   // 好友总数：双向匹配去重
-  const totalRow = iGM_Db
+  const totalRow = ((await iGM_Db
     .query(
       `SELECT COUNT(*) AS iGM_Count FROM (
          SELECT CASE WHEN iGM_UserId = ? THEN iGM_FriendId ELSE iGM_UserId END AS fid
@@ -483,7 +491,7 @@ export function iGM_ListFriendsService(
             AND (iGM_UserId = ? OR iGM_FriendId = ?)
           GROUP BY fid)`,
     )
-    .get(userId, userId, userId) as { iGM_Count: number };
+    .get(userId, userId, userId)) as { iGM_Count: number });
 
   return {
     items,
@@ -495,65 +503,68 @@ export function iGM_ListFriendsService(
 }
 
 /** 好友申请列表（收到的与发出的） */
-export function iGM_ListFriendRequestsService(userId: string): iGM_FriendRequestListData {
-  const toDto = (row: {
+export async function iGM_ListFriendRequestsService(userId: string): Promise<iGM_FriendRequestListData> {
+  const toDto = async (row: {
     iGM_Id: string;
     iGM_Status: "pending" | "accepted" | "rejected";
     iGM_CreatedAt: string;
     iGM_UserId: string;
     iGM_FriendId: string;
-  }): iGM_FriendRequestDto | null => {
-    const requester = iGM_FindUserById(row.iGM_UserId);
-    const recipient = iGM_FindUserById(row.iGM_FriendId);
+  }): Promise<iGM_FriendRequestDto | null> => {
+    const requester = await iGM_FindUserById(row.iGM_UserId);
+    const recipient = await iGM_FindUserById(row.iGM_FriendId);
     if (!requester || !recipient) return null;
     return {
       id: row.iGM_Id,
       status: row.iGM_Status,
       direction: row.iGM_FriendId === userId ? "incoming" : "outgoing",
       createdAt: row.iGM_CreatedAt,
-      requester: iGM_ToAuthorDto(requester),
-      recipient: iGM_ToAuthorDto(recipient),
+      requester: await iGM_ToAuthorDto(requester),
+      recipient: await iGM_ToAuthorDto(recipient),
     };
   };
-  const incoming = iGM_ListIncomingRequests(userId)
-    .map(toDto)
-    .filter((item): item is iGM_FriendRequestDto => item !== null);
-  const outgoing = iGM_ListOutgoingRequests(userId)
-    .map(toDto)
-    .filter((item): item is iGM_FriendRequestDto => item !== null);
+  const incomingRows = await iGM_ListIncomingRequests(userId);
+  const incoming: iGM_FriendRequestDto[] = [];
+  for (const row of incomingRows) {
+    const dto = await toDto(row);
+    if (dto !== null) incoming.push(dto);
+  }
+  const outgoingRows = await iGM_ListOutgoingRequests(userId);
+  const outgoing: iGM_FriendRequestDto[] = [];
+  for (const row of outgoingRows) {
+    const dto = await toDto(row);
+    if (dto !== null) outgoing.push(dto);
+  }
   return {
     incoming,
     outgoing,
-    incomingCount: iGM_CountIncomingRequests(userId),
+    incomingCount: await iGM_CountIncomingRequests(userId),
   };
 }
 
 /** 黑名单列表 */
-export function iGM_ListBlocksService(
+export async function iGM_ListBlocksService(
   userId: string,
   pageRaw?: number,
   pageSizeRaw?: number,
-): iGM_BlockListData {
+): Promise<iGM_BlockListData> {
   const { page, pageSize } = iGM_ResolvePagination(pageRaw, pageSizeRaw);
-  const rows = iGM_ListBlocks({
+  const rows = await iGM_ListBlocks({
     userId,
     limit: pageSize,
     offset: (page - 1) * pageSize,
   });
-  const users = iGM_FindUsersByIds(rows.map((row) => row.iGM_BlockedUserId));
+  const users = await iGM_FindUsersByIds(rows.map((row) => row.iGM_BlockedUserId));
   const userMap = new Map(users.map((item) => [item.iGM_Id, item]));
-  const items = rows
-    .map((row) => {
-      const u = userMap.get(row.iGM_BlockedUserId);
-      return u
-        ? { createdAt: row.iGM_CreatedAt, user: iGM_ToAuthorDto(u) }
-        : null;
-    })
-    .filter((item): item is iGM_RelationUserDto => item !== null);
+  const items: iGM_RelationUserDto[] = [];
+  for (const row of rows) {
+    const u = userMap.get(row.iGM_BlockedUserId);
+    if (u) items.push({ createdAt: row.iGM_CreatedAt, user: await iGM_ToAuthorDto(u) });
+  }
 
-  const totalRow = iGM_Db
+  const totalRow = ((await iGM_Db
     .query(`SELECT COUNT(*) AS iGM_Count FROM iGM_Blocks WHERE iGM_UserId = ?`)
-    .get(userId) as { iGM_Count: number };
+    .get(userId)) as { iGM_Count: number });
 
   return {
     items,
@@ -571,13 +582,13 @@ export function iGM_ListBlocksService(
  * 聚合其最近已发布帖子与可见评论，按时间倒序合并后分页。
  * 无任何关注/好友时返回空。
  */
-export function iGM_GetFeedService(
+export async function iGM_GetFeedService(
   userId: string,
   pageRaw?: number,
   pageSizeRaw?: number,
-): iGM_FeedData {
+): Promise<iGM_FeedData> {
   const { page, pageSize } = iGM_ResolvePagination(pageRaw, pageSizeRaw);
-  const sourceIds = iGM_GetFeedSourceIds(userId);
+  const sourceIds = await iGM_GetFeedSourceIds(userId);
   if (sourceIds.length === 0) {
     return { items: [], total: 0, page, pageSize, totalPages: 1 };
   }
@@ -585,28 +596,28 @@ export function iGM_GetFeedService(
   // 计数口径：帖子 + 评论
   const placeholders = sourceIds.map(() => "?").join(", ");
   const postTotal = (
-    iGM_Db
+    (await iGM_Db
       .query(
         `SELECT COUNT(*) AS iGM_Count FROM iGM_Posts
           WHERE iGM_Status = 'published' AND iGM_AuthorId IN (${placeholders})`,
       )
-      .get(...sourceIds) as { iGM_Count: number }
+      .get(...sourceIds)) as { iGM_Count: number }
   ).iGM_Count;
   const commentTotal = (
-    iGM_Db
+    (await iGM_Db
       .query(
         `SELECT COUNT(*) AS iGM_Count FROM iGM_Comments c
            JOIN iGM_Posts p ON p.iGM_Id = c.iGM_PostId
           WHERE c.iGM_Status = 'visible' AND p.iGM_Status = 'published'
             AND c.iGM_AuthorId IN (${placeholders})`,
       )
-      .get(...sourceIds) as { iGM_Count: number }
+      .get(...sourceIds)) as { iGM_Count: number }
   ).iGM_Count;
   const total = postTotal + commentTotal;
 
   // 多取一页数据用于内存合并分页
   const fetchSize = page * pageSize;
-  const postRows = iGM_Db
+  const postRows = (await iGM_Db
     .query(
       `SELECT iGM_Id, iGM_AuthorId, iGM_Title, iGM_Content, iGM_CreatedAt
          FROM iGM_Posts
@@ -614,14 +625,14 @@ export function iGM_GetFeedService(
         ORDER BY iGM_CreatedAt DESC, iGM_Id DESC
         LIMIT ?`,
     )
-    .all(...sourceIds, fetchSize) as Array<{
+    .all(...sourceIds, fetchSize)) as Array<{
     iGM_Id: string;
     iGM_AuthorId: string;
     iGM_Title: string;
     iGM_Content: string;
     iGM_CreatedAt: string;
   }>;
-  const commentRows = iGM_Db
+  const commentRows = (await iGM_Db
     .query(
       `SELECT c.iGM_Id, c.iGM_AuthorId, c.iGM_PostId, c.iGM_Content, c.iGM_CreatedAt,
               p.iGM_Title AS iGM_PostTitle
@@ -632,7 +643,7 @@ export function iGM_GetFeedService(
         ORDER BY c.iGM_CreatedAt DESC, c.iGM_Id DESC
         LIMIT ?`,
     )
-    .all(...sourceIds, fetchSize) as Array<{
+    .all(...sourceIds, fetchSize)) as Array<{
     iGM_Id: string;
     iGM_AuthorId: string;
     iGM_PostId: string;
@@ -641,7 +652,7 @@ export function iGM_GetFeedService(
     iGM_CreatedAt: string;
   }>;
 
-  const actorRows = iGM_FindUsersByIds(
+  const actorRows = await iGM_FindUsersByIds(
     Array.from(new Set([...postRows.map((r) => r.iGM_AuthorId), ...commentRows.map((r) => r.iGM_AuthorId)])),
   );
   const actorMap = new Map(actorRows.map((item) => [item.iGM_Id, item]));
@@ -652,7 +663,7 @@ export function iGM_GetFeedService(
     if (!actor) continue;
     items.push({
       type: "post",
-      actor: iGM_ToAuthorDto(actor),
+      actor: await iGM_ToAuthorDto(actor),
       createdAt: row.iGM_CreatedAt,
       postId: row.iGM_Id,
       postTitle: row.iGM_Title,
@@ -664,7 +675,7 @@ export function iGM_GetFeedService(
     if (!actor) continue;
     items.push({
       type: "comment",
-      actor: iGM_ToAuthorDto(actor),
+      actor: await iGM_ToAuthorDto(actor),
       createdAt: row.iGM_CreatedAt,
       postId: row.iGM_PostId,
       postTitle: row.iGM_PostTitle,
@@ -687,9 +698,9 @@ export function iGM_GetFeedService(
 }
 
 /** 获取动态流来源用户：关注 + 双向好友，去重且仅 active */
-function iGM_GetFeedSourceIds(userId: string): string[] {
-  const followingRows = iGM_ListFollowing({ userId, limit: iGM_MaxPageSize, offset: 0 });
-  const friendEntries = iGM_ListFriends({ userId, limit: iGM_MaxPageSize, offset: 0 });
+async function iGM_GetFeedSourceIds(userId: string): Promise<string[]> {
+  const followingRows = await iGM_ListFollowing({ userId, limit: iGM_MaxPageSize, offset: 0 });
+  const friendEntries = await iGM_ListFriends({ userId, limit: iGM_MaxPageSize, offset: 0 });
   const ids = new Set<string>();
   for (const row of followingRows) ids.add(row.iGM_FollowingId);
   for (const entry of friendEntries) ids.add(entry.friendId);

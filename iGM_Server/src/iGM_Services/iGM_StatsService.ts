@@ -143,25 +143,25 @@ function iGM_RecentDates(days: number): string[] {
 /* ---------- 惰性每日聚合 ---------- */
 
 /** 确保昨日聚合已写入 iGM_StatsDaily（每日首次统计请求时执行一次） */
-function iGM_EnsureYesterdayAggregated(): void {
+async function iGM_EnsureYesterdayAggregated(): Promise<void> {
   const yesterday = iGM_ShanghaiDate(new Date(Date.now() - 24 * 60 * 60 * 1000));
-  if (iGM_FindStatsDaily(yesterday)) return;
+  if (await iGM_FindStatsDaily(yesterday)) return;
   const { startIso, endIso } = iGM_ShanghaiDayBounds(yesterday);
-  iGM_UpsertStatsDaily({
+  await iGM_UpsertStatsDaily({
     iGM_Date: yesterday,
-    iGM_NewUsers: iGM_CountUsersBetween(startIso, endIso),
-    iGM_ActiveUsers: iGM_CountActiveUsersBetween(startIso, endIso, yesterday),
-    iGM_PostsCount: iGM_CountPostsBetween(startIso, endIso),
-    iGM_CommentsCount: iGM_CountCommentsBetween(startIso, endIso),
-    iGM_LikesCount: iGM_CountLikesBetween(startIso, endIso),
+    iGM_NewUsers: await iGM_CountUsersBetween(startIso, endIso),
+    iGM_ActiveUsers: await iGM_CountActiveUsersBetween(startIso, endIso, yesterday),
+    iGM_PostsCount: await iGM_CountPostsBetween(startIso, endIso),
+    iGM_CommentsCount: await iGM_CountCommentsBetween(startIso, endIso),
+    iGM_LikesCount: await iGM_CountLikesBetween(startIso, endIso),
     iGM_ResourcesCount: 0, // 资源发布数非核心趋势指标，保持 0 占位
-    iGM_ActivitiesCount: iGM_CountActivitiesBetween(startIso, endIso),
+    iGM_ActivitiesCount: await iGM_CountActivitiesBetween(startIso, endIso),
   });
 }
 
 /** 时间窗内活动创建数 */
-function iGM_CountActivitiesBetween(startIso: string, endIso: string): number {
-  return iGM_ListActivityStats(startIso, endIso).length;
+async function iGM_CountActivitiesBetween(startIso: string, endIso: string): Promise<number> {
+  return (await iGM_ListActivityStats(startIso, endIso)).length;
 }
 
 /* ---------- 概览 ---------- */
@@ -169,10 +169,10 @@ function iGM_CountActivitiesBetween(startIso: string, endIso: string): number {
 const iGM_OverviewSnapshotMaxAgeMs = 5 * 60 * 1000;
 
 /** 核心指标概览（5 分钟快照缓存；在线人数始终实时） */
-export function iGM_GetStatsOverview(onlineUsers: number): iGM_StatsOverview {
-  iGM_EnsureYesterdayAggregated();
+export async function iGM_GetStatsOverview(onlineUsers: number): Promise<iGM_StatsOverview> {
+  await iGM_EnsureYesterdayAggregated();
 
-  const cached = iGM_FindFreshSnapshot(
+  const cached = await iGM_FindFreshSnapshot(
     "overview",
     "latest",
     iGM_OverviewSnapshotMaxAgeMs,
@@ -191,21 +191,21 @@ export function iGM_GetStatsOverview(onlineUsers: number): iGM_StatsOverview {
   const weekStart = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const monthStart = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
   const nowIso = new Date().toISOString();
-  const totals = iGM_GetTotalCounts();
+  const totals = await iGM_GetTotalCounts();
 
   const overview: Omit<iGM_StatsOverview, "onlineUsers"> = {
-    totalUsers: iGM_CountUsersBetween("1970-01-01T00:00:00.000Z"),
-    newUsersToday: iGM_CountUsersBetween(todayStart),
-    activeUsersDaily: iGM_CountActiveUsersBetween(todayStart, nowIso, today),
-    activeUsersWeekly: iGM_CountActiveUsersBetween(weekStart, nowIso, null),
-    activeUsersMonthly: iGM_CountActiveUsersBetween(monthStart, nowIso, null),
-    totalPosts: iGM_CountPostsBetween("1970-01-01T00:00:00.000Z"),
-    postsToday: iGM_CountPostsBetween(todayStart),
-    totalComments: iGM_CountCommentsBetween("1970-01-01T00:00:00.000Z"),
-    commentsToday: iGM_CountCommentsBetween(todayStart),
+    totalUsers: await iGM_CountUsersBetween("1970-01-01T00:00:00.000Z"),
+    newUsersToday: await iGM_CountUsersBetween(todayStart),
+    activeUsersDaily: await iGM_CountActiveUsersBetween(todayStart, nowIso, today),
+    activeUsersWeekly: await iGM_CountActiveUsersBetween(weekStart, nowIso, null),
+    activeUsersMonthly: await iGM_CountActiveUsersBetween(monthStart, nowIso, null),
+    totalPosts: await iGM_CountPostsBetween("1970-01-01T00:00:00.000Z"),
+    postsToday: await iGM_CountPostsBetween(todayStart),
+    totalComments: await iGM_CountCommentsBetween("1970-01-01T00:00:00.000Z"),
+    commentsToday: await iGM_CountCommentsBetween(todayStart),
     totalLikes: totals.likes,
     totalResources: totals.resources,
-    totalActivities: iGM_CountActivitiesBetween(
+    totalActivities: await iGM_CountActivitiesBetween(
       "1970-01-01T00:00:00.000Z",
       nowIso,
     ),
@@ -213,7 +213,7 @@ export function iGM_GetStatsOverview(onlineUsers: number): iGM_StatsOverview {
     totalResourceDownloads: totals.resourceDownloads,
   };
 
-  iGM_WriteSnapshot(
+  await iGM_WriteSnapshot(
     "overview",
     "latest",
     JSON.stringify(overview),
@@ -225,46 +225,48 @@ export function iGM_GetStatsOverview(onlineUsers: number): iGM_StatsOverview {
 /* ---------- 趋势 ---------- */
 
 /** 趋势序列：按日聚合指定指标（最近 N 天，含今天） */
-export function iGM_GetStatsTrend(
+export async function iGM_GetStatsTrend(
   metric: iGM_StatsTrendMetric,
   range: iGM_StatsRange,
-): iGM_StatsTrendPoint[] {
-  iGM_EnsureYesterdayAggregated();
+): Promise<iGM_StatsTrendPoint[]> {
+  await iGM_EnsureYesterdayAggregated();
   const { days } = iGM_ParseRange(range);
   const dates = iGM_RecentDates(days);
 
-  return dates.map((date) => {
-    const { startIso, endIso } = iGM_ShanghaiDayBounds(date);
-    let value = 0;
-    switch (metric) {
-      case "users":
-        value = iGM_CountUsersBetween(startIso, endIso);
-        break;
-      case "posts":
-        value = iGM_CountPostsBetween(startIso, endIso);
-        break;
-      case "comments":
-        value = iGM_CountCommentsBetween(startIso, endIso);
-        break;
-      case "activity":
-        value = iGM_CountActiveUsersBetween(startIso, endIso, date);
-        break;
-    }
-    return { date, value };
-  });
+  return Promise.all(
+    dates.map(async (date) => {
+      const { startIso, endIso } = iGM_ShanghaiDayBounds(date);
+      let value = 0;
+      switch (metric) {
+        case "users":
+          value = await iGM_CountUsersBetween(startIso, endIso);
+          break;
+        case "posts":
+          value = await iGM_CountPostsBetween(startIso, endIso);
+          break;
+        case "comments":
+          value = await iGM_CountCommentsBetween(startIso, endIso);
+          break;
+        case "activity":
+          value = await iGM_CountActiveUsersBetween(startIso, endIso, date);
+          break;
+      }
+      return { date, value };
+    }),
+  );
 }
 
 /* ---------- 排行榜 ---------- */
 
 /** 排行榜：热门帖子 / 热门资源 / 活跃用户（各 Top 10） */
-export function iGM_GetStatsLeaderboards(range: iGM_StatsRange): iGM_StatsLeaderboards {
-  iGM_EnsureYesterdayAggregated();
+export async function iGM_GetStatsLeaderboards(range: iGM_StatsRange): Promise<iGM_StatsLeaderboards> {
+  await iGM_EnsureYesterdayAggregated();
   const { days } = iGM_ParseRange(range);
   const startIso = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
   const endIso = new Date().toISOString();
 
   return {
-    hotPosts: iGM_ListHotPosts(startIso, endIso, 10).map((row) => ({
+    hotPosts: (await iGM_ListHotPosts(startIso, endIso, 10)).map((row) => ({
       id: row.iGM_Id,
       title: row.iGM_Title,
       authorName: row.iGM_AuthorName,
@@ -272,31 +274,33 @@ export function iGM_GetStatsLeaderboards(range: iGM_StatsRange): iGM_StatsLeader
       commentCount: row.iGM_CommentCount,
       score: row.iGM_Score,
     })),
-    hotResources: iGM_ListHotResources(10).map((row) => ({
+    hotResources: (await iGM_ListHotResources(10)).map((row) => ({
       id: row.iGM_Id,
       title: row.iGM_Title,
       uploaderName: row.iGM_UploaderName,
       downloadCount: row.iGM_DownloadCount,
     })),
-    activeUsers: iGM_ListActiveUsers(startIso, endIso, 10).map((row) => ({
-      userId: row.iGM_Id,
-      username: row.iGM_Username,
-      displayName: row.iGM_DisplayName,
-      avatar: row.iGM_Avatar,
-      verifiedOrg: iGM_ResolveUserOrgBadge(row.iGM_VerifiedOrgId, row.iGM_Email),
-      actionCount: row.iGM_ActionCount,
-    })),
+    activeUsers: await Promise.all(
+      (await iGM_ListActiveUsers(startIso, endIso, 10)).map(async (row) => ({
+        userId: row.iGM_Id,
+        username: row.iGM_Username,
+        displayName: row.iGM_DisplayName,
+        avatar: row.iGM_Avatar,
+        verifiedOrg: await iGM_ResolveUserOrgBadge(row.iGM_VerifiedOrgId, row.iGM_Email),
+        actionCount: row.iGM_ActionCount,
+      })),
+    ),
   };
 }
 
 /* ---------- 活动参与统计 ---------- */
 
 /** 活动参与统计：范围内创建的活动及其有效报名数 */
-export function iGM_GetStatsActivities(range: iGM_StatsRange): iGM_StatsActivities {
+export async function iGM_GetStatsActivities(range: iGM_StatsRange): Promise<iGM_StatsActivities> {
   const { days } = iGM_ParseRange(range);
   const startIso = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
   const endIso = new Date().toISOString();
-  const rows: iGM_ActivityStatRow[] = iGM_ListActivityStats(startIso, endIso);
+  const rows: iGM_ActivityStatRow[] = await iGM_ListActivityStats(startIso, endIso);
 
   return {
     totalActivities: rows.length,

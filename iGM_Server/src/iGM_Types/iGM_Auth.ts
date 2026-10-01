@@ -108,7 +108,7 @@ export function iGM_IsRole(value: unknown): value is iGM_UserRole {
  * 将数据库用户行转换为对外 DTO
  * 统一出口，保证 passwordHash 永远不会泄露到响应体
  */
-export function iGM_ToUserDto(row: iGM_UserRow): iGM_UserDto {
+export async function iGM_ToUserDto(row: iGM_UserRow): Promise<iGM_UserDto> {
   return {
     id: row.iGM_Id,
     username: row.iGM_Username,
@@ -122,7 +122,7 @@ export function iGM_ToUserDto(row: iGM_UserRow): iGM_UserDto {
     website: row.iGM_Website,
     // 模块七：组织认证徽标（组织数据静态种子，走内存缓存解析；
     // 邮箱与组织负责人邮箱匹配时带 isOwner 金标）
-    verifiedOrg: iGM_ResolveUserOrgBadge(
+    verifiedOrg: await iGM_ResolveUserOrgBadge(
       row.iGM_VerifiedOrgId ?? null,
       row.iGM_Email,
     ),

@@ -40,7 +40,7 @@ export interface iGM_OAuthConsentClientRow extends iGM_OAuthConsentRow {
 /* ---------- 应用 Clients ---------- */
 
 /** 写入一条 OAuth 应用（初始状态 pending，secret 为空） */
-export function iGM_InsertOAuthClient(params: {
+export async function iGM_InsertOAuthClient(params: {
   id: string;
   clientId: string;
   name: string;
@@ -52,8 +52,8 @@ export function iGM_InsertOAuthClient(params: {
   contact: string;
   ownerUid: string;
   now: string;
-}): iGM_OAuthClientRow {
-  iGM_Db.run(
+}): Promise<iGM_OAuthClientRow> {
+  await iGM_Db.run(
     `INSERT INTO iGM_OAuthClients
        (iGM_Id, iGM_ClientId, iGM_ClientSecretHash, iGM_Name, iGM_Type,
         iGM_Description, iGM_RedirectUris, iGM_Scopes, iGM_Purpose,
@@ -75,76 +75,76 @@ export function iGM_InsertOAuthClient(params: {
       params.now,
     ],
   );
-  const row = iGM_FindOAuthClientById(params.id);
+  const row = await iGM_FindOAuthClientById(params.id);
   if (!row) throw new Error("iGM_InsertOAuthClient：写入后查询失败");
   return row;
 }
 
 /** 按主键查询应用 */
-export function iGM_FindOAuthClientById(
+export async function iGM_FindOAuthClientById(
   id: string,
-): iGM_OAuthClientRow | null {
+): Promise<iGM_OAuthClientRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(`SELECT * FROM iGM_OAuthClients WHERE iGM_Id = ?`)
-      .get(id) as iGM_OAuthClientRow | undefined) ?? null
+      .get(id)) as iGM_OAuthClientRow | undefined) ?? null
   );
 }
 
 /** 按 client_id 查询应用 */
-export function iGM_FindOAuthClientByClientId(
+export async function iGM_FindOAuthClientByClientId(
   clientId: string,
-): iGM_OAuthClientRow | null {
+): Promise<iGM_OAuthClientRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(`SELECT * FROM iGM_OAuthClients WHERE iGM_ClientId = ?`)
-      .get(clientId) as iGM_OAuthClientRow | undefined) ?? null
+      .get(clientId)) as iGM_OAuthClientRow | undefined) ?? null
   );
 }
 
 /** 开发者侧：按申请人 UID 列出全部应用（创建时间倒序） */
-export function iGM_ListOAuthClientsByOwner(
+export async function iGM_ListOAuthClientsByOwner(
   ownerUid: string,
-): iGM_OAuthClientRow[] {
-  return iGM_Db.query(
+): Promise<iGM_OAuthClientRow[]> {
+  return (await iGM_Db.query(
     `SELECT * FROM iGM_OAuthClients
      WHERE iGM_OwnerUid = ? ORDER BY iGM_CreatedAt DESC`,
-  ).all(ownerUid) as iGM_OAuthClientRow[];
+  ).all(ownerUid)) as iGM_OAuthClientRow[];
 }
 
 /** 管理端：按状态分页列出应用（连申请人用户名与昵称） */
-export function iGM_ListOAuthClientsForAdmin(params: {
+export async function iGM_ListOAuthClientsForAdmin(params: {
   status: string | null;
   limit: number;
   offset: number;
-}): { items: iGM_OAuthClientAdminRow[]; total: number } {
+}): Promise<{ items: iGM_OAuthClientAdminRow[]; total: number }> {
   const where = params.status ? `WHERE c.iGM_Status = ?` : "";
   const args: Array<string | number> = params.status ? [params.status] : [];
   const total = (
-    iGM_Db
+    (await iGM_Db
       .query(`SELECT COUNT(*) AS total FROM iGM_OAuthClients c ${where}`)
-      .get(...args) as { total: number }
+      .get(...args)) as { total: number }
   ).total;
-  const items = iGM_Db.query(
+  const items = (await iGM_Db.query(
     `SELECT c.*, u.iGM_Username, u.iGM_DisplayName
      FROM iGM_OAuthClients c
      JOIN iGM_Users u ON u.iGM_Uid = c.iGM_OwnerUid
      ${where}
      ORDER BY c.iGM_CreatedAt DESC
      LIMIT ? OFFSET ?`,
-  ).all(...args, params.limit, params.offset) as iGM_OAuthClientAdminRow[];
+  ).all(...args, params.limit, params.offset)) as iGM_OAuthClientAdminRow[];
   return { items, total };
 }
 
 /** 审核：仅待审核可被审核，写入状态、审核人与意见 */
-export function iGM_ReviewOAuthClient(params: {
+export async function iGM_ReviewOAuthClient(params: {
   id: string;
   status: string;
   reviewerId: string;
   reviewComment: string | null;
   now: string;
-}): boolean {
-  const result = iGM_Db.run(
+}): Promise<boolean> {
+  const result = await iGM_Db.run(
     `UPDATE iGM_OAuthClients
      SET iGM_Status = ?, iGM_ReviewerId = ?, iGM_ReviewComment = ?,
          iGM_UpdatedAt = ?
@@ -161,13 +161,13 @@ export function iGM_ReviewOAuthClient(params: {
 }
 
 /** 管理端：更新应用状态（启用 / 禁用 / 删除前置） */
-export function iGM_UpdateOAuthClientStatus(params: {
+export async function iGM_UpdateOAuthClientStatus(params: {
   id: string;
   status: string;
   reviewerId: string;
   now: string;
-}): boolean {
-  const result = iGM_Db.run(
+}): Promise<boolean> {
+  const result = await iGM_Db.run(
     `UPDATE iGM_OAuthClients
      SET iGM_Status = ?, iGM_ReviewerId = ?, iGM_UpdatedAt = ?
      WHERE iGM_Id = ?`,
@@ -177,12 +177,12 @@ export function iGM_UpdateOAuthClientStatus(params: {
 }
 
 /** 写入 / 重置 client_secret 哈希（明文不落库） */
-export function iGM_SetOAuthClientSecret(params: {
+export async function iGM_SetOAuthClientSecret(params: {
   id: string;
   secretHash: string;
   now: string;
-}): boolean {
-  const result = iGM_Db.run(
+}): Promise<boolean> {
+  const result = await iGM_Db.run(
     `UPDATE iGM_OAuthClients
      SET iGM_ClientSecretHash = ?, iGM_SecretRotatedAt = ?, iGM_UpdatedAt = ?
      WHERE iGM_Id = ?`,
@@ -192,12 +192,12 @@ export function iGM_SetOAuthClientSecret(params: {
 }
 
 /** 开发者撤回本人待审核申请 */
-export function iGM_WithdrawOAuthClient(params: {
+export async function iGM_WithdrawOAuthClient(params: {
   id: string;
   ownerUid: string;
   now: string;
-}): boolean {
-  const result = iGM_Db.run(
+}): Promise<boolean> {
+  const result = await iGM_Db.run(
     `UPDATE iGM_OAuthClients
      SET iGM_Status = 'withdrawn', iGM_UpdatedAt = ?
      WHERE iGM_Id = ? AND iGM_OwnerUid = ? AND iGM_Status = 'pending'`,
@@ -207,8 +207,8 @@ export function iGM_WithdrawOAuthClient(params: {
 }
 
 /** 删除应用（级联清理授权码 / 令牌 / 同意记录） */
-export function iGM_DeleteOAuthClient(id: string): boolean {
-  const result = iGM_Db.run(`DELETE FROM iGM_OAuthClients WHERE iGM_Id = ?`, [
+export async function iGM_DeleteOAuthClient(id: string): Promise<boolean> {
+  const result = await iGM_Db.run(`DELETE FROM iGM_OAuthClients WHERE iGM_Id = ?`, [
     id,
   ]);
   return result.changes > 0;
@@ -217,7 +217,7 @@ export function iGM_DeleteOAuthClient(id: string): boolean {
 /* ---------- 授权码 Codes ---------- */
 
 /** 写入一次性授权码 */
-export function iGM_InsertOAuthCode(params: {
+export async function iGM_InsertOAuthCode(params: {
   id: string;
   code: string;
   clientId: string;
@@ -229,8 +229,8 @@ export function iGM_InsertOAuthCode(params: {
   nonce: string | null;
   expiresAt: string;
   now: string;
-}): void {
-  iGM_Db.run(
+}): Promise<void> {
+  await iGM_Db.run(
     `INSERT INTO iGM_OAuthCodes
        (iGM_Id, iGM_Code, iGM_ClientId, iGM_UserId, iGM_Scope, iGM_RedirectUri,
         iGM_CodeChallenge, iGM_CodeChallengeMethod, iGM_Nonce, iGM_ExpiresAt,
@@ -253,19 +253,19 @@ export function iGM_InsertOAuthCode(params: {
 }
 
 /** 按授权码查询 */
-export function iGM_FindOAuthCodeByCode(
+export async function iGM_FindOAuthCodeByCode(
   code: string,
-): iGM_OAuthCodeRow | null {
+): Promise<iGM_OAuthCodeRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(`SELECT * FROM iGM_OAuthCodes WHERE iGM_Code = ?`)
-      .get(code) as iGM_OAuthCodeRow | undefined) ?? null
+      .get(code)) as iGM_OAuthCodeRow | undefined) ?? null
   );
 }
 
 /** 核销授权码：仅未使用时可标记，保证一次性 */
-export function iGM_MarkOAuthCodeUsed(id: string): boolean {
-  const result = iGM_Db.run(
+export async function iGM_MarkOAuthCodeUsed(id: string): Promise<boolean> {
+  const result = await iGM_Db.run(
     `UPDATE iGM_OAuthCodes SET iGM_Used = 1 WHERE iGM_Id = ? AND iGM_Used = 0`,
     [id],
   );
@@ -275,7 +275,7 @@ export function iGM_MarkOAuthCodeUsed(id: string): boolean {
 /* ---------- 令牌 Tokens ---------- */
 
 /** 写入令牌行（传入的 access/refresh 均为哈希） */
-export function iGM_InsertOAuthToken(params: {
+export async function iGM_InsertOAuthToken(params: {
   id: string;
   accessTokenHash: string;
   refreshTokenHash: string | null;
@@ -285,8 +285,8 @@ export function iGM_InsertOAuthToken(params: {
   expiresAt: string;
   refreshExpiresAt: string | null;
   now: string;
-}): void {
-  iGM_Db.run(
+}): Promise<void> {
+  await iGM_Db.run(
     `INSERT INTO iGM_OAuthTokens
        (iGM_Id, iGM_AccessToken, iGM_RefreshToken, iGM_ClientId, iGM_UserId,
         iGM_Scope, iGM_ExpiresAt, iGM_RefreshExpiresAt, iGM_Revoked,
@@ -308,30 +308,30 @@ export function iGM_InsertOAuthToken(params: {
 }
 
 /** 按 access_token 哈希查询 */
-export function iGM_FindOAuthTokenByAccessHash(
+export async function iGM_FindOAuthTokenByAccessHash(
   hash: string,
-): iGM_OAuthTokenRow | null {
+): Promise<iGM_OAuthTokenRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(`SELECT * FROM iGM_OAuthTokens WHERE iGM_AccessToken = ?`)
-      .get(hash) as iGM_OAuthTokenRow | undefined) ?? null
+      .get(hash)) as iGM_OAuthTokenRow | undefined) ?? null
   );
 }
 
 /** 按 refresh_token 哈希查询 */
-export function iGM_FindOAuthTokenByRefreshHash(
+export async function iGM_FindOAuthTokenByRefreshHash(
   hash: string,
-): iGM_OAuthTokenRow | null {
+): Promise<iGM_OAuthTokenRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(`SELECT * FROM iGM_OAuthTokens WHERE iGM_RefreshToken = ?`)
-      .get(hash) as iGM_OAuthTokenRow | undefined) ?? null
+      .get(hash)) as iGM_OAuthTokenRow | undefined) ?? null
   );
 }
 
 /** 按主键撤销令牌 */
-export function iGM_RevokeOAuthTokenById(id: string, now: string): boolean {
-  const result = iGM_Db.run(
+export async function iGM_RevokeOAuthTokenById(id: string, now: string): Promise<boolean> {
+  const result = await iGM_Db.run(
     `UPDATE iGM_OAuthTokens SET iGM_Revoked = 1, iGM_UpdatedAt = ?
      WHERE iGM_Id = ? AND iGM_Revoked = 0`,
     [now, id],
@@ -340,12 +340,12 @@ export function iGM_RevokeOAuthTokenById(id: string, now: string): boolean {
 }
 
 /** 撤销某用户在某个应用下的全部令牌（用户取消授权时调用） */
-export function iGM_RevokeOAuthTokensByUserClient(params: {
+export async function iGM_RevokeOAuthTokensByUserClient(params: {
   userId: string;
   clientId: string;
   now: string;
-}): number {
-  const result = iGM_Db.run(
+}): Promise<number> {
+  const result = await iGM_Db.run(
     `UPDATE iGM_OAuthTokens SET iGM_Revoked = 1, iGM_UpdatedAt = ?
      WHERE iGM_UserId = ? AND iGM_ClientId = ? AND iGM_Revoked = 0`,
     [params.now, params.userId, params.clientId],
@@ -354,11 +354,11 @@ export function iGM_RevokeOAuthTokensByUserClient(params: {
 }
 
 /** 撤销某应用下已签发的全部令牌（管理端禁用应用时调用） */
-export function iGM_RevokeOAuthTokensByClient(params: {
+export async function iGM_RevokeOAuthTokensByClient(params: {
   clientId: string;
   now: string;
-}): number {
-  const result = iGM_Db.run(
+}): Promise<number> {
+  const result = await iGM_Db.run(
     `UPDATE iGM_OAuthTokens SET iGM_Revoked = 1, iGM_UpdatedAt = ?
      WHERE iGM_ClientId = ? AND iGM_Revoked = 0`,
     [params.now, params.clientId],
@@ -369,14 +369,14 @@ export function iGM_RevokeOAuthTokensByClient(params: {
 /* ---------- 授权同意 Consents ---------- */
 
 /** 写入或更新用户对某应用的授权同意（按 用户+应用 唯一） */
-export function iGM_UpsertOAuthConsent(params: {
+export async function iGM_UpsertOAuthConsent(params: {
   id: string;
   userId: string;
   clientId: string;
   scope: string;
   now: string;
-}): void {
-  iGM_Db.run(
+}): Promise<void> {
+  await iGM_Db.run(
     `INSERT INTO iGM_OAuthConsents
        (iGM_Id, iGM_UserId, iGM_ClientId, iGM_Scope, iGM_GrantedAt, iGM_UpdatedAt)
      VALUES (?, ?, ?, ?, ?, ?)
@@ -388,39 +388,39 @@ export function iGM_UpsertOAuthConsent(params: {
 }
 
 /** 查询用户对某应用的授权同意 */
-export function iGM_FindOAuthConsent(
+export async function iGM_FindOAuthConsent(
   userId: string,
   clientId: string,
-): iGM_OAuthConsentRow | null {
+): Promise<iGM_OAuthConsentRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(
         `SELECT * FROM iGM_OAuthConsents
          WHERE iGM_UserId = ? AND iGM_ClientId = ?`,
       )
-      .get(userId, clientId) as iGM_OAuthConsentRow | undefined) ?? null
+      .get(userId, clientId)) as iGM_OAuthConsentRow | undefined) ?? null
   );
 }
 
 /** 用户侧：列出已授权应用（连应用基本信息） */
-export function iGM_ListOAuthConsentsByUser(
+export async function iGM_ListOAuthConsentsByUser(
   userId: string,
-): iGM_OAuthConsentClientRow[] {
-  return iGM_Db.query(
+): Promise<iGM_OAuthConsentClientRow[]> {
+  return (await iGM_Db.query(
     `SELECT s.*, c.iGM_Name, c.iGM_Type, c.iGM_Description, c.iGM_Status
      FROM iGM_OAuthConsents s
      JOIN iGM_OAuthClients c ON c.iGM_ClientId = s.iGM_ClientId
      WHERE s.iGM_UserId = ?
      ORDER BY s.iGM_GrantedAt DESC`,
-  ).all(userId) as iGM_OAuthConsentClientRow[];
+  ).all(userId)) as iGM_OAuthConsentClientRow[];
 }
 
 /** 删除用户对某应用的授权同意（取消授权） */
-export function iGM_DeleteOAuthConsent(
+export async function iGM_DeleteOAuthConsent(
   userId: string,
   clientId: string,
-): boolean {
-  const result = iGM_Db.run(
+): Promise<boolean> {
+  const result = await iGM_Db.run(
     `DELETE FROM iGM_OAuthConsents WHERE iGM_UserId = ? AND iGM_ClientId = ?`,
     [userId, clientId],
   );
@@ -430,7 +430,7 @@ export function iGM_DeleteOAuthConsent(
 /* ---------- 操作日志 Logs ---------- */
 
 /** 写入一条 OAuth 操作日志 */
-export function iGM_InsertOAuthLog(params: {
+export async function iGM_InsertOAuthLog(params: {
   id: string;
   clientId: string | null;
   userId: string | null;
@@ -438,8 +438,8 @@ export function iGM_InsertOAuthLog(params: {
   detail: string | null;
   ip: string | null;
   now: string;
-}): void {
-  iGM_Db.run(
+}): Promise<void> {
+  await iGM_Db.run(
     `INSERT INTO iGM_OAuthLogs
        (iGM_Id, iGM_ClientId, iGM_UserId, iGM_Action, iGM_Detail, iGM_Ip, iGM_CreatedAt)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -456,55 +456,55 @@ export function iGM_InsertOAuthLog(params: {
 }
 
 /** 按应用分页检索日志（时间倒序） */
-export function iGM_ListOAuthLogsByClient(params: {
+export async function iGM_ListOAuthLogsByClient(params: {
   clientId: string;
   limit: number;
   offset: number;
-}): { items: iGM_OAuthLogRow[]; total: number } {
+}): Promise<{ items: iGM_OAuthLogRow[]; total: number }> {
   const total = (
-    iGM_Db
+    (await iGM_Db
       .query(
         `SELECT COUNT(*) AS total FROM iGM_OAuthLogs WHERE iGM_ClientId = ?`,
       )
-      .get(params.clientId) as { total: number }
+      .get(params.clientId)) as { total: number }
   ).total;
-  const items = iGM_Db.query(
+  const items = (await iGM_Db.query(
     `SELECT * FROM iGM_OAuthLogs
      WHERE iGM_ClientId = ?
      ORDER BY iGM_CreatedAt DESC
      LIMIT ? OFFSET ?`,
-  ).all(params.clientId, params.limit, params.offset) as iGM_OAuthLogRow[];
+  ).all(params.clientId, params.limit, params.offset)) as iGM_OAuthLogRow[];
   return { items, total };
 }
 
 /* ---------- 签名密钥 Keys ---------- */
 
 /** 读取某类别的当前启用密钥 */
-export function iGM_FindActiveOAuthKey(
+export async function iGM_FindActiveOAuthKey(
   kind: string,
-): iGM_OAuthKeyRow | null {
+): Promise<iGM_OAuthKeyRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(
         `SELECT * FROM iGM_OAuthKeys
          WHERE iGM_Kind = ? AND iGM_Active = 1
          ORDER BY iGM_CreatedAt DESC LIMIT 1`,
       )
-      .get(kind) as iGM_OAuthKeyRow | undefined) ?? null
+      .get(kind)) as iGM_OAuthKeyRow | undefined) ?? null
   );
 }
 
 /** 读取某类别的全部启用密钥（JWKS 需暴露历史公钥，便于轮换平滑过渡） */
-export function iGM_ListActiveOAuthKeys(kind: string): iGM_OAuthKeyRow[] {
-  return iGM_Db.query(
+export async function iGM_ListActiveOAuthKeys(kind: string): Promise<iGM_OAuthKeyRow[]> {
+  return (await iGM_Db.query(
     `SELECT * FROM iGM_OAuthKeys
      WHERE iGM_Kind = ? AND iGM_Active = 1
      ORDER BY iGM_CreatedAt DESC`,
-  ).all(kind) as iGM_OAuthKeyRow[];
+  ).all(kind)) as iGM_OAuthKeyRow[];
 }
 
 /** 写入一条密钥 */
-export function iGM_InsertOAuthKey(params: {
+export async function iGM_InsertOAuthKey(params: {
   id: string;
   kind: string;
   kid: string;
@@ -512,8 +512,8 @@ export function iGM_InsertOAuthKey(params: {
   publicJwk: string;
   privateJwk: string;
   now: string;
-}): void {
-  iGM_Db.run(
+}): Promise<void> {
+  await iGM_Db.run(
     `INSERT INTO iGM_OAuthKeys
        (iGM_Id, iGM_Kind, iGM_Kid, iGM_Alg, iGM_PublicJwk, iGM_PrivateJwk,
         iGM_Active, iGM_CreatedAt)

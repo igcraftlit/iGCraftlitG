@@ -179,62 +179,62 @@ function iGM_BuildFilters(params: iGM_ResourceListParams): {
 /* ---------- 资源分类 ---------- */
 
 /** 获取全部资源分类（按 sortOrder 排序） */
-export function iGM_ListResourceCategories(): iGM_ResourceCategoryRow[] {
-  return iGM_Db
+export async function iGM_ListResourceCategories(): Promise<iGM_ResourceCategoryRow[]> {
+  return (await iGM_Db
     .query(
       `SELECT * FROM iGM_ResourceCategories
         ORDER BY iGM_SortOrder ASC, iGM_Name ASC`,
     )
-    .all() as iGM_ResourceCategoryRow[];
+    .all()) as iGM_ResourceCategoryRow[];
 }
 
 /** 按主键查询资源分类 */
-export function iGM_FindResourceCategoryById(
+export async function iGM_FindResourceCategoryById(
   id: string,
-): iGM_ResourceCategoryRow | null {
+): Promise<iGM_ResourceCategoryRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(`SELECT * FROM iGM_ResourceCategories WHERE iGM_Id = ?`)
-      .get(id) as iGM_ResourceCategoryRow | undefined) ?? null
+      .get(id)) as iGM_ResourceCategoryRow | undefined) ?? null
   );
 }
 
 /* ---------- 资源标签 ---------- */
 
 /** 按主键批量查询资源标签 */
-export function iGM_FindResourceTagsByIds(ids: string[]): iGM_ResourceTagRow[] {
+export async function iGM_FindResourceTagsByIds(ids: string[]): Promise<iGM_ResourceTagRow[]> {
   const unique = Array.from(new Set(ids)).filter(Boolean);
   if (unique.length === 0) return [];
   const placeholders = unique.map(() => "?").join(", ");
-  return iGM_Db
+  return (await iGM_Db
     .query(
       `SELECT * FROM iGM_ResourceTags WHERE iGM_Id IN (${placeholders})`,
     )
-    .all(...unique) as iGM_ResourceTagRow[];
+    .all(...unique)) as iGM_ResourceTagRow[];
 }
 
 /** 按 slug 查询资源标签 */
-export function iGM_FindResourceTagBySlug(
+export async function iGM_FindResourceTagBySlug(
   slug: string,
-): iGM_ResourceTagRow | null {
+): Promise<iGM_ResourceTagRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(`SELECT * FROM iGM_ResourceTags WHERE iGM_Slug = ?`)
-      .get(slug) as iGM_ResourceTagRow | undefined) ?? null
+      .get(slug)) as iGM_ResourceTagRow | undefined) ?? null
   );
 }
 
 /** 按名称集合查找或新建资源标签（名称大小写不敏感） */
-export function iGM_FindOrCreateResourceTags(
+export async function iGM_FindOrCreateResourceTags(
   names: string[],
-): iGM_ResourceTagRow[] {
+): Promise<iGM_ResourceTagRow[]> {
   const result: iGM_ResourceTagRow[] = [];
   for (const name of names) {
-    const existing = iGM_Db
+    const existing = (await iGM_Db
       .query(
-        `SELECT * FROM iGM_ResourceTags WHERE iGM_Name = ? COLLATE NOCASE`,
+        `SELECT * FROM iGM_ResourceTags WHERE LOWER(iGM_Name) = LOWER(?)`,
       )
-      .get(name) as iGM_ResourceTagRow | undefined;
+      .get(name)) as iGM_ResourceTagRow | undefined;
     if (existing) {
       result.push(existing);
       continue;
@@ -242,9 +242,9 @@ export function iGM_FindOrCreateResourceTags(
     const row: iGM_ResourceTagRow = {
       iGM_Id: iGM_RandomUuid(),
       iGM_Name: name,
-      iGM_Slug: iGM_BuildResourceTagSlug(name),
+      iGM_Slug: await iGM_BuildResourceTagSlug(name),
     };
-    iGM_Db.run(
+    await iGM_Db.run(
       `INSERT INTO iGM_ResourceTags (iGM_Id, iGM_Name, iGM_Slug)
        VALUES (?, ?, ?)`,
       [row.iGM_Id, row.iGM_Name, row.iGM_Slug],
@@ -255,7 +255,7 @@ export function iGM_FindOrCreateResourceTags(
 }
 
 /** 由标签名生成 slug，冲突时追加短随机串 */
-function iGM_BuildResourceTagSlug(name: string): string {
+async function iGM_BuildResourceTagSlug(name: string): Promise<string> {
   const base = name
     .trim()
     .toLowerCase()
@@ -264,7 +264,7 @@ function iGM_BuildResourceTagSlug(name: string): string {
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
   const slug = base || "tag";
-  const exists = iGM_Db
+  const exists = await iGM_Db
     .query(`SELECT iGM_Id FROM iGM_ResourceTags WHERE iGM_Slug = ?`)
     .get(slug);
   if (!exists) return slug;
@@ -272,39 +272,40 @@ function iGM_BuildResourceTagSlug(name: string): string {
 }
 
 /** 替换某资源的标签关联（先删后插） */
-export function iGM_ReplaceResourceTags(
+export async function iGM_ReplaceResourceTags(
   resourceId: string,
   tagIds: string[],
-): void {
-  iGM_Db.run(`DELETE FROM iGM_ResourceTagsMap WHERE iGM_ResourceId = ?`, [
+): Promise<void> {
+  await iGM_Db.run(`DELETE FROM iGM_ResourceTagsMap WHERE iGM_ResourceId = ?`, [
     resourceId,
   ]);
   const uniqueIds = Array.from(new Set(tagIds));
   if (uniqueIds.length === 0) return;
   const insert = iGM_Db.prepare(
-    `INSERT OR IGNORE INTO iGM_ResourceTagsMap (iGM_ResourceId, iGM_TagId)
-     VALUES (?, ?)`,
+    `INSERT INTO iGM_ResourceTagsMap (iGM_ResourceId, iGM_TagId)
+     VALUES (?, ?)
+     ON CONFLICT DO NOTHING`,
   );
-  for (const tagId of uniqueIds) insert.run(resourceId, tagId);
+  for (const tagId of uniqueIds) await insert.run(resourceId, tagId);
 }
 
 /** 读取一批资源的标签关联：resourceId -> 标签行数组 */
-export function iGM_GetTagsForResources(
+export async function iGM_GetTagsForResources(
   resourceIds: string[],
-): Map<string, iGM_ResourceTagRow[]> {
+): Promise<Map<string, iGM_ResourceTagRow[]>> {
   const map = new Map<string, iGM_ResourceTagRow[]>();
   const unique = Array.from(new Set(resourceIds)).filter(Boolean);
   if (unique.length === 0) return map;
 
   const placeholders = unique.map(() => "?").join(", ");
-  const rows = iGM_Db
+  const rows = (await iGM_Db
     .query(
       `SELECT m.iGM_ResourceId AS iGM_ResourceId, t.*
          FROM iGM_ResourceTagsMap m
          JOIN iGM_ResourceTags t ON t.iGM_Id = m.iGM_TagId
         WHERE m.iGM_ResourceId IN (${placeholders})`,
     )
-    .all(...unique) as (iGM_ResourceTagRow & { iGM_ResourceId: string })[];
+    .all(...unique)) as (iGM_ResourceTagRow & { iGM_ResourceId: string })[];
 
   for (const row of rows) {
     const list = map.get(row.iGM_ResourceId) ?? [];
@@ -321,9 +322,9 @@ export function iGM_GetTagsForResources(
 /* ---------- 资源 ---------- */
 
 /** 新建资源 */
-export function iGM_CreateResource(
+export async function iGM_CreateResource(
   input: iGM_CreateResourceInput,
-): iGM_ResourceRow {
+): Promise<iGM_ResourceRow> {
   const row: iGM_ResourceRow = {
     iGM_Id: iGM_RandomUuid(),
     iGM_UploaderId: input.uploaderId,
@@ -349,7 +350,7 @@ export function iGM_CreateResource(
     iGM_CreatedAt: input.now,
     iGM_UpdatedAt: input.now,
   };
-  iGM_Db.run(
+  await iGM_Db.run(
     `INSERT INTO iGM_Resources
        (iGM_Id, iGM_UploaderId, iGM_Title, iGM_Description, iGM_CategoryId,
         iGM_FileId, iGM_CoverFileId, iGM_ActivityId, iGM_DownloadCount,
@@ -388,11 +389,11 @@ export function iGM_CreateResource(
 }
 
 /** 按主键查询资源 */
-export function iGM_FindResourceById(id: string): iGM_ResourceRow | null {
+export async function iGM_FindResourceById(id: string): Promise<iGM_ResourceRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(`SELECT * FROM iGM_Resources WHERE iGM_Id = ?`)
-      .get(id) as iGM_ResourceRow | undefined) ?? null
+      .get(id)) as iGM_ResourceRow | undefined) ?? null
   );
 }
 
@@ -406,33 +407,33 @@ export function iGM_FindResourceById(id: string): iGM_ResourceRow | null {
 const iGM_UuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export function iGM_FindResourceByIdentifier(
+export async function iGM_FindResourceByIdentifier(
   identifier: string,
-): iGM_ResourceRow | null {
+): Promise<iGM_ResourceRow | null> {
   const trimmed = identifier.trim();
   if (!trimmed) return null;
   if (iGM_UuidPattern.test(trimmed)) {
-    return iGM_FindResourceById(trimmed);
+    return await iGM_FindResourceById(trimmed);
   }
   // 优先按 slug 匹配
-  const bySlug = iGM_Db
+  const bySlug = (await iGM_Db
     .query(`SELECT * FROM iGM_Resources WHERE iGM_Slug = ? LIMIT 1`)
-    .get(trimmed) as iGM_ResourceRow | undefined;
+    .get(trimmed)) as iGM_ResourceRow | undefined;
   if (bySlug) return bySlug;
   // 回退按标题精确匹配
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(`SELECT * FROM iGM_Resources WHERE iGM_Title = ? LIMIT 1`)
-      .get(trimmed) as iGM_ResourceRow | undefined) ?? null
+      .get(trimmed)) as iGM_ResourceRow | undefined) ?? null
   );
 }
 
 /** 更新资源 */
-export function iGM_UpdateResource(
+export async function iGM_UpdateResource(
   id: string,
   input: iGM_UpdateResourceInput,
-): boolean {
-  const result = iGM_Db.run(
+): Promise<boolean> {
+  const result = await iGM_Db.run(
     `UPDATE iGM_Resources SET
        iGM_Title = ?, iGM_Description = ?, iGM_CategoryId = ?,
        iGM_FileId = ?, iGM_CoverFileId = ?, iGM_ActivityId = ?,
@@ -470,14 +471,14 @@ export function iGM_UpdateResource(
 }
 
 /** 删除资源（标签关联由外键级联清理） */
-export function iGM_DeleteResource(id: string): boolean {
-  const result = iGM_Db.run(`DELETE FROM iGM_Resources WHERE iGM_Id = ?`, [id]);
+export async function iGM_DeleteResource(id: string): Promise<boolean> {
+  const result = await iGM_Db.run(`DELETE FROM iGM_Resources WHERE iGM_Id = ?`, [id]);
   return result.changes > 0;
 }
 
 /** 下载计数 +1 */
-export function iGM_IncrementDownloadCount(id: string): void {
-  iGM_Db.run(
+export async function iGM_IncrementDownloadCount(id: string): Promise<void> {
+  await iGM_Db.run(
     `UPDATE iGM_Resources SET iGM_DownloadCount = iGM_DownloadCount + 1
       WHERE iGM_Id = ?`,
     [id],
@@ -485,24 +486,24 @@ export function iGM_IncrementDownloadCount(id: string): void {
 }
 
 /** 按筛选条件分页查询资源（按创建时间倒序） */
-export function iGM_ListResources(
+export async function iGM_ListResources(
   params: iGM_ResourceListParams,
-): iGM_ResourceListResult {
+): Promise<iGM_ResourceListResult> {
   const { where, bindings } = iGM_BuildFilters(params);
   const offset = (params.page - 1) * params.pageSize;
 
-  const totalRow = iGM_Db
+  const totalRow = (await iGM_Db
     .query(`SELECT COUNT(*) AS iGM_Count FROM iGM_Resources r ${where}`)
-    .get(...bindings) as { iGM_Count: number };
+    .get(...bindings)) as { iGM_Count: number };
 
-  const items = iGM_Db
+  const items = (await iGM_Db
     .query(
       `SELECT r.* FROM iGM_Resources r
        ${where}
        ORDER BY r.iGM_CreatedAt DESC, r.iGM_Id DESC
        LIMIT ? OFFSET ?`,
     )
-    .all(...bindings, params.pageSize, offset) as iGM_ResourceRow[];
+    .all(...bindings, params.pageSize, offset)) as iGM_ResourceRow[];
 
   return { items, total: totalRow.iGM_Count };
 }

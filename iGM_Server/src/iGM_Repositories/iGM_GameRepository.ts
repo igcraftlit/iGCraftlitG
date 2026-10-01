@@ -87,12 +87,12 @@ function iGM_EscapeLike(value: string): string {
 /* ---------- 版本元数据 ---------- */
 
 /** 按版本号幂等写入版本元数据（已存在则更新元数据） */
-export function iGM_UpsertMinecraftVersion(
+export async function iGM_UpsertMinecraftVersion(
   input: iGM_UpsertVersionInput,
-): iGM_MinecraftVersionRow {
-  const existing = iGM_FindMinecraftVersionByVersion(input.version);
+): Promise<iGM_MinecraftVersionRow> {
+  const existing = await iGM_FindMinecraftVersionByVersion(input.version);
   const id = existing?.iGM_Id ?? iGM_RandomUuid();
-  iGM_Db.run(
+  await iGM_Db.run(
     `INSERT INTO iGM_MinecraftVersions
        (iGM_Id, iGM_Version, iGM_Type, iGM_ReleaseTime,
         iGM_ClientUrl, iGM_ServerUrl, iGM_ClientSize, iGM_ServerSize,
@@ -128,30 +128,30 @@ export function iGM_UpsertMinecraftVersion(
       input.now,
     ],
   );
-  return (
-    iGM_FindMinecraftVersionByVersion(input.version) as iGM_MinecraftVersionRow
-  );
+  return (await iGM_FindMinecraftVersionByVersion(
+    input.version,
+  )) as iGM_MinecraftVersionRow;
 }
 
 /** 按主键查询版本 */
-export function iGM_FindMinecraftVersionById(
+export async function iGM_FindMinecraftVersionById(
   id: string,
-): iGM_MinecraftVersionRow | null {
+): Promise<iGM_MinecraftVersionRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(`SELECT * FROM iGM_MinecraftVersions WHERE iGM_Id = ?`)
-      .get(id) as iGM_MinecraftVersionRow | undefined) ?? null
+      .get(id)) as iGM_MinecraftVersionRow | undefined) ?? null
   );
 }
 
 /** 按版本号查询版本 */
-export function iGM_FindMinecraftVersionByVersion(
+export async function iGM_FindMinecraftVersionByVersion(
   version: string,
-): iGM_MinecraftVersionRow | null {
+): Promise<iGM_MinecraftVersionRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(`SELECT * FROM iGM_MinecraftVersions WHERE iGM_Version = ?`)
-      .get(version) as iGM_MinecraftVersionRow | undefined) ?? null
+      .get(version)) as iGM_MinecraftVersionRow | undefined) ?? null
   );
 }
 
@@ -180,19 +180,21 @@ function iGM_BuildVersionFilters(params: iGM_VersionListParams): {
 }
 
 /** 按筛选条件分页查询版本（默认发布时间倒序） */
-export function iGM_ListMinecraftVersions(params: iGM_VersionListParams): {
+export async function iGM_ListMinecraftVersions(
+  params: iGM_VersionListParams,
+): Promise<{
   items: iGM_MinecraftVersionRow[];
   total: number;
-} {
+}> {
   const { where, bindings } = iGM_BuildVersionFilters(params);
   const offset = (params.page - 1) * params.pageSize;
   const direction = params.sort === "oldest" ? "ASC" : "DESC";
 
-  const totalRow = iGM_Db
+  const totalRow = (await iGM_Db
     .query(`SELECT COUNT(*) AS iGM_Count FROM iGM_MinecraftVersions ${where}`)
-    .get(...bindings) as { iGM_Count: number };
+    .get(...bindings)) as { iGM_Count: number };
 
-  const items = iGM_Db
+  const items = (await iGM_Db
     .query(
       `SELECT * FROM iGM_MinecraftVersions
        ${where}
@@ -200,19 +202,21 @@ export function iGM_ListMinecraftVersions(params: iGM_VersionListParams): {
                 iGM_CreatedAt ${direction}
        LIMIT ? OFFSET ?`,
     )
-    .all(...bindings, params.pageSize, offset) as iGM_MinecraftVersionRow[];
+    .all(...bindings, params.pageSize, offset)) as iGM_MinecraftVersionRow[];
 
   return { items, total: totalRow.iGM_Count };
 }
 
 /** 查询某用户已安装完成的版本号集合 */
-export function iGM_ListInstalledVersions(userId: string): Set<string> {
-  const rows = iGM_Db
+export async function iGM_ListInstalledVersions(
+  userId: string,
+): Promise<Set<string>> {
+  const rows = (await iGM_Db
     .query(
       `SELECT DISTINCT iGM_Version FROM iGM_GameInstalls
         WHERE iGM_UserId = ? AND iGM_Status = 'completed'`,
     )
-    .all(userId) as { iGM_Version: string }[];
+    .all(userId)) as { iGM_Version: string }[];
   return new Set(rows.map((row) => row.iGM_Version));
 }
 
@@ -220,31 +224,35 @@ export function iGM_ListInstalledVersions(userId: string): Set<string> {
  * 查询某用户已安装完成的「版本 + 加载器」组合键集合
  * 键格式：<版本号>|<加载器>，用于版本卡片区分原版与 Fabric 的安装状态
  */
-export function iGM_ListInstalledVersionKeys(userId: string): Set<string> {
-  const rows = iGM_Db
+export async function iGM_ListInstalledVersionKeys(
+  userId: string,
+): Promise<Set<string>> {
+  const rows = (await iGM_Db
     .query(
       `SELECT DISTINCT iGM_Version, iGM_Loader FROM iGM_GameInstalls
         WHERE iGM_UserId = ? AND iGM_Status = 'completed'`,
     )
-    .all(userId) as { iGM_Version: string; iGM_Loader: string }[];
+    .all(userId)) as { iGM_Version: string; iGM_Loader: string }[];
   return new Set(rows.map((row) => `${row.iGM_Version}|${row.iGM_Loader}`));
 }
 
 /* ---------- 模组加载器字典 ---------- */
 
 /** 列出全部模组加载器（按排序号升序） */
-export function iGM_ListModLoaders(): iGM_ModLoaderRow[] {
-  return iGM_Db
+export async function iGM_ListModLoaders(): Promise<iGM_ModLoaderRow[]> {
+  return (await iGM_Db
     .query(`SELECT * FROM iGM_ModLoaders ORDER BY iGM_SortOrder ASC`)
-    .all() as iGM_ModLoaderRow[];
+    .all()) as iGM_ModLoaderRow[];
 }
 
 /* ---------- 安装任务 ---------- */
 
 /** 创建安装任务（初始 pending） */
-export function iGM_CreateGameInstall(input: iGM_CreateInstallInput): iGM_GameInstallRow {
+export async function iGM_CreateGameInstall(
+  input: iGM_CreateInstallInput,
+): Promise<iGM_GameInstallRow> {
   const id = iGM_RandomUuid();
-  iGM_Db.run(
+  await iGM_Db.run(
     `INSERT INTO iGM_GameInstalls
        (iGM_Id, iGM_UserId, iGM_Version, iGM_InstallDir, iGM_Loader, iGM_LoaderVersion,
         iGM_Status, iGM_Progress, iGM_TotalFiles, iGM_DownloadedFiles, iGM_Error,
@@ -261,41 +269,43 @@ export function iGM_CreateGameInstall(input: iGM_CreateInstallInput): iGM_GameIn
       input.now,
     ],
   );
-  return iGM_FindGameInstallById(id) as iGM_GameInstallRow;
+  return (await iGM_FindGameInstallById(id)) as iGM_GameInstallRow;
 }
 
 /** 按主键查询安装任务 */
-export function iGM_FindGameInstallById(id: string): iGM_GameInstallRow | null {
+export async function iGM_FindGameInstallById(
+  id: string,
+): Promise<iGM_GameInstallRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(`SELECT * FROM iGM_GameInstalls WHERE iGM_Id = ?`)
-      .get(id) as iGM_GameInstallRow | undefined) ?? null
+      .get(id)) as iGM_GameInstallRow | undefined) ?? null
   );
 }
 
 /** 查询某用户对「版本 + 加载器」进行中的安装任务（用于避免重复启动） */
-export function iGM_FindActiveGameInstall(
+export async function iGM_FindActiveGameInstall(
   userId: string,
   version: string,
   loader: string,
-): iGM_GameInstallRow | null {
+): Promise<iGM_GameInstallRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(
         `SELECT * FROM iGM_GameInstalls
           WHERE iGM_UserId = ? AND iGM_Version = ? AND iGM_Loader = ?
             AND iGM_Status IN ('pending', 'running')
           ORDER BY iGM_CreatedAt DESC LIMIT 1`,
       )
-      .get(userId, version, loader) as iGM_GameInstallRow | undefined) ?? null
+      .get(userId, version, loader)) as iGM_GameInstallRow | undefined) ?? null
   );
 }
 
 /** 更新安装任务进度（未提供的字段保持原值） */
-export function iGM_UpdateGameInstallProgress(
+export async function iGM_UpdateGameInstallProgress(
   id: string,
   input: iGM_InstallProgressInput,
-): void {
+): Promise<void> {
   const clauses: string[] = ["iGM_UpdatedAt = ?"];
   const bindings: (string | number | null)[] = [input.now];
 
@@ -321,57 +331,60 @@ export function iGM_UpdateGameInstallProgress(
   }
 
   bindings.push(id);
-  iGM_Db.run(
+  await iGM_Db.run(
     `UPDATE iGM_GameInstalls SET ${clauses.join(", ")} WHERE iGM_Id = ?`,
     bindings,
   );
 }
 
 /** 查询某用户的安装任务列表（创建时间倒序） */
-export function iGM_ListGameInstallsByUser(
+export async function iGM_ListGameInstallsByUser(
   userId: string,
   statuses: iGM_GameInstallStatus[],
-): iGM_GameInstallRow[] {
+): Promise<iGM_GameInstallRow[]> {
   const where =
     statuses.length > 0
       ? `AND iGM_Status IN (${statuses.map(() => "?").join(", ")})`
       : "";
-  return iGM_Db
+  return (await iGM_Db
     .query(
       `SELECT * FROM iGM_GameInstalls
         WHERE iGM_UserId = ? ${where}
         ORDER BY iGM_CreatedAt DESC`,
     )
-    .all(userId, ...statuses) as iGM_GameInstallRow[];
+    .all(userId, ...statuses)) as iGM_GameInstallRow[];
 }
 
 /** 删除安装任务（安装文件由外键级联清理） */
-export function iGM_DeleteGameInstall(id: string): boolean {
-  const result = iGM_Db.run(`DELETE FROM iGM_GameInstalls WHERE iGM_Id = ?`, [id]);
+export async function iGM_DeleteGameInstall(id: string): Promise<boolean> {
+  const result = await iGM_Db.run(
+    `DELETE FROM iGM_GameInstalls WHERE iGM_Id = ?`,
+    [id],
+  );
   return result.changes > 0;
 }
 
 /** 删除某任务的全部安装文件明细（重新规划时使用） */
-export function iGM_DeleteGameFiles(installId: string): void {
-  iGM_Db.run(`DELETE FROM iGM_GameFiles WHERE iGM_InstallId = ?`, [installId]);
+export async function iGM_DeleteGameFiles(installId: string): Promise<void> {
+  await iGM_Db.run(`DELETE FROM iGM_GameFiles WHERE iGM_InstallId = ?`, [installId]);
 }
 
 /* ---------- 安装文件明细 ---------- */
 
 /** 批量登记安装文件（事务内写入，path 幂等：同任务同路径唯一） */
-export function iGM_InsertGameFiles(
+export async function iGM_InsertGameFiles(
   installId: string,
   files: iGM_GameFileInput[],
-): void {
+): Promise<void> {
   const insert = iGM_Db.prepare(
     `INSERT INTO iGM_GameFiles
        (iGM_Id, iGM_InstallId, iGM_Path, iGM_Url, iGM_Sha1, iGM_Size,
         iGM_Status, iGM_DownloadedAt)
      VALUES (?, ?, ?, ?, ?, ?, 'pending', NULL)`,
   );
-  const run = iGM_Db.transaction(() => {
+  const run = iGM_Db.transaction(async () => {
     for (const file of files) {
-      insert.run(
+      await insert.run(
         iGM_RandomUuid(),
         installId,
         file.path,
@@ -381,40 +394,42 @@ export function iGM_InsertGameFiles(
       );
     }
   });
-  run();
+  await run();
 }
 
 /** 查询某任务的全部安装文件明细 */
-export function iGM_ListGameFiles(installId: string): iGM_GameFileRow[] {
-  return iGM_Db
+export async function iGM_ListGameFiles(
+  installId: string,
+): Promise<iGM_GameFileRow[]> {
+  return (await iGM_Db
     .query(`SELECT * FROM iGM_GameFiles WHERE iGM_InstallId = ?`)
-    .all(installId) as iGM_GameFileRow[];
+    .all(installId)) as iGM_GameFileRow[];
 }
 
 /** 按状态统计某任务的文件数 */
-export function iGM_CountGameFilesByStatus(
+export async function iGM_CountGameFilesByStatus(
   installId: string,
-): Record<string, number> {
-  const rows = iGM_Db
+): Promise<Record<string, number>> {
+  const rows = (await iGM_Db
     .query(
       `SELECT iGM_Status AS iGM_State, COUNT(*) AS iGM_Count
          FROM iGM_GameFiles WHERE iGM_InstallId = ?
         GROUP BY iGM_Status`,
     )
-    .all(installId) as { iGM_State: string; iGM_Count: number }[];
+    .all(installId)) as { iGM_State: string; iGM_Count: number }[];
   const result: Record<string, number> = {};
   for (const row of rows) result[row.iGM_State] = row.iGM_Count;
   return result;
 }
 
 /** 更新单个安装文件状态 */
-export function iGM_UpdateGameFileStatus(
+export async function iGM_UpdateGameFileStatus(
   installId: string,
   path: string,
   status: iGM_GameFileStatus,
   now: string,
-): void {
-  iGM_Db.run(
+): Promise<void> {
+  await iGM_Db.run(
     `UPDATE iGM_GameFiles
         SET iGM_Status = ?, iGM_DownloadedAt = ?
       WHERE iGM_InstallId = ? AND iGM_Path = ?`,
@@ -423,8 +438,10 @@ export function iGM_UpdateGameFileStatus(
 }
 
 /** 将某任务全部失败文件复位为待下载（单独重试失败文件） */
-export function iGM_ResetFailedGameFiles(installId: string): number {
-  const result = iGM_Db.run(
+export async function iGM_ResetFailedGameFiles(
+  installId: string,
+): Promise<number> {
+  const result = await iGM_Db.run(
     `UPDATE iGM_GameFiles SET iGM_Status = 'pending', iGM_DownloadedAt = NULL
       WHERE iGM_InstallId = ? AND iGM_Status = 'failed'`,
     [installId],

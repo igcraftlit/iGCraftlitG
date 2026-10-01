@@ -104,7 +104,7 @@ function iGM_IsUploader(user: iGM_UserRow, uploaderId: string): boolean {
 }
 
 /** 用户行转作者简要 DTO */
-function iGM_ToAuthorDto(user: iGM_UserRow): iGM_AuthorDto {
+async function iGM_ToAuthorDto(user: iGM_UserRow): Promise<iGM_AuthorDto> {
   return {
     id: user.iGM_Id,
     username: user.iGM_Username,
@@ -112,7 +112,7 @@ function iGM_ToAuthorDto(user: iGM_UserRow): iGM_AuthorDto {
     avatar: user.iGM_Avatar,
     role: user.iGM_Role,
     // 模块七：认证组织徽标（负责人邮箱匹配时带 isOwner 金标）
-    verifiedOrg: iGM_ResolveUserOrgBadge(
+    verifiedOrg: await iGM_ResolveUserOrgBadge(
       user.iGM_VerifiedOrgId ?? null,
       user.iGM_Email,
     ),
@@ -140,8 +140,8 @@ function iGM_BuildExcerpt(content: string): string {
 }
 
 /** 分类列表 DTO */
-export function iGM_ListResourceCategoriesService(): iGM_ResourceCategoryDto[] {
-  return iGM_ListResourceCategories().map(iGM_ToResourceCategoryDto);
+export async function iGM_ListResourceCategoriesService(): Promise<iGM_ResourceCategoryDto[]> {
+  return (await iGM_ListResourceCategories()).map(iGM_ToResourceCategoryDto);
 }
 
 /** 解析标签原始字符串（复用社区口径：逗号/顿号/分号/空白分隔） */
@@ -185,26 +185,26 @@ function iGM_ValidateResourceInput(input: iGM_ResourceInput): {
 }
 
 /** 校验附件文件存在（必填） */
-function iGM_ResolveFile(fileId?: string | null): string {
+async function iGM_ResolveFile(fileId?: string | null): Promise<string> {
   const id = (fileId ?? "").trim();
   if (!id) throw new iGM_ContentError("resource.errors.fileRequired", 422);
-  iGM_GetFileDto(id); // 不存在会抛 404
+  await iGM_GetFileDto(id); // 不存在会抛 404
   return id;
 }
 
 /** 校验封面文件存在（可选） */
-function iGM_ResolveCover(coverFileId?: string | null): string | null {
+async function iGM_ResolveCover(coverFileId?: string | null): Promise<string | null> {
   if (!coverFileId || !coverFileId.trim()) return null;
   const id = coverFileId.trim();
-  iGM_GetFileDto(id);
+  await iGM_GetFileDto(id);
   return id;
 }
 
 /** 解析分类（可选） */
-function iGM_ResolveCategory(categoryId?: string | null): string | null {
+async function iGM_ResolveCategory(categoryId?: string | null): Promise<string | null> {
   if (!categoryId || !categoryId.trim()) return null;
   const id = categoryId.trim();
-  const category = iGM_FindResourceCategoryById(id);
+  const category = await iGM_FindResourceCategoryById(id);
   if (!category) {
     throw new iGM_ContentError("resource.errors.categoryNotFound", 422);
   }
@@ -212,10 +212,10 @@ function iGM_ResolveCategory(categoryId?: string | null): string | null {
 }
 
 /** 解析关联活动（可选，活动必须存在） */
-function iGM_ResolveActivity(activityId?: string | null): string | null {
+async function iGM_ResolveActivity(activityId?: string | null): Promise<string | null> {
   if (!activityId || !activityId.trim()) return null;
   const id = activityId.trim();
-  if (!iGM_FindActivityById(id)) {
+  if (!(await iGM_FindActivityById(id))) {
     throw new iGM_ContentError("resource.errors.activityNotFound", 422);
   }
   return id;
@@ -381,31 +381,32 @@ function iGM_ResolvePagination(
 }
 
 /** 由资源行组装列表项 DTO */
-function iGM_AssembleResourceList(
+async function iGM_AssembleResourceList(
   rows: iGM_ResourceRow[],
-): iGM_ResourceListItemDto[] {
+): Promise<iGM_ResourceListItemDto[]> {
   if (rows.length === 0) return [];
 
-  const uploaderRows = iGM_FindUsersByIds(rows.map((row) => row.iGM_UploaderId));
+  const uploaderRows = await iGM_FindUsersByIds(rows.map((row) => row.iGM_UploaderId));
   const uploaderMap = new Map(uploaderRows.map((user) => [user.iGM_Id, user]));
   const categoryMap = new Map(
-    iGM_ListResourceCategories().map((category) => [category.iGM_Id, category]),
+    (await iGM_ListResourceCategories()).map((category) => [category.iGM_Id, category]),
   );
-  const tagsMap = iGM_GetTagsForResources(rows.map((row) => row.iGM_Id));
+  const tagsMap = await iGM_GetTagsForResources(rows.map((row) => row.iGM_Id));
   const fileIds = rows.flatMap((row) => [
     row.iGM_FileId,
     row.iGM_CoverFileId,
   ]);
-  const fileMap = iGM_GetFileDtoMap(fileIds);
+  const fileMap = await iGM_GetFileDtoMap(fileIds);
 
-  return rows.map((row) => {
+  const items: iGM_ResourceListItemDto[] = [];
+  for (const row of rows) {
     const uploaderRow = uploaderMap.get(row.iGM_UploaderId);
     const categoryRow = row.iGM_CategoryId
       ? (categoryMap.get(row.iGM_CategoryId) ?? null)
       : null;
     const tags = (tagsMap.get(row.iGM_Id) ?? []).map(iGM_ToResourceTagDto);
 
-    return {
+    items.push({
       id: row.iGM_Id,
       title: row.iGM_Title,
       excerpt: iGM_BuildExcerpt(row.iGM_Description),
@@ -424,28 +425,29 @@ function iGM_AssembleResourceList(
       originalUrl: row.iGM_OriginalUrl,
       changelog: row.iGM_Changelog,
       uploader: uploaderRow
-        ? iGM_ToAuthorDto(uploaderRow)
+        ? await iGM_ToAuthorDto(uploaderRow)
         : iGM_DeletedAuthorPlaceholder(row.iGM_UploaderId),
       file: fileMap.get(row.iGM_FileId) as iGM_ResourceListItemDto["file"],
       cover: row.iGM_CoverFileId ? fileMap.get(row.iGM_CoverFileId) ?? null : null,
       createdAt: row.iGM_CreatedAt,
       updatedAt: row.iGM_UpdatedAt,
-    };
-  });
+    });
+  }
+  return items;
 }
 
 /* ---------- 创建 / 编辑 / 删除 / 状态 ---------- */
 
 /** 创建资源：登录用户上传；必须绑定一个上传好的文件 */
-export function iGM_CreateResourceService(
+export async function iGM_CreateResourceService(
   user: iGM_UserRow,
   input: iGM_ResourceInput,
-): iGM_ResourceDetailDto {
+): Promise<iGM_ResourceDetailDto> {
   const { title, description, tags } = iGM_ValidateResourceInput(input);
-  const fileId = iGM_ResolveFile(input.fileId);
-  const coverFileId = iGM_ResolveCover(input.coverFileId);
-  const categoryId = iGM_ResolveCategory(input.categoryId);
-  const activityId = iGM_ResolveActivity(input.activityId);
+  const fileId = await iGM_ResolveFile(input.fileId);
+  const coverFileId = await iGM_ResolveCover(input.coverFileId);
+  const categoryId = await iGM_ResolveCategory(input.categoryId);
+  const activityId = await iGM_ResolveActivity(input.activityId);
   // 模块十：仅 Minecraft 分区表单携带 minecraft 标记并做扩展校验
   const mc = input.minecraft ? iGM_ValidateMcFields(input) : iGM_EmptyMcFields();
   // 模块十三：CLI 下载——勾选可下载时生成 slug（含用户 uid）
@@ -453,8 +455,8 @@ export function iGM_CreateResourceService(
   const slug = downloadable ? iGM_BuildResourceSlug(user.iGM_Uid, title) : null;
   const version = downloadable ? (input.version ?? null) : null;
 
-  const resource = iGM_Db.transaction(() => {
-    const created = iGM_CreateResource({
+  const resource = await iGM_Db.transaction(async () => {
+    const created = await iGM_CreateResource({
       uploaderId: user.iGM_Id,
       title,
       description,
@@ -479,8 +481,8 @@ export function iGM_CreateResourceService(
       now: new Date().toISOString(),
     });
     if (tags.length > 0) {
-      const tagRows = iGM_FindOrCreateResourceTags(tags);
-      iGM_ReplaceResourceTags(
+      const tagRows = await iGM_FindOrCreateResourceTags(tags);
+      await iGM_ReplaceResourceTags(
         created.iGM_Id,
         tagRows.map((tag) => tag.iGM_Id),
       );
@@ -488,36 +490,36 @@ export function iGM_CreateResourceService(
     return created;
   })();
 
-  const detail = iGM_GetResourceDetail(user, resource.iGM_Id);
+  const detail = await iGM_GetResourceDetail(user, resource.iGM_Id);
   if (!detail) throw new Error("iGM_CreateResourceService：创建后详情组装失败");
   // 模块五：上传资源积分埋点（内部吞异常，不影响主流程）
-  iGM_AwardPoints(user.iGM_Id, "resource_upload", title);
+  await iGM_AwardPoints(user.iGM_Id, "resource_upload", title);
   return detail;
 }
 
 /** 编辑资源：仅上传者本人或协管员及以上 */
-export function iGM_UpdateResourceService(
+export async function iGM_UpdateResourceService(
   user: iGM_UserRow,
   resourceId: string,
   input: iGM_ResourceInput,
-): iGM_ResourceDetailDto {
-  const resource = iGM_FindResourceById(resourceId);
+): Promise<iGM_ResourceDetailDto> {
+  const resource = await iGM_FindResourceById(resourceId);
   if (!resource) throw new iGM_ContentError("resource.errors.notFound", 404);
   if (!iGM_IsUploader(user, resource.iGM_UploaderId) && !iGM_CanModerate(user)) {
     throw new iGM_ContentError("auth.errors.forbidden", 403);
   }
 
   const { title, description, tags } = iGM_ValidateResourceInput(input);
-  const fileId = iGM_ResolveFile(input.fileId ?? resource.iGM_FileId);
+  const fileId = await iGM_ResolveFile(input.fileId ?? resource.iGM_FileId);
   const coverFileId =
     input.coverFileId === "" || input.coverFileId === null
       ? null
-      : iGM_ResolveCover(input.coverFileId ?? resource.iGM_CoverFileId);
-  const categoryId = iGM_ResolveCategory(input.categoryId);
+      : await iGM_ResolveCover(input.coverFileId ?? resource.iGM_CoverFileId);
+  const categoryId = await iGM_ResolveCategory(input.categoryId);
   const activityId =
     input.activityId === undefined
       ? resource.iGM_ActivityId
-      : iGM_ResolveActivity(input.activityId);
+      : await iGM_ResolveActivity(input.activityId);
   // 模块十：Minecraft 表单按提交校验；普通表单保留资源原 MC 字段
   const mc = input.minecraft
     ? iGM_ValidateMcFields(input)
@@ -527,8 +529,8 @@ export function iGM_UpdateResourceService(
   const slug = downloadable ? iGM_BuildResourceSlug(user.iGM_Uid, title) : null;
   const version = downloadable ? (input.version ?? null) : null;
 
-  iGM_Db.transaction(() => {
-    iGM_UpdateResource(resourceId, {
+  await iGM_Db.transaction(async () => {
+    await iGM_UpdateResource(resourceId, {
       title,
       description,
       categoryId,
@@ -554,45 +556,45 @@ export function iGM_UpdateResourceService(
       version,
       now: new Date().toISOString(),
     });
-    const tagRows = tags.length > 0 ? iGM_FindOrCreateResourceTags(tags) : [];
-    iGM_ReplaceResourceTags(
+    const tagRows = tags.length > 0 ? await iGM_FindOrCreateResourceTags(tags) : [];
+    await iGM_ReplaceResourceTags(
       resourceId,
       tagRows.map((tag) => tag.iGM_Id),
     );
   })();
 
-  const detail = iGM_GetResourceDetail(user, resourceId);
+  const detail = await iGM_GetResourceDetail(user, resourceId);
   if (!detail) throw new Error("iGM_UpdateResourceService：更新后详情组装失败");
   return detail;
 }
 
 /** 删除资源：上传者本人或协管员及以上 */
-export function iGM_DeleteResourceService(
+export async function iGM_DeleteResourceService(
   user: iGM_UserRow,
   resourceId: string,
-): void {
-  const resource = iGM_FindResourceById(resourceId);
+): Promise<void> {
+  const resource = await iGM_FindResourceById(resourceId);
   if (!resource) throw new iGM_ContentError("resource.errors.notFound", 404);
   if (!iGM_IsUploader(user, resource.iGM_UploaderId) && !iGM_CanModerate(user)) {
     throw new iGM_ContentError("auth.errors.forbidden", 403);
   }
-  iGM_DeleteResource(resourceId);
+  await iGM_DeleteResource(resourceId);
 }
 
 /** 上架/下架资源：上传者本人或协管员及以上 */
-export function iGM_SetResourceStatusService(
+export async function iGM_SetResourceStatusService(
   user: iGM_UserRow,
   resourceId: string,
   status: iGM_ResourceStatus,
-): iGM_ResourceDetailDto {
-  const resource = iGM_FindResourceById(resourceId);
+): Promise<iGM_ResourceDetailDto> {
+  const resource = await iGM_FindResourceById(resourceId);
   if (!resource) throw new iGM_ContentError("resource.errors.notFound", 404);
   if (!iGM_IsUploader(user, resource.iGM_UploaderId) && !iGM_CanModerate(user)) {
     throw new iGM_ContentError("auth.errors.forbidden", 403);
   }
   // 模块十：状态变更不触碰内容与 Minecraft 字段，原样回填
   const mc = iGM_McFieldsFromRow(resource);
-  iGM_UpdateResource(resourceId, {
+  await iGM_UpdateResource(resourceId, {
     title: resource.iGM_Title,
     description: resource.iGM_Description,
     categoryId: resource.iGM_CategoryId,
@@ -610,7 +612,7 @@ export function iGM_SetResourceStatusService(
     changelog: mc.changelog,
     now: new Date().toISOString(),
   });
-  const detail = iGM_GetResourceDetail(user, resourceId);
+  const detail = await iGM_GetResourceDetail(user, resourceId);
   if (!detail) throw new Error("iGM_SetResourceStatusService：状态更新后组装失败");
   return detail;
 }
@@ -618,29 +620,29 @@ export function iGM_SetResourceStatusService(
 /* ---------- 查询 ---------- */
 
 /** 资源列表：已发布公开可见，隐藏资源仅上传者与协管员可见 */
-export function iGM_ListResourcesService(
+export async function iGM_ListResourcesService(
   currentUser: iGM_UserRow | null,
   query: iGM_ResourceQueryInput,
-): iGM_ResourceListData {
+): Promise<iGM_ResourceListData> {
   const { page, pageSize } = iGM_ResolvePagination(query.page, query.pageSize);
   const canModerate = currentUser ? iGM_CanModerate(currentUser) : false;
 
   let tagId: string | null = null;
   if (query.tag) {
-    const tag = iGM_FindResourceTagBySlug(query.tag);
+    const tag = await iGM_FindResourceTagBySlug(query.tag);
     if (!tag) return iGM_EmptyPage(page, pageSize);
     tagId = tag.iGM_Id;
   }
   let categoryId: string | null = null;
   if (query.category) {
-    const category = iGM_ListResourceCategories().find(
+    const category = (await iGM_ListResourceCategories()).find(
       (item) => item.iGM_Slug === query.category,
     );
     if (!category) return iGM_EmptyPage(page, pageSize);
     categoryId = category.iGM_Id;
   }
 
-  const { items, total } = iGM_ListResources({
+  const { items, total } = await iGM_ListResources({
     statuses: canModerate ? ["published", "hidden"] : ["published"],
     categoryId,
     tagId,
@@ -652,7 +654,7 @@ export function iGM_ListResourcesService(
   });
 
   return {
-    items: iGM_AssembleResourceList(items),
+    items: await iGM_AssembleResourceList(items),
     total,
     page,
     pageSize,
@@ -671,7 +673,7 @@ function iGM_EmptyPage(
 /* ---------- 模块十：Minecraft 分区列表 ---------- */
 
 /** Minecraft 分区列表：仅 Minecraft 资源，支持类型/版本/加载器/平台筛选与搜索 */
-export function iGM_ListMinecraftResourcesService(
+export async function iGM_ListMinecraftResourcesService(
   currentUser: iGM_UserRow | null,
   query: {
     type?: string;
@@ -682,10 +684,10 @@ export function iGM_ListMinecraftResourcesService(
     page?: number;
     pageSize?: number;
   },
-): iGM_ResourceListData {
+): Promise<iGM_ResourceListData> {
   const { page, pageSize } = iGM_ResolvePagination(query.page, query.pageSize);
   const canModerate = currentUser ? iGM_CanModerate(currentUser) : false;
-  const { items, total } = iGM_ListResources({
+  const { items, total } = await iGM_ListResources({
     statuses: canModerate ? ["published", "hidden"] : ["published"],
     categoryId: null,
     tagId: null,
@@ -701,7 +703,7 @@ export function iGM_ListMinecraftResourcesService(
     pageSize,
   });
   return {
-    items: iGM_AssembleResourceList(items),
+    items: await iGM_AssembleResourceList(items),
     total,
     page,
     pageSize,
@@ -710,10 +712,10 @@ export function iGM_ListMinecraftResourcesService(
 }
 
 /** 活动详情用：列出关联到该活动的已发布资源（最多 20 条，按创建时间倒序） */
-export function iGM_ListActivityResourcesService(
+export async function iGM_ListActivityResourcesService(
   activityId: string,
-): iGM_ResourceListItemDto[] {
-  const { items } = iGM_ListResources({
+): Promise<iGM_ResourceListItemDto[]> {
+  const { items } = await iGM_ListResources({
     statuses: ["published"],
     categoryId: null,
     tagId: null,
@@ -723,15 +725,15 @@ export function iGM_ListActivityResourcesService(
     page: 1,
     pageSize: 20,
   });
-  return iGM_AssembleResourceList(items);
+  return await iGM_AssembleResourceList(items);
 }
 
 /** 资源详情：隐藏资源仅上传者与协管员可见 */
-export function iGM_GetResourceDetail(
+export async function iGM_GetResourceDetail(
   currentUser: iGM_UserRow | null,
   resourceId: string,
-): iGM_ResourceDetailDto | null {
-  const row = iGM_FindResourceById(resourceId);
+): Promise<iGM_ResourceDetailDto | null> {
+  const row = await iGM_FindResourceById(resourceId);
   if (!row) return null;
 
   const isUploader = currentUser !== null && row.iGM_UploaderId === currentUser.iGM_Id;
@@ -740,7 +742,7 @@ export function iGM_GetResourceDetail(
     return null;
   }
 
-  const [item] = iGM_AssembleResourceList([row]);
+  const [item] = await iGM_AssembleResourceList([row]);
   if (!item) return null;
   const { excerpt: _excerpt, ...rest } = item;
   return {
@@ -765,16 +767,16 @@ export async function iGM_DownloadResourceService(
   resourceId: string,
   locale?: string,
 ): Promise<iGM_FileContent> {
-  const resource = iGM_FindResourceById(resourceId);
+  const resource = await iGM_FindResourceById(resourceId);
   if (!resource || resource.iGM_Status !== "published") {
     throw new iGM_ContentError("resource.errors.notFound", 404);
   }
 
-  iGM_IncrementDownloadCount(resourceId);
+  await iGM_IncrementDownloadCount(resourceId);
 
   // 登录用户下载他人资源时，通知资源上传者
   if (actor && actor.iGM_Id !== resource.iGM_UploaderId) {
-    iGM_Notify({
+    await iGM_Notify({
       userId: resource.iGM_UploaderId,
       actorId: actor.iGM_Id,
       actorName: actor.iGM_DisplayName ?? actor.iGM_Username,
@@ -785,7 +787,7 @@ export async function iGM_DownloadResourceService(
     });
   }
 
-  return iGM_ReadFileContentService(resource.iGM_FileId);
+  return await iGM_ReadFileContentService(resource.iGM_FileId);
 }
 
 /**
@@ -797,16 +799,16 @@ export async function iGM_DownloadResourceByIdentifierService(
   identifier: string,
   locale?: string,
 ): Promise<iGM_FileContent> {
-  const resource = iGM_FindResourceByIdentifier(identifier);
+  const resource = await iGM_FindResourceByIdentifier(identifier);
   if (!resource || resource.iGM_Status !== "published") {
     throw new iGM_ContentError("resource.errors.notFound", 404);
   }
   const resourceId = resource.iGM_Id;
 
-  iGM_IncrementDownloadCount(resourceId);
+  await iGM_IncrementDownloadCount(resourceId);
 
   if (actor && actor.iGM_Id !== resource.iGM_UploaderId) {
-    iGM_Notify({
+    await iGM_Notify({
       userId: resource.iGM_UploaderId,
       actorId: actor.iGM_Id,
       actorName: actor.iGM_DisplayName ?? actor.iGM_Username,
@@ -817,7 +819,7 @@ export async function iGM_DownloadResourceByIdentifierService(
     });
   }
 
-  return iGM_ReadFileContentService(resource.iGM_FileId);
+  return await iGM_ReadFileContentService(resource.iGM_FileId);
 }
 
 // 导出 //

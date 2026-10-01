@@ -103,7 +103,7 @@ async function iGM_HandleResourceDetail(ctx: iGM_RouteContext) {
 /* ---------- 下载任务 ---------- */
 
 async function iGM_HandleStartDownload(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "thirdPartyDownload", `user:${user.iGM_Id}`);
   const task = await iGM_StartThirdPartyDownload(user, {
     resourceId: iGM_Field(ctx.body, "resourceId"),
@@ -124,28 +124,28 @@ async function iGM_HandleStartDownload(ctx: iGM_RouteContext) {
   );
 }
 
-function iGM_HandleDownloadStatus(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleDownloadStatus(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const taskId = iGM_Param(ctx as iGM_ThirdPartyContext, "taskId");
-  return iGM_Ok({ task: iGM_GetThirdPartyDownload(user, taskId) });
+  return iGM_Ok({ task: await iGM_GetThirdPartyDownload(user, taskId) });
 }
 
-function iGM_HandleDownloadList(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleDownloadList(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   return iGM_Ok({
-    items: iGM_ListThirdPartyDownloads(
+    items: await iGM_ListThirdPartyDownloads(
       user,
       iGM_Query(ctx.query, "status") || undefined,
     ),
   });
 }
 
-function iGM_HandlePause(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandlePause(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "thirdPartyTask", `user:${user.iGM_Id}`);
   const taskId = iGM_Param(ctx as iGM_ThirdPartyContext, "taskId");
   return iGM_Ok({
-    task: iGM_PauseThirdPartyDownload(
+    task: await iGM_PauseThirdPartyDownload(
       user,
       taskId,
       iGM_BoolField(ctx.body, "paused"),
@@ -154,7 +154,7 @@ function iGM_HandlePause(ctx: iGM_RouteContext) {
 }
 
 async function iGM_HandleCancel(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "thirdPartyTask", `user:${user.iGM_Id}`);
   const taskId = iGM_Param(ctx as iGM_ThirdPartyContext, "taskId");
   const purge = iGM_BoolField(ctx.body, "purge");
@@ -163,24 +163,24 @@ async function iGM_HandleCancel(ctx: iGM_RouteContext) {
   });
 }
 
-function iGM_HandleRetry(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleRetry(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "thirdPartyTask", `user:${user.iGM_Id}`);
   const taskId = iGM_Param(ctx as iGM_ThirdPartyContext, "taskId");
-  return iGM_Ok({ task: iGM_RetryThirdPartyDownload(user, taskId) });
+  return iGM_Ok({ task: await iGM_RetryThirdPartyDownload(user, taskId) });
 }
 
 async function iGM_HandleRemove(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "thirdPartyTask", `user:${user.iGM_Id}`);
   const taskId = iGM_Param(ctx as iGM_ThirdPartyContext, "taskId");
   return iGM_Ok(await iGM_DeleteThirdPartyDownload(user, taskId));
 }
 
-function iGM_HandleClearCompleted(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleClearCompleted(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "thirdPartyTask", `user:${user.iGM_Id}`);
-  return iGM_Ok(iGM_ClearCompletedThirdPartyDownloads(user));
+  return iGM_Ok(await iGM_ClearCompletedThirdPartyDownloads(user));
 }
 
 /* ---------- WebSocket 进度推送 ---------- */
@@ -189,12 +189,12 @@ function iGM_HandleClearCompleted(ctx: iGM_RouteContext) {
  * 握手守卫：Origin 白名单 + 连接限流 + 会话鉴权 + 任务归属校验
  * 校验失败即拒绝 upgrade，客户端收到对应 HTTP 错误
  */
-function iGM_ThirdPartyWsBeforeHandle(context: {
+async function iGM_ThirdPartyWsBeforeHandle(context: {
   request: Request;
   server: iGM_NetworkServer | null;
   set: { status: number; headers: Record<string, string> };
   params?: Record<string, string>;
-}): void {
+}): Promise<void> {
   const origin = context.request.headers.get("Origin") ?? "";
   if (!iGM_Config.corsOrigins.includes(origin)) {
     throw new iGM_AuthError("auth.errors.forbidden", 403);
@@ -206,12 +206,12 @@ function iGM_ThirdPartyWsBeforeHandle(context: {
     context.set.headers["Retry-After"] = String(limit.retryAfterSeconds);
     throw new iGM_AuthError("auth.errors.tooManyRequests", 429);
   }
-  const user = iGM_ResolveRequestUser(context.request);
+  const user = await iGM_ResolveRequestUser(context.request);
   if (!user) throw new iGM_AuthError("auth.errors.unauthorized", 401);
 
   const taskId = context.params?.taskId ?? "";
   // 任务归属校验：非本人任务直接拒绝
-  iGM_GetThirdPartyDownload(user, taskId);
+  await iGM_GetThirdPartyDownload(user, taskId);
 
   const extra = context as unknown as iGM_ThirdPartyWsExtra;
   extra.iGM_WsUser = user;
@@ -234,7 +234,7 @@ export const G_ThirdParty = new Elysia({ name: "G_ThirdParty" })
     beforeHandle: iGM_ThirdPartyWsBeforeHandle as never,
 
     // 连接建立：下发当前任务快照并订阅后续进度事件
-    open(ws) {
+    async open(ws) {
       const data = ws.data as unknown as iGM_ThirdPartyWsExtra & {
         params?: Record<string, string>;
       };
@@ -248,7 +248,7 @@ export const G_ThirdParty = new Elysia({ name: "G_ThirdParty" })
       ws.send(
         JSON.stringify({
           type: "snapshot",
-          task: iGM_GetThirdPartyDownload(user, taskId),
+          task: await iGM_GetThirdPartyDownload(user, taskId),
         }),
       );
       data.iGM_WsUnsubscribe = iGM_SubscribeThirdPartyTask(taskId, (event) => {

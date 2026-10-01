@@ -159,22 +159,26 @@ async function iGM_HandleLogin(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 登出 ---------- */
-function iGM_HandleLogout(ctx: iGM_RouteContext) {
-  iGM_Logout(iGM_GetSessionId(ctx.request));
+async function iGM_HandleLogout(ctx: iGM_RouteContext) {
+  await iGM_Logout(iGM_GetSessionId(ctx.request));
   ctx.set.headers["Set-Cookie"] = iGM_ClearSessionCookie(iGM_Config);
   return iGM_Ok(null, "auth.messages.loggedOut");
 }
 
 /* ---------- 当前用户（会话恢复） ---------- */
-function iGM_HandleMe(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_ResolveSession(iGM_GetSessionId(ctx.request)));
-  return iGM_Ok({ user: iGM_ToUserDto(user) });
+async function iGM_HandleMe(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(
+    await iGM_ResolveSession(iGM_GetSessionId(ctx.request)),
+  );
+  return iGM_Ok({ user: await iGM_ToUserDto(user) });
 }
 
 /* ---------- 模块十五：我的《用户管理规定》同意状态 ---------- */
-function iGM_HandleAgreement(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_ResolveSession(iGM_GetSessionId(ctx.request)));
-  const latest = iGM_FindLatestAgreement(user.iGM_Id);
+async function iGM_HandleAgreement(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(
+    await iGM_ResolveSession(iGM_GetSessionId(ctx.request)),
+  );
+  const latest = await iGM_FindLatestAgreement(user.iGM_Id);
   return iGM_Ok({
     version: latest?.iGM_Version ?? null,
     acceptedAt: latest?.iGM_AcceptedAt ?? null,
@@ -185,7 +189,9 @@ function iGM_HandleAgreement(ctx: iGM_RouteContext) {
 
 /* ---------- 发送邮箱验证码 ---------- */
 async function iGM_HandleSendVerification(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_ResolveSession(iGM_GetSessionId(ctx.request)));
+  const user = iGM_RequireUser(
+    await iGM_ResolveSession(iGM_GetSessionId(ctx.request)),
+  );
   iGM_EnforceRateLimit(ctx, "sendVerification", `user:${user.iGM_Id}`);
 
   await iGM_SendVerification(
@@ -197,7 +203,9 @@ async function iGM_HandleSendVerification(ctx: iGM_RouteContext) {
 
 /* ---------- 发送修改密码验证码（登录态，旧密码缺省时的身份验证途径） ---------- */
 async function iGM_HandleSendPasswordChangeCode(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_ResolveSession(iGM_GetSessionId(ctx.request)));
+  const user = iGM_RequireUser(
+    await iGM_ResolveSession(iGM_GetSessionId(ctx.request)),
+  );
   iGM_EnforceRateLimit(ctx, "sendVerification", `user:${user.iGM_Id}`);
 
   await iGM_SendPasswordChangeCode(
@@ -209,7 +217,9 @@ async function iGM_HandleSendPasswordChangeCode(ctx: iGM_RouteContext) {
 
 /* ---------- 校验邮箱验证码 ---------- */
 async function iGM_HandleVerifyEmail(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_ResolveSession(iGM_GetSessionId(ctx.request)));
+  const user = iGM_RequireUser(
+    await iGM_ResolveSession(iGM_GetSessionId(ctx.request)),
+  );
   iGM_EnforceRateLimit(ctx, "verify", `user:${user.iGM_Id}`);
 
   const updated = await iGM_VerifyEmail(
@@ -235,9 +245,9 @@ async function iGM_HandleForgotPassword(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 重置令牌有效性预检 ---------- */
-function iGM_HandleCheckResetToken(ctx: iGM_RouteContext) {
+async function iGM_HandleCheckResetToken(ctx: iGM_RouteContext) {
   const token = ctx.query.token ?? "";
-  return iGM_Ok({ valid: iGM_CheckResetToken(token) });
+  return iGM_Ok({ valid: await iGM_CheckResetToken(token) });
 }
 
 /* ---------- 重置密码 ---------- */
@@ -255,7 +265,7 @@ async function iGM_HandleResetPassword(ctx: iGM_RouteContext) {
 /* ---------- 修改密码（登录态） ---------- */
 async function iGM_HandleChangePassword(ctx: iGM_RouteContext) {
   const rawSessionId = iGM_GetSessionId(ctx.request);
-  const user = iGM_RequireUser(iGM_ResolveSession(rawSessionId));
+  const user = iGM_RequireUser(await iGM_ResolveSession(rawSessionId));
   iGM_EnforceRateLimit(ctx, "verify", `user:${user.iGM_Id}`);
 
   await iGM_ChangePassword(
@@ -270,7 +280,9 @@ async function iGM_HandleChangePassword(ctx: iGM_RouteContext) {
 
 /* ---------- 模块七第三轮：发送注销账号验证码（登录态，邮箱二次确认） ---------- */
 async function iGM_HandleSendDeleteCode(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_ResolveSession(iGM_GetSessionId(ctx.request)));
+  const user = iGM_RequireUser(
+    await iGM_ResolveSession(iGM_GetSessionId(ctx.request)),
+  );
   iGM_EnforceRateLimit(ctx, "sendVerification", `delete:${user.iGM_Id}`);
 
   await iGM_SendAccountDeleteCode(
@@ -282,7 +294,9 @@ async function iGM_HandleSendDeleteCode(ctx: iGM_RouteContext) {
 
 /* ---------- 模块七第三轮：自助注销账号（登录态 + 邮箱验证码） ---------- */
 async function iGM_HandleDeleteAccount(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_ResolveSession(iGM_GetSessionId(ctx.request)));
+  const user = iGM_RequireUser(
+    await iGM_ResolveSession(iGM_GetSessionId(ctx.request)),
+  );
   iGM_EnforceRateLimit(ctx, "verify", `delete:${user.iGM_Id}`);
 
   await iGM_DeleteAccount(user, iGM_Field(ctx.body, "code"));
@@ -292,9 +306,9 @@ async function iGM_HandleDeleteAccount(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 管理员：用户列表（角色权限示例） ---------- */
-function iGM_HandleAdminUsers(ctx: iGM_RouteContext) {
+async function iGM_HandleAdminUsers(ctx: iGM_RouteContext) {
   const user = iGM_RequireRole(
-    iGM_ResolveSession(iGM_GetSessionId(ctx.request)),
+    await iGM_ResolveSession(iGM_GetSessionId(ctx.request)),
     "admin",
   );
   // 管理员接口同样需要有效登录
@@ -305,8 +319,9 @@ function iGM_HandleAdminUsers(ctx: iGM_RouteContext) {
   const limit = Math.min(Math.max(Number.isFinite(rawLimit) ? rawLimit : 20, 1), 100);
   const offset = Math.max(Number.isFinite(rawOffset) ? rawOffset : 0, 0);
 
-  const users: iGM_UserDto[] = iGM_ListUsers(limit, offset).map(iGM_ToUserDto);
-  return iGM_Ok({ items: users, total: iGM_CountUsers() });
+  const rows = await iGM_ListUsers(limit, offset);
+  const users: iGM_UserDto[] = await Promise.all(rows.map(iGM_ToUserDto));
+  return iGM_Ok({ items: users, total: await iGM_CountUsers() });
 }
 
 /**

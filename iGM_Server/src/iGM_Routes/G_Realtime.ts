@@ -44,17 +44,17 @@ interface iGM_ClientMessage {
 
 // 核心逻辑 //
 /**
- * 握手前置守卫：
+ * 握手前置守卫（异步：会话解析已迁移为异步数据层）：
  * 1. Origin 必须存在于 CORS 白名单（浏览器 WebSocket 握手必带 Origin）；
- * 2. 连接限流（按客户端 IP）；
+ * 2. 连接限流（按客户端 IP，iGM_CheckRateLimit 仍为同步函数，不加 await）；
  * 3. Cookie 会话鉴权，通过则把用户与连接 ID 挂到上下文供 open 使用。
  * 抛出错误时 Elysia 不执行 upgrade，客户端收到对应 HTTP 错误。
  */
-function iGM_WsBeforeHandle(context: {
+async function iGM_WsBeforeHandle(context: {
   request: Request;
   server: iGM_NetworkServer | null;
   set: { status: number; headers: Record<string, string> };
-}): void {
+}): Promise<void> {
   const origin = context.request.headers.get("Origin") ?? "";
   if (!iGM_Config.corsOrigins.includes(origin)) {
     throw new iGM_AuthError("auth.errors.forbidden", 403);
@@ -68,7 +68,7 @@ function iGM_WsBeforeHandle(context: {
     throw new iGM_AuthError("auth.errors.tooManyRequests", 429);
   }
 
-  const user = iGM_ResolveRequestUser(context.request);
+  const user = await iGM_ResolveRequestUser(context.request);
   if (!user) {
     throw new iGM_AuthError("auth.errors.unauthorized", 401);
   }
@@ -87,7 +87,7 @@ export const G_Realtime = new Elysia({ name: "G_Realtime" }).ws(
     beforeHandle: iGM_WsBeforeHandle as never,
 
     // 连接建立：登记在线状态并广播在线列表
-    open(ws) {
+    async open(ws) {
       const data = ws.data as unknown as iGM_WsContextExtra & {
         request: Request;
       };
@@ -97,7 +97,7 @@ export const G_Realtime = new Elysia({ name: "G_Realtime" }).ws(
         ws.close(4401, "unauthorized");
         return;
       }
-      iGM_RegisterConnection({
+      await iGM_RegisterConnection({
         userId: user.iGM_Id,
         connectionId,
         handle: ws,
@@ -107,21 +107,21 @@ export const G_Realtime = new Elysia({ name: "G_Realtime" }).ws(
     },
 
     // 客户端消息：仅识别 ping 心跳，其余忽略
-    message(ws, raw) {
+    async message(ws, raw) {
       const data = ws.data as unknown as iGM_WsContextExtra;
       const connectionId = data.iGM_WsConnectionId;
       if (!connectionId) return;
       const message = raw as iGM_ClientMessage;
       if (message && message.type === "ping") {
-        iGM_Heartbeat(connectionId);
+        await iGM_Heartbeat(connectionId);
       }
     },
 
     // 连接关闭：注销在线状态并广播
-    close(ws) {
+    async close(ws) {
       const data = ws.data as unknown as iGM_WsContextExtra;
       if (data.iGM_WsConnectionId) {
-        iGM_UnregisterConnection(data.iGM_WsConnectionId);
+        await iGM_UnregisterConnection(data.iGM_WsConnectionId);
       }
     },
   },

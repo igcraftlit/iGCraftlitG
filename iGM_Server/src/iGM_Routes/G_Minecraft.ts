@@ -91,10 +91,10 @@ function iGM_ReadMinecraftInput(body: unknown): iGM_ResourceInput {
 }
 
 /* ---------- 分区资源列表 ---------- */
-function iGM_HandleList(ctx: iGM_RouteContext) {
+async function iGM_HandleList(ctx: iGM_RouteContext) {
   const { page, pageSize } = iGM_PageQuery(ctx);
   return iGM_Ok(
-    iGM_ListMinecraftResourcesService(iGM_CurrentUser(ctx), {
+    await iGM_ListMinecraftResourcesService(await iGM_CurrentUser(ctx), {
       type: iGM_Query(ctx.query, "type") || undefined,
       version: iGM_Query(ctx.query, "version") || undefined,
       loader: iGM_Query(ctx.query, "loader") || undefined,
@@ -107,7 +107,7 @@ function iGM_HandleList(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 表单选项字典 ---------- */
-function iGM_HandleOptions() {
+async function iGM_HandleOptions() {
   return iGM_Ok({
     resourceTypes: iGM_McResourceTypes,
     /** 分区浏览类型（含本体分区，仅用于列表筛选，不作为上传类型） */
@@ -119,10 +119,10 @@ function iGM_HandleOptions() {
 }
 
 /* ---------- 模块十七：本体版本列表 ---------- */
-function iGM_HandleVersions(ctx: iGM_RouteContext) {
+async function iGM_HandleVersions(ctx: iGM_RouteContext) {
   const { page, pageSize } = iGM_PageQuery(ctx);
   return iGM_Ok(
-    iGM_ListGameVersions(iGM_CurrentUser(ctx), {
+    await iGM_ListGameVersions(await iGM_CurrentUser(ctx), {
       type: iGM_Query(ctx.query, "type") || undefined,
       search: iGM_Query(ctx.query, "search") || undefined,
       sort: iGM_Query(ctx.query, "sort") || undefined,
@@ -133,17 +133,19 @@ function iGM_HandleVersions(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 模块十七：本体版本详情 ---------- */
-function iGM_HandleVersionDetail(ctx: iGM_MinecraftContext) {
+async function iGM_HandleVersionDetail(ctx: iGM_MinecraftContext) {
   const versionId = iGM_MinecraftParam(ctx, "id");
   if (!versionId) throw new iGM_GameError("game.errors.versionNotFound", 404);
-  return iGM_Ok({ version: iGM_GetGameVersion(iGM_CurrentUser(ctx), versionId) });
+  return iGM_Ok({
+    version: await iGM_GetGameVersion(await iGM_CurrentUser(ctx), versionId),
+  });
 }
 
 /* ---------- 资源详情 ---------- */
-function iGM_HandleDetail(ctx: iGM_RouteContext) {
+async function iGM_HandleDetail(ctx: iGM_RouteContext) {
   const resourceId = iGM_Query(ctx.query, "resourceId");
   if (!resourceId) throw new iGM_ContentError("resource.errors.notFound", 404);
-  const detail = iGM_GetResourceDetail(iGM_CurrentUser(ctx), resourceId);
+  const detail = await iGM_GetResourceDetail(await iGM_CurrentUser(ctx), resourceId);
   if (!detail || !detail.resourceType) {
     throw new iGM_ContentError("resource.errors.notFound", 404);
   }
@@ -151,21 +153,24 @@ function iGM_HandleDetail(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 创建资源 ---------- */
-function iGM_HandleCreate(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleCreate(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "mcWrite", `user:${user.iGM_Id}`);
-  const detail = iGM_CreateResourceService(user, iGM_ReadMinecraftInput(ctx.body));
+  const detail = await iGM_CreateResourceService(
+    user,
+    iGM_ReadMinecraftInput(ctx.body),
+  );
   ctx.set.status = 201;
   return iGM_Ok({ resource: detail }, "resource.messages.created");
 }
 
 /* ---------- 编辑资源 ---------- */
-function iGM_HandleEdit(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleEdit(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "mcWrite", `user:${user.iGM_Id}`);
   const resourceId = iGM_Field(ctx.body, "resourceId").trim();
   if (!resourceId) throw new iGM_ContentError("resource.errors.notFound", 404);
-  const detail = iGM_UpdateResourceService(
+  const detail = await iGM_UpdateResourceService(
     user,
     resourceId,
     iGM_ReadMinecraftInput(ctx.body),
@@ -174,12 +179,12 @@ function iGM_HandleEdit(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 删除资源 ---------- */
-function iGM_HandleDelete(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleDelete(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "mcWrite", `user:${user.iGM_Id}`);
   const resourceId = iGM_Query(ctx.query, "resourceId");
   if (!resourceId) throw new iGM_ContentError("resource.errors.notFound", 404);
-  iGM_DeleteResourceService(user, resourceId);
+  await iGM_DeleteResourceService(user, resourceId);
   return iGM_Ok({ deleted: true }, "resource.messages.deleted");
 }
 
@@ -189,7 +194,7 @@ async function iGM_HandleDownload(ctx: iGM_RouteContext) {
   if (!resourceId) throw new iGM_ContentError("resource.errors.notFound", 404);
   iGM_EnforceRateLimit(ctx, "resourceDownload", `res:${resourceId}`);
   const content = await iGM_DownloadResourceService(
-    iGM_CurrentUser(ctx),
+    await iGM_CurrentUser(ctx),
     resourceId,
     iGM_RequestLocale(ctx),
   );

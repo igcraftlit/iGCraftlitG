@@ -101,11 +101,11 @@ const iGM_PasswordMaxLength = 128;
 
 /** 定期清理过期会话与令牌（每 10 分钟） */
 function iGM_ScheduleCleanup(): void {
-  setInterval(() => {
+  setInterval(async () => {
     const now = new Date().toISOString();
     try {
-      iGM_DeleteExpiredSessions(now);
-      iGM_DeleteExpiredTokens(now);
+      await iGM_DeleteExpiredSessions(now);
+      await iGM_DeleteExpiredTokens(now);
     } catch (error) {
       console.warn("[iGM_AuthService] 过期数据清理失败", error);
     }
@@ -137,10 +137,10 @@ function iGM_ValidateCredentials(input: {
 }
 
 /** 创建会话并返回 DTO + 原始会话 ID */
-function iGM_IssueSession(user: iGM_UserRow, context: iGM_RequestContext): iGM_AuthResult {
+async function iGM_IssueSession(user: iGM_UserRow, context: iGM_RequestContext): Promise<iGM_AuthResult> {
   const sessionId = iGM_GenerateSessionId();
   const now = Date.now();
-  iGM_CreateSession({
+  await iGM_CreateSession({
     idHash: iGM_Sha256(sessionId),
     userId: user.iGM_Id,
     createdAt: new Date(now).toISOString(),
@@ -148,7 +148,7 @@ function iGM_IssueSession(user: iGM_UserRow, context: iGM_RequestContext): iGM_A
     userAgent: context.userAgent,
     ip: context.ip,
   });
-  return { user: iGM_ToUserDto(user), sessionId };
+  return { user: await iGM_ToUserDto(user), sessionId };
 }
 
 /** 为用户签发新的邮箱验证码（旧码自动作废）并发送邮件 */
@@ -158,8 +158,8 @@ async function iGM_IssueVerifyCode(
 ): Promise<void> {
   const now = Date.now();
   const code = iGM_GenerateVerifyCode();
-  iGM_RevokeActiveTokens(user.iGM_Id, "email_verify", new Date(now).toISOString());
-  iGM_CreateToken({
+  await iGM_RevokeActiveTokens(user.iGM_Id, "email_verify", new Date(now).toISOString());
+  await iGM_CreateToken({
     id: iGM_RandomUuid(),
     userId: user.iGM_Id,
     purpose: "email_verify",
@@ -196,10 +196,10 @@ export async function iGM_Register(
   const email = input.email.trim().toLowerCase();
   iGM_ValidateCredentials({ username, email, password: input.password });
 
-  if (iGM_FindUserByEmail(email)) {
+  if (await iGM_FindUserByEmail(email)) {
     throw new iGM_AuthError("auth.errors.emailTaken", 409);
   }
-  if (iGM_FindUserByUsername(username)) {
+  if (await iGM_FindUserByUsername(username)) {
     throw new iGM_AuthError("auth.errors.usernameTaken", 409);
   }
 
@@ -209,10 +209,11 @@ export async function iGM_Register(
   // 模块七第三轮起：负责人不再授予全局 admin，统一为普通用户角色，
   // 仅保留对所属组织认证审核内容的管理能力（按 iGM_OwnerEmail 判定）。
   const ownerOrg = iGM_FindOwnerOrgByEmail(email);
-  const user = iGM_CreateUser({
+  // 模块十五：UID 首位为区分位，普通用户取 1-8
+  const uid = await iGM_GenerateUniqueUid("user");
+  const user = await iGM_CreateUser({
     id: iGM_RandomUuid(),
-    // 模块十五：UID 首位为区分位，普通用户取 1-8
-    uid: iGM_GenerateUniqueUid("user"),
+    uid,
     username,
     email,
     passwordHash,
@@ -224,7 +225,7 @@ export async function iGM_Register(
   });
 
   // 模块十五：同意记录写入 iGM_UserAgreements（含版本号与 IP），供版本变更时提示重读
-  iGM_InsertAgreement({
+  await iGM_InsertAgreement({
     userId: user.iGM_Id,
     version: input.agreementVersion?.trim() || iGM_UserAgreementVersion,
     acceptedIp: context.ip,
@@ -240,7 +241,7 @@ export async function iGM_Register(
     console.warn("[iGM_AuthService] 验证码邮件发送失败", error);
   }
 
-  const result = iGM_IssueSession(user, context);
+  const result = await iGM_IssueSession(user, context);
   return { ...result, mailSent };
 }
 
@@ -259,8 +260,8 @@ export async function iGM_Login(
   }
 
   const user = iGM_EmailPattern.test(account)
-    ? iGM_FindUserByEmail(account.toLowerCase())
-    : iGM_FindUserByUsername(account);
+    ? await iGM_FindUserByEmail(account.toLowerCase())
+    : await iGM_FindUserByUsername(account);
   // 统一模糊提示，避免泄露账号是否存在
   if (!user) {
     throw new iGM_AuthError("auth.errors.loginFailed", 401);
@@ -276,23 +277,23 @@ export async function iGM_Login(
   }
 
   iGM_ResetRateLimit("login", rateLimitKey);
-  return iGM_IssueSession(user, context);
+  return await iGM_IssueSession(user, context);
 }
 
 /** 登出：删除当前会话 */
-export function iGM_Logout(rawSessionId: string | null): void {
+export async function iGM_Logout(rawSessionId: string | null): Promise<void> {
   if (!rawSessionId) return;
-  iGM_DeleteSession(iGM_Sha256(rawSessionId));
+  await iGM_DeleteSession(iGM_Sha256(rawSessionId));
 }
 
 /** 按原始会话 ID 解析当前登录用户（过期会话返回 null） */
-export function iGM_ResolveSession(
+export async function iGM_ResolveSession(
   rawSessionId: string | null,
-): iGM_UserRow | null {
+): Promise<iGM_UserRow | null> {
   if (!rawSessionId) return null;
-  const session = iGM_FindSession(iGM_Sha256(rawSessionId), new Date().toISOString());
+  const session = await iGM_FindSession(iGM_Sha256(rawSessionId), new Date().toISOString());
   if (!session) return null;
-  const user = iGM_FindUserById(session.iGM_UserId);
+  const user = await iGM_FindUserById(session.iGM_UserId);
   if (!user || user.iGM_Status !== "active") return null;
   return user;
 }
@@ -318,8 +319,8 @@ async function iGM_IssuePasswordChangeCode(
 ): Promise<void> {
   const now = Date.now();
   const code = iGM_GenerateVerifyCode();
-  iGM_RevokeActiveTokens(user.iGM_Id, "password_change", new Date(now).toISOString());
-  iGM_CreateToken({
+  await iGM_RevokeActiveTokens(user.iGM_Id, "password_change", new Date(now).toISOString());
+  await iGM_CreateToken({
     id: iGM_RandomUuid(),
     userId: user.iGM_Id,
     purpose: "password_change",
@@ -358,7 +359,7 @@ export async function iGM_VerifyEmail(
   }
 
   const nowIso = new Date().toISOString();
-  const token = iGM_FindLatestToken(user.iGM_Id, "email_verify", nowIso);
+  const token = await iGM_FindLatestToken(user.iGM_Id, "email_verify", nowIso);
   if (!token) {
     throw new iGM_AuthError("auth.errors.codeExpired", 400);
   }
@@ -368,15 +369,15 @@ export async function iGM_VerifyEmail(
 
   const matched = await iGM_VerifyPassword(code.trim(), token.iGM_SecretHash);
   if (!matched) {
-    iGM_IncrementTokenAttempts(token.iGM_Id);
+    await iGM_IncrementTokenAttempts(token.iGM_Id);
     throw new iGM_AuthError("auth.errors.codeMismatch", 400);
   }
 
-  iGM_ConsumeToken(token.iGM_Id, nowIso);
-  iGM_MarkEmailVerified(user.iGM_Id, nowIso);
-  const refreshed = iGM_FindUserById(user.iGM_Id);
+  await iGM_ConsumeToken(token.iGM_Id, nowIso);
+  await iGM_MarkEmailVerified(user.iGM_Id, nowIso);
+  const refreshed = await iGM_FindUserById(user.iGM_Id);
   if (!refreshed) throw new iGM_AuthError("auth.errors.generic", 500);
-  return iGM_ToUserDto(refreshed);
+  return await iGM_ToUserDto(refreshed);
 }
 
 /**
@@ -391,13 +392,13 @@ export async function iGM_ForgotPassword(
   if (!iGM_EmailPattern.test(email.trim())) {
     throw new iGM_AuthError("auth.errors.emailInvalid", 422);
   }
-  const user = iGM_FindUserByEmail(email.trim().toLowerCase());
+  const user = await iGM_FindUserByEmail(email.trim().toLowerCase());
   if (!user) return;
 
   const now = Date.now();
   const rawToken = iGM_GenerateResetToken();
-  iGM_RevokeActiveTokens(user.iGM_Id, "password_reset", new Date(now).toISOString());
-  iGM_CreateToken({
+  await iGM_RevokeActiveTokens(user.iGM_Id, "password_reset", new Date(now).toISOString());
+  await iGM_CreateToken({
     id: iGM_RandomUuid(),
     userId: user.iGM_Id,
     purpose: "password_reset",
@@ -417,9 +418,9 @@ export async function iGM_ForgotPassword(
 }
 
 /** 供重置页在提交前检查令牌是否有效 */
-export function iGM_CheckResetToken(rawToken: string): boolean {
+export async function iGM_CheckResetToken(rawToken: string): Promise<boolean> {
   if (!rawToken || rawToken.length < 32) return false;
-  const token = iGM_FindActiveTokenBySecret(
+  const token = await iGM_FindActiveTokenBySecret(
     "password_reset",
     iGM_Sha256(rawToken),
     new Date().toISOString(),
@@ -438,7 +439,7 @@ export async function iGM_ResetPassword(
   }
 
   const nowIso = new Date().toISOString();
-  const token = iGM_FindActiveTokenBySecret(
+  const token = await iGM_FindActiveTokenBySecret(
     "password_reset",
     iGM_Sha256(rawToken),
     nowIso,
@@ -451,14 +452,14 @@ export async function iGM_ResetPassword(
   }
 
   // 一次性消费：消费失败说明已被使用
-  if (!iGM_ConsumeToken(token.iGM_Id, nowIso)) {
+  if (!(await iGM_ConsumeToken(token.iGM_Id, nowIso))) {
     throw new iGM_AuthError("auth.errors.resetTokenInvalid", 400);
   }
 
   const passwordHash = await iGM_HashPassword(newPassword);
-  iGM_UpdatePassword(token.iGM_UserId, passwordHash, nowIso);
+  await iGM_UpdatePassword(token.iGM_UserId, passwordHash, nowIso);
   // 安全要求：重置成功后旧会话全部失效，用户需用新密码重新登录
-  iGM_DeleteSessionsByUser(token.iGM_UserId);
+  await iGM_DeleteSessionsByUser(token.iGM_UserId);
 }
 
 /**
@@ -493,7 +494,7 @@ export async function iGM_ChangePassword(
     }
 
     const nowIso = new Date().toISOString();
-    const token = iGM_FindLatestToken(user.iGM_Id, "password_change", nowIso);
+    const token = await iGM_FindLatestToken(user.iGM_Id, "password_change", nowIso);
     if (!token) {
       throw new iGM_AuthError("auth.errors.codeExpired", 400);
     }
@@ -503,11 +504,11 @@ export async function iGM_ChangePassword(
 
     const matched = await iGM_VerifyPassword(code, token.iGM_SecretHash);
     if (!matched) {
-      iGM_IncrementTokenAttempts(token.iGM_Id);
+      await iGM_IncrementTokenAttempts(token.iGM_Id);
       throw new iGM_AuthError("auth.errors.codeMismatch", 400);
     }
     // 一次性消费：验证通过即作废该验证码
-    if (!iGM_ConsumeToken(token.iGM_Id, nowIso)) {
+    if (!(await iGM_ConsumeToken(token.iGM_Id, nowIso))) {
       throw new iGM_AuthError("auth.errors.codeExpired", 400);
     }
   }
@@ -520,8 +521,8 @@ export async function iGM_ChangePassword(
 
   const nowIso = new Date().toISOString();
   const passwordHash = await iGM_HashPassword(newPassword);
-  iGM_UpdatePassword(user.iGM_Id, passwordHash, nowIso);
-  iGM_DeleteSessionsByUser(user.iGM_Id, currentSessionIdHash ?? undefined);
+  await iGM_UpdatePassword(user.iGM_Id, passwordHash, nowIso);
+  await iGM_DeleteSessionsByUser(user.iGM_Id, currentSessionIdHash ?? undefined);
 }
 
 /**
@@ -534,12 +535,12 @@ async function iGM_IssueAccountDeleteCode(
 ): Promise<void> {
   const now = Date.now();
   const code = iGM_GenerateVerifyCode();
-  iGM_RevokeActiveTokens(
+  await iGM_RevokeActiveTokens(
     user.iGM_Id,
     "account_delete",
     new Date(now).toISOString(),
   );
-  iGM_CreateToken({
+  await iGM_CreateToken({
     id: iGM_RandomUuid(),
     userId: user.iGM_Id,
     purpose: "account_delete",
@@ -581,7 +582,7 @@ export async function iGM_DeleteAccount(
   }
 
   const nowIso = new Date().toISOString();
-  const token = iGM_FindLatestToken(user.iGM_Id, "account_delete", nowIso);
+  const token = await iGM_FindLatestToken(user.iGM_Id, "account_delete", nowIso);
   if (!token) {
     throw new iGM_AuthError("auth.errors.codeExpired", 400);
   }
@@ -591,17 +592,17 @@ export async function iGM_DeleteAccount(
 
   const matched = await iGM_VerifyPassword(trimmed, token.iGM_SecretHash);
   if (!matched) {
-    iGM_IncrementTokenAttempts(token.iGM_Id);
+    await iGM_IncrementTokenAttempts(token.iGM_Id);
     throw new iGM_AuthError("auth.errors.codeMismatch", 400);
   }
   // 一次性消费：验证通过即作废该验证码，防止删除失败后重放
-  if (!iGM_ConsumeToken(token.iGM_Id, nowIso)) {
+  if (!(await iGM_ConsumeToken(token.iGM_Id, nowIso))) {
     throw new iGM_AuthError("auth.errors.codeExpired", 400);
   }
 
   // 先显式作废全部会话，再删除用户（其余关联数据由外键级联清理）
-  iGM_DeleteSessionsByUser(user.iGM_Id);
-  iGM_DeleteUser(user.iGM_Id);
+  await iGM_DeleteSessionsByUser(user.iGM_Id);
+  await iGM_DeleteUser(user.iGM_Id);
 }
 
 // 导出 //

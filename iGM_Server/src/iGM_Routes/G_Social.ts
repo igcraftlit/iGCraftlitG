@@ -46,67 +46,69 @@ import {
 
 // 核心逻辑 //
 /* ---------- 关系状态（个人主页按钮） ---------- */
-function iGM_HandleState(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleState(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const targetId = iGM_Query(ctx.query, "userId").trim();
   if (!targetId) throw new iGM_SocialError("social.errors.userNotFound", 404);
   return iGM_Ok({
-    state: iGM_GetRelationStateService(user.iGM_Id, targetId),
+    state: await iGM_GetRelationStateService(user.iGM_Id, targetId),
   });
 }
 
 /* ---------- 关注 / 取消关注 ---------- */
-function iGM_HandleFollow(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleFollow(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "socialWrite", `user:${user.iGM_Id}`);
   const targetId = iGM_Field(ctx.body, "userId").trim();
-  return iGM_Ok({ state: iGM_FollowService(user, targetId) });
+  return iGM_Ok({ state: await iGM_FollowService(user, targetId) });
 }
 
-function iGM_HandleUnfollow(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleUnfollow(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "socialWrite", `user:${user.iGM_Id}`);
   const targetId = iGM_Field(ctx.body, "userId").trim();
-  return iGM_Ok({ state: iGM_UnfollowService(user, targetId) });
+  return iGM_Ok({ state: await iGM_UnfollowService(user, targetId) });
 }
 
 /* ---------- 关注列表 / 粉丝列表（公开只读） ---------- */
-function iGM_HandleFollowing(ctx: iGM_RouteContext) {
+async function iGM_HandleFollowing(ctx: iGM_RouteContext) {
   const userId = iGM_Query(ctx.query, "userId").trim();
   const { page, pageSize } = iGM_PageQuery(ctx);
   if (!userId) throw new iGM_SocialError("social.errors.userNotFound", 404);
   return iGM_Ok({
-    data: iGM_ListFollowingService(userId, page, pageSize),
+    data: await iGM_ListFollowingService(userId, page, pageSize),
   });
 }
 
-function iGM_HandleFollowers(ctx: iGM_RouteContext) {
+async function iGM_HandleFollowers(ctx: iGM_RouteContext) {
   const userId = iGM_Query(ctx.query, "userId").trim();
   const { page, pageSize } = iGM_PageQuery(ctx);
   if (!userId) throw new iGM_SocialError("social.errors.userNotFound", 404);
   return iGM_Ok({
-    data: iGM_ListFollowersService(userId, page, pageSize),
+    data: await iGM_ListFollowersService(userId, page, pageSize),
   });
 }
 
 /* ---------- 好友 ---------- */
-function iGM_HandleFriendList(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleFriendList(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const { page, pageSize } = iGM_PageQuery(ctx);
-  return iGM_Ok({ data: iGM_ListFriendsService(user.iGM_Id, page, pageSize) });
+  return iGM_Ok({
+    data: await iGM_ListFriendsService(user.iGM_Id, page, pageSize),
+  });
 }
 
-function iGM_HandleFriendRequests(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
-  return iGM_Ok({ data: iGM_ListFriendRequestsService(user.iGM_Id) });
+async function iGM_HandleFriendRequests(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
+  return iGM_Ok({ data: await iGM_ListFriendRequestsService(user.iGM_Id) });
 }
 
-function iGM_HandleFriendRequest(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleFriendRequest(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "socialWrite", `user:${user.iGM_Id}`);
   const targetId = iGM_Field(ctx.body, "userId").trim();
   return iGM_Ok({
-    request: iGM_SendFriendRequestService(
+    request: await iGM_SendFriendRequestService(
       user,
       targetId,
       iGM_RequestLocale(ctx),
@@ -114,8 +116,8 @@ function iGM_HandleFriendRequest(ctx: iGM_RouteContext) {
   });
 }
 
-function iGM_HandleFriendRespond(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleFriendRespond(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "socialWrite", `user:${user.iGM_Id}`);
   const requestId = iGM_Field(ctx.body, "requestId").trim();
   const action = iGM_Field(ctx.body, "action").trim();
@@ -123,7 +125,7 @@ function iGM_HandleFriendRespond(ctx: iGM_RouteContext) {
     throw new iGM_SocialError("social.errors.actionInvalid", 422);
   }
   return iGM_Ok({
-    request: iGM_RespondFriendRequestService(
+    request: await iGM_RespondFriendRequestService(
       user,
       requestId,
       action,
@@ -132,42 +134,44 @@ function iGM_HandleFriendRespond(ctx: iGM_RouteContext) {
   });
 }
 
-function iGM_HandleFriendRemove(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleFriendRemove(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "socialWrite", `user:${user.iGM_Id}`);
   const friendId = iGM_Query(ctx.query, "userId").trim();
-  iGM_RemoveFriendService(user, friendId);
+  await iGM_RemoveFriendService(user, friendId);
   return iGM_Ok({ deleted: true });
 }
 
 /* ---------- 黑名单 ---------- */
-function iGM_HandleBlock(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleBlock(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "socialWrite", `user:${user.iGM_Id}`);
   const targetId = iGM_Field(ctx.body, "userId").trim();
-  iGM_BlockService(user, targetId);
+  await iGM_BlockService(user, targetId);
   return iGM_Ok({ blocked: true });
 }
 
-function iGM_HandleUnblock(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleUnblock(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "socialWrite", `user:${user.iGM_Id}`);
   const targetId = iGM_Field(ctx.body, "userId").trim();
-  iGM_UnblockService(user, targetId);
+  await iGM_UnblockService(user, targetId);
   return iGM_Ok({ blocked: false });
 }
 
-function iGM_HandleBlockList(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleBlockList(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const { page, pageSize } = iGM_PageQuery(ctx);
-  return iGM_Ok({ data: iGM_ListBlocksService(user.iGM_Id, page, pageSize) });
+  return iGM_Ok({
+    data: await iGM_ListBlocksService(user.iGM_Id, page, pageSize),
+  });
 }
 
 /* ---------- 动态流 ---------- */
-function iGM_HandleFeed(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleFeed(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const { page, pageSize } = iGM_PageQuery(ctx);
-  return iGM_Ok({ data: iGM_GetFeedService(user.iGM_Id, page, pageSize) });
+  return iGM_Ok({ data: await iGM_GetFeedService(user.iGM_Id, page, pageSize) });
 }
 
 /**

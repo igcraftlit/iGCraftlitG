@@ -72,16 +72,16 @@ export interface iGM_StatsDailyRow {
 /* ---------- 通用计数 ---------- */
 
 /** 通用行计数 */
-function iGM_Count(sql: string, params: (string | number)[] = []): number {
-  const row = iGM_Db.query(sql).get(...params) as { total: number };
+async function iGM_Count(sql: string, params: (string | number)[] = []): Promise<number> {
+  const row = (await iGM_Db.query(sql).get(...params)) as { total: number };
   return row.total;
 }
 
 /* ---------- 概览计数 ---------- */
 
 /** 指定时间窗内的新增用户数（startIso 含，endIso 不含；endIso 省略表示至今） */
-export function iGM_CountUsersBetween(startIso: string, endIso?: string): number {
-  return iGM_Count(
+export async function iGM_CountUsersBetween(startIso: string, endIso?: string): Promise<number> {
+  return await iGM_Count(
     `SELECT COUNT(*) AS total FROM iGM_Users
       WHERE iGM_CreatedAt >= ?${endIso ? " AND iGM_CreatedAt < ?" : ""}`,
     endIso ? [startIso, endIso] : [startIso],
@@ -89,8 +89,8 @@ export function iGM_CountUsersBetween(startIso: string, endIso?: string): number
 }
 
 /** 时间窗内发帖数（仅统计正常发布状态） */
-export function iGM_CountPostsBetween(startIso: string, endIso?: string): number {
-  return iGM_Count(
+export async function iGM_CountPostsBetween(startIso: string, endIso?: string): Promise<number> {
+  return await iGM_Count(
     `SELECT COUNT(*) AS total FROM iGM_Posts
       WHERE iGM_Status = 'published' AND iGM_CreatedAt >= ?${endIso ? " AND iGM_CreatedAt < ?" : ""}`,
     endIso ? [startIso, endIso] : [startIso],
@@ -98,8 +98,8 @@ export function iGM_CountPostsBetween(startIso: string, endIso?: string): number
 }
 
 /** 时间窗内评论数（仅统计可见状态） */
-export function iGM_CountCommentsBetween(startIso: string, endIso?: string): number {
-  return iGM_Count(
+export async function iGM_CountCommentsBetween(startIso: string, endIso?: string): Promise<number> {
+  return await iGM_Count(
     `SELECT COUNT(*) AS total FROM iGM_Comments
       WHERE iGM_Status = 'visible' AND iGM_CreatedAt >= ?${endIso ? " AND iGM_CreatedAt < ?" : ""}`,
     endIso ? [startIso, endIso] : [startIso],
@@ -107,8 +107,8 @@ export function iGM_CountCommentsBetween(startIso: string, endIso?: string): num
 }
 
 /** 时间窗内点赞数 */
-export function iGM_CountLikesBetween(startIso: string, endIso?: string): number {
-  return iGM_Count(
+export async function iGM_CountLikesBetween(startIso: string, endIso?: string): Promise<number> {
+  return await iGM_Count(
     `SELECT COUNT(*) AS total FROM iGM_Likes
       WHERE iGM_CreatedAt >= ?${endIso ? " AND iGM_CreatedAt < ?" : ""}`,
     endIso ? [startIso, endIso] : [startIso],
@@ -120,15 +120,15 @@ export function iGM_CountLikesBetween(startIso: string, endIso?: string): number
  * 在发帖、评论、点赞、签到、活动报名任一行为中有记录的用户
  * @param shanghaiDate 单日统计时传入当日上海日期（签到表按日期字符串存储）；范围统计传 null 跳过签到
  */
-export function iGM_CountActiveUsersBetween(
+export async function iGM_CountActiveUsersBetween(
   startIso: string,
   endIso: string,
   shanghaiDate: string | null,
-): number {
+): Promise<number> {
   const checkinClause = shanghaiDate
     ? `UNION SELECT iGM_UserId AS uid FROM iGM_Checkins WHERE iGM_CheckinDate = '${shanghaiDate}'`
     : "";
-  const row = iGM_Db
+  const row = (await iGM_Db
     .query(
       `SELECT COUNT(DISTINCT uid) AS total FROM (
          SELECT iGM_AuthorId AS uid FROM iGM_Posts WHERE iGM_CreatedAt >= ? AND iGM_CreatedAt < ?
@@ -141,29 +141,29 @@ export function iGM_CountActiveUsersBetween(
          ${checkinClause}
        )`,
     )
-    .get(startIso, endIso, startIso, endIso, startIso, endIso, startIso, endIso) as {
+    .get(startIso, endIso, startIso, endIso, startIso, endIso, startIso, endIso)) as {
     total: number;
   };
   return row.total;
 }
 
 /** 总量计数：点赞总数、活动报名总数（registered）、资源总数、资源下载总量 */
-export function iGM_GetTotalCounts(): {
+export async function iGM_GetTotalCounts(): Promise<{
   likes: number;
   activityRegistrations: number;
   resources: number;
   resourceDownloads: number;
-} {
-  const likes = iGM_Count(`SELECT COUNT(*) AS total FROM iGM_Likes`);
-  const registrations = iGM_Count(
+}> {
+  const likes = await iGM_Count(`SELECT COUNT(*) AS total FROM iGM_Likes`);
+  const registrations = await iGM_Count(
     `SELECT COUNT(*) AS total FROM iGM_ActivityRegistrations WHERE iGM_Status = 'registered'`,
   );
-  const resources = iGM_Count(
+  const resources = await iGM_Count(
     `SELECT COUNT(*) AS total FROM iGM_Resources WHERE iGM_Status = 'published'`,
   );
-  const downloads = iGM_Db
+  const downloads = (await iGM_Db
     .query(`SELECT COALESCE(SUM(iGM_DownloadCount), 0) AS total FROM iGM_Resources`)
-    .get() as { total: number };
+    .get()) as { total: number };
   return {
     likes,
     activityRegistrations: registrations,
@@ -175,30 +175,39 @@ export function iGM_GetTotalCounts(): {
 /* ---------- 排行榜 ---------- */
 
 /** 热门帖子 Top N：按时间窗内 点赞数 + 评论数 合计排序（仅已发布帖子） */
-export function iGM_ListHotPosts(
+export async function iGM_ListHotPosts(
   startIso: string,
   endIso: string,
   limit: number,
-): iGM_HotPostRow[] {
-  return iGM_Db
+): Promise<iGM_HotPostRow[]> {
+  // 说明：PostgreSQL 的 ORDER BY 不允许在表达式中引用输出列别名
+  //       （SQLite 允许），故把聚合子查询包成派生表后按派生列排序
+  return (await iGM_Db
     .query(
-      `SELECT p.iGM_Id,
-              p.iGM_Title,
-              COALESCE(u.iGM_DisplayName, u.iGM_Username) AS iGM_AuthorName,
-              (SELECT COUNT(*) FROM iGM_Likes l
-                WHERE l.iGM_TargetType = 'post' AND l.iGM_TargetId = p.iGM_Id
-                  AND l.iGM_CreatedAt >= ? AND l.iGM_CreatedAt < ?) AS iGM_LikeCount,
-              (SELECT COUNT(*) FROM iGM_Comments c
-                WHERE c.iGM_PostId = p.iGM_Id AND c.iGM_Status = 'visible'
-                  AND c.iGM_CreatedAt >= ? AND c.iGM_CreatedAt < ?) AS iGM_CommentCount
-         FROM iGM_Posts p
-         JOIN iGM_Users u ON u.iGM_Id = p.iGM_AuthorId
-        WHERE p.iGM_Status = 'published'
-        ORDER BY (iGM_LikeCount + iGM_CommentCount) DESC, p.iGM_CreatedAt DESC
+      `SELECT t.iGM_Id,
+              t.iGM_Title,
+              t.iGM_AuthorName,
+              t.iGM_LikeCount,
+              t.iGM_CommentCount
+         FROM (
+           SELECT p.iGM_Id,
+                  p.iGM_Title,
+                  COALESCE(u.iGM_DisplayName, u.iGM_Username) AS iGM_AuthorName,
+                  (SELECT COUNT(*) FROM iGM_Likes l
+                    WHERE l.iGM_TargetType = 'post' AND l.iGM_TargetId = p.iGM_Id
+                      AND l.iGM_CreatedAt >= ? AND l.iGM_CreatedAt < ?) AS iGM_LikeCount,
+                  (SELECT COUNT(*) FROM iGM_Comments c
+                    WHERE c.iGM_PostId = p.iGM_Id AND c.iGM_Status = 'visible'
+                      AND c.iGM_CreatedAt >= ? AND c.iGM_CreatedAt < ?) AS iGM_CommentCount,
+                  p.iGM_CreatedAt AS iGM_SortAt
+             FROM iGM_Posts p
+             JOIN iGM_Users u ON u.iGM_Id = p.iGM_AuthorId
+            WHERE p.iGM_Status = 'published'
+         ) AS t
+        ORDER BY (t.iGM_LikeCount + t.iGM_CommentCount) DESC, t.iGM_SortAt DESC
         LIMIT ?`,
     )
-    .all(startIso, endIso, startIso, endIso, limit)
-    .map((row) => {
+    .all(startIso, endIso, startIso, endIso, limit)).map((row) => {
       const r = row as Omit<iGM_HotPostRow, "iGM_Score">;
       return { ...r, iGM_Score: r.iGM_LikeCount + r.iGM_CommentCount };
     });
@@ -208,8 +217,8 @@ export function iGM_ListHotPosts(
  * 热门资源 Top N：按累计下载量排序
  * 说明：下载量以计数器存储（无逐次时间戳），无法按时间窗过滤，采用全量口径
  */
-export function iGM_ListHotResources(limit: number): iGM_HotResourceRow[] {
-  return iGM_Db
+export async function iGM_ListHotResources(limit: number): Promise<iGM_HotResourceRow[]> {
+  return (await iGM_Db
     .query(
       `SELECT r.iGM_Id,
               r.iGM_Title,
@@ -221,16 +230,16 @@ export function iGM_ListHotResources(limit: number): iGM_HotResourceRow[] {
         ORDER BY r.iGM_DownloadCount DESC, r.iGM_CreatedAt DESC
         LIMIT ?`,
     )
-    .all(limit) as iGM_HotResourceRow[];
+    .all(limit)) as iGM_HotResourceRow[];
 }
 
 /** 活跃用户 Top N：按时间窗内 发帖 + 评论 + 点赞 行为合计排序 */
-export function iGM_ListActiveUsers(
+export async function iGM_ListActiveUsers(
   startIso: string,
   endIso: string,
   limit: number,
-): iGM_ActiveUserRow[] {
-  return iGM_Db
+): Promise<iGM_ActiveUserRow[]> {
+  return (await iGM_Db
     .query(
       `SELECT u.iGM_Id,
               u.iGM_Username,
@@ -250,15 +259,15 @@ export function iGM_ListActiveUsers(
         ORDER BY iGM_ActionCount DESC, u.iGM_CreatedAt ASC
         LIMIT ?`,
     )
-    .all(startIso, endIso, startIso, endIso, startIso, endIso, limit) as iGM_ActiveUserRow[];
+    .all(startIso, endIso, startIso, endIso, startIso, endIso, limit)) as iGM_ActiveUserRow[];
 }
 
 /** 活动参与统计：时间窗内创建的活动及其当前有效报名数 */
-export function iGM_ListActivityStats(
+export async function iGM_ListActivityStats(
   startIso: string,
   endIso: string,
-): iGM_ActivityStatRow[] {
-  return iGM_Db
+): Promise<iGM_ActivityStatRow[]> {
+  return (await iGM_Db
     .query(
       `SELECT a.iGM_Id,
               a.iGM_Title,
@@ -272,25 +281,25 @@ export function iGM_ListActivityStats(
         WHERE a.iGM_CreatedAt >= ? AND a.iGM_CreatedAt < ?
         ORDER BY a.iGM_CreatedAt DESC`,
     )
-    .all(startIso, endIso) as iGM_ActivityStatRow[];
+    .all(startIso, endIso)) as iGM_ActivityStatRow[];
 }
 
 /* ---------- 每日聚合表 iGM_StatsDaily ---------- */
 
 /** 按日期读取聚合行 */
-export function iGM_FindStatsDaily(date: string): iGM_StatsDailyRow | null {
+export async function iGM_FindStatsDaily(date: string): Promise<iGM_StatsDailyRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(`SELECT * FROM iGM_StatsDaily WHERE iGM_Date = ?`)
-      .get(date) as iGM_StatsDailyRow | undefined) ?? null
+      .get(date)) as iGM_StatsDailyRow | undefined) ?? null
   );
 }
 
 /** 写入或更新某日聚合行（按唯一日期 upsert） */
-export function iGM_UpsertStatsDaily(
+export async function iGM_UpsertStatsDaily(
   row: Omit<iGM_StatsDailyRow, "iGM_Id">,
-): void {
-  iGM_Db.run(
+): Promise<void> {
+  await iGM_Db.run(
     `INSERT INTO iGM_StatsDaily
        (iGM_Id, iGM_Date, iGM_NewUsers, iGM_ActiveUsers, iGM_PostsCount,
         iGM_CommentsCount, iGM_LikesCount, iGM_ResourcesCount, iGM_ActivitiesCount)
@@ -318,34 +327,34 @@ export function iGM_UpsertStatsDaily(
 }
 
 /** 读取日期区间内的聚合行（升序） */
-export function iGM_ListStatsDaily(
+export async function iGM_ListStatsDaily(
   startDate: string,
   endDate: string,
-): iGM_StatsDailyRow[] {
-  return iGM_Db
+): Promise<iGM_StatsDailyRow[]> {
+  return (await iGM_Db
     .query(
       `SELECT * FROM iGM_StatsDaily
         WHERE iGM_Date >= ? AND iGM_Date <= ?
         ORDER BY iGM_Date ASC`,
     )
-    .all(startDate, endDate) as iGM_StatsDailyRow[];
+    .all(startDate, endDate)) as iGM_StatsDailyRow[];
 }
 
 /* ---------- 聚合快照表 iGM_StatsSnapshots ---------- */
 
 /** 读取新鲜快照（在 maxAgeMs 内创建才返回，否则 null） */
-export function iGM_FindFreshSnapshot(
+export async function iGM_FindFreshSnapshot(
   metric: string,
   period: string,
   maxAgeMs: number,
-): string | null {
-  const row = iGM_Db
+): Promise<string | null> {
+  const row = (await iGM_Db
     .query(
       `SELECT iGM_Value, iGM_CreatedAt FROM iGM_StatsSnapshots
         WHERE iGM_Metric = ? AND iGM_Period = ?
         ORDER BY iGM_CreatedAt DESC LIMIT 1`,
     )
-    .get(metric, period) as
+    .get(metric, period)) as
     | { iGM_Value: string; iGM_CreatedAt: string }
     | undefined;
   if (!row) return null;
@@ -354,17 +363,17 @@ export function iGM_FindFreshSnapshot(
 }
 
 /** 写入快照（同指标同周期仅保留最新一条） */
-export function iGM_WriteSnapshot(
+export async function iGM_WriteSnapshot(
   metric: string,
   period: string,
   valueJson: string,
   now: string,
-): void {
-  iGM_Db.run(
+): Promise<void> {
+  await iGM_Db.run(
     `DELETE FROM iGM_StatsSnapshots WHERE iGM_Metric = ? AND iGM_Period = ?`,
     [metric, period],
   );
-  iGM_Db.run(
+  await iGM_Db.run(
     `INSERT INTO iGM_StatsSnapshots (iGM_Id, iGM_Metric, iGM_Value, iGM_Period, iGM_CreatedAt)
      VALUES (?, ?, ?, ?, ?)`,
     [iGM_RandomUuid(), metric, valueJson, period, now],

@@ -35,23 +35,23 @@ import { iGM_ContentError } from "../iGM_Services/iGM_ContentService";
 
 // 核心逻辑 //
 /** 公共守卫：moderator 及以上 + 按用户限流，返回用户 ID */
-function iGM_GuardStats(ctx: iGM_RouteContext): string {
-  const user = iGM_RequireRole(iGM_CurrentUser(ctx), "moderator");
+async function iGM_GuardStats(ctx: iGM_RouteContext): Promise<string> {
+  const user = iGM_RequireRole(await iGM_CurrentUser(ctx), "moderator");
   iGM_EnforceRateLimit(ctx, "statsQuery", `user:${user.iGM_Id}`);
   return user.iGM_Id;
 }
 
 /* ---------- 核心指标概览 ---------- */
-function iGM_HandleOverview(ctx: iGM_RouteContext) {
-  iGM_GuardStats(ctx);
+async function iGM_HandleOverview(ctx: iGM_RouteContext) {
+  await iGM_GuardStats(ctx);
   // 在线人数取实时去重用户列表长度
-  const onlineUsers = iGM_BuildOnlineList().length;
-  return iGM_Ok({ overview: iGM_GetStatsOverview(onlineUsers) });
+  const onlineUsers = (await iGM_BuildOnlineList()).length;
+  return iGM_Ok({ overview: await iGM_GetStatsOverview(onlineUsers) });
 }
 
 /* ---------- 趋势序列 ---------- */
-function iGM_HandleTrends(ctx: iGM_RouteContext) {
-  iGM_GuardStats(ctx);
+async function iGM_HandleTrends(ctx: iGM_RouteContext) {
+  await iGM_GuardStats(ctx);
   const metricRaw = iGM_Query(ctx.query, "metric", "users");
   if (!["users", "posts", "comments", "activity"].includes(metricRaw)) {
     throw new iGM_ContentError("stats.errors.badMetric", 400);
@@ -60,22 +60,22 @@ function iGM_HandleTrends(ctx: iGM_RouteContext) {
   return iGM_Ok({
     metric: metricRaw,
     range,
-    series: iGM_GetStatsTrend(metricRaw as never, range),
+    series: await iGM_GetStatsTrend(metricRaw as never, range),
   });
 }
 
 /* ---------- 排行榜 ---------- */
-function iGM_HandleLeaderboards(ctx: iGM_RouteContext) {
-  iGM_GuardStats(ctx);
+async function iGM_HandleLeaderboards(ctx: iGM_RouteContext) {
+  await iGM_GuardStats(ctx);
   const { range } = iGM_ParseRange(iGM_Query(ctx.query, "range", "7d"));
-  return iGM_Ok({ range, ...iGM_GetStatsLeaderboards(range) });
+  return iGM_Ok({ range, ...(await iGM_GetStatsLeaderboards(range)) });
 }
 
 /* ---------- 活动参与统计 ---------- */
-function iGM_HandleActivities(ctx: iGM_RouteContext) {
-  iGM_GuardStats(ctx);
+async function iGM_HandleActivities(ctx: iGM_RouteContext) {
+  await iGM_GuardStats(ctx);
   const { range } = iGM_ParseRange(iGM_Query(ctx.query, "range", "30d"));
-  return iGM_Ok({ range, ...iGM_GetStatsActivities(range) });
+  return iGM_Ok({ range, ...(await iGM_GetStatsActivities(range)) });
 }
 
 /**

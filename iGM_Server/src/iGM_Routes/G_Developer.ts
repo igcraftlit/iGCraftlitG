@@ -40,9 +40,9 @@ import {
 
 // 核心逻辑 //
 /** 要求当前用户具备审核资格（组织所有者或管理员），否则抛 403 */
-function iGM_RequireReviewer(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
-  if (!iGM_IsDeveloperReviewer(user)) {
+async function iGM_RequireReviewer(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
+  if (!(await iGM_IsDeveloperReviewer(user))) {
     throw new iGM_DeveloperError("auth.errors.forbidden", 403);
   }
   return user;
@@ -63,7 +63,7 @@ function iGM_ReadApplyInput(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 开发者能力说明（公开） ---------- */
-function iGM_HandleIntro(_ctx: iGM_RouteContext) {
+async function iGM_HandleIntro(_ctx: iGM_RouteContext) {
   return iGM_Ok({
     // 说明条目由前端语言包渲染，此处仅提供稳定的能力标识
     capabilities: ["sdk", "adapter-protocol"],
@@ -75,10 +75,10 @@ function iGM_HandleIntro(_ctx: iGM_RouteContext) {
 }
 
 /* ---------- 提交开发者申请 ---------- */
-function iGM_HandleApply(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleApply(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "developerApply", `user:${user.iGM_Id}`);
-  const application = iGM_SubmitDeveloperApplyService(
+  const application = await iGM_SubmitDeveloperApplyService(
     user.iGM_Id,
     iGM_ReadApplyInput(ctx),
   );
@@ -86,10 +86,10 @@ function iGM_HandleApply(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 重新申请（仅最近一条为已拒绝 / 已撤回时允许） ---------- */
-function iGM_HandleReapply(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleReapply(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "developerApply", `user:${user.iGM_Id}`);
-  const application = iGM_SubmitDeveloperApplyService(
+  const application = await iGM_SubmitDeveloperApplyService(
     user.iGM_Id,
     iGM_ReadApplyInput(ctx),
     "reapply",
@@ -98,33 +98,33 @@ function iGM_HandleReapply(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 我的申请状态与历史 ---------- */
-function iGM_HandleMyDeveloper(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleMyDeveloper(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   return iGM_Ok({
-    latest: iGM_GetMyDeveloperService(user.iGM_Id),
-    history: iGM_ListMyDevelopersService(user.iGM_Id),
+    latest: await iGM_GetMyDeveloperService(user.iGM_Id),
+    history: await iGM_ListMyDevelopersService(user.iGM_Id),
     /** 当前用户是否具备审核资格（前端据此决定是否展示审核入口） */
-    canReview: iGM_IsDeveloperReviewer(user),
+    canReview: await iGM_IsDeveloperReviewer(user),
   });
 }
 
 /* ---------- 撤回本人待审核申请 ---------- */
-function iGM_HandleWithdraw(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleWithdraw(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const applicationId = iGM_Field(ctx.body, "applicationId").trim();
   if (!applicationId) {
     throw new iGM_DeveloperError("developer.errors.badRequest", 422);
   }
-  iGM_WithdrawDeveloperApplyService(user.iGM_Id, applicationId);
+  await iGM_WithdrawDeveloperApplyService(user.iGM_Id, applicationId);
   return iGM_Ok({ applicationId }, "developer.messages.withdrawn");
 }
 
 /* ---------- 待审核申请列表（仅组织所有者与管理员） ---------- */
-function iGM_HandleApplications(ctx: iGM_RouteContext) {
-  iGM_RequireReviewer(ctx);
+async function iGM_HandleApplications(ctx: iGM_RouteContext) {
+  await iGM_RequireReviewer(ctx);
   const { page, pageSize } = iGM_PageQuery(ctx);
   return iGM_Ok(
-    iGM_AdminListDevelopersService(
+    await iGM_AdminListDevelopersService(
       iGM_Query(ctx.query, "status") || null,
       page,
       pageSize,
@@ -133,8 +133,8 @@ function iGM_HandleApplications(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 审核申请（通过 / 拒绝） ---------- */
-function iGM_HandleReview(ctx: iGM_RouteContext) {
-  const reviewer = iGM_RequireReviewer(ctx);
+async function iGM_HandleReview(ctx: iGM_RouteContext) {
+  const reviewer = await iGM_RequireReviewer(ctx);
   iGM_EnforceRateLimit(
     ctx,
     "adminWrite",
@@ -146,7 +146,7 @@ function iGM_HandleReview(ctx: iGM_RouteContext) {
   if (!applicationId || (action !== "approve" && action !== "reject")) {
     throw new iGM_DeveloperError("developer.errors.badRequest", 422);
   }
-  iGM_ReviewDeveloperService(reviewer.iGM_Id, applicationId, action, comment);
+  await iGM_ReviewDeveloperService(reviewer.iGM_Id, applicationId, action, comment);
   return iGM_Ok(
     { applicationId, action },
     action === "approve"

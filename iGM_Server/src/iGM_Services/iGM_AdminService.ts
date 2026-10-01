@@ -83,14 +83,14 @@ function iGM_Page(pageRaw: number, pageSizeRaw: number): {
 }
 
 /** 写操作日志 */
-function iGM_Log(params: {
+async function iGM_Log(params: {
   adminId: string;
   action: string;
   targetType?: string;
   targetId?: string;
   detail?: string;
-}): void {
-  iGM_InsertAdminLog({
+}): Promise<void> {
+  await iGM_InsertAdminLog({
     adminId: params.adminId,
     action: params.action,
     targetType: params.targetType ?? null,
@@ -103,46 +103,48 @@ function iGM_Log(params: {
 /* ---------- 概览 ---------- */
 
 /** 数据概览统计 */
-export function iGM_GetOverviewService(): iGM_AdminOverviewDto {
-  return iGM_GetOverviewStats();
+export async function iGM_GetOverviewService(): Promise<iGM_AdminOverviewDto> {
+  return await iGM_GetOverviewStats();
 }
 
 /* ---------- 用户管理 ---------- */
 
 /** 用户管理列表（检索 + 分页） */
-export function iGM_ListUsersService(
+export async function iGM_ListUsersService(
   search: string | null,
   pageRaw: number,
   pageSizeRaw: number,
-): { items: iGM_AdminUserDto[]; total: number; page: number; pageSize: number; totalPages: number } {
+): Promise<{ items: iGM_AdminUserDto[]; total: number; page: number; pageSize: number; totalPages: number }> {
   const { page, pageSize } = iGM_Page(pageRaw, pageSizeRaw);
-  const { items, total } = iGM_ListUsersForAdmin(
+  const { items, total } = await iGM_ListUsersForAdmin(
     search && search.trim() ? search.trim() : null,
     page,
     pageSize,
   );
   return {
-    items: items.map((row) => ({
-      id: row.iGM_Id,
-      // 模块七增强：管理员可查看每个用户的 11 位 iGMUid
-      uid: row.iGM_Uid,
-      username: row.iGM_Username,
-      email: row.iGM_Email,
-      role: row.iGM_Role as iGM_AdminUserDto["role"],
-      status: row.iGM_Status as iGM_AdminUserDto["status"],
-      emailVerified: row.iGM_EmailVerified === 1,
-      displayName: row.iGM_DisplayName,
-      avatar: row.iGM_Avatar,
-      // 模块七：认证组织徽标（负责人带 isOwner 金标）
-      verifiedOrg: iGM_ResolveUserOrgBadge(
-        row.iGM_VerifiedOrgId ?? null,
-        row.iGM_Email,
-      ),
-      createdAt: row.iGM_CreatedAt,
-      totalPoints: row.iGM_TotalPoints,
-      postCount: row.iGM_PostCount,
-      commentCount: row.iGM_CommentCount,
-    })),
+    items: await Promise.all(
+      items.map(async (row) => ({
+        id: row.iGM_Id,
+        // 模块七增强：管理员可查看每个用户的 11 位 iGMUid
+        uid: row.iGM_Uid,
+        username: row.iGM_Username,
+        email: row.iGM_Email,
+        role: row.iGM_Role as iGM_AdminUserDto["role"],
+        status: row.iGM_Status as iGM_AdminUserDto["status"],
+        emailVerified: row.iGM_EmailVerified === 1,
+        displayName: row.iGM_DisplayName,
+        avatar: row.iGM_Avatar,
+        // 模块七：认证组织徽标（负责人带 isOwner 金标）
+        verifiedOrg: await iGM_ResolveUserOrgBadge(
+          row.iGM_VerifiedOrgId ?? null,
+          row.iGM_Email,
+        ),
+        createdAt: row.iGM_CreatedAt,
+        totalPoints: row.iGM_TotalPoints,
+        postCount: row.iGM_PostCount,
+        commentCount: row.iGM_CommentCount,
+      })),
+    ),
     total,
     page,
     pageSize,
@@ -151,31 +153,31 @@ export function iGM_ListUsersService(
 }
 
 /** 封禁用户：仅 admin；不可封禁自己与其他管理员；封禁后立即失效全部会话 */
-export function iGM_SetUserStatusService(
+export async function iGM_SetUserStatusService(
   admin: iGM_UserRow,
   userId: string,
   status: "active" | "suspended",
-): iGM_AdminUserDto["id"] {
+): Promise<iGM_AdminUserDto["id"]> {
   if (admin.iGM_Role !== "admin") {
     throw new iGM_AdminError("auth.errors.forbidden", 403);
   }
   if (userId === admin.iGM_Id) {
     throw new iGM_AdminError("admin.errors.cannotModifySelf", 422);
   }
-  const target = iGM_FindUserById(userId);
+  const target = await iGM_FindUserById(userId);
   if (!target) throw new iGM_AdminError("admin.errors.userNotFound", 404);
   if (target.iGM_Role === "admin") {
     throw new iGM_AdminError("admin.errors.cannotModifyAdmin", 403);
   }
 
-  iGM_Db.transaction(() => {
-    iGM_UpdateUserAdmin(userId, { status, now: new Date().toISOString() });
+  await iGM_Db.transaction(async () => {
+    await iGM_UpdateUserAdmin(userId, { status, now: new Date().toISOString() });
     if (status === "suspended") {
-      iGM_DeleteSessionsByUser(userId);
+      await iGM_DeleteSessionsByUser(userId);
     }
   })();
 
-  iGM_Log({
+  await iGM_Log({
     adminId: admin.iGM_Id,
     action: status === "suspended" ? "user_ban" : "user_unban",
     targetType: "user",
@@ -186,25 +188,25 @@ export function iGM_SetUserStatusService(
 }
 
 /** 修改用户角色：仅 admin；不可修改自己与其他管理员 */
-export function iGM_SetUserRoleService(
+export async function iGM_SetUserRoleService(
   admin: iGM_UserRow,
   userId: string,
   role: iGM_AdminUserDto["role"],
-): string {
+): Promise<string> {
   if (admin.iGM_Role !== "admin") {
     throw new iGM_AdminError("auth.errors.forbidden", 403);
   }
   if (userId === admin.iGM_Id) {
     throw new iGM_AdminError("admin.errors.cannotModifySelf", 422);
   }
-  const target = iGM_FindUserById(userId);
+  const target = await iGM_FindUserById(userId);
   if (!target) throw new iGM_AdminError("admin.errors.userNotFound", 404);
   if (target.iGM_Role === "admin") {
     throw new iGM_AdminError("admin.errors.cannotModifyAdmin", 403);
   }
 
-  iGM_UpdateUserAdmin(userId, { role, now: new Date().toISOString() });
-  iGM_Log({
+  await iGM_UpdateUserAdmin(userId, { role, now: new Date().toISOString() });
+  await iGM_Log({
     adminId: admin.iGM_Id,
     action: "user_role",
     targetType: "user",
@@ -221,29 +223,29 @@ export function iGM_SetUserRoleService(
  * 删除后其邮箱重新注册仍会按负责人规则恢复组织认证。
  * 外键级联清理帖子、评论、会话、通知等全部关联数据。
  */
-export function iGM_DeleteUserService(
+export async function iGM_DeleteUserService(
   admin: iGM_UserRow,
   userId: string,
   locale: string,
-): string {
+): Promise<string> {
   if (admin.iGM_Role !== "admin") {
     throw new iGM_AdminError("auth.errors.forbidden", 403);
   }
   if (userId === admin.iGM_Id) {
     throw new iGM_AdminError("admin.errors.cannotDeleteSelf", 422);
   }
-  const target = iGM_FindUserById(userId);
+  const target = await iGM_FindUserById(userId);
   if (!target) throw new iGM_AdminError("admin.errors.userNotFound", 404);
   if (target.iGM_Role === "admin") {
     throw new iGM_AdminError("admin.errors.cannotModifyAdmin", 403);
   }
 
-  iGM_Db.transaction(() => {
-    iGM_DeleteSessionsByUser(userId);
-    iGM_DeleteUser(userId);
+  await iGM_Db.transaction(async () => {
+    await iGM_DeleteSessionsByUser(userId);
+    await iGM_DeleteUser(userId);
   })();
 
-  iGM_Log({
+  await iGM_Log({
     adminId: admin.iGM_Id,
     action: "user_delete",
     targetType: "user",
@@ -287,13 +289,13 @@ export function iGM_DeleteUserService(
 /* ---------- 内容审核 ---------- */
 
 /** 内容管理列表（帖子/评论全状态检索） */
-export function iGM_ListContentsService(
+export async function iGM_ListContentsService(
   type: string,
   search: string | null,
   statusFilter: string | null,
   pageRaw: number,
   pageSizeRaw: number,
-): { items: iGM_AdminContentDto[]; total: number; page: number; pageSize: number; totalPages: number } {
+): Promise<{ items: iGM_AdminContentDto[]; total: number; page: number; pageSize: number; totalPages: number }> {
   const { page, pageSize } = iGM_Page(pageRaw, pageSizeRaw);
   const statuses =
     statusFilter === "normal"
@@ -307,8 +309,8 @@ export function iGM_ListContentsService(
         : null;
   const result =
     type === "comment"
-      ? iGM_ListCommentsForAdmin(search, statuses, page, pageSize)
-      : iGM_ListPostsForAdmin(search, statuses, page, pageSize);
+      ? await iGM_ListCommentsForAdmin(search, statuses, page, pageSize)
+      : await iGM_ListPostsForAdmin(search, statuses, page, pageSize);
   return {
     items: result.items,
     total: result.total,
@@ -322,29 +324,29 @@ export function iGM_ListContentsService(
  * 审核内容：hide 隐藏 / restore 恢复 / delete 删除
  * moderator 及以上可操作任意内容；底层复用社区服务，操作日志在此落库
  */
-export function iGM_ReviewContentService(
+export async function iGM_ReviewContentService(
   admin: iGM_UserRow,
   type: string,
   contentId: string,
   action: iGM_ReviewAction,
-): void {
+): Promise<void> {
   if (type === "post") {
     if (action === "delete") {
-      iGM_DeletePostService(admin, contentId);
+      await iGM_DeletePostService(admin, contentId);
     } else {
-      iGM_SetPostStatusService(admin, contentId, action === "hide" ? "hidden" : "published");
+      await iGM_SetPostStatusService(admin, contentId, action === "hide" ? "hidden" : "published");
     }
   } else if (type === "comment") {
     if (action === "delete") {
-      iGM_DeleteCommentService(admin, contentId);
+      await iGM_DeleteCommentService(admin, contentId);
     } else {
-      iGM_SetCommentStatusService(admin, contentId, action === "hide" ? "hidden" : "visible");
+      await iGM_SetCommentStatusService(admin, contentId, action === "hide" ? "hidden" : "visible");
     }
   } else {
     throw new iGM_AdminError("admin.errors.badTargetType", 422);
   }
 
-  iGM_Log({
+  await iGM_Log({
     adminId: admin.iGM_Id,
     action: `content_${action}`,
     targetType: type,
@@ -355,17 +357,17 @@ export function iGM_ReviewContentService(
 /* ---------- 举报处理 ---------- */
 
 /** 举报列表（状态过滤 + 分页 + 联表摘要） */
-export function iGM_ListReportsService(
+export async function iGM_ListReportsService(
   status: string | null,
   pageRaw: number,
   pageSizeRaw: number,
-): { items: iGM_AdminReportDto[]; total: number; page: number; pageSize: number; totalPages: number } {
+): Promise<{ items: iGM_AdminReportDto[]; total: number; page: number; pageSize: number; totalPages: number }> {
   const { page, pageSize } = iGM_Page(pageRaw, pageSizeRaw);
   const resolvedStatus =
     status === "pending" || status === "resolved" || status === "dismissed"
       ? status
       : null;
-  const data = iGM_ListReports(resolvedStatus, page, pageSize);
+  const data = await iGM_ListReports(resolvedStatus, page, pageSize);
   return {
     items: data.items.map((row) => {
       let targetSummary: string | null = null;
@@ -412,25 +414,25 @@ export function iGM_ListReportsService(
  * 处理举报：resolved 违规成立 / dismissed 驳回
  * 可选联动处置目标内容：hide 隐藏 / delete 删除（仅 resolved 时执行）
  */
-export function iGM_HandleReportService(
+export async function iGM_HandleReportService(
   admin: iGM_UserRow,
   reportId: string,
   decision: iGM_ReportDecision,
   contentAction: "none" | "hide" | "delete",
-): void {
-  const report = iGM_FindReportById(reportId);
+): Promise<void> {
+  const report = await iGM_FindReportById(reportId);
   if (!report) throw new iGM_AdminError("admin.errors.reportNotFound", 404);
   if (report.iGM_Status !== "pending") {
     throw new iGM_AdminError("admin.errors.reportAlreadyHandled", 409);
   }
 
-  iGM_UpdateReportStatus(reportId, decision, admin.iGM_Id, new Date().toISOString());
+  await iGM_UpdateReportStatus(reportId, decision, admin.iGM_Id, new Date().toISOString());
 
   if (decision === "resolved" && contentAction !== "none") {
-    iGM_ReviewContentService(admin, report.iGM_TargetType, report.iGM_TargetId, contentAction);
+    await iGM_ReviewContentService(admin, report.iGM_TargetType, report.iGM_TargetId, contentAction);
   }
 
-  iGM_Log({
+  await iGM_Log({
     adminId: admin.iGM_Id,
     action: "report_handle",
     targetType: "report",
@@ -472,7 +474,7 @@ export async function iGM_SendTestMailService(
     throw new iGM_AdminError("admin.errors.mailSendFailed", 502);
   }
 
-  iGM_Log({
+  await iGM_Log({
     adminId: admin.iGM_Id,
     action: "mail_test",
     targetType: "mail",
@@ -483,12 +485,12 @@ export async function iGM_SendTestMailService(
 /* ---------- 操作日志与系统信息 ---------- */
 
 /** 操作日志分页 */
-export function iGM_ListLogsService(
+export async function iGM_ListLogsService(
   pageRaw: number,
   pageSizeRaw: number,
-): { items: iGM_AdminLogDto[]; total: number; page: number; pageSize: number; totalPages: number } {
+): Promise<{ items: iGM_AdminLogDto[]; total: number; page: number; pageSize: number; totalPages: number }> {
   const { page, pageSize } = iGM_Page(pageRaw, pageSizeRaw);
-  const { items, total, adminNames } = iGM_ListAdminLogs(page, pageSize);
+  const { items, total, adminNames } = await iGM_ListAdminLogs(page, pageSize);
   return {
     items: items.map((row) => ({
       id: row.iGM_Id,

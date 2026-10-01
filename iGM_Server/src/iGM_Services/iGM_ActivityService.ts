@@ -70,7 +70,7 @@ function iGM_IsCreator(user: iGM_UserRow, creatorId: string): boolean {
 }
 
 /** 用户行转作者简要 DTO */
-function iGM_ToAuthorDto(user: iGM_UserRow): iGM_AuthorDto {
+async function iGM_ToAuthorDto(user: iGM_UserRow): Promise<iGM_AuthorDto> {
   return {
     id: user.iGM_Id,
     username: user.iGM_Username,
@@ -78,7 +78,7 @@ function iGM_ToAuthorDto(user: iGM_UserRow): iGM_AuthorDto {
     avatar: user.iGM_Avatar,
     role: user.iGM_Role,
     // 模块七：认证组织徽标（负责人邮箱匹配时带 isOwner 金标）
-    verifiedOrg: iGM_ResolveUserOrgBadge(
+    verifiedOrg: await iGM_ResolveUserOrgBadge(
       user.iGM_VerifiedOrgId ?? null,
       user.iGM_Email,
     ),
@@ -173,10 +173,12 @@ function iGM_ValidateActivityInput(input: iGM_ActivityInput): {
 }
 
 /** 校验封面文件存在（可选） */
-function iGM_ResolveCover(coverFileId?: string | null): string | null {
+async function iGM_ResolveCover(
+  coverFileId?: string | null,
+): Promise<string | null> {
   if (!coverFileId || !coverFileId.trim()) return null;
   const id = coverFileId.trim();
-  iGM_GetFileDto(id); // 不存在会抛 404
+  await iGM_GetFileDto(id); // 不存在会抛 404
   return id;
 }
 
@@ -199,62 +201,66 @@ function iGM_ResolvePagination(
 }
 
 /** 由活动行组装列表项 DTO（创建者、封面、报名数一次取齐） */
-function iGM_AssembleActivityList(
+async function iGM_AssembleActivityList(
   rows: iGM_ActivityRow[],
   currentUserId: string | null,
-): iGM_ActivityListItemDto[] {
+): Promise<iGM_ActivityListItemDto[]> {
   if (rows.length === 0) return [];
 
-  const creatorRows = iGM_FindUsersByIds(rows.map((row) => row.iGM_CreatorId));
+  const creatorRows = await iGM_FindUsersByIds(
+    rows.map((row) => row.iGM_CreatorId),
+  );
   const creatorMap = new Map(creatorRows.map((user) => [user.iGM_Id, user]));
-  const coverMap = iGM_GetFileDtoMap(
+  const coverMap = await iGM_GetFileDtoMap(
     rows.map((row) => row.iGM_CoverFileId),
   );
-  const registerCounts = iGM_CountRegistrationsBatch(
+  const registerCounts = await iGM_CountRegistrationsBatch(
     rows.map((row) => row.iGM_Id),
   );
 
-  return rows.map((row) => {
-    const creatorRow = creatorMap.get(row.iGM_CreatorId);
-    const cover = row.iGM_CoverFileId
-      ? coverMap.get(row.iGM_CoverFileId) ?? null
-      : null;
-    return {
-      id: row.iGM_Id,
-      title: row.iGM_Title,
-      excerpt: iGM_BuildExcerpt(row.iGM_Description),
-      status: row.iGM_Status,
-      location: row.iGM_Location,
-      startTime: row.iGM_StartTime,
-      endTime: row.iGM_EndTime,
-      maxParticipants: row.iGM_MaxParticipants,
-      registeredCount: registerCounts.get(row.iGM_Id) ?? 0,
-      creator: creatorRow
-        ? iGM_ToAuthorDto(creatorRow)
-        : iGM_DeletedAuthorPlaceholder(row.iGM_CreatorId),
-      cover,
-      createdAt: row.iGM_CreatedAt,
-      updatedAt: row.iGM_UpdatedAt,
-    };
-  });
+  return Promise.all(
+    rows.map(async (row) => {
+      const creatorRow = creatorMap.get(row.iGM_CreatorId);
+      const cover = row.iGM_CoverFileId
+        ? coverMap.get(row.iGM_CoverFileId) ?? null
+        : null;
+      return {
+        id: row.iGM_Id,
+        title: row.iGM_Title,
+        excerpt: iGM_BuildExcerpt(row.iGM_Description),
+        status: row.iGM_Status,
+        location: row.iGM_Location,
+        startTime: row.iGM_StartTime,
+        endTime: row.iGM_EndTime,
+        maxParticipants: row.iGM_MaxParticipants,
+        registeredCount: registerCounts.get(row.iGM_Id) ?? 0,
+        creator: creatorRow
+          ? await iGM_ToAuthorDto(creatorRow)
+          : iGM_DeletedAuthorPlaceholder(row.iGM_CreatorId),
+        cover,
+        createdAt: row.iGM_CreatedAt,
+        updatedAt: row.iGM_UpdatedAt,
+      };
+    }),
+  );
 }
 
 /* ---------- 创建 / 编辑 / 删除 ---------- */
 
 /** 创建活动：登录用户；协管员及以上可创建并存位任意状态 */
-export function iGM_CreateActivityService(
+export async function iGM_CreateActivityService(
   user: iGM_UserRow,
   input: iGM_ActivityInput,
-): iGM_ActivityDetailDto {
+): Promise<iGM_ActivityDetailDto> {
   const validated = iGM_ValidateActivityInput(input);
   // 普通用户创建的活动默认报名中，草稿状态仅协管员及以上可用
   const status = iGM_CanModerate(user) ? validated.status : "open";
 
-  const activity = iGM_CreateActivity({
+  const activity = await iGM_CreateActivity({
     creatorId: user.iGM_Id,
     title: validated.title,
     description: validated.description,
-    coverFileId: iGM_ResolveCover(input.coverFileId),
+    coverFileId: await iGM_ResolveCover(input.coverFileId),
     location: validated.location,
     startTime: validated.startTime,
     endTime: validated.endTime,
@@ -263,18 +269,18 @@ export function iGM_CreateActivityService(
     now: new Date().toISOString(),
   });
 
-  const detail = iGM_GetActivityDetailService(user, activity.iGM_Id);
+  const detail = await iGM_GetActivityDetailService(user, activity.iGM_Id);
   if (!detail) throw new Error("iGM_CreateActivityService：创建后详情组装失败");
   return detail;
 }
 
 /** 编辑活动：仅创建者本人或协管员及以上 */
-export function iGM_UpdateActivityService(
+export async function iGM_UpdateActivityService(
   user: iGM_UserRow,
   activityId: string,
   input: iGM_ActivityInput,
-): iGM_ActivityDetailDto {
-  const activity = iGM_FindActivityById(activityId);
+): Promise<iGM_ActivityDetailDto> {
+  const activity = await iGM_FindActivityById(activityId);
   if (!activity) throw new iGM_ContentError("activity.errors.notFound", 404);
   if (!iGM_IsCreator(user, activity.iGM_CreatorId) && !iGM_CanModerate(user)) {
     throw new iGM_ContentError("auth.errors.forbidden", 403);
@@ -289,10 +295,10 @@ export function iGM_UpdateActivityService(
       ? "open"
       : validated.status;
 
-  iGM_UpdateActivity(activityId, {
+  await iGM_UpdateActivity(activityId, {
     title: validated.title,
     description: validated.description,
-    coverFileId: iGM_ResolveCover(input.coverFileId),
+    coverFileId: await iGM_ResolveCover(input.coverFileId),
     location: validated.location,
     startTime: validated.startTime,
     endTime: validated.endTime,
@@ -301,31 +307,31 @@ export function iGM_UpdateActivityService(
     now: new Date().toISOString(),
   });
 
-  const detail = iGM_GetActivityDetailService(user, activityId);
+  const detail = await iGM_GetActivityDetailService(user, activityId);
   if (!detail) throw new Error("iGM_UpdateActivityService：更新后详情组装失败");
   return detail;
 }
 
 /** 删除活动：创建者本人或协管员及以上 */
-export function iGM_DeleteActivityService(
+export async function iGM_DeleteActivityService(
   user: iGM_UserRow,
   activityId: string,
-): void {
-  const activity = iGM_FindActivityById(activityId);
+): Promise<void> {
+  const activity = await iGM_FindActivityById(activityId);
   if (!activity) throw new iGM_ContentError("activity.errors.notFound", 404);
   if (!iGM_IsCreator(user, activity.iGM_CreatorId) && !iGM_CanModerate(user)) {
     throw new iGM_ContentError("auth.errors.forbidden", 403);
   }
-  iGM_DeleteActivity(activityId);
+  await iGM_DeleteActivity(activityId);
 }
 
 /* ---------- 查询 ---------- */
 
 /** 活动列表：草稿仅创建者与协管员可见，其余状态公开可见 */
-export function iGM_ListActivitiesService(
+export async function iGM_ListActivitiesService(
   currentUser: iGM_UserRow | null,
   query: iGM_ActivityQueryInput,
-): iGM_ActivityListData {
+): Promise<iGM_ActivityListData> {
   const { page, pageSize } = iGM_ResolvePagination(query.page, query.pageSize);
   const canModerate = currentUser ? iGM_CanModerate(currentUser) : false;
 
@@ -341,7 +347,7 @@ export function iGM_ListActivitiesService(
     statuses = ["open", "closed", ...(canModerate ? (["draft"] as const) : [])];
   }
 
-  const { items, total } = iGM_ListActivities({
+  const { items, total } = await iGM_ListActivities({
     statuses,
     search: query.search?.trim() ? query.search.trim() : null,
     creatorId: null,
@@ -359,7 +365,7 @@ export function iGM_ListActivitiesService(
       );
 
   return {
-    items: iGM_AssembleActivityList(visible, currentUser?.iGM_Id ?? null),
+    items: await iGM_AssembleActivityList(visible, currentUser?.iGM_Id ?? null),
     total,
     page,
     pageSize,
@@ -368,11 +374,11 @@ export function iGM_ListActivitiesService(
 }
 
 /** 活动详情：草稿仅创建者与协管员可见；附带当前用户报名状态与编辑权限 */
-export function iGM_GetActivityDetailService(
+export async function iGM_GetActivityDetailService(
   currentUser: iGM_UserRow | null,
   activityId: string,
-): iGM_ActivityDetailDto | null {
-  const row = iGM_FindActivityById(activityId);
+): Promise<iGM_ActivityDetailDto | null> {
+  const row = await iGM_FindActivityById(activityId);
   if (!row) return null;
 
   const isCreator = currentUser !== null && row.iGM_CreatorId === currentUser.iGM_Id;
@@ -381,12 +387,15 @@ export function iGM_GetActivityDetailService(
     return null;
   }
 
-  const [item] = iGM_AssembleActivityList([row], currentUser?.iGM_Id ?? null);
+  const [item] = await iGM_AssembleActivityList(
+    [row],
+    currentUser?.iGM_Id ?? null,
+  );
   if (!item) return null;
 
   const registrationRow =
     currentUser !== null
-      ? iGM_FindRegistration(activityId, currentUser.iGM_Id)
+      ? await iGM_FindRegistration(activityId, currentUser.iGM_Id)
       : null;
 
   const { excerpt: _excerpt, ...rest } = item;
@@ -396,36 +405,36 @@ export function iGM_GetActivityDetailService(
     registeredByMe: registrationRow?.iGM_Status === "registered",
     canEdit: isCreator || canModerate,
     // 活动资源：关联到本活动的已发布资源
-    resources: iGM_ListActivityResourcesService(activityId),
+    resources: await iGM_ListActivityResourcesService(activityId),
   };
 }
 
 /* ---------- 报名 / 取消 ---------- */
 
 /** 报名活动：登录用户；仅报名中且未满员的活动可报名，成功后创建通知 */
-export function iGM_RegisterActivityService(
+export async function iGM_RegisterActivityService(
   user: iGM_UserRow,
   activityId: string,
   locale?: string,
-): iGM_ActivityDetailDto {
-  const activity = iGM_FindActivityById(activityId);
+): Promise<iGM_ActivityDetailDto> {
+  const activity = await iGM_FindActivityById(activityId);
   if (!activity) throw new iGM_ContentError("activity.errors.notFound", 404);
   if (activity.iGM_Status !== "open") {
     throw new iGM_ContentError("activity.errors.notOpen", 409);
   }
 
-  const existing = iGM_FindRegistration(activityId, user.iGM_Id);
+  const existing = await iGM_FindRegistration(activityId, user.iGM_Id);
   if (existing?.iGM_Status === "registered") {
     throw new iGM_ContentError("activity.errors.alreadyRegistered", 409);
   }
   if (activity.iGM_MaxParticipants !== null) {
-    const current = iGM_CountRegistrations(activityId);
+    const current = await iGM_CountRegistrations(activityId);
     if (current >= activity.iGM_MaxParticipants) {
       throw new iGM_ContentError("activity.errors.full", 409);
     }
   }
 
-  iGM_UpsertRegistration(
+  await iGM_UpsertRegistration(
     activityId,
     user.iGM_Id,
     "registered",
@@ -433,7 +442,7 @@ export function iGM_RegisterActivityService(
   );
 
   // 报名成功创建站内通知（若用户开启邮件通知则附带邮件）
-  iGM_Notify({
+  await iGM_Notify({
     userId: user.iGM_Id,
     type: "activity",
     title: activity.iGM_Title,
@@ -441,56 +450,58 @@ export function iGM_RegisterActivityService(
     locale,
   });
 
-  const detail = iGM_GetActivityDetailService(user, activityId);
+  const detail = await iGM_GetActivityDetailService(user, activityId);
   if (!detail) throw new Error("iGM_RegisterActivityService：报名后详情组装失败");
   // 模块五：报名活动积分埋点（内部吞异常，不影响主流程）
-  iGM_AwardPoints(user.iGM_Id, "activity_join", activity.iGM_Title);
+  await iGM_AwardPoints(user.iGM_Id, "activity_join", activity.iGM_Title);
   return detail;
 }
 
 /** 取消报名：仅本人可取消自己的报名 */
-export function iGM_CancelRegistrationService(
+export async function iGM_CancelRegistrationService(
   user: iGM_UserRow,
   activityId: string,
-): iGM_ActivityDetailDto {
-  const activity = iGM_FindActivityById(activityId);
+): Promise<iGM_ActivityDetailDto> {
+  const activity = await iGM_FindActivityById(activityId);
   if (!activity) throw new iGM_ContentError("activity.errors.notFound", 404);
 
-  const existing = iGM_FindRegistration(activityId, user.iGM_Id);
+  const existing = await iGM_FindRegistration(activityId, user.iGM_Id);
   if (!existing || existing.iGM_Status !== "registered") {
     throw new iGM_ContentError("activity.errors.notRegistered", 409);
   }
 
-  iGM_UpsertRegistration(
+  await iGM_UpsertRegistration(
     activityId,
     user.iGM_Id,
     "cancelled",
     new Date().toISOString(),
   );
 
-  const detail = iGM_GetActivityDetailService(user, activityId);
+  const detail = await iGM_GetActivityDetailService(user, activityId);
   if (!detail) throw new Error("iGM_CancelRegistrationService：取消后详情组装失败");
   return detail;
 }
 
 /** 活动报名列表：每项附带报名者公开资料 */
-export function iGM_ListRegistrationsService(
+export async function iGM_ListRegistrationsService(
   activityId: string,
-): iGM_ActivityRegistrationDto[] {
-  const rows = iGM_ListRegistrations(activityId);
+): Promise<iGM_ActivityRegistrationDto[]> {
+  const rows = await iGM_ListRegistrations(activityId);
   if (rows.length === 0) return [];
 
-  const userRows = iGM_FindUsersByIds(rows.map((row) => row.iGM_UserId));
+  const userRows = await iGM_FindUsersByIds(rows.map((row) => row.iGM_UserId));
   const userMap = new Map(userRows.map((user) => [user.iGM_Id, user]));
 
-  return rows.map((row) => ({
-    id: row.iGM_Id,
-    status: row.iGM_Status,
-    createdAt: row.iGM_CreatedAt,
-    user: userMap.has(row.iGM_UserId)
-      ? iGM_ToAuthorDto(userMap.get(row.iGM_UserId) as iGM_UserRow)
-      : iGM_DeletedAuthorPlaceholder(row.iGM_UserId),
-  }));
+  return Promise.all(
+    rows.map(async (row) => ({
+      id: row.iGM_Id,
+      status: row.iGM_Status,
+      createdAt: row.iGM_CreatedAt,
+      user: userMap.has(row.iGM_UserId)
+        ? await iGM_ToAuthorDto(userMap.get(row.iGM_UserId) as iGM_UserRow)
+        : iGM_DeletedAuthorPlaceholder(row.iGM_UserId),
+    })),
+  );
 }
 
 // 导出 //

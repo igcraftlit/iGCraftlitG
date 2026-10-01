@@ -148,7 +148,7 @@ CREATE INDEX IF NOT EXISTS iGM_Idx_Resources_ResourceType
   ON iGM_Resources (iGM_ResourceType);
 
 -- ===== Minecraft 分区分类种子：1 个父分类 + 8 个子分类（固定 ID，幂等） =====
-INSERT OR IGNORE INTO iGM_ResourceCategories (iGM_Id, iGM_Name, iGM_Slug, iGM_SortOrder) VALUES
+INSERT INTO iGM_ResourceCategories (iGM_Id, iGM_Name, iGM_Slug, iGM_SortOrder) VALUES
   ('rcat-minecraft',         'Minecraft', 'minecraft',         10),
   ('rcat-mc-mod',            '模组',       'minecraft-mod',     11),
   ('rcat-mc-texturepack',    '材质包',     'minecraft-texture', 12),
@@ -157,4 +157,5 @@ INSERT OR IGNORE INTO iGM_ResourceCategories (iGM_Id, iGM_Name, iGM_Slug, iGM_So
   ('rcat-mc-plugin',         '插件',       'minecraft-plugin',  15),
   ('rcat-mc-modpack',        '整合包',     'minecraft-modpack', 16),
   ('rcat-mc-datapack',       '数据包',     'minecraft-data',    17),
-  ('rcat-mc-other',          '其他',       'minecraft-other',   18);
+  ('rcat-mc-other',          '其他',       'minecraft-other',   18)
+ON CONFLICT DO NOTHING;

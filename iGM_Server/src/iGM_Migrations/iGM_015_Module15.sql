@@ -22,10 +22,11 @@ UPDATE iGM_Levels SET iGM_Name = '求真者', iGM_MinPoints = 2500,  iGM_MaxPoin
 UPDATE iGM_Levels SET iGM_Name = '远航者', iGM_MinPoints = 4500,  iGM_MaxPoints = 9499,  iGM_Icon = 'sailboat',  iGM_SortOrder = 7,  iGM_IsExamRequired = 0 WHERE iGM_Id = 'lv7';
 UPDATE iGM_Levels SET iGM_Name = '星图师', iGM_MinPoints = 9500,  iGM_MaxPoints = 19499, iGM_Icon = 'orbit',     iGM_SortOrder = 8,  iGM_IsExamRequired = 1 WHERE iGM_Id = 'lv8';
 
-INSERT OR IGNORE INTO iGM_Levels
+INSERT INTO iGM_Levels
   (iGM_Id, iGM_Name, iGM_MinPoints, iGM_MaxPoints, iGM_Icon, iGM_SortOrder, iGM_IsExamRequired) VALUES
   ('lv9',  '领航者', 19500, 99998, 'crown',  9,  1),
-  ('lv10', '探星者', 99999, NULL,  'trophy', 10, 1);
+  ('lv10', '探星者', 99999, NULL,  'trophy', 10, 1)
+ON CONFLICT DO NOTHING;
 
 -- ===== 勋章表：新增稀有度（common 普通 / rare 稀有 / legendary 传说） =====
 ALTER TABLE iGM_Badges ADD COLUMN iGM_Rarity TEXT NOT NULL DEFAULT 'common';
@@ -35,18 +36,19 @@ UPDATE iGM_Badges SET iGM_Rarity = 'common' WHERE iGM_Id IN ('badge-first-post',
 UPDATE iGM_Badges SET iGM_Rarity = 'rare'   WHERE iGM_Id IN ('badge-post-10', 'badge-comment-50', 'badge-checkin-30', 'badge-points-1000');
 
 -- 新增勋章：考核通过（稀有）、季度任务（稀有）、官方授予（传说，仅管理员人工发放）
-INSERT OR IGNORE INTO iGM_Badges
+INSERT INTO iGM_Badges
   (iGM_Id, iGM_Name, iGM_Description, iGM_Icon, iGM_ConditionType, iGM_ConditionValue, iGM_Rarity) VALUES
   ('badge-exam-pass',    '求真问道', '通过一次等级考核',           'graduation-cap', 'exams_passed',   1, 'rare'),
   ('badge-season-glow',  '季度之光', '完成一项每季任务',           'sparkles',       'seasonal_tasks', 1, 'rare'),
-  ('badge-legend-official', '传说之证', '由官方人工授予的重大成就勋章', 'gem',       'manual',         1, 'legendary');
+  ('badge-legend-official', '传说之证', '由官方人工授予的重大成就勋章', 'gem',       'manual',         1, 'legendary')
+ON CONFLICT DO NOTHING;
 
 -- ===== 任务表：新增赛季标记，并取消一次性任务、改为每周 / 每季任务 =====
 ALTER TABLE iGM_Tasks ADD COLUMN iGM_SeasonId TEXT;
 
 DELETE FROM iGM_Tasks;
 
-INSERT OR IGNORE INTO iGM_Tasks
+INSERT INTO iGM_Tasks
   (iGM_Id, iGM_Name, iGM_Description, iGM_Action, iGM_TargetCount, iGM_RewardPoints, iGM_TaskType, iGM_SortOrder, iGM_SeasonId) VALUES
   ('task-week-checkin',  '每周签到',   '本周累计签到 5 天',         'checkin',         5,  30,  'weekly',   1, NULL),
   ('task-week-post',     '每周创作',   '本周发布 3 篇内容',         'post_create',     3,  20,  'weekly',   2, NULL),
@@ -55,7 +57,8 @@ INSERT OR IGNORE INTO iGM_Tasks
   ('task-season-post',     '季度创作', '本季发布 30 篇优质内容',    'post_create',     30, 300, 'seasonal', 5, '*'),
   ('task-season-resource', '季度分享', '本季上传 10 个合规资源',    'resource_upload', 10, 500, 'seasonal', 6, '*'),
   ('task-season-checkin',  '季度坚持', '本季累计签到 60 天',        'checkin',         60, 400, 'seasonal', 7, '*'),
-  ('task-season-exam',     '季度考核', '本季通过一次等级考核',      'exam_pass',       1,  800, 'seasonal', 8, '*');
+  ('task-season-exam',     '季度考核', '本季通过一次等级考核',      'exam_pass',       1,  800, 'seasonal', 8, '*')
+ON CONFLICT DO NOTHING;
 
 -- ===== 用户任务表：新增领取标记与周期键（周/季重置依据） =====
 ALTER TABLE iGM_UserTasks ADD COLUMN iGM_IsClaimed INTEGER NOT NULL DEFAULT 0;

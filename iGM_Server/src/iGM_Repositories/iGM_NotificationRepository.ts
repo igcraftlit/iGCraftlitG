@@ -27,9 +27,9 @@ export interface iGM_NotificationListResult {
 
 // 核心逻辑 //
 /** 新建一条站内通知 */
-export function iGM_CreateNotification(
+export async function iGM_CreateNotification(
   input: iGM_CreateNotificationInput,
-): iGM_NotificationRow {
+): Promise<iGM_NotificationRow> {
   const row: iGM_NotificationRow = {
     iGM_Id: iGM_RandomUuid(),
     iGM_UserId: input.userId,
@@ -40,7 +40,7 @@ export function iGM_CreateNotification(
     iGM_IsRead: 0,
     iGM_CreatedAt: input.now,
   };
-  iGM_Db.run(
+  await iGM_Db.run(
     `INSERT INTO iGM_Notifications
        (iGM_Id, iGM_UserId, iGM_Type, iGM_Title, iGM_Content, iGM_Link, iGM_IsRead, iGM_CreatedAt)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -59,60 +59,62 @@ export function iGM_CreateNotification(
 }
 
 /** 按主键查询通知 */
-export function iGM_FindNotificationById(
+export async function iGM_FindNotificationById(
   id: string,
-): iGM_NotificationRow | null {
+): Promise<iGM_NotificationRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(`SELECT * FROM iGM_Notifications WHERE iGM_Id = ?`)
-      .get(id) as iGM_NotificationRow | undefined) ?? null
+      .get(id)) as iGM_NotificationRow | undefined) ?? null
   );
 }
 
 /** 分页查询某用户的通知（时间倒序）；onlyUnread 为 true 时仅返回未读 */
-export function iGM_ListNotificationsByUser(
+export async function iGM_ListNotificationsByUser(
   userId: string,
   onlyUnread: boolean,
   page: number,
   pageSize: number,
-): iGM_NotificationListResult {
+): Promise<iGM_NotificationListResult> {
   const where = onlyUnread
     ? `WHERE iGM_UserId = ? AND iGM_IsRead = 0`
     : `WHERE iGM_UserId = ?`;
   const offset = (page - 1) * pageSize;
 
-  const totalRow = iGM_Db
+  const totalRow = (await iGM_Db
     .query(`SELECT COUNT(*) AS iGM_Count FROM iGM_Notifications ${where}`)
-    .get(userId) as { iGM_Count: number };
+    .get(userId)) as { iGM_Count: number };
 
-  const items = iGM_Db
+  const items = (await iGM_Db
     .query(
       `SELECT * FROM iGM_Notifications ${where}
         ORDER BY iGM_CreatedAt DESC, iGM_Id DESC
         LIMIT ? OFFSET ?`,
     )
-    .all(userId, pageSize, offset) as iGM_NotificationRow[];
+    .all(userId, pageSize, offset)) as iGM_NotificationRow[];
 
   return { items, total: totalRow.iGM_Count };
 }
 
 /** 统计某用户的未读通知数 */
-export function iGM_CountUnreadNotifications(userId: string): number {
-  const row = iGM_Db
+export async function iGM_CountUnreadNotifications(
+  userId: string,
+): Promise<number> {
+  const row = (await iGM_Db
     .query(
       `SELECT COUNT(*) AS iGM_Count FROM iGM_Notifications
         WHERE iGM_UserId = ? AND iGM_IsRead = 0`,
     )
-    .get(userId) as { iGM_Count: number };
+    .get(userId)) as { iGM_Count: number };
   return row.iGM_Count;
 }
 
 /** 将单条通知标记为已读（限定归属用户，防止越权） */
-export function iGM_MarkNotificationRead(
+export async function iGM_MarkNotificationRead(
   id: string,
   userId: string,
-): boolean {
-  const result = iGM_Db.run(
+): Promise<boolean> {
+  const result = await iGM_Db.run(
     `UPDATE iGM_Notifications SET iGM_IsRead = 1
       WHERE iGM_Id = ? AND iGM_UserId = ?`,
     [id, userId],
@@ -121,8 +123,10 @@ export function iGM_MarkNotificationRead(
 }
 
 /** 将某用户全部通知标记为已读，返回受影响条数 */
-export function iGM_MarkAllNotificationsRead(userId: string): number {
-  const result = iGM_Db.run(
+export async function iGM_MarkAllNotificationsRead(
+  userId: string,
+): Promise<number> {
+  const result = await iGM_Db.run(
     `UPDATE iGM_Notifications SET iGM_IsRead = 1
       WHERE iGM_UserId = ? AND iGM_IsRead = 0`,
     [userId],
@@ -131,8 +135,11 @@ export function iGM_MarkAllNotificationsRead(userId: string): number {
 }
 
 /** 删除单条通知（限定归属用户） */
-export function iGM_DeleteNotification(id: string, userId: string): boolean {
-  const result = iGM_Db.run(
+export async function iGM_DeleteNotification(
+  id: string,
+  userId: string,
+): Promise<boolean> {
+  const result = await iGM_Db.run(
     `DELETE FROM iGM_Notifications WHERE iGM_Id = ? AND iGM_UserId = ?`,
     [id, userId],
   );
@@ -140,26 +147,26 @@ export function iGM_DeleteNotification(id: string, userId: string): boolean {
 }
 
 /** 查询某用户的通知偏好（未设置返回 null） */
-export function iGM_FindNotificationPreference(
+export async function iGM_FindNotificationPreference(
   userId: string,
-): iGM_NotificationPreferenceRow | null {
+): Promise<iGM_NotificationPreferenceRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(
         `SELECT * FROM iGM_NotificationPreferences WHERE iGM_UserId = ?`,
       )
-      .get(userId) as iGM_NotificationPreferenceRow | undefined) ?? null
+      .get(userId)) as iGM_NotificationPreferenceRow | undefined) ?? null
   );
 }
 
 /** 写入（首次）或更新通知偏好 */
-export function iGM_UpsertNotificationPreference(
+export async function iGM_UpsertNotificationPreference(
   userId: string,
   siteEnabled: boolean,
   emailEnabled: boolean,
   now: string,
-): void {
-  iGM_Db.run(
+): Promise<void> {
+  await iGM_Db.run(
     `INSERT INTO iGM_NotificationPreferences
        (iGM_Id, iGM_UserId, iGM_SiteEnabled, iGM_EmailEnabled, iGM_UpdatedAt)
      VALUES (?, ?, ?, ?, ?)

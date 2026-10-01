@@ -55,9 +55,10 @@ ALTER TABLE iGM_Users
 
 -- ===== 受信任组织种子（固定 ID，迁移幂等） =====
 -- 前端组织描述优先匹配语言包 orgVerify.orgs.<slug>，匹配不到时显示 iGM_Description
-INSERT OR IGNORE INTO iGM_Organizations
+INSERT INTO iGM_Organizations
   (iGM_Id, iGM_Name, iGM_Slug, iGM_Description, iGM_Logo, iGM_IsTrusted, iGM_CreatedAt) VALUES
   ('org-igcraftlit', 'iGCraftLit', 'igcraftlit',
    'iGCraftLit 官方组织认证', NULL, 1, '2026-09-25T00:00:00.000Z'),
   ('org-muoceon', 'MuoCeon', 'muoceon',
-   'MuoCeon 合作组织认证', NULL, 1, '2026-09-25T00:00:00.000Z');
+   'MuoCeon 合作组织认证', NULL, 1, '2026-09-25T00:00:00.000Z')
+ON CONFLICT DO NOTHING;

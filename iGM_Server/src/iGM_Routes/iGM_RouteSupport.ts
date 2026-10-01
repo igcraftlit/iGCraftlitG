@@ -58,9 +58,11 @@ export function iGM_Query(
   return typeof value === "string" && value.length > 0 ? value : fallback;
 }
 
-/** 解析当前请求的登录用户（未登录返回 null） */
-export function iGM_CurrentUser(ctx: iGM_RouteContext): iGM_UserRow | null {
-  return iGM_ResolveRequestUser(ctx.request);
+/** 解析当前请求的登录用户（未登录返回 null）；数据层为异步，调用方需 await */
+export async function iGM_CurrentUser(
+  ctx: iGM_RouteContext,
+): Promise<iGM_UserRow | null> {
+  return await iGM_ResolveRequestUser(ctx.request);
 }
 
 /** 解析客户端 IP（限流维度使用） */

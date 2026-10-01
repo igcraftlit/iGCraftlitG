@@ -33,38 +33,38 @@ export function iGM_OrderPair(userA: string, userB: string): iGM_OrderedPair {
 /* ---------- 会话 ---------- */
 
 /** 按归一参与者查找会话 */
-export function iGM_FindConversation(
+export async function iGM_FindConversation(
   userA: string,
   userB: string,
-): iGM_ConversationRow | null {
+): Promise<iGM_ConversationRow | null> {
   const [first, second] = iGM_OrderPair(userA, userB);
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(
         `SELECT * FROM iGM_Conversations
           WHERE iGM_UserAId = ? AND iGM_UserBId = ?`,
       )
-      .get(first, second) as iGM_ConversationRow | undefined) ?? null
+      .get(first, second)) as iGM_ConversationRow | undefined) ?? null
   );
 }
 
 /** 按主键查询会话 */
-export function iGM_FindConversationById(
+export async function iGM_FindConversationById(
   id: string,
-): iGM_ConversationRow | null {
+): Promise<iGM_ConversationRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(`SELECT * FROM iGM_Conversations WHERE iGM_Id = ?`)
-      .get(id) as iGM_ConversationRow | undefined) ?? null
+      .get(id)) as iGM_ConversationRow | undefined) ?? null
   );
 }
 
 /** 创建会话（双方初始未删除） */
-export function iGM_CreateConversation(
+export async function iGM_CreateConversation(
   userA: string,
   userB: string,
   now: string,
-): iGM_ConversationRow {
+): Promise<iGM_ConversationRow> {
   const [first, second] = iGM_OrderPair(userA, userB);
   const row: iGM_ConversationRow = {
     iGM_Id: iGM_RandomUuid(),
@@ -76,7 +76,7 @@ export function iGM_CreateConversation(
     iGM_CreatedAt: now,
     iGM_UpdatedAt: now,
   };
-  iGM_Db.run(
+  await iGM_Db.run(
     `INSERT INTO iGM_Conversations
        (iGM_Id, iGM_UserAId, iGM_UserBId, iGM_LastMessageId,
         iGM_DeletedByA, iGM_DeletedByB, iGM_CreatedAt, iGM_UpdatedAt)
@@ -96,20 +96,25 @@ export function iGM_CreateConversation(
 }
 
 /** 查找或创建会话 */
-export function iGM_GetOrCreateConversation(
+export async function iGM_GetOrCreateConversation(
   userA: string,
   userB: string,
   now: string,
-): iGM_ConversationRow {
-  return iGM_FindConversation(userA, userB) ?? iGM_CreateConversation(userA, userB, now);
+): Promise<iGM_ConversationRow> {
+  return (
+    (await iGM_FindConversation(userA, userB)) ??
+    (await iGM_CreateConversation(userA, userB, now))
+  );
 }
 
 /**
  * 会话列表：按参与方过滤，并排除该方已删除的会话；
  * 对端用户必须存在且 active。按更新时间倒序。
  */
-export function iGM_ListConversations(userId: string): iGM_ConversationRow[] {
-  return iGM_Db
+export async function iGM_ListConversations(
+  userId: string,
+): Promise<iGM_ConversationRow[]> {
+  return (await iGM_Db
     .query(
       `SELECT c.* FROM iGM_Conversations c
          JOIN iGM_Users u ON u.iGM_Id =
@@ -120,21 +125,21 @@ export function iGM_ListConversations(userId: string): iGM_ConversationRow[] {
           AND u.iGM_Status = 'active'
         ORDER BY c.iGM_UpdatedAt DESC, c.iGM_Id DESC`,
     )
-    .all(userId, userId, userId, userId) as iGM_ConversationRow[];
+    .all(userId, userId, userId, userId)) as iGM_ConversationRow[];
 }
 
 /**
  * 新消息到达时更新会话：最后消息、更新时间，
  * 并复位接收方（非发送方）的删除标记，保证对方能重新看到会话。
  */
-export function iGM_TouchConversationWithMessage(
+export async function iGM_TouchConversationWithMessage(
   conversation: iGM_ConversationRow,
   messageId: string,
   senderId: string,
   now: string,
-): void {
+): Promise<void> {
   const senderIsA = conversation.iGM_UserAId === senderId;
-  iGM_Db.run(
+  await iGM_Db.run(
     `UPDATE iGM_Conversations SET
        iGM_LastMessageId = ?, iGM_UpdatedAt = ?,
        iGM_DeletedByA = ?, iGM_DeletedByB = ?
@@ -150,19 +155,19 @@ export function iGM_TouchConversationWithMessage(
 }
 
 /** 标记某一方已删除会话（仅对该方隐藏） */
-export function iGM_MarkConversationDeleted(
+export async function iGM_MarkConversationDeleted(
   conversationId: string,
   userId: string,
-): boolean {
-  const conversation = iGM_FindConversationById(conversationId);
+): Promise<boolean> {
+  const conversation = await iGM_FindConversationById(conversationId);
   if (!conversation) return false;
   if (conversation.iGM_UserAId === userId) {
-    iGM_Db.run(
+    await iGM_Db.run(
       `UPDATE iGM_Conversations SET iGM_DeletedByA = 1 WHERE iGM_Id = ?`,
       [conversationId],
     );
   } else if (conversation.iGM_UserBId === userId) {
-    iGM_Db.run(
+    await iGM_Db.run(
       `UPDATE iGM_Conversations SET iGM_DeletedByB = 1 WHERE iGM_Id = ?`,
       [conversationId],
     );
@@ -185,12 +190,12 @@ export function iGM_IsConversationHiddenFor(
 /* ---------- 消息 ---------- */
 
 /** 写入消息（默认未读、未撤回） */
-export function iGM_CreateMessage(
+export async function iGM_CreateMessage(
   conversationId: string,
   senderId: string,
   content: string,
   now: string,
-): iGM_MessageRow {
+): Promise<iGM_MessageRow> {
   const row: iGM_MessageRow = {
     iGM_Id: iGM_RandomUuid(),
     iGM_ConversationId: conversationId,
@@ -201,7 +206,7 @@ export function iGM_CreateMessage(
     iGM_IsRecalled: 0,
     iGM_CreatedAt: now,
   };
-  iGM_Db.run(
+  await iGM_Db.run(
     `INSERT INTO iGM_Messages
        (iGM_Id, iGM_ConversationId, iGM_SenderId, iGM_Content, iGM_Type,
         iGM_IsRead, iGM_IsRecalled, iGM_CreatedAt)
@@ -221,34 +226,38 @@ export function iGM_CreateMessage(
 }
 
 /** 按主键查询消息 */
-export function iGM_FindMessageById(id: string): iGM_MessageRow | null {
+export async function iGM_FindMessageById(
+  id: string,
+): Promise<iGM_MessageRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(`SELECT * FROM iGM_Messages WHERE iGM_Id = ?`)
-      .get(id) as iGM_MessageRow | undefined) ?? null
+      .get(id)) as iGM_MessageRow | undefined) ?? null
   );
 }
 
 /** 会话全部消息（按时间正序） */
-export function iGM_ListMessages(conversationId: string): iGM_MessageRow[] {
-  return iGM_Db
+export async function iGM_ListMessages(
+  conversationId: string,
+): Promise<iGM_MessageRow[]> {
+  return (await iGM_Db
     .query(
       `SELECT * FROM iGM_Messages
         WHERE iGM_ConversationId = ?
         ORDER BY iGM_CreatedAt ASC, iGM_Id ASC`,
     )
-    .all(conversationId) as iGM_MessageRow[];
+    .all(conversationId)) as iGM_MessageRow[];
 }
 
 /**
  * 标记会话中对方发来的消息为已读（读者自己发的不动）。
  * 返回受影响行数。
  */
-export function iGM_MarkConversationReadBy(
+export async function iGM_MarkConversationReadBy(
   conversationId: string,
   readerId: string,
-): number {
-  const result = iGM_Db.run(
+): Promise<number> {
+  const result = await iGM_Db.run(
     `UPDATE iGM_Messages SET iGM_IsRead = 1
       WHERE iGM_ConversationId = ? AND iGM_SenderId != ? AND iGM_IsRead = 0`,
     [conversationId, readerId],
@@ -257,25 +266,25 @@ export function iGM_MarkConversationReadBy(
 }
 
 /** 会话内某读者的未读数（对方发送且未读） */
-export function iGM_CountConversationUnread(
+export async function iGM_CountConversationUnread(
   conversationId: string,
   readerId: string,
-): number {
+): Promise<number> {
   return (
-    iGM_Db
+    (await iGM_Db
       .query(
         `SELECT COUNT(*) AS iGM_Count FROM iGM_Messages
           WHERE iGM_ConversationId = ? AND iGM_SenderId != ?
             AND iGM_IsRead = 0 AND iGM_IsRecalled = 0`,
       )
-      .get(conversationId, readerId) as { iGM_Count: number }
+      .get(conversationId, readerId)) as { iGM_Count: number }
   ).iGM_Count;
 }
 
 /** 用户全部未读消息数（跨会话，且会话对用户未删除） */
-export function iGM_CountAllUnread(userId: string): number {
+export async function iGM_CountAllUnread(userId: string): Promise<number> {
   return (
-    iGM_Db
+    (await iGM_Db
       .query(
         `SELECT COUNT(*) AS iGM_Count FROM iGM_Messages m
            JOIN iGM_Conversations c ON c.iGM_Id = m.iGM_ConversationId
@@ -284,13 +293,13 @@ export function iGM_CountAllUnread(userId: string): number {
             AND (CASE WHEN c.iGM_UserAId = ? THEN c.iGM_DeletedByA
                       ELSE c.iGM_DeletedByB END) = 0`,
       )
-      .get(userId, userId, userId, userId) as { iGM_Count: number }
+      .get(userId, userId, userId, userId)) as { iGM_Count: number }
   ).iGM_Count;
 }
 
 /** 撤回消息：仅设置撤回标记，行保留以维持会话记录；返回是否有行更新 */
-export function iGM_RecallMessage(id: string): boolean {
-  const result = iGM_Db.run(
+export async function iGM_RecallMessage(id: string): Promise<boolean> {
+  const result = await iGM_Db.run(
     `UPDATE iGM_Messages SET iGM_IsRecalled = 1, iGM_Content = ''
       WHERE iGM_Id = ? AND iGM_IsRecalled = 0`,
     [id],
@@ -301,25 +310,25 @@ export function iGM_RecallMessage(id: string): boolean {
 /* ---------- 隐私设置 ---------- */
 
 /** 读取用户私信设置；未设置时返回 null（服务层按默认 everyone） */
-export function iGM_GetMessageSettings(
+export async function iGM_GetMessageSettings(
   userId: string,
-): iGM_MessageSettingsRow | null {
+): Promise<iGM_MessageSettingsRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(`SELECT * FROM iGM_MessageSettings WHERE iGM_UserId = ?`)
-      .get(userId) as iGM_MessageSettingsRow | undefined) ?? null
+      .get(userId)) as iGM_MessageSettingsRow | undefined) ?? null
   );
 }
 
 /** 更新或创建私信隐私设置（幂等 upsert） */
-export function iGM_UpsertMessageSettings(
+export async function iGM_UpsertMessageSettings(
   userId: string,
   allowFrom: iGM_MessageAllowFrom,
   now: string,
-): iGM_MessageSettingsRow {
-  const existing = iGM_GetMessageSettings(userId);
+): Promise<iGM_MessageSettingsRow> {
+  const existing = await iGM_GetMessageSettings(userId);
   if (existing) {
-    iGM_Db.run(
+    await iGM_Db.run(
       `UPDATE iGM_MessageSettings SET iGM_AllowFrom = ?, iGM_UpdatedAt = ?
         WHERE iGM_Id = ?`,
       [allowFrom, now, existing.iGM_Id],
@@ -332,7 +341,7 @@ export function iGM_UpsertMessageSettings(
     iGM_AllowFrom: allowFrom,
     iGM_UpdatedAt: now,
   };
-  iGM_Db.run(
+  await iGM_Db.run(
     `INSERT INTO iGM_MessageSettings
        (iGM_Id, iGM_UserId, iGM_AllowFrom, iGM_UpdatedAt)
      VALUES (?, ?, ?, ?)`,

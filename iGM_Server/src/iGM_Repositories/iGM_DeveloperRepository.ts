@@ -22,7 +22,7 @@ import type {
 
 // 核心逻辑 //
 /** 写入一条开发者申请（初始状态 pending，apiKey 为空） */
-export function iGM_InsertDeveloperApplication(params: {
+export async function iGM_InsertDeveloperApplication(params: {
   userId: string;
   projectName: string;
   projectType: string;
@@ -32,7 +32,7 @@ export function iGM_InsertDeveloperApplication(params: {
   expectedQuota: string | null;
   reason: string;
   now: string;
-}): iGM_DeveloperApplicationRow {
+}): Promise<iGM_DeveloperApplicationRow> {
   const row: iGM_DeveloperApplicationRow = {
     iGM_Id: randomUUID(),
     iGM_UserId: params.userId,
@@ -50,7 +50,7 @@ export function iGM_InsertDeveloperApplication(params: {
     iGM_CreatedAt: params.now,
     iGM_UpdatedAt: params.now,
   };
-  iGM_Db.run(
+  await iGM_Db.run(
     `INSERT INTO iGM_DeveloperApplications
        (iGM_Id, iGM_UserId, iGM_ProjectName, iGM_ProjectType, iGM_ProjectDesc,
         iGM_ProjectUrl, iGM_Contact, iGM_ExpectedQuota, iGM_Reason, iGM_Status,
@@ -79,70 +79,70 @@ export function iGM_InsertDeveloperApplication(params: {
 }
 
 /** 用户最近一条开发者申请（不存在返回 null） */
-export function iGM_FindLatestDeveloperApplicationByUser(
+export async function iGM_FindLatestDeveloperApplicationByUser(
   userId: string,
-): iGM_DeveloperApplicationRow | null {
+): Promise<iGM_DeveloperApplicationRow | null> {
   return (
-    (iGM_Db.query(
+    ((await iGM_Db.query(
       `SELECT * FROM iGM_DeveloperApplications
        WHERE iGM_UserId = ? ORDER BY iGM_CreatedAt DESC LIMIT 1`,
-    ).get(userId) as iGM_DeveloperApplicationRow | undefined) ?? null
+    ).get(userId)) as iGM_DeveloperApplicationRow | undefined) ?? null
   );
 }
 
 /** 用户全部开发者申请记录（按时间倒序） */
-export function iGM_ListDeveloperApplicationsByUser(
+export async function iGM_ListDeveloperApplicationsByUser(
   userId: string,
-): iGM_DeveloperApplicationRow[] {
-  return iGM_Db.query(
+): Promise<iGM_DeveloperApplicationRow[]> {
+  return (await iGM_Db.query(
     `SELECT * FROM iGM_DeveloperApplications
      WHERE iGM_UserId = ? ORDER BY iGM_CreatedAt DESC`,
-  ).all(userId) as iGM_DeveloperApplicationRow[];
+  ).all(userId)) as iGM_DeveloperApplicationRow[];
 }
 
 /** 按主键查询开发者申请 */
-export function iGM_FindDeveloperApplicationById(
+export async function iGM_FindDeveloperApplicationById(
   id: string,
-): iGM_DeveloperApplicationRow | null {
+): Promise<iGM_DeveloperApplicationRow | null> {
   return (
-    (iGM_Db.query(`SELECT * FROM iGM_DeveloperApplications WHERE iGM_Id = ?`)
-      .get(id) as iGM_DeveloperApplicationRow | undefined) ?? null
+    ((await iGM_Db.query(`SELECT * FROM iGM_DeveloperApplications WHERE iGM_Id = ?`)
+      .get(id)) as iGM_DeveloperApplicationRow | undefined) ?? null
   );
 }
 
 /** 管理端分页查询开发者申请（可按状态筛选，连申请人用户名与昵称） */
-export function iGM_ListDeveloperApplicationsForAdmin(params: {
+export async function iGM_ListDeveloperApplicationsForAdmin(params: {
   status: string | null;
   limit: number;
   offset: number;
-}): { items: iGM_DeveloperApplicationAdminRow[]; total: number } {
+}): Promise<{ items: iGM_DeveloperApplicationAdminRow[]; total: number }> {
   const where = params.status ? `WHERE d.iGM_Status = ?` : "";
   const args: Array<string | number> = params.status ? [params.status] : [];
   const total = (
-    iGM_Db.query(
+    (await iGM_Db.query(
       `SELECT COUNT(*) AS total FROM iGM_DeveloperApplications d ${where}`,
-    ).get(...args) as { total: number }
+    ).get(...args)) as { total: number }
   ).total;
-  const items = iGM_Db.query(
+  const items = (await iGM_Db.query(
     `SELECT d.*, u.iGM_Username, u.iGM_DisplayName
      FROM iGM_DeveloperApplications d
      JOIN iGM_Users u ON u.iGM_Id = d.iGM_UserId
      ${where}
      ORDER BY d.iGM_CreatedAt DESC
      LIMIT ? OFFSET ?`,
-  ).all(...args, params.limit, params.offset) as iGM_DeveloperApplicationAdminRow[];
+  ).all(...args, params.limit, params.offset)) as iGM_DeveloperApplicationAdminRow[];
   return { items, total };
 }
 
 /** 审核开发者申请：仅待审核（pending）可被审核，写入审核人、意见与时间 */
-export function iGM_ReviewDeveloperApplication(params: {
+export async function iGM_ReviewDeveloperApplication(params: {
   id: string;
   status: string;
   reviewerId: string;
   reviewComment: string | null;
   now: string;
-}): boolean {
-  const result = iGM_Db.run(
+}): Promise<boolean> {
+  const result = await iGM_Db.run(
     `UPDATE iGM_DeveloperApplications
      SET iGM_Status = ?, iGM_ReviewerId = ?, iGM_ReviewComment = ?, iGM_UpdatedAt = ?
      WHERE iGM_Id = ? AND iGM_Status = 'pending'`,
@@ -158,12 +158,12 @@ export function iGM_ReviewDeveloperApplication(params: {
 }
 
 /** 撤回本人待审核申请：仅 pending 且属于本人时可撤回 */
-export function iGM_WithdrawDeveloperApplication(params: {
+export async function iGM_WithdrawDeveloperApplication(params: {
   id: string;
   userId: string;
   now: string;
-}): boolean {
-  const result = iGM_Db.run(
+}): Promise<boolean> {
+  const result = await iGM_Db.run(
     `UPDATE iGM_DeveloperApplications
      SET iGM_Status = 'withdrawn', iGM_UpdatedAt = ?
      WHERE iGM_Id = ? AND iGM_UserId = ? AND iGM_Status = 'pending'`,

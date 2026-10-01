@@ -191,10 +191,14 @@ function iGM_TaskCycleKey(taskType: string): string {
  * 解析用户当前生效等级：按积分升序累进，
  * 遇到需考核但未通过的等级即停止（模块十五考核门槛）
  */
-function iGM_ResolveLevel(userId: string, totalPoints: number): iGM_LevelRow | null {
-  const passed = new Set(iGM_ListPassedExamLevelIds(userId));
+async function iGM_ResolveLevel(
+  userId: string,
+  totalPoints: number,
+): Promise<iGM_LevelRow | null> {
+  const passed = new Set(await iGM_ListPassedExamLevelIds(userId));
   let resolved: iGM_LevelRow | null = null;
-  for (const level of iGM_ListLevels()) {
+  const levels = await iGM_ListLevels();
+  for (const level of levels) {
     if (level.iGM_MinPoints > totalPoints) break;
     if (level.iGM_IsExamRequired === 1 && !passed.has(level.iGM_Id)) break;
     resolved = level;
@@ -208,10 +212,16 @@ function iGM_ResolveLevel(userId: string, totalPoints: number): iGM_LevelRow | n
  * 记录任务进度：action 命中任务 +1（按周 / 季周期键自动重置）。
  * 模块十五起进度与奖励解耦，达标后由用户主动领取奖励
  */
-function iGM_RecordTaskProgress(userId: string, action: string, now: string): void {
-  const tasks = iGM_ListTasks().filter((task) => task.iGM_Action === action);
+async function iGM_RecordTaskProgress(
+  userId: string,
+  action: string,
+  now: string,
+): Promise<void> {
+  const tasks = (await iGM_ListTasks()).filter(
+    (task) => task.iGM_Action === action,
+  );
   for (const task of tasks) {
-    iGM_IncrementTaskProgress({
+    await iGM_IncrementTaskProgress({
       userId,
       taskId: task.iGM_Id,
       targetCount: task.iGM_TargetCount,
@@ -222,63 +232,67 @@ function iGM_RecordTaskProgress(userId: string, action: string, now: string): vo
 }
 
 /** 单个勋章条件的当前值统计口径 */
-function iGM_MeasureCondition(
+async function iGM_MeasureCondition(
   userId: string,
   conditionType: string,
-): number {
+): Promise<number> {
   switch (conditionType) {
     case "posts_count":
       return (
-        iGM_Db.query(
+        (await iGM_Db.query(
           `SELECT COUNT(*) AS total FROM iGM_Posts WHERE iGM_AuthorId = ?`,
-        ).get(userId) as { total: number }
+        ).get(userId)) as { total: number }
       ).total;
     case "comments_count":
       return (
-        iGM_Db.query(
+        (await iGM_Db.query(
           `SELECT COUNT(*) AS total FROM iGM_Comments WHERE iGM_AuthorId = ?`,
-        ).get(userId) as { total: number }
+        ).get(userId)) as { total: number }
       ).total;
     case "resources_count":
       return (
-        iGM_Db.query(
+        (await iGM_Db.query(
           `SELECT COUNT(*) AS total FROM iGM_Resources WHERE iGM_UploaderId = ?`,
-        ).get(userId) as { total: number }
+        ).get(userId)) as { total: number }
       ).total;
     case "checkin_days":
-      return iGM_CountCheckinDays(userId);
+      return await iGM_CountCheckinDays(userId);
     case "likes_received": {
       // 帖子被赞 + 评论被赞（本人内容收到的点赞总数）
-      const posts = iGM_Db.query(
+      const posts = (await iGM_Db.query(
         `SELECT COUNT(*) AS total FROM iGM_Likes l
          JOIN iGM_Posts p ON p.iGM_Id = l.iGM_TargetId AND l.iGM_TargetType = 'post'
          WHERE p.iGM_AuthorId = ?`,
-      ).get(userId) as { total: number };
-      const comments = iGM_Db.query(
+      ).get(userId)) as { total: number };
+      const comments = (await iGM_Db.query(
         `SELECT COUNT(*) AS total FROM iGM_Likes l
          JOIN iGM_Comments c ON c.iGM_Id = l.iGM_TargetId AND l.iGM_TargetType = 'comment'
          WHERE c.iGM_AuthorId = ?`,
-      ).get(userId) as { total: number };
+      ).get(userId)) as { total: number };
       return posts.total + comments.total;
     }
     case "points_total":
-      return iGM_FindUserPoints(userId)?.iGM_TotalPoints ?? 0;
+      return (await iGM_FindUserPoints(userId))?.iGM_TotalPoints ?? 0;
     case "seasonal_tasks":
-      return iGM_CountCompletedTasksByType(userId, "seasonal");
+      return await iGM_CountCompletedTasksByType(userId, "seasonal");
     case "exams_passed":
-      return iGM_CountPassedExams(userId);
+      return await iGM_CountPassedExams(userId);
     default:
       return 0;
   }
 }
 
 /** 评估并授予达标勋章，返回本次新获得的勋章行（传说 / 人工授予勋章跳过） */
-function iGM_EvaluateBadges(userId: string, now: string): iGM_BadgeRow[] {
+async function iGM_EvaluateBadges(
+  userId: string,
+  now: string,
+): Promise<iGM_BadgeRow[]> {
   const grantedRows: iGM_BadgeRow[] = [];
   const owned = new Set(
-    iGM_ListUserBadges(userId).map((row) => row.iGM_BadgeId),
+    (await iGM_ListUserBadges(userId)).map((row) => row.iGM_BadgeId),
   );
-  for (const badge of iGM_ListBadges()) {
+  const badges = await iGM_ListBadges();
+  for (const badge of badges) {
     if (owned.has(badge.iGM_Id)) continue;
     // 传说勋章与人工授予条件：系统不自动发放，仅管理员手动授予
     if (
@@ -287,9 +301,9 @@ function iGM_EvaluateBadges(userId: string, now: string): iGM_BadgeRow[] {
     ) {
       continue;
     }
-    const value = iGM_MeasureCondition(userId, badge.iGM_ConditionType);
+    const value = await iGM_MeasureCondition(userId, badge.iGM_ConditionType);
     if (value >= badge.iGM_ConditionValue) {
-      if (iGM_GrantBadge(userId, badge.iGM_Id, now)) {
+      if (await iGM_GrantBadge(userId, badge.iGM_Id, now)) {
         grantedRows.push(badge);
       }
     }
@@ -304,41 +318,41 @@ function iGM_EvaluateBadges(userId: string, now: string): iGM_BadgeRow[] {
  * 防刷分：同一动作当日达到上限后仅记任务进度、不再发分
  * 返回发放结果摘要；未发分时 points 为 0
  */
-export function iGM_AwardPoints(
+export async function iGM_AwardPoints(
   userId: string,
   action: string,
   description?: string | null,
-): { awarded: boolean; points: number; totalPoints: number } {
+): Promise<{ awarded: boolean; points: number; totalPoints: number }> {
   try {
     const rule = iGM_PointActions[action];
     const now = new Date().toISOString();
-    const total = iGM_Db.transaction(() => {
+    const total = await iGM_Db.transaction(async () => {
       // 1. 任务进度始终记录（模块十五：无积分动作同样推进任务进度）
-      iGM_RecordTaskProgress(userId, action, now);
+      await iGM_RecordTaskProgress(userId, action, now);
 
       // 2. 无对应发分规则的动作（发帖 / 评论 / 点赞）仅推进任务，不发分
       let awarded = false;
       let points = 0;
       if (rule) {
         const dayStart = `${iGM_TodayDate()}T00:00:00.000+08:00`;
-        const usedToday = iGM_CountRecordsSince(userId, action, dayStart);
+        const usedToday = await iGM_CountRecordsSince(userId, action, dayStart);
         if (usedToday < rule.dailyCap) {
           points = rule.points;
-          iGM_InsertPointsRecord({ userId, points, action, description, now });
+          await iGM_InsertPointsRecord({ userId, points, action, description, now });
           awarded = true;
         }
       }
 
       // 3. 汇总总分并重算等级（第 8/9/10 级需考核通过方可生效）
-      const row = iGM_UpsertUserPoints(userId, points, null, now);
-      const level = iGM_ResolveLevel(userId, row.iGM_TotalPoints);
+      const row = await iGM_UpsertUserPoints(userId, points, null, now);
+      const level = await iGM_ResolveLevel(userId, row.iGM_TotalPoints);
       const finalRow =
         level && level.iGM_Id !== row.iGM_LevelId
-          ? iGM_UpsertUserPoints(userId, 0, level.iGM_Id, now)
+          ? await iGM_UpsertUserPoints(userId, 0, level.iGM_Id, now)
           : row;
 
       // 4. 勋章评估（积分总数类勋章依赖最新总分）
-      iGM_EvaluateBadges(userId, now);
+      await iGM_EvaluateBadges(userId, now);
 
       return { awarded, points, totalPoints: finalRow.iGM_TotalPoints };
     })();
@@ -350,21 +364,21 @@ export function iGM_AwardPoints(
 }
 
 /** 签到动作专用发分（指定分值，绕过动作规则表） */
-function iGM_AwardCheckinPoints(
+async function iGM_AwardCheckinPoints(
   userId: string,
   points: number,
   description: string,
   now: string,
-): number {
-  iGM_InsertPointsRecord({ userId, points, action: "checkin", description, now });
-  const row = iGM_UpsertUserPoints(userId, points, null, now);
-  const level = iGM_ResolveLevel(userId, row.iGM_TotalPoints);
+): Promise<number> {
+  await iGM_InsertPointsRecord({ userId, points, action: "checkin", description, now });
+  const row = await iGM_UpsertUserPoints(userId, points, null, now);
+  const level = await iGM_ResolveLevel(userId, row.iGM_TotalPoints);
   if (level && level.iGM_Id !== row.iGM_LevelId) {
-    iGM_UpsertUserPoints(userId, 0, level.iGM_Id, now);
+    await iGM_UpsertUserPoints(userId, 0, level.iGM_Id, now);
   }
-  iGM_RecordTaskProgress(userId, "checkin", now);
-  iGM_EvaluateBadges(userId, now);
-  return iGM_FindUserPoints(userId)?.iGM_TotalPoints ?? points;
+  await iGM_RecordTaskProgress(userId, "checkin", now);
+  await iGM_EvaluateBadges(userId, now);
+  return (await iGM_FindUserPoints(userId))?.iGM_TotalPoints ?? points;
 }
 
 /* ---------- 日期工具 ---------- */
@@ -377,12 +391,12 @@ function iGM_TodayDate(): string {
 }
 
 /** 计算连续签到天数：昨日有签到则 +1，否则从 1 开始 */
-function iGM_NextContinuousDays(userId: string): number {
+async function iGM_NextContinuousDays(userId: string): Promise<number> {
   const today = iGM_TodayDate();
   const yesterday = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Shanghai",
   }).format(new Date(Date.now() - 24 * 60 * 60 * 1000));
-  const latest = iGM_FindLatestCheckin(userId);
+  const latest = await iGM_FindLatestCheckin(userId);
   if (latest && latest.iGM_CheckinDate === yesterday) {
     return latest.iGM_ContinuousDays + 1;
   }
@@ -395,10 +409,10 @@ function iGM_NextContinuousDays(userId: string): number {
 /* ---------- 查询服务 ---------- */
 
 /** 我的积分概览：总分、当前等级与下一等级 */
-export function iGM_GetMyPointsService(userId: string): iGM_MyPointsDto {
-  const totalPoints = iGM_FindUserPoints(userId)?.iGM_TotalPoints ?? 0;
-  const levels = iGM_ListLevels();
-  const level = iGM_ResolveLevel(userId, totalPoints);
+export async function iGM_GetMyPointsService(userId: string): Promise<iGM_MyPointsDto> {
+  const totalPoints = (await iGM_FindUserPoints(userId))?.iGM_TotalPoints ?? 0;
+  const levels = await iGM_ListLevels();
+  const level = await iGM_ResolveLevel(userId, totalPoints);
   // 下一等级取当前生效等级的下一档（考核未通过的等级仍作为目标展示）
   const nextLevel = level
     ? levels.find((item) => item.iGM_SortOrder > level.iGM_SortOrder) ?? null
@@ -416,10 +430,12 @@ export function iGM_GetMyPointsService(userId: string): iGM_MyPointsDto {
 /* ---------- 等级考核 ---------- */
 
 /** 升级进度：积分、目标等级、考核状态与是否可升级 */
-export function iGM_GetLevelProgressService(userId: string): iGM_LevelProgressDto {
-  const totalPoints = iGM_FindUserPoints(userId)?.iGM_TotalPoints ?? 0;
-  const levels = iGM_ListLevels();
-  const level = iGM_ResolveLevel(userId, totalPoints);
+export async function iGM_GetLevelProgressService(
+  userId: string,
+): Promise<iGM_LevelProgressDto> {
+  const totalPoints = (await iGM_FindUserPoints(userId))?.iGM_TotalPoints ?? 0;
+  const levels = await iGM_ListLevels();
+  const level = await iGM_ResolveLevel(userId, totalPoints);
   const nextLevel = level
     ? levels.find((item) => item.iGM_SortOrder > level.iGM_SortOrder) ?? null
     : levels[0] ?? null;
@@ -440,7 +456,7 @@ export function iGM_GetLevelProgressService(userId: string): iGM_LevelProgressDt
   const pointsReached = totalPoints >= nextLevel.iGM_MinPoints;
   const examRequired = nextLevel.iGM_IsExamRequired === 1;
   const exam = examRequired
-    ? iGM_FindLatestExamByLevel(userId, nextLevel.iGM_Id)
+    ? await iGM_FindLatestExamByLevel(userId, nextLevel.iGM_Id)
     : null;
   const examStatus = exam ? exam.iGM_Status : "none";
   return {
@@ -456,9 +472,13 @@ export function iGM_GetLevelProgressService(userId: string): iGM_LevelProgressDt
 }
 
 /** 我的考核记录（含等级名） */
-export function iGM_GetMyExamsService(userId: string): iGM_LevelExamDto[] {
-  const nameMap = new Map(iGM_ListLevels().map((row) => [row.iGM_Id, row.iGM_Name]));
-  return iGM_ListExamsByUser(userId).map((row) =>
+export async function iGM_GetMyExamsService(
+  userId: string,
+): Promise<iGM_LevelExamDto[]> {
+  const nameMap = new Map(
+    (await iGM_ListLevels()).map((row) => [row.iGM_Id, row.iGM_Name]),
+  );
+  return (await iGM_ListExamsByUser(userId)).map((row) =>
     iGM_ToExamDto(row, nameMap.get(row.iGM_LevelId) ?? null),
   );
 }
@@ -467,27 +487,27 @@ export function iGM_GetMyExamsService(userId: string): iGM_LevelExamDto[] {
  * 提交等级考核申请：仅需考核且积分已达标的等级可申请，
  * 已有待审核申请时不可重复提交（未通过可再次申请）
  */
-export function iGM_SubmitLevelExamService(
+export async function iGM_SubmitLevelExamService(
   userId: string,
   levelId: string,
   content: string | null,
-): iGM_LevelExamDto {
-  const user = iGM_FindUserById(userId);
+): Promise<iGM_LevelExamDto> {
+  const user = await iGM_FindUserById(userId);
   if (!user || user.iGM_Status !== "active") {
     throw new iGM_PointsError("auth.errors.unauthorized", 401);
   }
-  const level = iGM_ListLevels().find((item) => item.iGM_Id === levelId);
+  const level = (await iGM_ListLevels()).find((item) => item.iGM_Id === levelId);
   if (!level) {
     throw new iGM_PointsError("levels.errors.levelNotFound", 404);
   }
   if (level.iGM_IsExamRequired !== 1) {
     throw new iGM_PointsError("levels.errors.examNotRequired", 409);
   }
-  const totalPoints = iGM_FindUserPoints(userId)?.iGM_TotalPoints ?? 0;
+  const totalPoints = (await iGM_FindUserPoints(userId))?.iGM_TotalPoints ?? 0;
   if (totalPoints < level.iGM_MinPoints) {
     throw new iGM_PointsError("levels.errors.pointsNotReached", 409);
   }
-  const latest = iGM_FindLatestExamByLevel(userId, levelId);
+  const latest = await iGM_FindLatestExamByLevel(userId, levelId);
   if (latest && latest.iGM_Status === "pending") {
     throw new iGM_PointsError("levels.errors.examPending", 409);
   }
@@ -495,7 +515,7 @@ export function iGM_SubmitLevelExamService(
     throw new iGM_PointsError("levels.errors.examApproved", 409);
   }
 
-  const row = iGM_InsertLevelExam({
+  const row = await iGM_InsertLevelExam({
     userId,
     levelId,
     content,
@@ -505,23 +525,23 @@ export function iGM_SubmitLevelExamService(
 }
 
 /** 管理端：分页查询等级考核申请 */
-export function iGM_AdminListExamsService(
+export async function iGM_AdminListExamsService(
   status: string | null,
   pageRaw?: number,
   pageSizeRaw?: number,
-): {
+): Promise<{
   items: Array<iGM_LevelExamDto & { userId: string; username: string; displayName: string | null }>;
   total: number;
   page: number;
   pageSize: number;
   totalPages: number;
-} {
+}> {
   const page = Number.isFinite(pageRaw) && (pageRaw as number) >= 1 ? Math.floor(pageRaw as number) : 1;
   const pageSize =
     Number.isFinite(pageSizeRaw) && (pageSizeRaw as number) >= 1 && (pageSizeRaw as number) <= 50
       ? Math.floor(pageSizeRaw as number)
       : 10;
-  const { items, total } = iGM_ListExamsForAdmin({
+  const { items, total } = await iGM_ListExamsForAdmin({
     status: status && status.length > 0 ? status : null,
     limit: pageSize,
     offset: (page - 1) * pageSize,
@@ -544,13 +564,13 @@ export function iGM_AdminListExamsService(
  * 管理端：审核等级考核申请。
  * 通过时推进「季度考核」任务进度、重新评估勋章并按考核门槛重算等级
  */
-export function iGM_ReviewExamService(
+export async function iGM_ReviewExamService(
   reviewerId: string,
   examId: string,
   action: "approve" | "reject",
   note: string | null,
-): void {
-  const exam = iGM_FindExamById(examId);
+): Promise<void> {
+  const exam = await iGM_FindExamById(examId);
   if (!exam) {
     throw new iGM_PointsError("levels.errors.examNotFound", 404);
   }
@@ -558,7 +578,7 @@ export function iGM_ReviewExamService(
     throw new iGM_PointsError("levels.errors.examReviewed", 409);
   }
   const now = new Date().toISOString();
-  const ok = iGM_ReviewExam({
+  const ok = await iGM_ReviewExam({
     examId,
     status: action === "approve" ? "approved" : "rejected",
     reviewerId,
@@ -571,25 +591,25 @@ export function iGM_ReviewExamService(
   if (action !== "approve") return;
 
   const userId = exam.iGM_UserId;
-  const totalPoints = iGM_FindUserPoints(userId)?.iGM_TotalPoints ?? 0;
-  iGM_RecordTaskProgress(userId, "exam_pass", now);
-  iGM_EvaluateBadges(userId, now);
-  const level = iGM_ResolveLevel(userId, totalPoints);
-  iGM_UpsertUserPoints(userId, 0, level?.iGM_Id ?? null, now);
+  const totalPoints = (await iGM_FindUserPoints(userId))?.iGM_TotalPoints ?? 0;
+  await iGM_RecordTaskProgress(userId, "exam_pass", now);
+  await iGM_EvaluateBadges(userId, now);
+  const level = await iGM_ResolveLevel(userId, totalPoints);
+  await iGM_UpsertUserPoints(userId, 0, level?.iGM_Id ?? null, now);
 }
 
 /** 我的积分流水分页 */
-export function iGM_ListMyRecordsService(
+export async function iGM_ListMyRecordsService(
   userId: string,
   pageRaw?: number,
   pageSizeRaw?: number,
-): { items: iGM_PointsRecordDto[]; total: number; page: number; pageSize: number; totalPages: number } {
+): Promise<{ items: iGM_PointsRecordDto[]; total: number; page: number; pageSize: number; totalPages: number }> {
   const page = Number.isFinite(pageRaw) && (pageRaw as number) >= 1 ? Math.floor(pageRaw as number) : 1;
   const pageSize =
     Number.isFinite(pageSizeRaw) && (pageSizeRaw as number) >= 1 && (pageSizeRaw as number) <= 50
       ? Math.floor(pageSizeRaw as number)
       : 10;
-  const { items, total } = iGM_ListRecordsByUser(userId, page, pageSize);
+  const { items, total } = await iGM_ListRecordsByUser(userId, page, pageSize);
   return {
     items: items.map((row) => ({
       id: row.iGM_Id,
@@ -606,21 +626,21 @@ export function iGM_ListMyRecordsService(
 }
 
 /** 等级规则列表 */
-export function iGM_GetLevelRulesService(): iGM_LevelDto[] {
-  return iGM_ListLevels().map(iGM_ToLevelDto);
+export async function iGM_GetLevelRulesService(): Promise<iGM_LevelDto[]> {
+  return (await iGM_ListLevels()).map(iGM_ToLevelDto);
 }
 
 /** 勋章列表（含我的获得状态；rarity 可选按稀有度筛选） */
-export function iGM_GetBadgesService(
+export async function iGM_GetBadgesService(
   userId: string | null,
   rarity?: string | null,
-): iGM_BadgeDto[] {
+): Promise<iGM_BadgeDto[]> {
   const grantedMap = new Map(
     userId
-      ? iGM_ListUserBadges(userId).map((row) => [row.iGM_BadgeId, row.iGM_GrantedAt])
+      ? (await iGM_ListUserBadges(userId)).map((row) => [row.iGM_BadgeId, row.iGM_GrantedAt])
       : [],
   );
-  const rows = iGM_ListBadges();
+  const rows = await iGM_ListBadges();
   const filtered =
     rarity && rarity.length > 0
       ? rows.filter((badge) => badge.iGM_Rarity === rarity)
@@ -631,13 +651,13 @@ export function iGM_GetBadgesService(
 }
 
 /** 任务列表与我的进度（含赛季与领取状态，按每周 / 每季分组展示） */
-export function iGM_GetTasksService(userId: string | null): iGM_TaskDto[] {
+export async function iGM_GetTasksService(userId: string | null): Promise<iGM_TaskDto[]> {
   const progressMap = new Map(
     userId
-      ? iGM_ListUserTasks(userId).map((row) => [row.iGM_TaskId, row])
+      ? (await iGM_ListUserTasks(userId)).map((row) => [row.iGM_TaskId, row])
       : [],
   );
-  return iGM_ListTasks().map((task) => {
+  return (await iGM_ListTasks()).map((task) => {
     const progress = progressMap.get(task.iGM_Id);
     // 周期变更后旧进度视为失效（展示为未开始）
     const cycleKey = iGM_TaskCycleKey(task.iGM_TaskType);
@@ -664,19 +684,19 @@ export function iGM_GetTasksService(userId: string | null): iGM_TaskDto[] {
  * 领取任务奖励：仅当前周期内已完成且未领取的任务可领取；
  * 发分后重算等级并评估勋章（传说勋章不自动发放）
  */
-export function iGM_ClaimTaskRewardService(
+export async function iGM_ClaimTaskRewardService(
   userId: string,
   taskId: string,
-): iGM_TaskClaimResultDto {
-  const user = iGM_FindUserById(userId);
+): Promise<iGM_TaskClaimResultDto> {
+  const user = await iGM_FindUserById(userId);
   if (!user || user.iGM_Status !== "active") {
     throw new iGM_PointsError("auth.errors.unauthorized", 401);
   }
-  const task = iGM_ListTasks().find((item) => item.iGM_Id === taskId);
+  const task = (await iGM_ListTasks()).find((item) => item.iGM_Id === taskId);
   if (!task) {
     throw new iGM_PointsError("tasks.errors.taskNotFound", 404);
   }
-  const progress = iGM_FindUserTask(userId, taskId);
+  const progress = await iGM_FindUserTask(userId, taskId);
   const cycleKey = iGM_TaskCycleKey(task.iGM_TaskType);
   if (
     !progress ||
@@ -689,13 +709,13 @@ export function iGM_ClaimTaskRewardService(
     throw new iGM_PointsError("tasks.errors.alreadyClaimed", 409);
   }
 
-  const beforeLevelId = iGM_FindUserPoints(userId)?.iGM_LevelId ?? null;
+  const beforeLevelId = (await iGM_FindUserPoints(userId))?.iGM_LevelId ?? null;
   const now = new Date().toISOString();
 
-  return iGM_Db.transaction(() => {
-    iGM_MarkTaskClaimed(userId, taskId, now);
+  return await iGM_Db.transaction(async () => {
+    await iGM_MarkTaskClaimed(userId, taskId, now);
     if (task.iGM_RewardPoints > 0) {
-      iGM_InsertPointsRecord({
+      await iGM_InsertPointsRecord({
         userId,
         points: task.iGM_RewardPoints,
         action: iGM_TaskRewardAction,
@@ -703,15 +723,15 @@ export function iGM_ClaimTaskRewardService(
         now,
       });
     }
-    const row = iGM_UpsertUserPoints(userId, task.iGM_RewardPoints, null, now);
-    const level = iGM_ResolveLevel(userId, row.iGM_TotalPoints);
+    const row = await iGM_UpsertUserPoints(userId, task.iGM_RewardPoints, null, now);
+    const level = await iGM_ResolveLevel(userId, row.iGM_TotalPoints);
     const finalRow =
       level && level.iGM_Id !== row.iGM_LevelId
-        ? iGM_UpsertUserPoints(userId, 0, level.iGM_Id, now)
+        ? await iGM_UpsertUserPoints(userId, 0, level.iGM_Id, now)
         : row;
 
     // 任务奖励同样可能触发「季度之光」等勋章，传说勋章由管理员人工授予
-    const newBadges = iGM_EvaluateBadges(userId, now);
+    const newBadges = await iGM_EvaluateBadges(userId, now);
 
     return {
       taskId,
@@ -728,21 +748,21 @@ export function iGM_ClaimTaskRewardService(
 }
 
 /** 排行榜：sort=total 按总分 / sort=weekly 按周增量 */
-export function iGM_GetLeaderboardService(
+export async function iGM_GetLeaderboardService(
   sort: string,
   limitRaw?: number,
-): iGM_LeaderboardEntryDto[] {
+): Promise<iGM_LeaderboardEntryDto[]> {
   const limit =
     Number.isFinite(limitRaw) && (limitRaw as number) >= 1 && (limitRaw as number) <= 50
       ? Math.floor(limitRaw as number)
       : 20;
   const rows =
     sort === "weekly"
-      ? iGM_ListLeaderboardByWeekly(
+      ? await iGM_ListLeaderboardByWeekly(
           new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
           limit,
         )
-      : iGM_ListLeaderboardByTotal(limit);
+      : await iGM_ListLeaderboardByTotal(limit);
   return rows.map((row, index) => ({
     rank: index + 1,
     userId: row.iGM_UserId,
@@ -759,10 +779,12 @@ export function iGM_GetLeaderboardService(
 /* ---------- 签到 ---------- */
 
 /** 签到状态：今日是否已签、连续天数、今日可得分数与本月签到日历 */
-export function iGM_GetCheckinStatusService(userId: string): iGM_CheckinStatusDto {
+export async function iGM_GetCheckinStatusService(
+  userId: string,
+): Promise<iGM_CheckinStatusDto> {
   const today = iGM_TodayDate();
-  const todayRow = iGM_FindCheckinByDate(userId, today);
-  const latest = iGM_FindLatestCheckin(userId);
+  const todayRow = await iGM_FindCheckinByDate(userId, today);
+  const latest = await iGM_FindLatestCheckin(userId);
   // 未签时连续天数按「若今日不签则保持的连续数」展示：
   // 昨日有签则取昨日连续数，否则为 0
   const continuousIfNotToday =
@@ -778,44 +800,44 @@ export function iGM_GetCheckinStatusService(userId: string): iGM_CheckinStatusDt
     todayPoints:
       iGM_CheckinBasePoints +
       Math.min(continuousIfNotToday, iGM_CheckinBonusMax),
-    monthDates: iGM_ListCheckinDatesOfMonth(userId, monthPrefix),
+    monthDates: await iGM_ListCheckinDatesOfMonth(userId, monthPrefix),
   };
 }
 
 /** 执行签到：唯一约束防重复，连续天数给额外奖励，返回签到结果与升级/新勋章 */
-export function iGM_CheckinService(userId: string): iGM_CheckinResultDto {
-  const user = iGM_FindUserById(userId);
+export async function iGM_CheckinService(userId: string): Promise<iGM_CheckinResultDto> {
+  const user = await iGM_FindUserById(userId);
   if (!user || user.iGM_Status !== "active") {
     throw new iGM_PointsError("auth.errors.unauthorized", 401);
   }
   const today = iGM_TodayDate();
-  if (iGM_FindCheckinByDate(userId, today)) {
+  if (await iGM_FindCheckinByDate(userId, today)) {
     throw new iGM_PointsError("points.errors.alreadyCheckedIn", 409);
   }
 
-  const beforeLevelId = iGM_FindUserPoints(userId)?.iGM_LevelId ?? null;
+  const beforeLevelId = (await iGM_FindUserPoints(userId))?.iGM_LevelId ?? null;
 
-  const continuousDays = iGM_NextContinuousDays(userId);
+  const continuousDays = await iGM_NextContinuousDays(userId);
   const pointsEarned =
     iGM_CheckinBasePoints + Math.min(continuousDays - 1, iGM_CheckinBonusMax);
 
-  const result = iGM_Db.transaction(() => {
-    iGM_InsertCheckin({
+  const result = await iGM_Db.transaction(async () => {
+    await iGM_InsertCheckin({
       userId,
       checkinDate: today,
       pointsEarned,
       continuousDays,
       now: new Date().toISOString(),
     });
-    const totalPoints = iGM_AwardCheckinPoints(
+    const totalPoints = await iGM_AwardCheckinPoints(
       userId,
       pointsEarned,
       `连续签到 ${continuousDays} 天`,
       new Date().toISOString(),
     );
-    const finalPoints = iGM_FindUserPoints(userId)?.iGM_TotalPoints ?? totalPoints;
-    const finalLevel = iGM_ResolveLevel(userId, finalPoints);
-    const newBadges = iGM_EvaluateBadges(userId, new Date().toISOString());
+    const finalPoints = (await iGM_FindUserPoints(userId))?.iGM_TotalPoints ?? totalPoints;
+    const finalLevel = await iGM_ResolveLevel(userId, finalPoints);
+    const newBadges = await iGM_EvaluateBadges(userId, new Date().toISOString());
     return { totalPoints: finalPoints, level: finalLevel, newBadges };
   })();
 

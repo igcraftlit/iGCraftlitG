@@ -96,11 +96,11 @@ function iGM_SameEmail(a: string | null | undefined, b: string): boolean {
 }
 
 /** 申请行转用户视角 DTO */
-function iGM_ToVerificationDto(
+async function iGM_ToVerificationDto(
   row: iGM_OrgVerificationRow,
   reviewerName?: string | null,
-): iGM_OrgVerificationDto {
-  const org = iGM_ResolveOrgBadge(row.iGM_OrgId);
+): Promise<iGM_OrgVerificationDto> {
+  const org = await iGM_ResolveOrgBadge(row.iGM_OrgId);
   return {
     id: row.iGM_Id,
     org: org ?? { id: row.iGM_OrgId, name: row.iGM_OrgId, slug: "" },
@@ -115,11 +115,11 @@ function iGM_ToVerificationDto(
 }
 
 /** 管理端列表行转 DTO */
-function iGM_ToAdminVerificationDto(
+async function iGM_ToAdminVerificationDto(
   row: iGM_AdminVerificationListRow,
-): iGM_AdminOrgVerificationDto {
+): Promise<iGM_AdminOrgVerificationDto> {
   return {
-    ...iGM_ToVerificationDto(row, row.iGM_ReviewerName),
+    ...(await iGM_ToVerificationDto(row, row.iGM_ReviewerName)),
     userId: row.iGM_UserId,
     username: row.iGM_Username,
     userDisplayName: row.iGM_UserDisplayName,
@@ -132,14 +132,14 @@ function iGM_ToAdminVerificationDto(
  * 发送组织认证邮件（异步、失败仅记录日志，不阻断主流程）
  * 邮件语言取接收用户控制台语言（无偏好记录时回退中文）
  */
-function iGM_NotifyByMail(params: {
+async function iGM_NotifyByMail(params: {
   userId: string;
   orgName: string;
   kind: "submitted" | "approved" | "rejected" | "left";
   comment?: string | null;
   locale: string;
-}): void {
-  const user = iGM_FindUserById(params.userId);
+}): Promise<void> {
+  const user = await iGM_FindUserById(params.userId);
   if (!user) return;
   void iGM_SendOrgVerifyMail({
     to: user.iGM_Email,
@@ -157,17 +157,17 @@ function iGM_NotifyByMail(params: {
 }
 
 /** admin 审核时同步通知对应组织负责人（审核人即负责人本人时不重复发送） */
-function iGM_NotifyOwnerByMail(params: {
+async function iGM_NotifyOwnerByMail(params: {
   ownerEmail: string | null | undefined;
   applicant: iGM_UserRow;
   orgName: string;
   kind: "approved" | "rejected";
   comment?: string | null;
-}): void {
+}): Promise<void> {
   const ownerEmail = params.ownerEmail?.trim();
   // 无负责人邮箱，或申请人/负责人同一邮箱时，不重复通知
   if (!ownerEmail || iGM_SameEmail(ownerEmail, params.applicant.iGM_Email)) return;
-  const owner = iGM_FindUserByEmail(ownerEmail);
+  const owner = await iGM_FindUserByEmail(ownerEmail);
   void iGM_SendOrgVerifyMail({
     to: ownerEmail,
     username: owner?.iGM_Username ?? ownerEmail,
@@ -186,21 +186,21 @@ function iGM_NotifyOwnerByMail(params: {
 /* ---------- 用户侧：组织 ---------- */
 
 /** 受信任组织列表（申请页卡片数据源） */
-export function iGM_ListTrustedOrgsService(): iGM_OrganizationDto[] {
-  return iGM_ListTrustedOrganizations().map(iGM_ToOrganizationDto);
+export async function iGM_ListTrustedOrgsService(): Promise<iGM_OrganizationDto[]> {
+  return (await iGM_ListTrustedOrganizations()).map(iGM_ToOrganizationDto);
 }
 
 /** 公开组织详情（G_OrgDetails，按 id 或 slug 查询） */
-export function iGM_GetOrganizationDetailService(input: {
+export async function iGM_GetOrganizationDetailService(input: {
   id?: string | null;
   slug?: string | null;
-}): iGM_OrganizationDto {
+}): Promise<iGM_OrganizationDto> {
   const id = input.id?.trim();
   const slug = input.slug?.trim();
   const row = id
-    ? iGM_FindOrganizationById(id)
+    ? await iGM_FindOrganizationById(id)
     : slug
-      ? iGM_FindOrganizationBySlug(slug)
+      ? await iGM_FindOrganizationBySlug(slug)
       : null;
   if (!row || row.iGM_IsTrusted !== 1) {
     throw new iGM_OrgVerifyError("orgVerify.errors.orgNotFound", 404);
@@ -209,11 +209,11 @@ export function iGM_GetOrganizationDetailService(input: {
 }
 
 /** 当前用户的组织详情（已认证用户，附负责人标记） */
-export function iGM_GetMyOrgService(user: iGM_UserRow): iGM_MyOrgDetailDto {
+export async function iGM_GetMyOrgService(user: iGM_UserRow): Promise<iGM_MyOrgDetailDto> {
   if (!user.iGM_VerifiedOrgId) {
     throw new iGM_OrgVerifyError("orgVerify.errors.notOrgMember", 409);
   }
-  const org = iGM_FindOrganizationById(user.iGM_VerifiedOrgId);
+  const org = await iGM_FindOrganizationById(user.iGM_VerifiedOrgId);
   if (!org) {
     throw new iGM_OrgVerifyError("orgVerify.errors.orgNotFound", 404);
   }
@@ -227,11 +227,11 @@ export function iGM_GetMyOrgService(user: iGM_UserRow): iGM_MyOrgDetailDto {
  * 负责人编辑“关于组织”内容
  * 规则：仅该组织负责人邮箱可编辑（admin 若即负责人同样放行）
  */
-export function iGM_UpdateOrgAboutService(
+export async function iGM_UpdateOrgAboutService(
   user: iGM_UserRow,
   orgId: string,
   aboutRaw: string,
-): iGM_OrganizationDto {
+): Promise<iGM_OrganizationDto> {
   const id = orgId.trim();
   const aboutContent = (aboutRaw ?? "").trim();
   if (!id) {
@@ -240,15 +240,15 @@ export function iGM_UpdateOrgAboutService(
   if (aboutContent.length > iGM_AboutMaxLength) {
     throw new iGM_OrgVerifyError("orgVerify.errors.aboutTooLong", 422);
   }
-  const org = iGM_FindOrganizationById(id);
+  const org = await iGM_FindOrganizationById(id);
   if (!org || org.iGM_IsTrusted !== 1) {
     throw new iGM_OrgVerifyError("orgVerify.errors.orgNotFound", 404);
   }
   if (!iGM_SameEmail(org.iGM_OwnerEmail, user.iGM_Email)) {
     throw new iGM_OrgVerifyError("orgVerify.errors.forbidden", 403);
   }
-  iGM_UpdateOrganizationAbout(id, aboutContent);
-  return iGM_ToOrganizationDto(iGM_FindOrganizationById(id) ?? org);
+  await iGM_UpdateOrganizationAbout(id, aboutContent);
+  return iGM_ToOrganizationDto((await iGM_FindOrganizationById(id)) ?? org);
 }
 
 /* ---------- 用户侧：申请 ---------- */
@@ -258,11 +258,11 @@ export function iGM_UpdateOrgAboutService(
  * 校验：已认证用户不可申请（需先退出）、组织存在且受信任、
  *       理由非空且不超长、同一用户无待审核申请
  */
-export function iGM_SubmitVerificationService(
+export async function iGM_SubmitVerificationService(
   user: iGM_UserRow,
   input: { orgId: string; reason: string; proof: string | null },
   locale: string,
-): iGM_OrgVerificationDto {
+): Promise<iGM_OrgVerificationDto> {
   const orgId = input.orgId.trim();
   const reason = input.reason.trim();
   const proof = input.proof?.trim() ? input.proof.trim() : null;
@@ -277,7 +277,7 @@ export function iGM_SubmitVerificationService(
     throw new iGM_OrgVerifyError("orgVerify.errors.proofTooLong", 422);
   }
 
-  const org = iGM_FindOrganizationById(orgId);
+  const org = await iGM_FindOrganizationById(orgId);
   if (!org || org.iGM_IsTrusted !== 1) {
     throw new iGM_OrgVerifyError("orgVerify.errors.orgNotFound", 404);
   }
@@ -287,11 +287,11 @@ export function iGM_SubmitVerificationService(
     throw new iGM_OrgVerifyError("orgVerify.errors.alreadyVerified", 409);
   }
   // 同一用户同一时间只能有一个待审核申请（可取消后重新申请）
-  if (iGM_FindPendingVerificationByUser(user.iGM_Id)) {
+  if (await iGM_FindPendingVerificationByUser(user.iGM_Id)) {
     throw new iGM_OrgVerifyError("orgVerify.errors.pendingExists", 409);
   }
 
-  const row = iGM_InsertVerification({
+  const row = await iGM_InsertVerification({
     userId: user.iGM_Id,
     orgId,
     reason,
@@ -299,50 +299,51 @@ export function iGM_SubmitVerificationService(
     now: new Date().toISOString(),
   });
 
-  iGM_NotifyByMail({
+  await iGM_NotifyByMail({
     userId: user.iGM_Id,
     orgName: org.iGM_Name,
     kind: "submitted",
     locale,
   });
 
-  return iGM_ToVerificationDto(row);
+  return await iGM_ToVerificationDto(row);
 }
 
 /** 我的申请记录（按创建时间倒序，附审核人名称） */
-export function iGM_ListMyVerificationsService(
+export async function iGM_ListMyVerificationsService(
   user: iGM_UserRow,
-): iGM_OrgVerificationDto[] {
-  const rows = iGM_ListVerificationsByUser(user.iGM_Id);
+): Promise<iGM_OrgVerificationDto[]> {
+  const rows = await iGM_ListVerificationsByUser(user.iGM_Id);
   const reviewerIds = Array.from(
     new Set(rows.map((row) => row.iGM_ReviewerId).filter(Boolean)),
   ) as string[];
-  const reviewerNames = new Map<string, string>(
-    reviewerIds
-      .map((id) => {
-        const reviewer = iGM_FindUserById(id);
-        return reviewer ? [id, reviewer.iGM_Username] : null;
-      })
-      .filter((entry): entry is [string, string] => entry !== null),
-  );
-  return rows.map((row) =>
-    iGM_ToVerificationDto(
-      row,
-      row.iGM_ReviewerId ? (reviewerNames.get(row.iGM_ReviewerId) ?? null) : null,
-    ),
-  );
+  const reviewerNames = new Map<string, string>();
+  for (const id of reviewerIds) {
+    const reviewer = await iGM_FindUserById(id);
+    if (reviewer) reviewerNames.set(id, reviewer.iGM_Username);
+  }
+  const items: iGM_OrgVerificationDto[] = [];
+  for (const row of rows) {
+    items.push(
+      await iGM_ToVerificationDto(
+        row,
+        row.iGM_ReviewerId ? (reviewerNames.get(row.iGM_ReviewerId) ?? null) : null,
+      ),
+    );
+  }
+  return items;
 }
 
 /** 取消待审核申请：仅本人、仅 pending 状态可取消 */
-export function iGM_CancelVerificationService(
+export async function iGM_CancelVerificationService(
   user: iGM_UserRow,
   verificationId: string,
-): void {
-  const row = iGM_FindVerificationById(verificationId.trim());
+): Promise<void> {
+  const row = await iGM_FindVerificationById(verificationId.trim());
   if (!row || row.iGM_UserId !== user.iGM_Id) {
     throw new iGM_OrgVerifyError("orgVerify.errors.notFound", 404);
   }
-  const updated = iGM_UpdateVerificationStatus({
+  const updated = await iGM_UpdateVerificationStatus({
     id: row.iGM_Id,
     status: "cancelled",
     reviewerId: null,
@@ -358,15 +359,15 @@ export function iGM_CancelVerificationService(
  * 退出已认证组织：清除认证标识并写入 left 历史记录、操作日志与邮件通知。
  * 退出后用户可重新提交申请。
  */
-export function iGM_LeaveOrgService(
+export async function iGM_LeaveOrgService(
   user: iGM_UserRow,
   reasonRaw: string | null,
   locale: string,
-): void {
+): Promise<void> {
   if (!user.iGM_VerifiedOrgId) {
     throw new iGM_OrgVerifyError("orgVerify.errors.notOrgMember", 409);
   }
-  const org = iGM_FindOrganizationById(user.iGM_VerifiedOrgId);
+  const org = await iGM_FindOrganizationById(user.iGM_VerifiedOrgId);
   if (!org) {
     throw new iGM_OrgVerifyError("orgVerify.errors.orgNotFound", 404);
   }
@@ -379,14 +380,14 @@ export function iGM_LeaveOrgService(
     throw new iGM_OrgVerifyError("orgVerify.errors.reasonTooLong", 422);
   }
   // 有待审核申请时先拦截，避免退出后挂着无法处理的申请
-  if (iGM_FindPendingVerificationByUser(user.iGM_Id)) {
+  if (await iGM_FindPendingVerificationByUser(user.iGM_Id)) {
     throw new iGM_OrgVerifyError("orgVerify.errors.pendingExists", 409);
   }
 
   const now = new Date().toISOString();
-  iGM_Db.transaction(() => {
-    iGM_SetUserVerifiedOrg(user.iGM_Id, null, now);
-    iGM_InsertLeaveRecord({
+  await iGM_Db.transaction(async () => {
+    await iGM_SetUserVerifiedOrg(user.iGM_Id, null, now);
+    await iGM_InsertLeaveRecord({
       userId: user.iGM_Id,
       orgId: org.iGM_Id,
       reason,
@@ -394,7 +395,7 @@ export function iGM_LeaveOrgService(
     });
   })();
 
-  iGM_InsertAdminLog({
+  await iGM_InsertAdminLog({
     adminId: user.iGM_Id,
     action: "org_verify_leave",
     targetType: "organization",
@@ -403,7 +404,7 @@ export function iGM_LeaveOrgService(
     now,
   });
 
-  iGM_NotifyByMail({
+  await iGM_NotifyByMail({
     userId: user.iGM_Id,
     orgName: org.iGM_Name,
     kind: "left",
@@ -419,14 +420,14 @@ export function iGM_LeaveOrgService(
  * 任何人都不能审核自己的申请。
  * @returns 校验通过的申请对应组织行
  */
-function iGM_AssertCanReview(
+async function iGM_AssertCanReview(
   reviewer: iGM_UserRow,
   application: iGM_OrgVerificationRow,
 ) {
   if (application.iGM_UserId === reviewer.iGM_Id) {
     throw new iGM_OrgVerifyError("orgVerify.errors.cannotReviewOwn", 422);
   }
-  const org = iGM_FindOrganizationById(application.iGM_OrgId);
+  const org = await iGM_FindOrganizationById(application.iGM_OrgId);
   if (!org) {
     throw new iGM_OrgVerifyError("orgVerify.errors.orgNotFound", 404);
   }
@@ -439,13 +440,13 @@ function iGM_AssertCanReview(
  * 申请列表（按审核人权限过滤）
  * admin：可按组织筛选，可看全部；负责人：强制仅自己组织；其余：403
  */
-export function iGM_AdminListVerificationsService(
+export async function iGM_AdminListVerificationsService(
   reviewer: iGM_UserRow,
   statusRaw: string | null,
   orgIdRaw: string | null,
   pageRaw: number,
   pageSizeRaw: number,
-): iGM_AdminOrgVerificationListData {
+): Promise<iGM_AdminOrgVerificationListData> {
   const { page, pageSize } = iGM_Page(pageRaw, pageSizeRaw);
   const status: iGM_OrgVerifyStatus | null = iGM_IsOrgVerifyStatus(statusRaw)
     ? statusRaw
@@ -454,25 +455,25 @@ export function iGM_AdminListVerificationsService(
   let orgFilter: string | null = null;
   if (reviewer.iGM_Role === "admin") {
     // admin 可选择组织筛选；传入非法 id 时按无筛选处理（不泄露存在性）
-    if (orgIdRaw?.trim() && iGM_FindOrganizationById(orgIdRaw.trim())) {
+    if (orgIdRaw?.trim() && (await iGM_FindOrganizationById(orgIdRaw.trim()))) {
       orgFilter = orgIdRaw.trim();
     }
   } else {
-    const ownerOrg = iGM_FindOrganizationByOwnerEmail(reviewer.iGM_Email);
+    const ownerOrg = await iGM_FindOrganizationByOwnerEmail(reviewer.iGM_Email);
     if (!ownerOrg) {
       throw new iGM_OrgVerifyError("orgVerify.errors.forbidden", 403);
     }
     orgFilter = ownerOrg.iGM_Id;
   }
 
-  const { items, total } = iGM_ListVerificationsForAdmin(
+  const { items, total } = await iGM_ListVerificationsForAdmin(
     status,
     orgFilter,
     page,
     pageSize,
   );
   return {
-    items: items.map(iGM_ToAdminVerificationDto),
+    items: await Promise.all(items.map((item) => iGM_ToAdminVerificationDto(item))),
     total,
     page,
     pageSize,
@@ -481,19 +482,19 @@ export function iGM_AdminListVerificationsService(
 }
 
 /** 申请详情（admin 或对应组织负责人） */
-export function iGM_AdminGetVerificationService(
+export async function iGM_AdminGetVerificationService(
   reviewer: iGM_UserRow,
   verificationId: string,
-): iGM_AdminOrgVerificationDto {
-  const row = iGM_FindVerificationById(verificationId.trim());
+): Promise<iGM_AdminOrgVerificationDto> {
+  const row = await iGM_FindVerificationById(verificationId.trim());
   if (!row) throw new iGM_OrgVerifyError("orgVerify.errors.notFound", 404);
-  iGM_AssertCanReview(reviewer, row);
-  const applicant = iGM_FindUserById(row.iGM_UserId);
+  await iGM_AssertCanReview(reviewer, row);
+  const applicant = await iGM_FindUserById(row.iGM_UserId);
   const reviewUser = row.iGM_ReviewerId
-    ? iGM_FindUserById(row.iGM_ReviewerId)
+    ? await iGM_FindUserById(row.iGM_ReviewerId)
     : null;
   return {
-    ...iGM_ToVerificationDto(row, reviewUser?.iGM_Username ?? null),
+    ...(await iGM_ToVerificationDto(row, reviewUser?.iGM_Username ?? null)),
     userId: row.iGM_UserId,
     username: applicant?.iGM_Username ?? "unknown",
     userDisplayName: applicant?.iGM_DisplayName ?? null,
@@ -508,18 +509,18 @@ export function iGM_AdminGetVerificationService(
  *       通过时写入用户认证组织；审核操作写入 iGM_AdminLogs；
  *       邮件通知申请人；审核人为 admin 时同步抄送组织负责人
  */
-export function iGM_ReviewVerificationService(
+export async function iGM_ReviewVerificationService(
   reviewer: iGM_UserRow,
   verificationId: string,
   action: iGM_OrgReviewAction,
   comment: string | null,
   locale: string,
-): void {
-  const row = iGM_FindVerificationById(verificationId.trim());
+): Promise<void> {
+  const row = await iGM_FindVerificationById(verificationId.trim());
   if (!row) throw new iGM_OrgVerifyError("orgVerify.errors.notFound", 404);
 
   // 权限判定内含“不能审核自己的申请”
-  const org = iGM_AssertCanReview(reviewer, row);
+  const org = await iGM_AssertCanReview(reviewer, row);
 
   const reviewComment = comment?.trim() ? comment.trim() : null;
   if (reviewComment && reviewComment.length > iGM_ReviewCommentMaxLength) {
@@ -528,8 +529,8 @@ export function iGM_ReviewVerificationService(
 
   const now = new Date().toISOString();
 
-  const updated = iGM_Db.transaction(() => {
-    const ok = iGM_UpdateVerificationStatus({
+  const updated = await iGM_Db.transaction(async () => {
+    const ok = await iGM_UpdateVerificationStatus({
       id: row.iGM_Id,
       status: action === "approve" ? "approved" : "rejected",
       reviewerId: reviewer.iGM_Id,
@@ -539,7 +540,7 @@ export function iGM_ReviewVerificationService(
     if (!ok) return false;
     // 通过：将认证组织写入用户资料（同一事务，保证状态与标识一致）
     if (action === "approve") {
-      iGM_SetUserVerifiedOrg(row.iGM_UserId, row.iGM_OrgId, now);
+      await iGM_SetUserVerifiedOrg(row.iGM_UserId, row.iGM_OrgId, now);
     }
     return true;
   })();
@@ -548,7 +549,7 @@ export function iGM_ReviewVerificationService(
     throw new iGM_OrgVerifyError("orgVerify.errors.notPending", 409);
   }
 
-  iGM_InsertAdminLog({
+  await iGM_InsertAdminLog({
     adminId: reviewer.iGM_Id,
     action: action === "approve" ? "org_verify_approve" : "org_verify_reject",
     targetType: "org_verification",
@@ -557,8 +558,8 @@ export function iGM_ReviewVerificationService(
     now,
   });
 
-  const applicant = iGM_FindUserById(row.iGM_UserId);
-  iGM_NotifyByMail({
+  const applicant = await iGM_FindUserById(row.iGM_UserId);
+  await iGM_NotifyByMail({
     userId: row.iGM_UserId,
     orgName: org.iGM_Name,
     kind: action === "approve" ? "approved" : "rejected",
@@ -567,7 +568,7 @@ export function iGM_ReviewVerificationService(
   });
   // admin 代为审核时同步通知组织负责人；负责人本人审核不重复通知
   if (reviewer.iGM_Role === "admin" && applicant) {
-    iGM_NotifyOwnerByMail({
+    await iGM_NotifyOwnerByMail({
       ownerEmail: org.iGM_OwnerEmail,
       applicant,
       orgName: org.iGM_Name,

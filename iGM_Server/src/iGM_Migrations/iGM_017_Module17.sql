@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS iGM_GameInstalls (
   iGM_Version         TEXT NOT NULL,
   iGM_InstallDir      TEXT NOT NULL,
   iGM_Status          TEXT NOT NULL DEFAULT 'pending',
-  iGM_Progress        REAL NOT NULL DEFAULT 0,
+  iGM_Progress        DOUBLE PRECISION NOT NULL DEFAULT 0,
   iGM_TotalFiles      INTEGER NOT NULL DEFAULT 0,
   iGM_DownloadedFiles INTEGER NOT NULL DEFAULT 0,
   iGM_Error           TEXT,

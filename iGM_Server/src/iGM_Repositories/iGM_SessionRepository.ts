@@ -26,8 +26,8 @@ export interface iGM_CreateSessionParams {
 
 // 核心逻辑 //
 /** 创建会话 */
-export function iGM_CreateSession(params: iGM_CreateSessionParams): void {
-  iGM_Db.run(
+export async function iGM_CreateSession(params: iGM_CreateSessionParams): Promise<void> {
+  await iGM_Db.run(
     `INSERT INTO iGM_Sessions
        (iGM_Id, iGM_UserId, iGM_ExpiresAt, iGM_CreatedAt, iGM_UserAgent, iGM_Ip)
      VALUES (?, ?, ?, ?, ?, ?)`,
@@ -43,38 +43,38 @@ export function iGM_CreateSession(params: iGM_CreateSessionParams): void {
 }
 
 /** 按会话 ID 哈希查询未过期会话 */
-export function iGM_FindSession(idHash: string, now: string): iGM_SessionRow | null {
+export async function iGM_FindSession(idHash: string, now: string): Promise<iGM_SessionRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(
         `SELECT * FROM iGM_Sessions
          WHERE iGM_Id = ? AND iGM_ExpiresAt > ?`,
       )
-      .get(idHash, now) as iGM_SessionRow | undefined) ?? null
+      .get(idHash, now)) as iGM_SessionRow | undefined) ?? null
   );
 }
 
 /** 删除单条会话（登出） */
-export function iGM_DeleteSession(idHash: string): boolean {
-  const result = iGM_Db.run(`DELETE FROM iGM_Sessions WHERE iGM_Id = ?`, [
+export async function iGM_DeleteSession(idHash: string): Promise<boolean> {
+  const result = await iGM_Db.run(`DELETE FROM iGM_Sessions WHERE iGM_Id = ?`, [
     idHash,
   ]);
   return result.changes > 0;
 }
 
 /** 删除某用户的全部会话（密码重置后强制重新登录） */
-export function iGM_DeleteSessionsByUser(
+export async function iGM_DeleteSessionsByUser(
   userId: string,
   exceptIdHash?: string,
-): number {
+): Promise<number> {
   if (exceptIdHash) {
-    const result = iGM_Db.run(
+    const result = await iGM_Db.run(
       `DELETE FROM iGM_Sessions WHERE iGM_UserId = ? AND iGM_Id != ?`,
       [userId, exceptIdHash],
     );
     return result.changes;
   }
-  const result = iGM_Db.run(
+  const result = await iGM_Db.run(
     `DELETE FROM iGM_Sessions WHERE iGM_UserId = ?`,
     [userId],
   );
@@ -82,8 +82,8 @@ export function iGM_DeleteSessionsByUser(
 }
 
 /** 清理全部已过期会话 */
-export function iGM_DeleteExpiredSessions(now: string): number {
-  const result = iGM_Db.run(
+export async function iGM_DeleteExpiredSessions(now: string): Promise<number> {
+  const result = await iGM_Db.run(
     `DELETE FROM iGM_Sessions WHERE iGM_ExpiresAt <= ?`,
     [now],
   );

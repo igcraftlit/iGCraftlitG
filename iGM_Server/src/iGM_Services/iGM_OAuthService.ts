@@ -128,14 +128,14 @@ export function iGM_ParseRedirectUris(raw: string): string[] {
 }
 
 /** 写一条操作日志（失败不影响主流程） */
-function iGM_Log(params: {
+async function iGM_Log(params: {
   clientId: string | null;
   userId: string | null;
   action: string;
   detail: string | null;
   ip: string | null;
-}): void {
-  iGM_InsertOAuthLog({
+}): Promise<void> {
+  await iGM_InsertOAuthLog({
     id: crypto.randomUUID(),
     clientId: params.clientId,
     userId: params.userId,
@@ -226,19 +226,19 @@ function iGM_ValidateApplyInput(input: iGM_OAuthApplyInput): {
 }
 
 /** 提交 OAuth 应用申请（须登录，状态 pending） */
-export function iGM_SubmitOAuthApplyService(
+export async function iGM_SubmitOAuthApplyService(
   user: iGM_UserRow,
   input: iGM_OAuthApplyInput,
-): iGM_OAuthClientDto {
+): Promise<iGM_OAuthClientDto> {
   const fields = iGM_ValidateApplyInput(input);
-  const row = iGM_InsertOAuthClient({
+  const row = await iGM_InsertOAuthClient({
     id: crypto.randomUUID(),
     clientId: iGM_OAuthClientId(),
     ownerUid: user.iGM_Uid,
     now: new Date().toISOString(),
     ...fields,
   });
-  iGM_Log({
+  await iGM_Log({
     clientId: row.iGM_ClientId,
     userId: user.iGM_Id,
     action: "apply",
@@ -249,22 +249,22 @@ export function iGM_SubmitOAuthApplyService(
 }
 
 /** 我的应用列表（开发者侧） */
-export function iGM_ListMyOAuthClientsService(
+export async function iGM_ListMyOAuthClientsService(
   user: iGM_UserRow,
-): iGM_OAuthClientDto[] {
-  return iGM_ListOAuthClientsByOwner(user.iGM_Uid).map(iGM_ToClientDto);
+): Promise<iGM_OAuthClientDto[]> {
+  return (await iGM_ListOAuthClientsByOwner(user.iGM_Uid)).map(iGM_ToClientDto);
 }
 
 /** 撤回本人待审核的应用申请 */
-export function iGM_WithdrawOAuthClientService(
+export async function iGM_WithdrawOAuthClientService(
   user: iGM_UserRow,
   clientId: string,
-): void {
-  const row = iGM_FindOAuthClientByClientId(clientId);
+): Promise<void> {
+  const row = await iGM_FindOAuthClientByClientId(clientId);
   if (!row || row.iGM_OwnerUid !== user.iGM_Uid) {
     throw new iGM_OAuthError("oauth.errors.appNotFound", 404);
   }
-  const ok = iGM_WithdrawOAuthClient({
+  const ok = await iGM_WithdrawOAuthClient({
     id: row.iGM_Id,
     ownerUid: user.iGM_Uid,
     now: new Date().toISOString(),
@@ -272,7 +272,7 @@ export function iGM_WithdrawOAuthClientService(
   if (!ok) {
     throw new iGM_OAuthError("oauth.errors.withdrawNotAllowed", 409);
   }
-  iGM_Log({
+  await iGM_Log({
     clientId: row.iGM_ClientId,
     userId: user.iGM_Id,
     action: "withdraw",
@@ -285,11 +285,11 @@ export function iGM_WithdrawOAuthClientService(
  * 重置 client_secret：仅应用所有者可操作，仅已通过的应用可重置。
  * 返回的新 secret 仅此一次返回，库中只保留哈希。
  */
-export function iGM_ResetClientSecretService(
+export async function iGM_ResetClientSecretService(
   user: iGM_UserRow,
   clientId: string,
-): { clientId: string; clientSecret: string } {
-  const row = iGM_FindOAuthClientByClientId(clientId);
+): Promise<{ clientId: string; clientSecret: string }> {
+  const row = await iGM_FindOAuthClientByClientId(clientId);
   if (!row || row.iGM_OwnerUid !== user.iGM_Uid) {
     throw new iGM_OAuthError("oauth.errors.appNotFound", 404);
   }
@@ -297,12 +297,12 @@ export function iGM_ResetClientSecretService(
     throw new iGM_OAuthError("oauth.errors.appNotApproved", 409);
   }
   const secret = iGM_OAuthRandomToken();
-  iGM_SetOAuthClientSecret({
+  await iGM_SetOAuthClientSecret({
     id: row.iGM_Id,
     secretHash: iGM_Sha256(secret),
     now: new Date().toISOString(),
   });
-  iGM_Log({
+  await iGM_Log({
     clientId: row.iGM_ClientId,
     userId: user.iGM_Id,
     action: "secret.reset",
@@ -313,23 +313,23 @@ export function iGM_ResetClientSecretService(
 }
 
 /** 开发者侧：查看本人应用的接入日志（分页） */
-export function iGM_ListMyOAuthLogsService(
+export async function iGM_ListMyOAuthLogsService(
   user: iGM_UserRow,
   clientId: string,
   page: number,
   pageSize: number,
-): {
+): Promise<{
   items: Array<Record<string, unknown>>;
   total: number;
   page: number;
   pageSize: number;
   totalPages: number;
-} {
-  const row = iGM_FindOAuthClientByClientId(clientId);
+}> {
+  const row = await iGM_FindOAuthClientByClientId(clientId);
   if (!row || row.iGM_OwnerUid !== user.iGM_Uid) {
     throw new iGM_OAuthError("oauth.errors.appNotFound", 404);
   }
-  const { items, total } = iGM_ListOAuthLogsByClient({
+  const { items, total } = await iGM_ListOAuthLogsByClient({
     clientId: row.iGM_ClientId,
     limit: pageSize,
     offset: (page - 1) * pageSize,
@@ -349,18 +349,18 @@ export function iGM_ListMyOAuthLogsService(
 }
 
 /** 管理端：按状态分页列出应用 */
-export function iGM_AdminListOAuthClientsService(
+export async function iGM_AdminListOAuthClientsService(
   status: string | null,
   pageRaw: number,
   pageSizeRaw: number,
-): Record<string, unknown> {
+): Promise<Record<string, unknown>> {
   const page =
     Number.isFinite(pageRaw) && pageRaw >= 1 ? Math.floor(pageRaw) : 1;
   const pageSize =
     Number.isFinite(pageSizeRaw) && pageSizeRaw >= 1 && pageSizeRaw <= 50
       ? Math.floor(pageSizeRaw)
       : 10;
-  const { items, total } = iGM_ListOAuthClientsForAdmin({
+  const { items, total } = await iGM_ListOAuthClientsForAdmin({
     status: status && status.length > 0 ? status : null,
     limit: pageSize,
     offset: (page - 1) * pageSize,
@@ -382,19 +382,19 @@ export function iGM_AdminListOAuthClientsService(
  * 审核应用：通过时发放 client_id（已有）与 client_secret（仅本次返回）。
  * 仅待审核可被审核；已通过的应用可被禁用 / 启用；管理员可删除。
  */
-export function iGM_ReviewOAuthClientService(
+export async function iGM_ReviewOAuthClientService(
   reviewer: iGM_UserRow,
   clientId: string,
   action: "approve" | "reject",
   comment: string | null,
   ip: string | null,
-): { clientId: string; clientSecret: string | null } {
-  const row = iGM_FindOAuthClientByClientId(clientId);
+): Promise<{ clientId: string; clientSecret: string | null }> {
+  const row = await iGM_FindOAuthClientByClientId(clientId);
   if (!row) {
     throw new iGM_OAuthError("oauth.errors.appNotFound", 404);
   }
   const now = new Date().toISOString();
-  const ok = iGM_ReviewOAuthClient({
+  const ok = await iGM_ReviewOAuthClient({
     id: row.iGM_Id,
     status: action === "approve" ? "approved" : "rejected",
     reviewerId: reviewer.iGM_Id,
@@ -408,13 +408,13 @@ export function iGM_ReviewOAuthClientService(
   let secret: string | null = null;
   if (action === "approve") {
     secret = iGM_OAuthRandomToken();
-    iGM_SetOAuthClientSecret({
+    await iGM_SetOAuthClientSecret({
       id: row.iGM_Id,
       secretHash: iGM_Sha256(secret),
       now,
     });
   }
-  iGM_Log({
+  await iGM_Log({
     clientId: row.iGM_ClientId,
     userId: reviewer.iGM_Id,
     action: action === "approve" ? "approve" : "reject",
@@ -425,20 +425,20 @@ export function iGM_ReviewOAuthClientService(
 }
 
 /** 管理端：启用 / 禁用应用 */
-export function iGM_SetOAuthClientDisabledService(
+export async function iGM_SetOAuthClientDisabledService(
   reviewer: iGM_UserRow,
   clientId: string,
   disabled: boolean,
   ip: string | null,
-): void {
-  const row = iGM_FindOAuthClientByClientId(clientId);
+): Promise<void> {
+  const row = await iGM_FindOAuthClientByClientId(clientId);
   if (!row) {
     throw new iGM_OAuthError("oauth.errors.appNotFound", 404);
   }
   if (row.iGM_Status !== "approved" && row.iGM_Status !== "disabled") {
     throw new iGM_OAuthError("oauth.errors.appNotApproved", 409);
   }
-  iGM_UpdateOAuthClientStatus({
+  await iGM_UpdateOAuthClientStatus({
     id: row.iGM_Id,
     status: disabled ? "disabled" : "approved",
     reviewerId: reviewer.iGM_Id,
@@ -446,12 +446,12 @@ export function iGM_SetOAuthClientDisabledService(
   });
   if (disabled) {
     // 禁用即撤销该应用已签发的全部令牌，避免继续访问
-    iGM_RevokeOAuthTokensByClient({
+    await iGM_RevokeOAuthTokensByClient({
       clientId: row.iGM_ClientId,
       now: new Date().toISOString(),
     });
   }
-  iGM_Log({
+  await iGM_Log({
     clientId: row.iGM_ClientId,
     userId: reviewer.iGM_Id,
     action: disabled ? "disable" : "enable",
@@ -461,23 +461,23 @@ export function iGM_SetOAuthClientDisabledService(
 }
 
 /** 管理端：删除应用（级联清理授权码 / 令牌 / 同意记录） */
-export function iGM_DeleteOAuthClientService(
+export async function iGM_DeleteOAuthClientService(
   reviewer: iGM_UserRow,
   clientId: string,
   ip: string | null,
-): void {
-  const row = iGM_FindOAuthClientByClientId(clientId);
+): Promise<void> {
+  const row = await iGM_FindOAuthClientByClientId(clientId);
   if (!row) {
     throw new iGM_OAuthError("oauth.errors.appNotFound", 404);
   }
-  iGM_Log({
+  await iGM_Log({
     clientId: row.iGM_ClientId,
     userId: reviewer.iGM_Id,
     action: "delete",
     detail: row.iGM_Name,
     ip,
   });
-  iGM_DeleteOAuthClient(row.iGM_Id);
+  await iGM_DeleteOAuthClient(row.iGM_Id);
 }
 
 /* ---------- 授权端点 ---------- */
@@ -486,7 +486,7 @@ export function iGM_DeleteOAuthClientService(
  * 校验授权请求：client_id 存在且已通过、redirect_uri 严格匹配、response_type=code。
  * 校验失败时若 redirect_uri 合法，仍以 error 参数回跳（OAuth 规范）。
  */
-export function iGM_ValidateAuthorizeRequest(query: {
+export async function iGM_ValidateAuthorizeRequest(query: {
   client_id?: string;
   redirect_uri?: string;
   response_type?: string;
@@ -495,12 +495,12 @@ export function iGM_ValidateAuthorizeRequest(query: {
   code_challenge?: string;
   code_challenge_method?: string;
   nonce?: string;
-}): { client: iGM_OAuthClientRow; request: iGM_AuthorizeRequest } {
+}): Promise<{ client: iGM_OAuthClientRow; request: iGM_AuthorizeRequest }> {
   const clientId = (query.client_id ?? "").trim();
   const redirectUri = (query.redirect_uri ?? "").trim();
   const responseType = (query.response_type ?? "code").trim();
 
-  const client = clientId ? iGM_FindOAuthClientByClientId(clientId) : null;
+  const client = clientId ? await iGM_FindOAuthClientByClientId(clientId) : null;
   if (!client) {
     throw new iGM_OAuthError("oauth.errors.invalidClient", 400);
   }
@@ -540,10 +540,10 @@ export function iGM_ValidateAuthorizeRequest(query: {
 }
 
 /** 授权同意页所需的应用信息（仅返回公开字段，不含任何密钥） */
-export function iGM_GetAuthorizeInfoService(
+export async function iGM_GetAuthorizeInfoService(
   request: iGM_AuthorizeRequest,
-): Record<string, unknown> {
-  const client = iGM_FindOAuthClientByClientId(request.clientId);
+): Promise<Record<string, unknown>> {
+  const client = await iGM_FindOAuthClientByClientId(request.clientId);
   if (!client) {
     throw new iGM_OAuthError("oauth.errors.invalidClient", 400);
   }
@@ -559,18 +559,18 @@ export function iGM_GetAuthorizeInfoService(
 }
 
 /** 签发授权码并返回回跳地址（用户同意） */
-export function iGM_ApproveAuthorizationService(
+export async function iGM_ApproveAuthorizationService(
   user: iGM_UserRow,
   request: iGM_AuthorizeRequest,
   ip: string | null,
-): { redirectUrl: string } {
-  const client = iGM_FindOAuthClientByClientId(request.clientId);
+): Promise<{ redirectUrl: string }> {
+  const client = await iGM_FindOAuthClientByClientId(request.clientId);
   if (!client || client.iGM_Status !== "approved") {
     throw new iGM_OAuthError("oauth.errors.invalidClient", 400);
   }
   const now = new Date();
   const code = iGM_OAuthRandomToken();
-  iGM_InsertOAuthCode({
+  await iGM_InsertOAuthCode({
     id: crypto.randomUUID(),
     code,
     clientId: client.iGM_ClientId,
@@ -586,14 +586,14 @@ export function iGM_ApproveAuthorizationService(
     now: now.toISOString(),
   });
   // 记录用户同意（按 用户+应用 唯一，scope 取并集覆盖）
-  iGM_UpsertOAuthConsent({
+  await iGM_UpsertOAuthConsent({
     id: crypto.randomUUID(),
     userId: user.iGM_Id,
     clientId: client.iGM_ClientId,
     scope: request.scope,
     now: now.toISOString(),
   });
-  iGM_Log({
+  await iGM_Log({
     clientId: client.iGM_ClientId,
     userId: user.iGM_Id,
     action: "authorize",
@@ -609,12 +609,12 @@ export function iGM_ApproveAuthorizationService(
 }
 
 /** 拒绝授权：按规范回跳 error=access_denied */
-export function iGM_DenyAuthorizationService(
+export async function iGM_DenyAuthorizationService(
   user: iGM_UserRow,
   request: iGM_AuthorizeRequest,
   ip: string | null,
-): { redirectUrl: string } {
-  iGM_Log({
+): Promise<{ redirectUrl: string }> {
+  await iGM_Log({
     clientId: request.clientId,
     userId: user.iGM_Id,
     action: "deny",
@@ -634,11 +634,11 @@ export function iGM_DenyAuthorizationService(
  * 是否可跳过授权页（已存在覆盖本次请求 scope 的同意记录）。
  * 命中时 /oauth/authorize 直接签发授权码回跳，符合 OIDC 静默授权体验。
  */
-export function iGM_HasFullConsent(
+export async function iGM_HasFullConsent(
   userId: string,
   request: iGM_AuthorizeRequest,
-): boolean {
-  const consent = iGM_FindOAuthConsent(userId, request.clientId);
+): Promise<boolean> {
+  const consent = await iGM_FindOAuthConsent(userId, request.clientId);
   if (!consent) return false;
   return iGM_ScopeCovers(consent.iGM_Scope, request.scope);
 }
@@ -646,11 +646,11 @@ export function iGM_HasFullConsent(
 /* ---------- 令牌端点 ---------- */
 
 /** 校验客户端身份：client_secret 哈希比对 */
-function iGM_AuthenticateClient(
+async function iGM_AuthenticateClient(
   credentials: iGM_ClientCredentials,
-): iGM_OAuthClientRow {
+): Promise<iGM_OAuthClientRow> {
   const client = credentials.clientId
-    ? iGM_FindOAuthClientByClientId(credentials.clientId)
+    ? await iGM_FindOAuthClientByClientId(credentials.clientId)
     : null;
   if (!client) {
     throw new iGM_OAuthError("oauth.errors.invalidClient", 401);
@@ -709,7 +709,7 @@ async function iGM_IssueTokens(params: {
   const accessExpiresAt = new Date(
     now + iGM_Config.oauth.accessTokenTtlSeconds * 1000,
   ).toISOString();
-  iGM_InsertOAuthToken({
+  await iGM_InsertOAuthToken({
     id: crypto.randomUUID(),
     accessTokenHash: iGM_Sha256(accessToken),
     refreshTokenHash: iGM_Sha256(refreshToken),
@@ -745,8 +745,10 @@ export async function iGM_ExchangeAuthorizationCodeService(params: {
   codeVerifier: string;
   ip: string | null;
 }): Promise<iGM_TokenResponse> {
-  const client = iGM_AuthenticateClient(params.credentials);
-  const codeRow = params.code ? iGM_FindOAuthCodeByCode(params.code) : null;
+  const client = await iGM_AuthenticateClient(params.credentials);
+  const codeRow = params.code
+    ? await iGM_FindOAuthCodeByCode(params.code)
+    : null;
   if (!codeRow || codeRow.iGM_ClientId !== client.iGM_ClientId) {
     throw new iGM_OAuthError("oauth.errors.invalidCode", 400);
   }
@@ -772,11 +774,11 @@ export async function iGM_ExchangeAuthorizationCodeService(params: {
     }
   }
   // 一次性核销：并发下只有一个请求能成功
-  if (!iGM_MarkOAuthCodeUsed(codeRow.iGM_Id)) {
+  if (!(await iGM_MarkOAuthCodeUsed(codeRow.iGM_Id))) {
     throw new iGM_OAuthError("oauth.errors.codeUsed", 400);
   }
 
-  const user = iGM_FindUserById(codeRow.iGM_UserId);
+  const user = await iGM_FindUserById(codeRow.iGM_UserId);
   if (!user || user.iGM_Status !== "active") {
     throw new iGM_OAuthError("oauth.errors.userUnavailable", 400);
   }
@@ -790,7 +792,7 @@ export async function iGM_ExchangeAuthorizationCodeService(params: {
     refreshExpiresAt,
     nonce: codeRow.iGM_Nonce,
   });
-  iGM_Log({
+  await iGM_Log({
     clientId: client.iGM_ClientId,
     userId: user.iGM_Id,
     action: "token",
@@ -812,10 +814,10 @@ export async function iGM_RefreshTokenService(params: {
   scope: string | null;
   ip: string | null;
 }): Promise<iGM_TokenResponse> {
-  const client = iGM_AuthenticateClient(params.credentials);
+  const client = await iGM_AuthenticateClient(params.credentials);
   const hash = iGM_Sha256(params.refreshToken);
   const row = params.refreshToken
-    ? iGM_FindOAuthTokenByRefreshHash(hash)
+    ? await iGM_FindOAuthTokenByRefreshHash(hash)
     : null;
   if (!row || row.iGM_ClientId !== client.iGM_ClientId) {
     throw new iGM_OAuthError("oauth.errors.invalidGrant", 400);
@@ -826,7 +828,7 @@ export async function iGM_RefreshTokenService(params: {
   if (iGM_IsExpired(row.iGM_RefreshExpiresAt)) {
     throw new iGM_OAuthError("oauth.errors.refreshExpired", 400);
   }
-  const user = iGM_FindUserById(row.iGM_UserId);
+  const user = await iGM_FindUserById(row.iGM_UserId);
   if (!user || user.iGM_Status !== "active") {
     throw new iGM_OAuthError("oauth.errors.userUnavailable", 400);
   }
@@ -839,7 +841,7 @@ export async function iGM_RefreshTokenService(params: {
   }
 
   // 轮换：旧行立即撤销，新行沿用原始刷新到期时间
-  iGM_RevokeOAuthTokenById(row.iGM_Id, new Date().toISOString());
+  await iGM_RevokeOAuthTokenById(row.iGM_Id, new Date().toISOString());
   const token = await iGM_IssueTokens({
     client,
     user,
@@ -847,7 +849,7 @@ export async function iGM_RefreshTokenService(params: {
     refreshExpiresAt: row.iGM_RefreshExpiresAt!,
     nonce: null,
   });
-  iGM_Log({
+  await iGM_Log({
     clientId: client.iGM_ClientId,
     userId: user.iGM_Id,
     action: "refresh",
@@ -862,16 +864,18 @@ export async function iGM_RefreshTokenService(params: {
 /* ---------- userinfo 与撤销 ---------- */
 
 /** 解析并校验 Bearer 访问令牌 */
-function iGM_ResolveAccessToken(bearer: string): {
+async function iGM_ResolveAccessToken(bearer: string): Promise<{
   row: iGM_OAuthTokenRow;
   user: iGM_UserRow;
-} {
+}> {
   const token = bearer.replace(/^Bearer\s+/i, "").trim();
-  const row = token ? iGM_FindOAuthTokenByAccessHash(iGM_Sha256(token)) : null;
+  const row = token
+    ? await iGM_FindOAuthTokenByAccessHash(iGM_Sha256(token))
+    : null;
   if (!row || row.iGM_Revoked === 1 || iGM_IsExpired(row.iGM_ExpiresAt)) {
     throw new iGM_OAuthError("oauth.errors.invalidToken", 401);
   }
-  const user = iGM_FindUserById(row.iGM_UserId);
+  const user = await iGM_FindUserById(row.iGM_UserId);
   if (!user || user.iGM_Status !== "active") {
     throw new iGM_OAuthError("oauth.errors.invalidToken", 401);
   }
@@ -879,8 +883,10 @@ function iGM_ResolveAccessToken(bearer: string): {
 }
 
 /** userinfo：按 scope 返回用户公开信息（sub 恒为 11 位 iGMUid） */
-export function iGM_GetUserInfoService(bearer: string): Record<string, unknown> {
-  const { row, user } = iGM_ResolveAccessToken(bearer);
+export async function iGM_GetUserInfoService(
+  bearer: string,
+): Promise<Record<string, unknown>> {
+  const { row, user } = await iGM_ResolveAccessToken(bearer);
   const scopes = new Set(row.iGM_Scope.split(" ").filter(Boolean));
   const claims: Record<string, unknown> = { sub: user.iGM_Uid };
   if (scopes.has("profile")) {
@@ -893,7 +899,7 @@ export function iGM_GetUserInfoService(bearer: string): Record<string, unknown> 
     claims.email_verified = user.iGM_EmailVerified === 1;
   }
   if (scopes.has("org")) {
-    claims.org = iGM_ResolveUserOrgBadge(
+    claims.org = await iGM_ResolveUserOrgBadge(
       user.iGM_VerifiedOrgId ?? null,
       user.iGM_Email,
     );
@@ -902,22 +908,22 @@ export function iGM_GetUserInfoService(bearer: string): Record<string, unknown> 
 }
 
 /** 撤销令牌：既接受 access_token 也接受 refresh_token（RFC 7009） */
-export function iGM_RevokeTokenService(params: {
+export async function iGM_RevokeTokenService(params: {
   credentials: iGM_ClientCredentials;
   token: string;
   ip: string | null;
-}): void {
-  const client = iGM_AuthenticateClient(params.credentials);
+}): Promise<void> {
+  const client = await iGM_AuthenticateClient(params.credentials);
   const hash = iGM_Sha256(params.token ?? "");
   const row =
-    iGM_FindOAuthTokenByAccessHash(hash) ??
-    iGM_FindOAuthTokenByRefreshHash(hash);
+    (await iGM_FindOAuthTokenByAccessHash(hash)) ??
+    (await iGM_FindOAuthTokenByRefreshHash(hash));
   if (!row || row.iGM_ClientId !== client.iGM_ClientId) {
     // 按规范：未知令牌也返回成功，避免探测
     return;
   }
-  iGM_RevokeOAuthTokenById(row.iGM_Id, new Date().toISOString());
-  iGM_Log({
+  await iGM_RevokeOAuthTokenById(row.iGM_Id, new Date().toISOString());
+  await iGM_Log({
     clientId: client.iGM_ClientId,
     userId: row.iGM_UserId,
     action: "revoke",
@@ -929,10 +935,10 @@ export function iGM_RevokeTokenService(params: {
 /* ---------- 用户授权管理 ---------- */
 
 /** 用户侧：已授权应用列表 */
-export function iGM_ListUserConsentsService(
+export async function iGM_ListUserConsentsService(
   user: iGM_UserRow,
-): Array<Record<string, unknown>> {
-  return iGM_ListOAuthConsentsByUser(user.iGM_Id).map((row) => ({
+): Promise<Array<Record<string, unknown>>> {
+  return (await iGM_ListOAuthConsentsByUser(user.iGM_Id)).map((row) => ({
     clientId: row.iGM_ClientId,
     name: row.iGM_Name,
     type: row.iGM_Type,
@@ -944,19 +950,19 @@ export function iGM_ListUserConsentsService(
 }
 
 /** 用户侧：撤销对某应用的授权（同时撤销其已签发令牌并清除同意记录） */
-export function iGM_RevokeUserConsentService(
+export async function iGM_RevokeUserConsentService(
   user: iGM_UserRow,
   clientId: string,
   ip: string | null,
-): void {
+): Promise<void> {
   const now = new Date().toISOString();
-  iGM_RevokeOAuthTokensByUserClient({
+  await iGM_RevokeOAuthTokensByUserClient({
     userId: user.iGM_Id,
     clientId,
     now,
   });
-  iGM_DeleteOAuthConsent(user.iGM_Id, clientId);
-  iGM_Log({
+  await iGM_DeleteOAuthConsent(user.iGM_Id, clientId);
+  await iGM_Log({
     clientId,
     userId: user.iGM_Id,
     action: "consent.revoke",

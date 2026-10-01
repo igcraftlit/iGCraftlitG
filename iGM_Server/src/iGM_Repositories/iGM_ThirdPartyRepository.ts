@@ -101,15 +101,15 @@ function iGM_NewTaskId(): string {
  * 按 (来源平台, 来源资源号) 幂等写入资源元数据
  * 说明：命中已有记录时保留原主键与创建时间，仅刷新元数据，保证缓存复用
  */
-export function iGM_UpsertThirdPartyResource(
+export async function iGM_UpsertThirdPartyResource(
   input: iGM_UpsertResourceInput,
-): iGM_ThirdPartyResourceRow {
-  const existing = iGM_FindThirdPartyResourceBySourceId(
+): Promise<iGM_ThirdPartyResourceRow> {
+  const existing = await iGM_FindThirdPartyResourceBySourceId(
     input.source,
     input.sourceId,
   );
   const id = existing?.iGM_Id ?? iGM_RandomUuid();
-  iGM_Db.run(
+  await iGM_Db.run(
     `INSERT INTO iGM_ThirdPartyResources
        (iGM_Id, iGM_Source, iGM_SourceId, iGM_Slug, iGM_Name, iGM_Type,
         iGM_Description, iGM_Author, iGM_CoverUrl, iGM_Downloads,
@@ -139,32 +139,32 @@ export function iGM_UpsertThirdPartyResource(
       input.now,
     ],
   );
-  return iGM_FindThirdPartyResourceById(id) as iGM_ThirdPartyResourceRow;
+  return (await iGM_FindThirdPartyResourceById(id)) as iGM_ThirdPartyResourceRow;
 }
 
 /** 按主键查询资源 */
-export function iGM_FindThirdPartyResourceById(
+export async function iGM_FindThirdPartyResourceById(
   id: string,
-): iGM_ThirdPartyResourceRow | null {
+): Promise<iGM_ThirdPartyResourceRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(`SELECT * FROM iGM_ThirdPartyResources WHERE iGM_Id = ?`)
-      .get(id) as iGM_ThirdPartyResourceRow | undefined) ?? null
+      .get(id)) as iGM_ThirdPartyResourceRow | undefined) ?? null
   );
 }
 
 /** 按来源平台与来源资源号查询资源 */
-export function iGM_FindThirdPartyResourceBySourceId(
+export async function iGM_FindThirdPartyResourceBySourceId(
   source: string,
   sourceId: string,
-): iGM_ThirdPartyResourceRow | null {
+): Promise<iGM_ThirdPartyResourceRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(
         `SELECT * FROM iGM_ThirdPartyResources
           WHERE iGM_Source = ? AND iGM_SourceId = ?`,
       )
-      .get(source, sourceId) as iGM_ThirdPartyResourceRow | undefined) ?? null
+      .get(source, sourceId)) as iGM_ThirdPartyResourceRow | undefined) ?? null
   );
 }
 
@@ -193,25 +193,25 @@ function iGM_BuildResourceFilters(params: iGM_ResourceListParams): {
 }
 
 /** 按筛选条件分页查询已缓存资源（更新时间倒序） */
-export function iGM_ListThirdPartyResources(params: iGM_ResourceListParams): {
+export async function iGM_ListThirdPartyResources(params: iGM_ResourceListParams): Promise<{
   items: iGM_ThirdPartyResourceRow[];
   total: number;
-} {
+}> {
   const { where, bindings } = iGM_BuildResourceFilters(params);
   const offset = (params.page - 1) * params.pageSize;
 
-  const totalRow = iGM_Db
+  const totalRow = (await iGM_Db
     .query(`SELECT COUNT(*) AS iGM_Count FROM iGM_ThirdPartyResources ${where}`)
-    .get(...bindings) as { iGM_Count: number };
+    .get(...bindings)) as { iGM_Count: number };
 
-  const items = iGM_Db
+  const items = (await iGM_Db
     .query(
       `SELECT * FROM iGM_ThirdPartyResources
        ${where}
        ORDER BY iGM_UpdatedAt DESC, iGM_CreatedAt DESC
        LIMIT ? OFFSET ?`,
     )
-    .all(...bindings, params.pageSize, offset) as iGM_ThirdPartyResourceRow[];
+    .all(...bindings, params.pageSize, offset)) as iGM_ThirdPartyResourceRow[];
 
   return { items, total: totalRow.iGM_Count };
 }
@@ -223,11 +223,11 @@ export function iGM_ListThirdPartyResources(params: iGM_ResourceListParams): {
  * 说明：按 (资源, 来源版本号) 去重，已存在则更新下载地址与校验信息；
  *       资源的版本列表以上游为准，故写入前先清理该资源下已不存在的版本
  */
-export function iGM_UpsertThirdPartyVersions(
+export async function iGM_UpsertThirdPartyVersions(
   resourceId: string,
   versions: iGM_UpsertVersionInput[],
   now: string,
-): void {
+): Promise<void> {
   const statement = iGM_Db.prepare(
     `INSERT INTO iGM_ThirdPartyVersions
        (iGM_Id, iGM_ResourceId, iGM_SourceId, iGM_Version, iGM_GameVersions,
@@ -246,9 +246,9 @@ export function iGM_UpsertThirdPartyVersions(
        iGM_VersionType = excluded.iGM_VersionType`,
   );
 
-  const run = iGM_Db.transaction(() => {
+  const run = iGM_Db.transaction(async () => {
     for (const version of versions) {
-      statement.run(
+      await statement.run(
         iGM_RandomUuid(),
         resourceId,
         version.sourceId,
@@ -265,43 +265,43 @@ export function iGM_UpsertThirdPartyVersions(
       );
     }
   });
-  run();
+  await run();
 }
 
 /** 查询某资源的全部版本（发布时间倒序） */
-export function iGM_ListThirdPartyVersions(
+export async function iGM_ListThirdPartyVersions(
   resourceId: string,
-): iGM_ThirdPartyVersionRow[] {
-  return iGM_Db
+): Promise<iGM_ThirdPartyVersionRow[]> {
+  return (await iGM_Db
     .query(
       `SELECT * FROM iGM_ThirdPartyVersions
         WHERE iGM_ResourceId = ?
         ORDER BY COALESCE(iGM_PublishedAt, iGM_CreatedAt) DESC,
                  iGM_CreatedAt DESC`,
     )
-    .all(resourceId) as iGM_ThirdPartyVersionRow[];
+    .all(resourceId)) as iGM_ThirdPartyVersionRow[];
 }
 
 /** 按主键查询资源版本 */
-export function iGM_FindThirdPartyVersionById(
+export async function iGM_FindThirdPartyVersionById(
   id: string,
-): iGM_ThirdPartyVersionRow | null {
+): Promise<iGM_ThirdPartyVersionRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(`SELECT * FROM iGM_ThirdPartyVersions WHERE iGM_Id = ?`)
-      .get(id) as iGM_ThirdPartyVersionRow | undefined) ?? null
+      .get(id)) as iGM_ThirdPartyVersionRow | undefined) ?? null
   );
 }
 
 /* ---------- 下载任务 ---------- */
 
 /** 创建下载任务（初始 pending） */
-export function iGM_CreateDownloadTask(
+export async function iGM_CreateDownloadTask(
   input: iGM_CreateDownloadTaskInput,
-): iGM_DownloadTaskRow {
+): Promise<iGM_DownloadTaskRow> {
   const id = iGM_RandomUuid();
   const taskId = iGM_NewTaskId();
-  iGM_Db.run(
+  await iGM_Db.run(
     `INSERT INTO iGM_DownloadTasks
        (iGM_Id, iGM_TaskId, iGM_UserId, iGM_ResourceId, iGM_VersionId, iGM_Source,
         iGM_DownloadUrl, iGM_Filename, iGM_Size, iGM_Sha1, iGM_Status,
@@ -324,17 +324,17 @@ export function iGM_CreateDownloadTask(
       input.now,
     ],
   );
-  return iGM_FindDownloadTaskById(taskId) as iGM_DownloadTaskRow;
+  return (await iGM_FindDownloadTaskById(taskId)) as iGM_DownloadTaskRow;
 }
 
 /**
  * 查询下载任务（连表带回资源名称、类型与版本号，供下载中心与启动器直接展示）
  */
-export function iGM_FindDownloadTaskById(
+export async function iGM_FindDownloadTaskById(
   taskId: string,
-): iGM_DownloadTaskRow | null {
+): Promise<iGM_DownloadTaskRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(
         `SELECT t.*,
                 r.iGM_Name AS iGM_ResourceName,
@@ -345,32 +345,32 @@ export function iGM_FindDownloadTaskById(
            LEFT JOIN iGM_ThirdPartyVersions v ON v.iGM_Id = t.iGM_VersionId
           WHERE t.iGM_TaskId = ?`,
       )
-      .get(taskId) as iGM_DownloadTaskRow | undefined) ?? null
+      .get(taskId)) as iGM_DownloadTaskRow | undefined) ?? null
   );
 }
 
 /** 查询某用户对某资源版本进行中的下载任务（用于避免重复创建） */
-export function iGM_FindActiveDownloadTask(
+export async function iGM_FindActiveDownloadTask(
   userId: string,
   versionId: string,
-): iGM_DownloadTaskRow | null {
+): Promise<iGM_DownloadTaskRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(
         `SELECT * FROM iGM_DownloadTasks
           WHERE iGM_UserId = ? AND iGM_VersionId = ?
             AND iGM_Status IN ('pending', 'downloading', 'paused')
           ORDER BY iGM_CreatedAt DESC LIMIT 1`,
       )
-      .get(userId, versionId) as iGM_DownloadTaskRow | undefined) ?? null
+      .get(userId, versionId)) as iGM_DownloadTaskRow | undefined) ?? null
   );
 }
 
 /** 更新下载任务（未提供的字段保持原值） */
-export function iGM_UpdateDownloadTask(
+export async function iGM_UpdateDownloadTask(
   taskId: string,
   patch: iGM_DownloadTaskPatch,
-): void {
+): Promise<void> {
   const clauses: string[] = ["iGM_UpdatedAt = ?"];
   const bindings: (string | number | null)[] = [patch.now];
 
@@ -404,22 +404,22 @@ export function iGM_UpdateDownloadTask(
   }
 
   bindings.push(taskId);
-  iGM_Db.run(
+  await iGM_Db.run(
     `UPDATE iGM_DownloadTasks SET ${clauses.join(", ")} WHERE iGM_TaskId = ?`,
     bindings,
   );
 }
 
 /** 查询某用户的下载任务列表（创建时间倒序，可按状态过滤） */
-export function iGM_ListDownloadTasksByUser(
+export async function iGM_ListDownloadTasksByUser(
   userId: string,
   statuses: iGM_DownloadTaskStatus[],
-): iGM_DownloadTaskRow[] {
+): Promise<iGM_DownloadTaskRow[]> {
   const where =
     statuses.length > 0
       ? `AND t.iGM_Status IN (${statuses.map(() => "?").join(", ")})`
       : "";
-  return iGM_Db
+  return (await iGM_Db
     .query(
       `SELECT t.*,
               r.iGM_Name AS iGM_ResourceName,
@@ -431,12 +431,12 @@ export function iGM_ListDownloadTasksByUser(
         WHERE t.iGM_UserId = ? ${where}
         ORDER BY t.iGM_CreatedAt DESC`,
     )
-    .all(userId, ...statuses) as iGM_DownloadTaskRow[];
+    .all(userId, ...statuses)) as iGM_DownloadTaskRow[];
 }
 
 /** 删除单个下载任务记录（仅删除记录，不触碰磁盘文件） */
-export function iGM_DeleteDownloadTask(taskId: string): boolean {
-  const result = iGM_Db.run(
+export async function iGM_DeleteDownloadTask(taskId: string): Promise<boolean> {
+  const result = await iGM_Db.run(
     `DELETE FROM iGM_DownloadTasks WHERE iGM_TaskId = ?`,
     [taskId],
   );
@@ -444,8 +444,8 @@ export function iGM_DeleteDownloadTask(taskId: string): boolean {
 }
 
 /** 清空某用户已完成的下载任务记录，返回清除数量 */
-export function iGM_DeleteCompletedDownloadTasks(userId: string): number {
-  const result = iGM_Db.run(
+export async function iGM_DeleteCompletedDownloadTasks(userId: string): Promise<number> {
+  const result = await iGM_Db.run(
     `DELETE FROM iGM_DownloadTasks
       WHERE iGM_UserId = ? AND iGM_Status = 'completed'`,
     [userId],

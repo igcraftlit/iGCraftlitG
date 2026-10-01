@@ -353,23 +353,27 @@ export async function iGM_ModrinthSearchResources(input: {
   const now = new Date().toISOString();
 
   // 命中结果幂等落库缓存，供详情页与下载页复用
-  const items = hits
-    .filter((hit) => typeof hit.project_id === "string" && hit.project_id.length > 0)
-    .map((hit) =>
-      iGM_UpsertThirdPartyResource({
-        source: iGM_ThirdPartySource,
-        sourceId: hit.project_id,
-        // 搜索时以用户所选类型为准，保证 map 与 datapack 可区分
-        slug: hit.slug ?? hit.project_id,
-        name: hit.title ?? hit.slug ?? hit.project_id,
-        type: input.type,
-        description: hit.description ?? null,
-        author: hit.author ?? null,
-        coverUrl: hit.icon_url ?? null,
-        downloads: typeof hit.downloads === "number" ? hit.downloads : null,
-        now,
-      }),
-    );
+  const items = await Promise.all(
+    hits
+      .filter(
+        (hit) => typeof hit.project_id === "string" && hit.project_id.length > 0,
+      )
+      .map((hit) =>
+        iGM_UpsertThirdPartyResource({
+          source: iGM_ThirdPartySource,
+          sourceId: hit.project_id,
+          // 搜索时以用户所选类型为准，保证 map 与 datapack 可区分
+          slug: hit.slug ?? hit.project_id,
+          name: hit.title ?? hit.slug ?? hit.project_id,
+          type: input.type,
+          description: hit.description ?? null,
+          author: hit.author ?? null,
+          coverUrl: hit.icon_url ?? null,
+          downloads: typeof hit.downloads === "number" ? hit.downloads : null,
+          now,
+        }),
+      ),
+  );
 
   const total = Number(payload.total_hits ?? items.length) || 0;
   return {
@@ -392,13 +396,13 @@ async function iGM_FetchAndCacheResource(
     `/project/${encodeURIComponent(sourceId)}`,
   );
   const resolvedId = project.id ?? sourceId;
-  const existing = iGM_FindThirdPartyResourceBySourceId(
+  const existing = await iGM_FindThirdPartyResourceBySourceId(
     iGM_ThirdPartySource,
     resolvedId,
   );
   const now = new Date().toISOString();
 
-  return iGM_UpsertThirdPartyResource({
+  return await iGM_UpsertThirdPartyResource({
     source: iGM_ThirdPartySource,
     sourceId: resolvedId,
     slug: project.slug ?? resolvedId,
@@ -434,7 +438,11 @@ async function iGM_FetchAndCacheVersions(
     .filter((item): item is iGM_UpsertVersionInput => item !== null);
 
   // 幂等写入（按 资源 + 上游版本号 去重）；上游暂无匹配版本时不落库，保留原有缓存
-  iGM_UpsertThirdPartyVersions(resourceId, normalized, new Date().toISOString());
+  await iGM_UpsertThirdPartyVersions(
+    resourceId,
+    normalized,
+    new Date().toISOString(),
+  );
 }
 
 /** 缓存是否仍在有效期内 */
@@ -464,10 +472,12 @@ export async function iGM_ModrinthLoadResource(
   if (!key) throw new iGM_ThirdPartyError("thirdParty.errors.resourceNotFound", 404);
 
   let resource =
-    iGM_FindThirdPartyResourceById(key) ??
-    iGM_FindThirdPartyResourceBySourceId(iGM_ThirdPartySource, key);
+    (await iGM_FindThirdPartyResourceById(key)) ??
+    (await iGM_FindThirdPartyResourceBySourceId(iGM_ThirdPartySource, key));
 
-  const cachedVersions = resource ? iGM_ListThirdPartyVersions(resource.iGM_Id) : [];
+  const cachedVersions = resource
+    ? await iGM_ListThirdPartyVersions(resource.iGM_Id)
+    : [];
   const fresh =
     resource !== null &&
     cachedVersions.length > 0 &&
@@ -487,7 +497,10 @@ export async function iGM_ModrinthLoadResource(
     resource.iGM_SourceId,
     iGM_NormalizeThirdPartyResourceType(resource.iGM_Type),
   );
-  return { resource, versions: iGM_ListThirdPartyVersions(resource.iGM_Id) };
+  return {
+    resource,
+    versions: await iGM_ListThirdPartyVersions(resource.iGM_Id),
+  };
 }
 
 // 导出 //

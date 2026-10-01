@@ -99,9 +99,9 @@ function iGM_BuildFilters(params: iGM_ActivityListParams): {
 }
 
 /** 新建活动 */
-export function iGM_CreateActivity(
+export async function iGM_CreateActivity(
   input: iGM_CreateActivityInput,
-): iGM_ActivityRow {
+): Promise<iGM_ActivityRow> {
   const row: iGM_ActivityRow = {
     iGM_Id: iGM_RandomUuid(),
     iGM_CreatorId: input.creatorId,
@@ -116,7 +116,7 @@ export function iGM_CreateActivity(
     iGM_CreatedAt: input.now,
     iGM_UpdatedAt: input.now,
   };
-  iGM_Db.run(
+  await iGM_Db.run(
     `INSERT INTO iGM_Activities
        (iGM_Id, iGM_CreatorId, iGM_Title, iGM_Description, iGM_CoverFileId,
         iGM_Location, iGM_StartTime, iGM_EndTime, iGM_Status,
@@ -141,20 +141,22 @@ export function iGM_CreateActivity(
 }
 
 /** 按主键查询活动 */
-export function iGM_FindActivityById(id: string): iGM_ActivityRow | null {
+export async function iGM_FindActivityById(
+  id: string,
+): Promise<iGM_ActivityRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(`SELECT * FROM iGM_Activities WHERE iGM_Id = ?`)
-      .get(id) as iGM_ActivityRow | undefined) ?? null
+      .get(id)) as iGM_ActivityRow | undefined) ?? null
   );
 }
 
 /** 更新活动（覆盖全部可编辑字段） */
-export function iGM_UpdateActivity(
+export async function iGM_UpdateActivity(
   id: string,
   input: iGM_UpdateActivityInput,
-): boolean {
-  const result = iGM_Db.run(
+): Promise<boolean> {
+  const result = await iGM_Db.run(
     `UPDATE iGM_Activities SET
        iGM_Title = ?, iGM_Description = ?, iGM_CoverFileId = ?,
        iGM_Location = ?, iGM_StartTime = ?, iGM_EndTime = ?,
@@ -177,23 +179,26 @@ export function iGM_UpdateActivity(
 }
 
 /** 删除活动（报名记录由外键级联清理） */
-export function iGM_DeleteActivity(id: string): boolean {
-  const result = iGM_Db.run(`DELETE FROM iGM_Activities WHERE iGM_Id = ?`, [id]);
+export async function iGM_DeleteActivity(id: string): Promise<boolean> {
+  const result = await iGM_Db.run(
+    `DELETE FROM iGM_Activities WHERE iGM_Id = ?`,
+    [id],
+  );
   return result.changes > 0;
 }
 
 /** 按筛选条件分页查询活动（按开始时间倒序，未填时间时退化为创建时间） */
-export function iGM_ListActivities(
+export async function iGM_ListActivities(
   params: iGM_ActivityListParams,
-): iGM_ActivityListResult {
+): Promise<iGM_ActivityListResult> {
   const { where, bindings } = iGM_BuildFilters(params);
   const offset = (params.page - 1) * params.pageSize;
 
-  const totalRow = iGM_Db
+  const totalRow = (await iGM_Db
     .query(`SELECT COUNT(*) AS iGM_Count FROM iGM_Activities a ${where}`)
-    .get(...bindings) as { iGM_Count: number };
+    .get(...bindings)) as { iGM_Count: number };
 
-  const items = iGM_Db
+  const items = (await iGM_Db
     .query(
       `SELECT a.* FROM iGM_Activities a
        ${where}
@@ -201,7 +206,7 @@ export function iGM_ListActivities(
                 a.iGM_CreatedAt DESC
        LIMIT ? OFFSET ?`,
     )
-    .all(...bindings, params.pageSize, offset) as iGM_ActivityRow[];
+    .all(...bindings, params.pageSize, offset)) as iGM_ActivityRow[];
 
   return { items, total: totalRow.iGM_Count };
 }
@@ -209,29 +214,29 @@ export function iGM_ListActivities(
 /* ---------- 报名 ---------- */
 
 /** 查询某用户对某活动的报名记录 */
-export function iGM_FindRegistration(
+export async function iGM_FindRegistration(
   activityId: string,
   userId: string,
-): iGM_ActivityRegistrationRow | null {
+): Promise<iGM_ActivityRegistrationRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(
         `SELECT * FROM iGM_ActivityRegistrations
           WHERE iGM_ActivityId = ? AND iGM_UserId = ?`,
       )
-      .get(activityId, userId) as iGM_ActivityRegistrationRow | undefined) ??
+      .get(activityId, userId)) as iGM_ActivityRegistrationRow | undefined) ??
     null
   );
 }
 
 /** 写入报名（已存在则更新状态与时间） */
-export function iGM_UpsertRegistration(
+export async function iGM_UpsertRegistration(
   activityId: string,
   userId: string,
   status: "registered" | "cancelled",
   now: string,
-): void {
-  iGM_Db.run(
+): Promise<void> {
+  await iGM_Db.run(
     `INSERT INTO iGM_ActivityRegistrations
        (iGM_Id, iGM_ActivityId, iGM_UserId, iGM_Status, iGM_CreatedAt)
      VALUES (?, ?, ?, ?, ?)
@@ -243,25 +248,27 @@ export function iGM_UpsertRegistration(
 }
 
 /** 统计活动有效报名人数 */
-export function iGM_CountRegistrations(activityId: string): number {
-  const row = iGM_Db
+export async function iGM_CountRegistrations(
+  activityId: string,
+): Promise<number> {
+  const row = (await iGM_Db
     .query(
       `SELECT COUNT(*) AS iGM_Count FROM iGM_ActivityRegistrations
         WHERE iGM_ActivityId = ? AND iGM_Status = 'registered'`,
     )
-    .get(activityId) as { iGM_Count: number };
+    .get(activityId)) as { iGM_Count: number };
   return row.iGM_Count;
 }
 
 /** 批量统计一组活动的有效报名人数：activityId -> 数量 */
-export function iGM_CountRegistrationsBatch(
+export async function iGM_CountRegistrationsBatch(
   activityIds: string[],
-): Map<string, number> {
+): Promise<Map<string, number>> {
   const map = new Map<string, number>();
   const unique = Array.from(new Set(activityIds)).filter(Boolean);
   if (unique.length === 0) return map;
   const placeholders = unique.map(() => "?").join(", ");
-  const rows = iGM_Db
+  const rows = (await iGM_Db
     .query(
       `SELECT iGM_ActivityId AS iGM_TargetId, COUNT(*) AS iGM_Count
          FROM iGM_ActivityRegistrations
@@ -269,22 +276,22 @@ export function iGM_CountRegistrationsBatch(
           AND iGM_ActivityId IN (${placeholders})
         GROUP BY iGM_ActivityId`,
     )
-    .all(...unique) as { iGM_TargetId: string; iGM_Count: number }[];
+    .all(...unique)) as { iGM_TargetId: string; iGM_Count: number }[];
   for (const row of rows) map.set(row.iGM_TargetId, row.iGM_Count);
   return map;
 }
 
 /** 查询某活动全部有效报名记录（时间正序，先报名在前） */
-export function iGM_ListRegistrations(
+export async function iGM_ListRegistrations(
   activityId: string,
-): iGM_ActivityRegistrationRow[] {
-  return iGM_Db
+): Promise<iGM_ActivityRegistrationRow[]> {
+  return (await iGM_Db
     .query(
       `SELECT * FROM iGM_ActivityRegistrations
         WHERE iGM_ActivityId = ? AND iGM_Status = 'registered'
         ORDER BY iGM_CreatedAt ASC`,
     )
-    .all(activityId) as iGM_ActivityRegistrationRow[];
+    .all(activityId)) as iGM_ActivityRegistrationRow[];
 }
 
 // 导出 //

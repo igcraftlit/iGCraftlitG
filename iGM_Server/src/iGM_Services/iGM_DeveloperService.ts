@@ -80,15 +80,15 @@ function iGM_ToApplicationDto(
 }
 
 /** 批量解析审核人显示名（用户名优先，其次昵称） */
-function iGM_ResolveReviewerNames(
+async function iGM_ResolveReviewerNames(
   rows: iGM_DeveloperApplicationRow[],
-): Map<string, string> {
+): Promise<Map<string, string>> {
   const ids = rows
     .map((row) => row.iGM_ReviewerId)
     .filter((id): id is string => Boolean(id));
   if (ids.length === 0) return new Map();
   const map = new Map<string, string>();
-  for (const user of iGM_FindUsersByIds(ids)) {
+  for (const user of await iGM_FindUsersByIds(ids)) {
     map.set(user.iGM_Id, user.iGM_DisplayName ?? user.iGM_Username);
   }
   return map;
@@ -98,9 +98,11 @@ function iGM_ResolveReviewerNames(
  * 是否具备开发者申请审核资格：管理员，或受信任组织负责人。
  * 组织负责人判定复用 iGM_Organizations.iGM_OwnerEmail 与用户邮箱比对。
  */
-export function iGM_IsDeveloperReviewer(user: iGM_UserRow): boolean {
+export async function iGM_IsDeveloperReviewer(
+  user: iGM_UserRow,
+): Promise<boolean> {
   if (user.iGM_Role === "admin") return true;
-  return iGM_FindOrganizationByOwnerEmail(user.iGM_Email) !== null;
+  return (await iGM_FindOrganizationByOwnerEmail(user.iGM_Email)) !== null;
 }
 
 /** 校验申请入参，返回规范化后的字段 */
@@ -165,19 +167,19 @@ function iGM_ValidateApplyInput(input: iGM_DeveloperApplyInput): {
  * 已有待审核或已通过申请时不可再次提交；
  * mode 为 "reapply" 时要求最近一条申请为已拒绝或已撤回。
  */
-export function iGM_SubmitDeveloperApplyService(
+export async function iGM_SubmitDeveloperApplyService(
   userId: string,
   input: iGM_DeveloperApplyInput,
   mode: "new" | "reapply" = "new",
-): Record<string, unknown> {
-  const user = iGM_FindUserById(userId);
+): Promise<Record<string, unknown>> {
+  const user = await iGM_FindUserById(userId);
   if (!user || user.iGM_Status !== "active") {
     throw new iGM_DeveloperError("auth.errors.unauthorized", 401);
   }
 
   const fields = iGM_ValidateApplyInput(input);
 
-  const latest = iGM_FindLatestDeveloperApplicationByUser(userId);
+  const latest = await iGM_FindLatestDeveloperApplicationByUser(userId);
   if (latest && latest.iGM_Status === "pending") {
     throw new iGM_DeveloperError("developer.errors.applyPending", 409);
   }
@@ -193,7 +195,7 @@ export function iGM_SubmitDeveloperApplyService(
     throw new iGM_DeveloperError("developer.errors.notReapplyable", 409);
   }
 
-  const row = iGM_InsertDeveloperApplication({
+  const row = await iGM_InsertDeveloperApplication({
     userId,
     ...fields,
     now: new Date().toISOString(),
@@ -202,25 +204,25 @@ export function iGM_SubmitDeveloperApplyService(
 }
 
 /** 我的最新一条开发者申请（未申请返回 null） */
-export function iGM_GetMyDeveloperService(
+export async function iGM_GetMyDeveloperService(
   userId: string,
-): Record<string, unknown> | null {
-  const row = iGM_FindLatestDeveloperApplicationByUser(userId);
+): Promise<Record<string, unknown> | null> {
+  const row = await iGM_FindLatestDeveloperApplicationByUser(userId);
   if (!row) return null;
   return iGM_ToApplicationDto(
     row,
     row.iGM_ReviewerId
-      ? (iGM_ResolveReviewerNames([row]).get(row.iGM_ReviewerId) ?? null)
+      ? ((await iGM_ResolveReviewerNames([row])).get(row.iGM_ReviewerId) ?? null)
       : null,
   );
 }
 
 /** 我的开发者申请历史（按时间倒序） */
-export function iGM_ListMyDevelopersService(
+export async function iGM_ListMyDevelopersService(
   userId: string,
-): Array<Record<string, unknown>> {
-  const rows = iGM_ListDeveloperApplicationsByUser(userId);
-  const names = iGM_ResolveReviewerNames(rows);
+): Promise<Array<Record<string, unknown>>> {
+  const rows = await iGM_ListDeveloperApplicationsByUser(userId);
+  const names = await iGM_ResolveReviewerNames(rows);
   return rows.map((row) =>
     iGM_ToApplicationDto(
       row,
@@ -230,18 +232,18 @@ export function iGM_ListMyDevelopersService(
 }
 
 /** 撤回本人待审核申请 */
-export function iGM_WithdrawDeveloperApplyService(
+export async function iGM_WithdrawDeveloperApplyService(
   userId: string,
   applicationId: string,
-): void {
-  const row = iGM_FindDeveloperApplicationById(applicationId);
+): Promise<void> {
+  const row = await iGM_FindDeveloperApplicationById(applicationId);
   if (!row || row.iGM_UserId !== userId) {
     throw new iGM_DeveloperError("developer.errors.applyNotFound", 404);
   }
   if (row.iGM_Status !== "pending") {
     throw new iGM_DeveloperError("developer.errors.withdrawNotAllowed", 409);
   }
-  const ok = iGM_WithdrawDeveloperApplication({
+  const ok = await iGM_WithdrawDeveloperApplication({
     id: applicationId,
     userId,
     now: new Date().toISOString(),
@@ -252,17 +254,17 @@ export function iGM_WithdrawDeveloperApplyService(
 }
 
 /** 待审核列表（仅组织所有者与管理员）：分页查询开发者申请 */
-export function iGM_AdminListDevelopersService(
+export async function iGM_AdminListDevelopersService(
   status: string | null,
   pageRaw?: number,
   pageSizeRaw?: number,
-): {
+): Promise<{
   items: Array<Record<string, unknown>>;
   total: number;
   page: number;
   pageSize: number;
   totalPages: number;
-} {
+}> {
   const page =
     Number.isFinite(pageRaw) && (pageRaw as number) >= 1
       ? Math.floor(pageRaw as number)
@@ -273,12 +275,12 @@ export function iGM_AdminListDevelopersService(
     (pageSizeRaw as number) <= 50
       ? Math.floor(pageSizeRaw as number)
       : 10;
-  const { items, total } = iGM_ListDeveloperApplicationsForAdmin({
+  const { items, total } = await iGM_ListDeveloperApplicationsForAdmin({
     status: status && status.length > 0 ? status : null,
     limit: pageSize,
     offset: (page - 1) * pageSize,
   });
-  const names = iGM_ResolveReviewerNames(items);
+  const names = await iGM_ResolveReviewerNames(items);
   return {
     items: items.map((row) => ({
       ...iGM_ToApplicationDto(
@@ -299,13 +301,13 @@ export function iGM_AdminListDevelopersService(
  * 审核开发者申请（通过 / 拒绝）：仅待审核可被审核。
  * 只记录状态与审核意见，通过即授予开发者接入资格（不发放 API Key）。
  */
-export function iGM_ReviewDeveloperService(
+export async function iGM_ReviewDeveloperService(
   reviewerId: string,
   applicationId: string,
   action: "approve" | "reject",
   comment?: string,
-): void {
-  const row = iGM_FindDeveloperApplicationById(applicationId);
+): Promise<void> {
+  const row = await iGM_FindDeveloperApplicationById(applicationId);
   if (!row) {
     throw new iGM_DeveloperError("developer.errors.applyNotFound", 404);
   }
@@ -313,7 +315,7 @@ export function iGM_ReviewDeveloperService(
     throw new iGM_DeveloperError("developer.errors.applyReviewed", 409);
   }
   const trimmed = comment?.trim() || null;
-  const ok = iGM_ReviewDeveloperApplication({
+  const ok = await iGM_ReviewDeveloperApplication({
     id: applicationId,
     status: action === "approve" ? "approved" : "rejected",
     reviewerId,

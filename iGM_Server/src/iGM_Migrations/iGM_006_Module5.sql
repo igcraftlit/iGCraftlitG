@@ -26,6 +26,17 @@ CREATE INDEX IF NOT EXISTS iGM_Idx_PointsRecords_User_Action_Created
 CREATE INDEX IF NOT EXISTS iGM_Idx_PointsRecords_Created
   ON iGM_PointsRecords (iGM_CreatedAt);
 
+-- ===== 等级表：minPoints ≤ 总分 ≤ maxPoints（maxPoints 为空表示无上限） =====
+-- 说明：必须先于 iGM_UserPoints 建表，PostgreSQL 不支持外键前向引用
+CREATE TABLE IF NOT EXISTS iGM_Levels (
+  iGM_Id       TEXT PRIMARY KEY,
+  iGM_Name     TEXT NOT NULL,
+  iGM_MinPoints INTEGER NOT NULL,
+  iGM_MaxPoints INTEGER,
+  iGM_Icon     TEXT,
+  iGM_SortOrder INTEGER NOT NULL DEFAULT 0
+);
+
 -- ===== 用户积分汇总表：每用户一行，等级随总分自动重算 =====
 CREATE TABLE IF NOT EXISTS iGM_UserPoints (
   iGM_Id         TEXT PRIMARY KEY,
@@ -39,16 +50,6 @@ CREATE TABLE IF NOT EXISTS iGM_UserPoints (
 
 CREATE INDEX IF NOT EXISTS iGM_Idx_UserPoints_Total
   ON iGM_UserPoints (iGM_TotalPoints DESC);
-
--- ===== 等级表：minPoints ≤ 总分 ≤ maxPoints（maxPoints 为空表示无上限） =====
-CREATE TABLE IF NOT EXISTS iGM_Levels (
-  iGM_Id       TEXT PRIMARY KEY,
-  iGM_Name     TEXT NOT NULL,
-  iGM_MinPoints INTEGER NOT NULL,
-  iGM_MaxPoints INTEGER,
-  iGM_Icon     TEXT,
-  iGM_SortOrder INTEGER NOT NULL DEFAULT 0
-);
 
 -- ===== 勋章定义表：conditionType 决定统计口径，conditionValue 为达标数值 =====
 -- conditionType 取值：posts_count 发帖数 / comments_count 评论数 /
@@ -158,7 +159,7 @@ CREATE INDEX IF NOT EXISTS iGM_Idx_Reports_Target
 
 -- ===== 等级种子（固定 ID，迁移幂等） =====
 -- 前端按 iGM_Id 优先匹配语言包 points.levels.<id>，匹配不到时显示 iGM_Name
-INSERT OR IGNORE INTO iGM_Levels (iGM_Id, iGM_Name, iGM_MinPoints, iGM_MaxPoints, iGM_Icon, iGM_SortOrder) VALUES
+INSERT INTO iGM_Levels (iGM_Id, iGM_Name, iGM_MinPoints, iGM_MaxPoints, iGM_Icon, iGM_SortOrder) VALUES
   ('lv1', '新星',   0,     99,    'star',        1),
   ('lv2', '见习者', 100,   299,   'compass',     2),
   ('lv3', '创作者', 300,   799,   'pen-tool',    3),
@@ -166,10 +167,11 @@ INSERT OR IGNORE INTO iGM_Levels (iGM_Id, iGM_Name, iGM_MinPoints, iGM_MaxPoints
   ('lv5', '探索者', 2000,  4999,  'map',         5),
   ('lv6', '工程师', 5000,  11999, 'cpu',         6),
   ('lv7', '大师',   12000, 29999, 'crown',       7),
-  ('lv8', '传奇',   30000, NULL,  'trophy',      8);
+  ('lv8', '传奇',   30000, NULL,  'trophy',      8)
+ON CONFLICT DO NOTHING;
 
 -- ===== 勋章种子（固定 ID，迁移幂等） =====
-INSERT OR IGNORE INTO iGM_Badges (iGM_Id, iGM_Name, iGM_Description, iGM_Icon, iGM_ConditionType, iGM_ConditionValue) VALUES
+INSERT INTO iGM_Badges (iGM_Id, iGM_Name, iGM_Description, iGM_Icon, iGM_ConditionType, iGM_ConditionValue) VALUES
   ('badge-first-post',     '初次发帖',   '发布了第一篇帖子',           'notebook-pen',  'posts_count',    1),
   ('badge-post-10',        '笔耕不辍',   '累计发布 10 篇帖子',         'book-open',     'posts_count',    10),
   ('badge-first-comment',  '初来乍到',   '发表了第一条评论',           'message-square','comments_count', 1),
@@ -178,13 +180,15 @@ INSERT OR IGNORE INTO iGM_Badges (iGM_Id, iGM_Name, iGM_Description, iGM_Icon, i
   ('badge-checkin-7',      '七日之约',   '累计签到 7 天',              'calendar-check','checkin_days',   7),
   ('badge-checkin-30',     '持之以恒',   '累计签到 30 天',             'calendar-heart','checkin_days',   30),
   ('badge-likes-10',       '广受好评',   '累计获得 10 次点赞',         'thumbs-up',     'likes_received', 10),
-  ('badge-points-1000',    '积分达人',   '累计积分达到 1000',          'coins',         'points_total',   1000);
+  ('badge-points-1000',    '积分达人',   '累计积分达到 1000',          'coins',         'points_total',   1000)
+ON CONFLICT DO NOTHING;
 
 -- ===== 任务种子（固定 ID，迁移幂等，均一次性） =====
-INSERT OR IGNORE INTO iGM_Tasks (iGM_Id, iGM_Name, iGM_Description, iGM_Action, iGM_TargetCount, iGM_RewardPoints, iGM_TaskType, iGM_SortOrder) VALUES
+INSERT INTO iGM_Tasks (iGM_Id, iGM_Name, iGM_Description, iGM_Action, iGM_TargetCount, iGM_RewardPoints, iGM_TaskType, iGM_SortOrder) VALUES
   ('task-first-post',      '发布首帖',   '发布你的第一篇帖子',       'post_create',    1, 20, 'once', 1),
   ('task-first-comment',   '首条评论',   '发表你的第一条评论',       'comment_create', 1, 10, 'once', 2),
   ('task-first-resource',  '首次分享',   '上传你的第一个资源',       'resource_upload',1, 30, 'once', 3),
   ('task-first-activity',  '首次报名',   '报名参加一次社区活动',     'activity_join',  1, 15, 'once', 4),
   ('task-first-checkin',   '首次签到',   '完成第一次每日签到',       'checkin',        1, 10, 'once', 5),
-  ('task-post-10',         '十帖之约',   '累计发布 10 篇帖子',       'post_create',    10, 50, 'once', 6);
+  ('task-post-10',         '十帖之约',   '累计发布 10 篇帖子',       'post_create',    10, 50, 'once', 6)
+ON CONFLICT DO NOTHING;

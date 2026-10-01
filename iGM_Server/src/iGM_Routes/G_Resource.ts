@@ -63,10 +63,10 @@ function iGM_ReadResourceInput(body: unknown): iGM_ResourceInput {
 }
 
 /* ---------- 资源列表 ---------- */
-function iGM_HandleList(ctx: iGM_RouteContext) {
+async function iGM_HandleList(ctx: iGM_RouteContext) {
   const { page, pageSize } = iGM_PageQuery(ctx);
   return iGM_Ok(
-    iGM_ListResourcesService(iGM_CurrentUser(ctx), {
+    await iGM_ListResourcesService(await iGM_CurrentUser(ctx), {
       category: iGM_Query(ctx.query, "category") || undefined,
       tag: iGM_Query(ctx.query, "tag") || undefined,
       activityId: iGM_Query(ctx.query, "activityId") || undefined,
@@ -78,35 +78,41 @@ function iGM_HandleList(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 资源分类字典 ---------- */
-function iGM_HandleCategories() {
-  return iGM_Ok({ items: iGM_ListResourceCategoriesService() });
+async function iGM_HandleCategories() {
+  return iGM_Ok({ items: await iGM_ListResourceCategoriesService() });
 }
 
 /* ---------- 资源详情 ---------- */
-function iGM_HandleDetail(ctx: iGM_RouteContext) {
+async function iGM_HandleDetail(ctx: iGM_RouteContext) {
   const resourceId = iGM_Query(ctx.query, "resourceId");
   if (!resourceId) throw new iGM_ContentError("resource.errors.notFound", 404);
-  const detail = iGM_GetResourceDetail(iGM_CurrentUser(ctx), resourceId);
+  const detail = await iGM_GetResourceDetail(
+    await iGM_CurrentUser(ctx),
+    resourceId,
+  );
   if (!detail) throw new iGM_ContentError("resource.errors.notFound", 404);
   return iGM_Ok({ resource: detail });
 }
 
 /* ---------- 创建资源 ---------- */
-function iGM_HandleCreate(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleCreate(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "resourceWrite", `user:${user.iGM_Id}`);
-  const detail = iGM_CreateResourceService(user, iGM_ReadResourceInput(ctx.body));
+  const detail = await iGM_CreateResourceService(
+    user,
+    iGM_ReadResourceInput(ctx.body),
+  );
   ctx.set.status = 201;
   return iGM_Ok({ resource: detail }, "resource.messages.created");
 }
 
 /* ---------- 编辑资源 ---------- */
-function iGM_HandleEdit(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleEdit(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "resourceWrite", `user:${user.iGM_Id}`);
   const resourceId = iGM_Field(ctx.body, "resourceId").trim();
   if (!resourceId) throw new iGM_ContentError("resource.errors.notFound", 404);
-  const detail = iGM_UpdateResourceService(
+  const detail = await iGM_UpdateResourceService(
     user,
     resourceId,
     iGM_ReadResourceInput(ctx.body),
@@ -115,18 +121,18 @@ function iGM_HandleEdit(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 删除资源 ---------- */
-function iGM_HandleDelete(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleDelete(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "resourceWrite", `user:${user.iGM_Id}`);
   const resourceId = iGM_Query(ctx.query, "resourceId");
   if (!resourceId) throw new iGM_ContentError("resource.errors.notFound", 404);
-  iGM_DeleteResourceService(user, resourceId);
+  await iGM_DeleteResourceService(user, resourceId);
   return iGM_Ok({ deleted: true }, "resource.messages.deleted");
 }
 
 /* ---------- 上架 / 下架 ---------- */
-function iGM_HandleSetStatus(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleSetStatus(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "resourceWrite", `user:${user.iGM_Id}`);
   const resourceId = iGM_Field(ctx.body, "resourceId").trim();
   const status = iGM_Field(ctx.body, "status").trim();
@@ -134,7 +140,7 @@ function iGM_HandleSetStatus(ctx: iGM_RouteContext) {
   if (!iGM_IsResourceStatus(status)) {
     throw new iGM_ContentError("resource.errors.notFound", 422);
   }
-  const detail = iGM_SetResourceStatusService(user, resourceId, status);
+  const detail = await iGM_SetResourceStatusService(user, resourceId, status);
   return iGM_Ok({ resource: detail }, "resource.messages.statusUpdated");
 }
 
@@ -144,7 +150,7 @@ async function iGM_HandleDownload(ctx: iGM_RouteContext) {
   if (!resourceId) throw new iGM_ContentError("resource.errors.notFound", 404);
   iGM_EnforceRateLimit(ctx, "resourceDownload", `res:${resourceId}`);
   const content = await iGM_DownloadResourceService(
-    iGM_CurrentUser(ctx),
+    await iGM_CurrentUser(ctx),
     resourceId,
     iGM_RequestLocale(ctx),
   );
@@ -158,7 +164,7 @@ async function iGM_HandleDownloadByIdentifier(ctx: iGM_RouteContext) {
   if (!identifier) throw new iGM_ContentError("resource.errors.notFound", 404);
   iGM_EnforceRateLimit(ctx, "resourceDownload", `res:${identifier}`);
   const content = await iGM_DownloadResourceByIdentifierService(
-    iGM_CurrentUser(ctx),
+    await iGM_CurrentUser(ctx),
     decodeURIComponent(identifier),
     iGM_RequestLocale(ctx),
   );

@@ -34,7 +34,7 @@ export interface iGM_CreateFileInput {
 
 // 核心逻辑 //
 /** 新建文件元数据记录 */
-export function iGM_CreateFile(input: iGM_CreateFileInput): iGM_FileRow {
+export async function iGM_CreateFile(input: iGM_CreateFileInput): Promise<iGM_FileRow> {
   const row: iGM_FileRow = {
     iGM_Id: input.id,
     iGM_UploaderId: input.uploaderId,
@@ -46,7 +46,7 @@ export function iGM_CreateFile(input: iGM_CreateFileInput): iGM_FileRow {
     iGM_Hash: input.hash,
     iGM_CreatedAt: input.now,
   };
-  iGM_Db.run(
+  await iGM_Db.run(
     `INSERT INTO iGM_Files
        (iGM_Id, iGM_UploaderId, iGM_FileName, iGM_OriginalName,
         iGM_MimeType, iGM_Size, iGM_Path, iGM_Hash, iGM_CreatedAt)
@@ -67,57 +67,57 @@ export function iGM_CreateFile(input: iGM_CreateFileInput): iGM_FileRow {
 }
 
 /** 按主键查询文件 */
-export function iGM_FindFileById(id: string): iGM_FileRow | null {
+export async function iGM_FindFileById(id: string): Promise<iGM_FileRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(`SELECT * FROM iGM_Files WHERE iGM_Id = ?`)
-      .get(id) as iGM_FileRow | undefined) ?? null
+      .get(id)) as iGM_FileRow | undefined) ?? null
   );
 }
 
 /** 按主键批量查询文件（用于列表页一次组装封面/附件） */
-export function iGM_FindFilesByIds(ids: string[]): iGM_FileRow[] {
+export async function iGM_FindFilesByIds(ids: string[]): Promise<iGM_FileRow[]> {
   const unique = Array.from(new Set(ids)).filter(Boolean);
   if (unique.length === 0) return [];
   const placeholders = unique.map(() => "?").join(", ");
-  return iGM_Db
+  return (await iGM_Db
     .query(`SELECT * FROM iGM_Files WHERE iGM_Id IN (${placeholders})`)
-    .all(...unique) as iGM_FileRow[];
+    .all(...unique)) as iGM_FileRow[];
 }
 
 /** 分页查询某上传者的文件（时间倒序） */
-export function iGM_ListFilesByUploader(
+export async function iGM_ListFilesByUploader(
   uploaderId: string,
   page: number,
   pageSize: number,
-): iGM_FileListResult {
+): Promise<iGM_FileListResult> {
   const offset = (page - 1) * pageSize;
-  const totalRow = iGM_Db
+  const totalRow = (await iGM_Db
     .query(
       `SELECT COUNT(*) AS iGM_Count FROM iGM_Files WHERE iGM_UploaderId = ?`,
     )
-    .get(uploaderId) as { iGM_Count: number };
+    .get(uploaderId)) as { iGM_Count: number };
 
-  const items = iGM_Db
+  const items = (await iGM_Db
     .query(
       `SELECT * FROM iGM_Files WHERE iGM_UploaderId = ?
         ORDER BY iGM_CreatedAt DESC, iGM_Id DESC
         LIMIT ? OFFSET ?`,
     )
-    .all(uploaderId, pageSize, offset) as iGM_FileRow[];
+    .all(uploaderId, pageSize, offset)) as iGM_FileRow[];
 
   return { items, total: totalRow.iGM_Count };
 }
 
 /** 删除文件元数据记录 */
-export function iGM_DeleteFile(id: string): boolean {
-  const result = iGM_Db.run(`DELETE FROM iGM_Files WHERE iGM_Id = ?`, [id]);
+export async function iGM_DeleteFile(id: string): Promise<boolean> {
+  const result = await iGM_Db.run(`DELETE FROM iGM_Files WHERE iGM_Id = ?`, [id]);
   return result.changes > 0;
 }
 
 /** 统计某文件被资源/活动引用的次数（用于删除前保护） */
-export function iGM_CountFileReferences(fileId: string): number {
-  const row = iGM_Db
+export async function iGM_CountFileReferences(fileId: string): Promise<number> {
+  const row = (await iGM_Db
     .query(
       `SELECT
          (SELECT COUNT(*) FROM iGM_Resources
@@ -126,7 +126,7 @@ export function iGM_CountFileReferences(fileId: string): number {
          (SELECT COUNT(*) FROM iGM_PostImages WHERE iGM_FileId = ?)
          AS iGM_Count`,
     )
-    .get(fileId, fileId, fileId, fileId) as { iGM_Count: number };
+    .get(fileId, fileId, fileId, fileId)) as { iGM_Count: number };
   return row.iGM_Count;
 }
 

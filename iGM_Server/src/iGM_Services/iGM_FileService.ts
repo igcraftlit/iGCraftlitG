@@ -118,7 +118,7 @@ export async function iGM_UploadFileService(
     { imageOnly: kind === "image" },
   );
 
-  const row = iGM_CreateFile({
+  const row = await iGM_CreateFile({
     id: iGM_RandomFileId(),
     uploaderId: user.iGM_Id,
     fileName: stored.fileName,
@@ -142,13 +142,13 @@ function iGM_RandomFileId(): string {
 /* ---------- 查询 ---------- */
 
 /** 分页查询本人上传的文件 */
-export function iGM_ListMyFilesService(
+export async function iGM_ListMyFilesService(
   user: iGM_UserRow,
   pageRaw?: number,
   pageSizeRaw?: number,
-): iGM_FileListData {
+): Promise<iGM_FileListData> {
   const { page, pageSize } = iGM_ResolvePagination(pageRaw, pageSizeRaw);
-  const { items, total } = iGM_ListFilesByUploader(
+  const { items, total } = await iGM_ListFilesByUploader(
     user.iGM_Id,
     page,
     pageSize,
@@ -163,20 +163,20 @@ export function iGM_ListMyFilesService(
 }
 
 /** 获取文件元数据 DTO（不存在抛 404） */
-export function iGM_GetFileDto(fileId: string): iGM_FileDto {
-  const row = iGM_FindFileById(fileId);
+export async function iGM_GetFileDto(fileId: string): Promise<iGM_FileDto> {
+  const row = await iGM_FindFileById(fileId);
   if (!row) throw new iGM_ContentError("file.errors.notFound", 404);
   return iGM_ToFileDto(row);
 }
 
 /** 批量获取文件 DTO：fileId -> DTO（供资源/活动列表组装封面） */
-export function iGM_GetFileDtoMap(
+export async function iGM_GetFileDtoMap(
   fileIds: (string | null | undefined)[],
-): Map<string, iGM_FileDto> {
+): Promise<Map<string, iGM_FileDto>> {
   const map = new Map<string, iGM_FileDto>();
   for (const id of fileIds) {
     if (!id || map.has(id)) continue;
-    const row = iGM_FindFileById(id);
+    const row = await iGM_FindFileById(id);
     if (row) map.set(id, iGM_ToFileDto(row));
   }
   return map;
@@ -188,7 +188,7 @@ export function iGM_GetFileDtoMap(
 export async function iGM_ReadFileContentService(
   fileId: string,
 ): Promise<iGM_FileContent> {
-  const row = iGM_FindFileById(fileId);
+  const row = await iGM_FindFileById(fileId);
   if (!row) throw new iGM_ContentError("file.errors.notFound", 404);
   const bytes = await iGM_ReadFileBytes(row.iGM_Path);
   return {
@@ -241,16 +241,16 @@ export async function iGM_DeleteFileService(
   user: iGM_UserRow,
   fileId: string,
 ): Promise<void> {
-  const row = iGM_FindFileById(fileId);
+  const row = await iGM_FindFileById(fileId);
   if (!row) throw new iGM_ContentError("file.errors.notFound", 404);
   if (row.iGM_UploaderId !== user.iGM_Id && !iGM_CanModerate(user)) {
     throw new iGM_ContentError("auth.errors.forbidden", 403);
   }
-  if (iGM_CountFileReferences(fileId) > 0) {
+  if ((await iGM_CountFileReferences(fileId)) > 0) {
     throw new iGM_ContentError("file.errors.inUse", 409);
   }
   // 先删数据库记录，再清理磁盘文件（磁盘失败不影响接口结果）
-  iGM_DeleteFile(fileId);
+  await iGM_DeleteFile(fileId);
   await iGM_RemoveFile(row.iGM_Path);
 }
 

@@ -18,12 +18,12 @@ import type { iGM_UserAgreementRow } from "../iGM_Types/iGM_Agreement";
 
 // 核心逻辑 //
 /** 写入一条用户协议同意记录 */
-export function iGM_InsertAgreement(params: {
+export async function iGM_InsertAgreement(params: {
   userId: string;
   version: string;
   acceptedIp: string | null;
   now: string;
-}): iGM_UserAgreementRow {
+}): Promise<iGM_UserAgreementRow> {
   const row: iGM_UserAgreementRow = {
     iGM_Id: randomUUID(),
     iGM_UserId: params.userId,
@@ -31,7 +31,7 @@ export function iGM_InsertAgreement(params: {
     iGM_AcceptedIp: params.acceptedIp,
     iGM_AcceptedAt: params.now,
   };
-  iGM_Db.run(
+  await iGM_Db.run(
     `INSERT INTO iGM_UserAgreements
        (iGM_Id, iGM_UserId, iGM_Version, iGM_AcceptedIp, iGM_AcceptedAt)
      VALUES (?, ?, ?, ?, ?)`,
@@ -47,23 +47,23 @@ export function iGM_InsertAgreement(params: {
 }
 
 /** 用户最近一次同意记录（不存在返回 null） */
-export function iGM_FindLatestAgreement(
+export async function iGM_FindLatestAgreement(
   userId: string,
-): iGM_UserAgreementRow | null {
+): Promise<iGM_UserAgreementRow | null> {
   return (
-    (iGM_Db.query(
+    ((await iGM_Db.query(
       `SELECT * FROM iGM_UserAgreements
        WHERE iGM_UserId = ? ORDER BY iGM_AcceptedAt DESC LIMIT 1`,
-    ).get(userId) as iGM_UserAgreementRow | undefined) ?? null
+    ).get(userId)) as iGM_UserAgreementRow | undefined) ?? null
   );
 }
 
 /** 用户全部同意记录（按时间倒序，供留痕查询） */
-export function iGM_ListAgreementsByUser(userId: string): iGM_UserAgreementRow[] {
-  return iGM_Db.query(
+export async function iGM_ListAgreementsByUser(userId: string): Promise<iGM_UserAgreementRow[]> {
+  return (await iGM_Db.query(
     `SELECT * FROM iGM_UserAgreements
      WHERE iGM_UserId = ? ORDER BY iGM_AcceptedAt DESC`,
-  ).all(userId) as iGM_UserAgreementRow[];
+  ).all(userId)) as iGM_UserAgreementRow[];
 }
 
 // 导出 //

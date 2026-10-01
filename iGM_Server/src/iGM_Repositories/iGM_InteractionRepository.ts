@@ -30,12 +30,12 @@ interface iGM_CountRow {
 
 // 核心逻辑 //
 /** 查询用户是否已点赞指定目标 */
-export function iGM_HasLike(
+export async function iGM_HasLike(
   targetType: iGM_LikeTargetType,
   targetId: string,
   userId: string,
-): boolean {
-  const row = iGM_Db
+): Promise<boolean> {
+  const row = await iGM_Db
     .query(
       `SELECT iGM_Id FROM iGM_Likes
         WHERE iGM_TargetType = ? AND iGM_TargetId = ? AND iGM_UserId = ?`,
@@ -45,28 +45,28 @@ export function iGM_HasLike(
 }
 
 /** 点赞（幂等：已点赞时不重复写入），返回当前是否处于点赞状态 */
-export function iGM_AddLike(
+export async function iGM_AddLike(
   targetType: iGM_LikeTargetType,
   targetId: string,
   userId: string,
   now: string,
-): boolean {
-  iGM_Db.run(
-    `INSERT OR IGNORE INTO iGM_Likes
+): Promise<boolean> {
+  await iGM_Db.run(
+    `INSERT INTO iGM_Likes
        (iGM_Id, iGM_TargetType, iGM_TargetId, iGM_UserId, iGM_CreatedAt)
-     VALUES (?, ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING`,
     [iGM_RandomUuid(), targetType, targetId, userId, now],
   );
   return true;
 }
 
 /** 取消点赞，返回当前是否处于点赞状态 */
-export function iGM_RemoveLike(
+export async function iGM_RemoveLike(
   targetType: iGM_LikeTargetType,
   targetId: string,
   userId: string,
-): boolean {
-  iGM_Db.run(
+): Promise<boolean> {
+  await iGM_Db.run(
     `DELETE FROM iGM_Likes
       WHERE iGM_TargetType = ? AND iGM_TargetId = ? AND iGM_UserId = ?`,
     [targetType, targetId, userId],
@@ -75,16 +75,16 @@ export function iGM_RemoveLike(
 }
 
 /** 统计单个目标的点赞数 */
-export function iGM_CountLikes(
+export async function iGM_CountLikes(
   targetType: iGM_LikeTargetType,
   targetId: string,
-): number {
-  const row = iGM_Db
+): Promise<number> {
+  const row = (await iGM_Db
     .query(
       `SELECT COUNT(*) AS iGM_Count FROM iGM_Likes
         WHERE iGM_TargetType = ? AND iGM_TargetId = ?`,
     )
-    .get(targetType, targetId) as { iGM_Count: number };
+    .get(targetType, targetId)) as { iGM_Count: number };
   return row.iGM_Count;
 }
 
@@ -92,43 +92,43 @@ export function iGM_CountLikes(
  * 批量统计一组目标的点赞数
  * @returns targetId -> 数量 映射
  */
-export function iGM_CountLikesBatch(
+export async function iGM_CountLikesBatch(
   targetType: iGM_LikeTargetType,
   targetIds: string[],
-): Map<string, number> {
+): Promise<Map<string, number>> {
   const map = new Map<string, number>();
   const unique = Array.from(new Set(targetIds)).filter(Boolean);
   if (unique.length === 0) return map;
   const placeholders = unique.map(() => "?").join(", ");
-  const rows = iGM_Db
+  const rows = (await iGM_Db
     .query(
       `SELECT iGM_TargetId AS iGM_TargetId, COUNT(*) AS iGM_Count
          FROM iGM_Likes
         WHERE iGM_TargetType = ? AND iGM_TargetId IN (${placeholders})
         GROUP BY iGM_TargetId`,
     )
-    .all(targetType, ...unique) as iGM_CountRow[];
+    .all(targetType, ...unique)) as iGM_CountRow[];
   for (const row of rows) map.set(row.iGM_TargetId, row.iGM_Count);
   return map;
 }
 
 /** 查询某用户在一组目标中已点赞的目标 ID 集合 */
-export function iGM_GetLikedIdSet(
+export async function iGM_GetLikedIdSet(
   targetType: iGM_LikeTargetType,
   targetIds: string[],
   userId: string | null,
-): Set<string> {
+): Promise<Set<string>> {
   const result = new Set<string>();
   const unique = Array.from(new Set(targetIds)).filter(Boolean);
   if (!userId || unique.length === 0) return result;
   const placeholders = unique.map(() => "?").join(", ");
-  const rows = iGM_Db
+  const rows = (await iGM_Db
     .query(
       `SELECT iGM_TargetId AS iGM_TargetId FROM iGM_Likes
         WHERE iGM_TargetType = ? AND iGM_UserId = ?
           AND iGM_TargetId IN (${placeholders})`,
     )
-    .all(targetType, userId, ...unique) as Pick<iGM_LikeRow, "iGM_TargetId">[];
+    .all(targetType, userId, ...unique)) as Pick<iGM_LikeRow, "iGM_TargetId">[];
   for (const row of rows) result.add(row.iGM_TargetId);
   return result;
 }
@@ -136,8 +136,8 @@ export function iGM_GetLikedIdSet(
 /* ---------- 收藏 ---------- */
 
 /** 查询用户是否已收藏指定帖子 */
-export function iGM_HasFavorite(postId: string, userId: string): boolean {
-  const row = iGM_Db
+export async function iGM_HasFavorite(postId: string, userId: string): Promise<boolean> {
+  const row = await iGM_Db
     .query(
       `SELECT iGM_Id FROM iGM_Favorites WHERE iGM_PostId = ? AND iGM_UserId = ?`,
     )
@@ -146,71 +146,71 @@ export function iGM_HasFavorite(postId: string, userId: string): boolean {
 }
 
 /** 收藏帖子（幂等） */
-export function iGM_AddFavorite(postId: string, userId: string, now: string): void {
-  iGM_Db.run(
-    `INSERT OR IGNORE INTO iGM_Favorites
+export async function iGM_AddFavorite(postId: string, userId: string, now: string): Promise<void> {
+  await iGM_Db.run(
+    `INSERT INTO iGM_Favorites
        (iGM_Id, iGM_PostId, iGM_UserId, iGM_CreatedAt)
-     VALUES (?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING`,
     [iGM_RandomUuid(), postId, userId, now],
   );
 }
 
 /** 取消收藏 */
-export function iGM_RemoveFavorite(postId: string, userId: string): void {
-  iGM_Db.run(
+export async function iGM_RemoveFavorite(postId: string, userId: string): Promise<void> {
+  await iGM_Db.run(
     `DELETE FROM iGM_Favorites WHERE iGM_PostId = ? AND iGM_UserId = ?`,
     [postId, userId],
   );
 }
 
 /** 统计单个帖子的收藏数 */
-export function iGM_CountFavorites(postId: string): number {
-  const row = iGM_Db
+export async function iGM_CountFavorites(postId: string): Promise<number> {
+  const row = (await iGM_Db
     .query(`SELECT COUNT(*) AS iGM_Count FROM iGM_Favorites WHERE iGM_PostId = ?`)
-    .get(postId) as { iGM_Count: number };
+    .get(postId)) as { iGM_Count: number };
   return row.iGM_Count;
 }
 
 /** 批量统计一组帖子的收藏数 */
-export function iGM_CountFavoritesBatch(postIds: string[]): Map<string, number> {
+export async function iGM_CountFavoritesBatch(postIds: string[]): Promise<Map<string, number>> {
   const map = new Map<string, number>();
   const unique = Array.from(new Set(postIds)).filter(Boolean);
   if (unique.length === 0) return map;
   const placeholders = unique.map(() => "?").join(", ");
-  const rows = iGM_Db
+  const rows = (await iGM_Db
     .query(
       `SELECT iGM_PostId AS iGM_TargetId, COUNT(*) AS iGM_Count
          FROM iGM_Favorites
         WHERE iGM_PostId IN (${placeholders})
         GROUP BY iGM_PostId`,
     )
-    .all(...unique) as iGM_CountRow[];
+    .all(...unique)) as iGM_CountRow[];
   for (const row of rows) map.set(row.iGM_TargetId, row.iGM_Count);
   return map;
 }
 
 /** 查询某用户在一组帖子中已收藏的帖子 ID 集合 */
-export function iGM_GetFavoritedIdSet(
+export async function iGM_GetFavoritedIdSet(
   postIds: string[],
   userId: string | null,
-): Set<string> {
+): Promise<Set<string>> {
   const result = new Set<string>();
   const unique = Array.from(new Set(postIds)).filter(Boolean);
   if (!userId || unique.length === 0) return result;
   const placeholders = unique.map(() => "?").join(", ");
-  const rows = iGM_Db
+  const rows = (await iGM_Db
     .query(
       `SELECT iGM_PostId AS iGM_TargetId FROM iGM_Favorites
         WHERE iGM_UserId = ? AND iGM_PostId IN (${placeholders})`,
     )
-    .all(userId, ...unique) as Pick<iGM_LikeRow, "iGM_TargetId">[];
+    .all(userId, ...unique)) as Pick<iGM_LikeRow, "iGM_TargetId">[];
   for (const row of rows) result.add(row.iGM_TargetId);
   return result;
 }
 
 /** 删除帖子时清理其多态点赞（帖子自身与该帖全部评论的点赞） */
-export function iGM_DeleteLikesForPost(postId: string): void {
-  iGM_Db.run(
+export async function iGM_DeleteLikesForPost(postId: string): Promise<void> {
+  await iGM_Db.run(
     `DELETE FROM iGM_Likes
       WHERE (iGM_TargetType = 'post' AND iGM_TargetId = ?)
          OR (iGM_TargetType = 'comment'

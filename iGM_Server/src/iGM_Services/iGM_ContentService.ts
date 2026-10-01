@@ -270,10 +270,10 @@ function iGM_ValidatePostInput(input: iGM_PostInput): {
  *    防止引用他人或非图片文件。
  * 返回去重后的有序文件 ID。
  */
-function iGM_ValidatePostImages(
+async function iGM_ValidatePostImages(
   user: iGM_UserRow,
   raw: unknown,
-): string[] {
+): Promise<string[]> {
   if (raw === undefined || raw === null) return [];
   if (!Array.isArray(raw)) {
     throw new iGM_ContentError("community.errors.imagesInvalid", 422);
@@ -290,7 +290,7 @@ function iGM_ValidatePostImages(
     throw new iGM_ContentError("community.errors.tooManyImages", 422);
   }
   if (ids.length === 0) return [];
-  const files = iGM_FindFilesByIds(ids);
+  const files = await iGM_FindFilesByIds(ids);
   const fileMap = new Map(files.map((file) => [file.iGM_Id, file]));
   for (const id of ids) {
     const file = fileMap.get(id);
@@ -306,8 +306,8 @@ function iGM_ValidatePostImages(
 }
 
 /** 读取帖子配图 DTO（按顺序） */
-function iGM_BuildPostImageDtos(postId: string): iGM_PostImageDto[] {
-  return iGM_ListPostImages(postId).map((row) => ({
+async function iGM_BuildPostImageDtos(postId: string): Promise<iGM_PostImageDto[]> {
+  return (await iGM_ListPostImages(postId)).map((row) => ({
     id: row.iGM_Id,
     fileId: row.iGM_FileId,
     sortOrder: row.iGM_SortOrder,
@@ -358,7 +358,7 @@ function iGM_IsOwner(user: iGM_UserRow, authorId: string): boolean {
 /* ---------- DTO 组装 ---------- */
 
 /** 用户行转作者简要 DTO */
-function iGM_ToAuthorDto(user: iGM_UserRow): iGM_AuthorDto {
+async function iGM_ToAuthorDto(user: iGM_UserRow): Promise<iGM_AuthorDto> {
   return {
     id: user.iGM_Id,
     username: user.iGM_Username,
@@ -366,7 +366,7 @@ function iGM_ToAuthorDto(user: iGM_UserRow): iGM_AuthorDto {
     avatar: user.iGM_Avatar,
     role: user.iGM_Role,
     // 模块七：认证组织徽标（负责人邮箱匹配时带 isOwner 金标）
-    verifiedOrg: iGM_ResolveUserOrgBadge(
+    verifiedOrg: await iGM_ResolveUserOrgBadge(
       user.iGM_VerifiedOrgId ?? null,
       user.iGM_Email,
     ),
@@ -374,52 +374,54 @@ function iGM_ToAuthorDto(user: iGM_UserRow): iGM_AuthorDto {
 }
 
 /** 由帖子行批量组装列表 DTO（作者、分类、标签、计数、当前用户互动状态一次取齐） */
-function iGM_AssemblePostList(
+async function iGM_AssemblePostList(
   rows: Awaited<ReturnType<typeof iGM_ListPosts>>["items"],
   currentUserId: string | null,
-): iGM_PostListItemDto[] {
+): Promise<iGM_PostListItemDto[]> {
   if (rows.length === 0) return [];
 
   const postIds = rows.map((row) => row.iGM_Id);
-  const authorRows = iGM_FindUsersByIds(rows.map((row) => row.iGM_AuthorId));
+  const authorRows = await iGM_FindUsersByIds(rows.map((row) => row.iGM_AuthorId));
   const authorMap = new Map(authorRows.map((user) => [user.iGM_Id, user]));
 
   const categoryMap = new Map(
-    iGM_ListCategories().map((category) => [category.iGM_Id, category]),
+    (await iGM_ListCategories()).map((category) => [category.iGM_Id, category]),
   );
-  const tagsMap = iGM_GetTagsForPosts(postIds);
-  const likeCounts = iGM_CountLikesBatch("post", postIds);
-  const favoriteCounts = iGM_CountFavoritesBatch(postIds);
-  const commentCounts = iGM_GetCommentCountsForPosts(postIds);
-  const likedSet = iGM_GetLikedIdSet("post", postIds, currentUserId);
-  const favoritedSet = iGM_GetFavoritedIdSet(postIds, currentUserId);
+  const tagsMap = await iGM_GetTagsForPosts(postIds);
+  const likeCounts = await iGM_CountLikesBatch("post", postIds);
+  const favoriteCounts = await iGM_CountFavoritesBatch(postIds);
+  const commentCounts = await iGM_GetCommentCountsForPosts(postIds);
+  const likedSet = await iGM_GetLikedIdSet("post", postIds, currentUserId);
+  const favoritedSet = await iGM_GetFavoritedIdSet(postIds, currentUserId);
 
-  return rows.map((row) => {
-    const authorRow = authorMap.get(row.iGM_AuthorId);
-    const categoryRow = row.iGM_CategoryId
-      ? (categoryMap.get(row.iGM_CategoryId) ?? null)
-      : null;
-    const tags = (tagsMap.get(row.iGM_Id) ?? []).map(iGM_ToTagDto);
+  return await Promise.all(
+    rows.map(async (row) => {
+      const authorRow = authorMap.get(row.iGM_AuthorId);
+      const categoryRow = row.iGM_CategoryId
+        ? (categoryMap.get(row.iGM_CategoryId) ?? null)
+        : null;
+      const tags = (tagsMap.get(row.iGM_Id) ?? []).map(iGM_ToTagDto);
 
-    return {
-      id: row.iGM_Id,
-      title: row.iGM_Title,
-      excerpt: iGM_BuildExcerpt(row.iGM_Content),
-      status: row.iGM_Status,
-      author: authorRow
-        ? iGM_ToAuthorDto(authorRow)
-        : iGM_DeletedAuthorPlaceholder(row.iGM_AuthorId),
-      category: categoryRow ? iGM_ToCategoryDto(categoryRow) : null,
-      tags,
-      likeCount: likeCounts.get(row.iGM_Id) ?? 0,
-      commentCount: commentCounts.get(row.iGM_Id) ?? 0,
-      favoriteCount: favoriteCounts.get(row.iGM_Id) ?? 0,
-      likedByMe: likedSet.has(row.iGM_Id),
-      favoritedByMe: favoritedSet.has(row.iGM_Id),
-      createdAt: row.iGM_CreatedAt,
-      updatedAt: row.iGM_UpdatedAt,
-    };
-  });
+      return {
+        id: row.iGM_Id,
+        title: row.iGM_Title,
+        excerpt: iGM_BuildExcerpt(row.iGM_Content),
+        status: row.iGM_Status,
+        author: authorRow
+          ? await iGM_ToAuthorDto(authorRow)
+          : iGM_DeletedAuthorPlaceholder(row.iGM_AuthorId),
+        category: categoryRow ? iGM_ToCategoryDto(categoryRow) : null,
+        tags,
+        likeCount: likeCounts.get(row.iGM_Id) ?? 0,
+        commentCount: commentCounts.get(row.iGM_Id) ?? 0,
+        favoriteCount: favoriteCounts.get(row.iGM_Id) ?? 0,
+        likedByMe: likedSet.has(row.iGM_Id),
+        favoritedByMe: favoritedSet.has(row.iGM_Id),
+        createdAt: row.iGM_CreatedAt,
+        updatedAt: row.iGM_UpdatedAt,
+      };
+    }),
+  );
 }
 
 /** 作者已注销场景的占位（当前无删号功能，仅为类型完整） */
@@ -443,13 +445,13 @@ function iGM_BuildExcerpt(content: string): string {
 }
 
 /** 组装分页帖子列表响应数据 */
-function iGM_BuildPostListData(
+async function iGM_BuildPostListData(
   params: iGM_PostListParams,
   currentUserId: string | null,
-): iGM_PostListData {
-  const { items, total } = iGM_ListPosts(params);
+): Promise<iGM_PostListData> {
+  const { items, total } = await iGM_ListPosts(params);
   return {
-    items: iGM_AssemblePostList(items, currentUserId),
+    items: await iGM_AssemblePostList(items, currentUserId),
     total,
     page: params.page,
     pageSize: params.pageSize,
@@ -458,75 +460,77 @@ function iGM_BuildPostListData(
 }
 
 /** 组装评论 DTO（平铺） */
-function iGM_AssembleComments(
-  rows: ReturnType<typeof iGM_ListCommentsByPost>,
+async function iGM_AssembleComments(
+  rows: Awaited<ReturnType<typeof iGM_ListCommentsByPost>>,
   currentUserId: string | null,
   postTitleById?: Map<string, string>,
-): Array<iGM_CommentDto | iGM_MyCommentItemDto> {
+): Promise<Array<iGM_CommentDto | iGM_MyCommentItemDto>> {
   if (rows.length === 0) return [];
 
-  const authorRows = iGM_FindUsersByIds(rows.map((row) => row.iGM_AuthorId));
+  const authorRows = await iGM_FindUsersByIds(rows.map((row) => row.iGM_AuthorId));
   const authorMap = new Map(authorRows.map((user) => [user.iGM_Id, user]));
-  const likeCounts = iGM_CountLikesBatch(
+  const likeCounts = await iGM_CountLikesBatch(
     "comment",
     rows.map((row) => row.iGM_Id),
   );
-  const likedSet = iGM_GetLikedIdSet(
+  const likedSet = await iGM_GetLikedIdSet(
     "comment",
     rows.map((row) => row.iGM_Id),
     currentUserId,
   );
 
-  return rows.map((row) => {
-    const authorRow = authorMap.get(row.iGM_AuthorId);
-    const base: iGM_CommentDto = {
-      id: row.iGM_Id,
-      postId: row.iGM_PostId,
-      parentId: row.iGM_ParentId,
-      content: row.iGM_Content,
-      status: row.iGM_Status,
-      author: authorRow
-        ? iGM_ToAuthorDto(authorRow)
-        : iGM_DeletedAuthorPlaceholder(row.iGM_AuthorId),
-      likeCount: likeCounts.get(row.iGM_Id) ?? 0,
-      likedByMe: likedSet.has(row.iGM_Id),
-      createdAt: row.iGM_CreatedAt,
-      updatedAt: row.iGM_UpdatedAt,
-    };
-    const titled = row as { iGM_PostTitle?: string };
-    if (postTitleById || typeof titled.iGM_PostTitle === "string") {
-      return {
-        ...base,
-        postTitle:
-          titled.iGM_PostTitle ??
-          (postTitleById?.get(row.iGM_PostId) ?? ""),
-      } as iGM_MyCommentItemDto;
-    }
-    return base;
-  });
+  return await Promise.all(
+    rows.map(async (row) => {
+      const authorRow = authorMap.get(row.iGM_AuthorId);
+      const base: iGM_CommentDto = {
+        id: row.iGM_Id,
+        postId: row.iGM_PostId,
+        parentId: row.iGM_ParentId,
+        content: row.iGM_Content,
+        status: row.iGM_Status,
+        author: authorRow
+          ? await iGM_ToAuthorDto(authorRow)
+          : iGM_DeletedAuthorPlaceholder(row.iGM_AuthorId),
+        likeCount: likeCounts.get(row.iGM_Id) ?? 0,
+        likedByMe: likedSet.has(row.iGM_Id),
+        createdAt: row.iGM_CreatedAt,
+        updatedAt: row.iGM_UpdatedAt,
+      };
+      const titled = row as { iGM_PostTitle?: string };
+      if (postTitleById || typeof titled.iGM_PostTitle === "string") {
+        return {
+          ...base,
+          postTitle:
+            titled.iGM_PostTitle ??
+            (postTitleById?.get(row.iGM_PostId) ?? ""),
+        } as iGM_MyCommentItemDto;
+      }
+      return base;
+    }),
+  );
 }
 
 /* ---------- 分类 ---------- */
 
 /** 获取全部分类 DTO */
-export function iGM_GetCategories(): iGM_CategoryDto[] {
-  return iGM_ListCategories().map(iGM_ToCategoryDto);
+export async function iGM_GetCategories(): Promise<iGM_CategoryDto[]> {
+  return (await iGM_ListCategories()).map(iGM_ToCategoryDto);
 }
 
 /* ---------- 帖子 ---------- */
 
 /** 发帖：登录用户；事务内写入帖子并替换标签关联 */
-export function iGM_CreatePostService(
+export async function iGM_CreatePostService(
   user: iGM_UserRow,
   input: iGM_PostInput,
-): iGM_PostDetailDto {
+): Promise<iGM_PostDetailDto> {
   const { title, content, tags } = iGM_ValidatePostInput(input);
   // 模块十：配图校验（数量、归属、类型）
-  const imageIds = iGM_ValidatePostImages(user, input.images);
+  const imageIds = await iGM_ValidatePostImages(user, input.images);
 
   let categoryId: string | null = null;
   if (input.categoryId) {
-    const category = iGM_FindCategoryById(input.categoryId);
+    const category = await iGM_FindCategoryById(input.categoryId);
     if (!category) {
       throw new iGM_ContentError("community.errors.categoryNotFound", 422);
     }
@@ -534,8 +538,8 @@ export function iGM_CreatePostService(
   }
 
   const now = new Date().toISOString();
-  const post = iGM_Db.transaction(() => {
-    const created = iGM_CreatePost({
+  const post = await iGM_Db.transaction(async () => {
+    const created = await iGM_CreatePost({
       authorId: user.iGM_Id,
       title,
       content,
@@ -543,33 +547,33 @@ export function iGM_CreatePostService(
       now,
     });
     if (tags.length > 0) {
-      const tagRows = iGM_FindOrCreateTags(tags);
-      iGM_ReplacePostTags(
+      const tagRows = await iGM_FindOrCreateTags(tags);
+      await iGM_ReplacePostTags(
         created.iGM_Id,
         tagRows.map((tag) => tag.iGM_Id),
       );
     }
     // 模块十：事务内写入配图关联，保证帖子与图片一致
     if (imageIds.length > 0) {
-      iGM_ReplacePostImages(created.iGM_Id, imageIds, now);
+      await iGM_ReplacePostImages(created.iGM_Id, imageIds, now);
     }
     return created;
   })();
 
-  const detail = iGM_GetPostDetail(user, post.iGM_Id);
+  const detail = await iGM_GetPostDetail(user, post.iGM_Id);
   if (!detail) throw new Error("iGM_CreatePostService：创建后详情组装失败");
   // 模块五：发帖积分埋点（内部吞异常，不影响主流程）
-  iGM_AwardPoints(user.iGM_Id, "post_create", title);
+  await iGM_AwardPoints(user.iGM_Id, "post_create", title);
   return detail;
 }
 
 /** 编辑帖子：仅作者本人可改标题、正文、分类与标签 */
-export function iGM_UpdatePostService(
+export async function iGM_UpdatePostService(
   user: iGM_UserRow,
   postId: string,
   input: iGM_PostInput,
-): iGM_PostDetailDto {
-  const post = iGM_FindPostById(postId);
+): Promise<iGM_PostDetailDto> {
+  const post = await iGM_FindPostById(postId);
   if (!post) throw new iGM_ContentError("community.errors.postNotFound", 404);
   if (!iGM_IsOwner(user, post.iGM_AuthorId)) {
     throw new iGM_ContentError("auth.errors.forbidden", 403);
@@ -577,11 +581,11 @@ export function iGM_UpdatePostService(
 
   const { title, content, tags } = iGM_ValidatePostInput(input);
   // 模块十：配图校验；编辑页始终提交完整列表，空数组即清空
-  const imageIds = iGM_ValidatePostImages(user, input.images);
+  const imageIds = await iGM_ValidatePostImages(user, input.images);
 
   let categoryId: string | null = null;
   if (input.categoryId) {
-    const category = iGM_FindCategoryById(input.categoryId);
+    const category = await iGM_FindCategoryById(input.categoryId);
     if (!category) {
       throw new iGM_ContentError("community.errors.categoryNotFound", 422);
     }
@@ -589,51 +593,51 @@ export function iGM_UpdatePostService(
   }
 
   const now = new Date().toISOString();
-  iGM_Db.transaction(() => {
-    iGM_UpdatePost(postId, { title, content, categoryId, now });
-    const tagRows = tags.length > 0 ? iGM_FindOrCreateTags(tags) : [];
-    iGM_ReplacePostTags(
+  await iGM_Db.transaction(async () => {
+    await iGM_UpdatePost(postId, { title, content, categoryId, now });
+    const tagRows = tags.length > 0 ? await iGM_FindOrCreateTags(tags) : [];
+    await iGM_ReplacePostTags(
       postId,
       tagRows.map((tag) => tag.iGM_Id),
     );
     // 模块十：整组替换配图（含清空）
-    iGM_ReplacePostImages(postId, imageIds, now);
+    await iGM_ReplacePostImages(postId, imageIds, now);
   })();
 
-  const detail = iGM_GetPostDetail(user, postId);
+  const detail = await iGM_GetPostDetail(user, postId);
   if (!detail) throw new Error("iGM_UpdatePostService：更新后详情组装失败");
   return detail;
 }
 
 /** 删除帖子：作者本人或协管员及以上；事务内清理点赞后删除（其余关联外键级联） */
-export function iGM_DeletePostService(
+export async function iGM_DeletePostService(
   user: iGM_UserRow,
   postId: string,
-): void {
-  const post = iGM_FindPostById(postId);
+): Promise<void> {
+  const post = await iGM_FindPostById(postId);
   if (!post) throw new iGM_ContentError("community.errors.postNotFound", 404);
   if (!iGM_IsOwner(user, post.iGM_AuthorId) && !iGM_CanModerate(user)) {
     throw new iGM_ContentError("auth.errors.forbidden", 403);
   }
-  iGM_Db.transaction(() => {
-    iGM_DeleteLikesForPost(postId);
-    iGM_DeletePost(postId);
+  await iGM_Db.transaction(async () => {
+    await iGM_DeleteLikesForPost(postId);
+    await iGM_DeletePost(postId);
   })();
 }
 
 /** 隐藏/恢复帖子：作者本人或协管员及以上 */
-export function iGM_SetPostStatusService(
+export async function iGM_SetPostStatusService(
   user: iGM_UserRow,
   postId: string,
   status: "published" | "hidden",
-): iGM_PostDetailDto {
-  const post = iGM_FindPostById(postId);
+): Promise<iGM_PostDetailDto> {
+  const post = await iGM_FindPostById(postId);
   if (!post) throw new iGM_ContentError("community.errors.postNotFound", 404);
   if (!iGM_IsOwner(user, post.iGM_AuthorId) && !iGM_CanModerate(user)) {
     throw new iGM_ContentError("auth.errors.forbidden", 403);
   }
-  iGM_SetPostStatus(postId, status, new Date().toISOString());
-  const detail = iGM_GetPostDetail(user, postId);
+  await iGM_SetPostStatus(postId, status, new Date().toISOString());
+  const detail = await iGM_GetPostDetail(user, postId);
   if (!detail) throw new Error("iGM_SetPostStatusService：状态更新后组装失败");
   return detail;
 }
@@ -642,11 +646,11 @@ export function iGM_SetPostStatusService(
  * 帖子详情：隐藏帖仅作者本人与协管员及以上可见，
  * 对其他访客一律返回“不存在”，避免泄露隐藏内容
  */
-export function iGM_GetPostDetail(
+export async function iGM_GetPostDetail(
   currentUser: iGM_UserRow | null,
   postId: string,
-): iGM_PostDetailDto | null {
-  const post = iGM_FindPostById(postId);
+): Promise<iGM_PostDetailDto | null> {
+  const post = await iGM_FindPostById(postId);
   if (!post) return null;
   if (
     post.iGM_Status !== "published" &&
@@ -656,22 +660,22 @@ export function iGM_GetPostDetail(
   ) {
     return null;
   }
-  const [item] = iGM_AssemblePostList([post], currentUser?.iGM_Id ?? null);
+  const [item] = await iGM_AssemblePostList([post], currentUser?.iGM_Id ?? null);
   if (!item) return null;
   const { excerpt: _excerpt, ...rest } = item;
   // 模块十：附带有序配图 DTO
   return {
     ...rest,
     content: post.iGM_Content,
-    images: iGM_BuildPostImageDtos(postId),
+    images: await iGM_BuildPostImageDtos(postId),
   };
 }
 
 /** 社区广场帖子列表：公开访问，仅返回已发布帖子 */
-export function iGM_ListPublishedPosts(
+export async function iGM_ListPublishedPosts(
   currentUserId: string | null,
   query: iGM_PostQueryInput,
-): iGM_PostListData {
+): Promise<iGM_PostListData> {
   const { page, pageSize } = iGM_ResolvePagination(
     query.page,
     query.pageSize,
@@ -679,13 +683,13 @@ export function iGM_ListPublishedPosts(
 
   let tagId: string | null = null;
   if (query.tagSlug) {
-    const tag = iGM_FindTagBySlug(query.tagSlug);
+    const tag = await iGM_FindTagBySlug(query.tagSlug);
     if (!tag) return iGM_EmptyPage(page, pageSize);
     tagId = tag.iGM_Id;
   }
   let categoryId: string | null = null;
   if (query.categorySlug) {
-    const category = iGM_ListCategories().find(
+    const category = (await iGM_ListCategories()).find(
       (item) => item.iGM_Slug === query.categorySlug,
     );
     if (!category) return iGM_EmptyPage(page, pageSize);
@@ -694,7 +698,7 @@ export function iGM_ListPublishedPosts(
 
   const search = query.search?.trim() ? query.search.trim() : null;
 
-  return iGM_BuildPostListData(
+  return await iGM_BuildPostListData(
     {
       categoryId,
       tagId,
@@ -714,13 +718,13 @@ function iGM_EmptyPage(page: number, pageSize: number): iGM_PostListData {
 }
 
 /** 我的帖子列表：包含全部状态 */
-export function iGM_ListMyPostsService(
+export async function iGM_ListMyPostsService(
   user: iGM_UserRow,
   pageRaw?: number,
   pageSizeRaw?: number,
-): iGM_PostListData {
+): Promise<iGM_PostListData> {
   const { page, pageSize } = iGM_ResolvePagination(pageRaw, pageSizeRaw);
-  return iGM_BuildPostListData(
+  return await iGM_BuildPostListData(
     {
       authorId: user.iGM_Id,
       statuses: ["published", "hidden"],
@@ -732,18 +736,18 @@ export function iGM_ListMyPostsService(
 }
 
 /** 指定用户的公开帖子列表（仅已发布） */
-export function iGM_ListUserPostsService(
+export async function iGM_ListUserPostsService(
   currentUserId: string | null,
   userId: string,
   pageRaw?: number,
   pageSizeRaw?: number,
-): iGM_PostListData {
-  const target = iGM_FindUserById(userId);
+): Promise<iGM_PostListData> {
+  const target = await iGM_FindUserById(userId);
   if (!target || target.iGM_Status !== "active") {
     throw new iGM_ContentError("community.errors.userNotFound", 404);
   }
   const { page, pageSize } = iGM_ResolvePagination(pageRaw, pageSizeRaw);
-  return iGM_BuildPostListData(
+  return await iGM_BuildPostListData(
     { authorId: userId, statuses: ["published"], page, pageSize },
     currentUserId,
   );
@@ -752,14 +756,14 @@ export function iGM_ListUserPostsService(
 /* ---------- 评论 ---------- */
 
 /** 发表评论或回复；评论通知帖子作者，回复通知父评论作者 */
-export function iGM_CreateCommentService(
+export async function iGM_CreateCommentService(
   user: iGM_UserRow,
   postId: string,
   parentId: string | null,
   rawContent: unknown,
   locale?: string,
-): iGM_CommentDto {
-  const post = iGM_FindPostById(postId);
+): Promise<iGM_CommentDto> {
+  const post = await iGM_FindPostById(postId);
   if (!post || post.iGM_Status !== "published") {
     throw new iGM_ContentError("community.errors.postNotFound", 404);
   }
@@ -768,7 +772,7 @@ export function iGM_CreateCommentService(
   let resolvedParentId: string | null = null;
   let parentAuthorId: string | null = null;
   if (parentId) {
-    const parent = iGM_FindCommentById(parentId);
+    const parent = await iGM_FindCommentById(parentId);
     // 父评论必须存在、属于同一帖子且未被隐藏
     if (
       !parent ||
@@ -781,7 +785,7 @@ export function iGM_CreateCommentService(
     parentAuthorId = parent.iGM_AuthorId;
   }
 
-  const comment = iGM_CreateComment({
+  const comment = await iGM_CreateComment({
     postId,
     authorId: user.iGM_Id,
     parentId: resolvedParentId,
@@ -793,7 +797,7 @@ export function iGM_CreateCommentService(
   const actorName = user.iGM_DisplayName ?? user.iGM_Username;
   const link = `/G_Post?postId=${postId}`;
   if (parentAuthorId) {
-    iGM_Notify({
+    await iGM_Notify({
       userId: parentAuthorId,
       actorId: user.iGM_Id,
       actorName,
@@ -803,7 +807,7 @@ export function iGM_CreateCommentService(
       locale,
     });
   } else {
-    iGM_Notify({
+    await iGM_Notify({
       userId: post.iGM_AuthorId,
       actorId: user.iGM_Id,
       actorName,
@@ -814,19 +818,19 @@ export function iGM_CreateCommentService(
     });
   }
 
-  const [dto] = iGM_AssembleComments([comment], user.iGM_Id);
+  const [dto] = await iGM_AssembleComments([comment], user.iGM_Id);
   // 模块五：评论积分埋点（内部吞异常，不影响主流程）
-  iGM_AwardPoints(user.iGM_Id, "comment_create");
+  await iGM_AwardPoints(user.iGM_Id, "comment_create");
   return dto as iGM_CommentDto;
 }
 
 /** 编辑评论：仅作者本人 */
-export function iGM_UpdateCommentService(
+export async function iGM_UpdateCommentService(
   user: iGM_UserRow,
   commentId: string,
   rawContent: unknown,
-): iGM_CommentDto {
-  const comment = iGM_FindCommentById(commentId);
+): Promise<iGM_CommentDto> {
+  const comment = await iGM_FindCommentById(commentId);
   if (!comment) {
     throw new iGM_ContentError("community.errors.commentNotFound", 404);
   }
@@ -834,9 +838,9 @@ export function iGM_UpdateCommentService(
     throw new iGM_ContentError("auth.errors.forbidden", 403);
   }
   const content = iGM_ValidateCommentContent(rawContent);
-  iGM_UpdateComment(commentId, content, new Date().toISOString());
-  const updated = iGM_FindCommentById(commentId);
-  const [dto] = iGM_AssembleComments(
+  await iGM_UpdateComment(commentId, content, new Date().toISOString());
+  const updated = await iGM_FindCommentById(commentId);
+  const [dto] = await iGM_AssembleComments(
     updated ? [updated] : [],
     user.iGM_Id,
   );
@@ -844,41 +848,41 @@ export function iGM_UpdateCommentService(
 }
 
 /** 删除评论：作者本人或协管员及以上 */
-export function iGM_DeleteCommentService(
+export async function iGM_DeleteCommentService(
   user: iGM_UserRow,
   commentId: string,
-): void {
-  const comment = iGM_FindCommentById(commentId);
+): Promise<void> {
+  const comment = await iGM_FindCommentById(commentId);
   if (!comment) {
     throw new iGM_ContentError("community.errors.commentNotFound", 404);
   }
   if (!iGM_IsOwner(user, comment.iGM_AuthorId) && !iGM_CanModerate(user)) {
     throw new iGM_ContentError("auth.errors.forbidden", 403);
   }
-  iGM_Db.transaction(() => {
+  await iGM_Db.transaction(async () => {
     // 多态点赞无外键约束，先手动清理
-    iGM_Db.run(
+    await iGM_Db.run(
       `DELETE FROM iGM_Likes WHERE iGM_TargetType = 'comment' AND iGM_TargetId = ?`,
       [commentId],
     );
-    iGM_DeleteComment(commentId);
+    await iGM_DeleteComment(commentId);
   })();
 }
 
 /** 隐藏/恢复评论：协管员及以上（作者可删除但不提供隐藏） */
-export function iGM_SetCommentStatusService(
+export async function iGM_SetCommentStatusService(
   user: iGM_UserRow,
   commentId: string,
   status: "visible" | "hidden",
-): iGM_CommentDto {
+): Promise<iGM_CommentDto> {
   iGM_RequireModerator(user);
-  const comment = iGM_FindCommentById(commentId);
+  const comment = await iGM_FindCommentById(commentId);
   if (!comment) {
     throw new iGM_ContentError("community.errors.commentNotFound", 404);
   }
-  iGM_SetCommentStatus(commentId, status, new Date().toISOString());
-  const updated = iGM_FindCommentById(commentId);
-  const [dto] = iGM_AssembleComments(updated ? [updated] : [], user.iGM_Id);
+  await iGM_SetCommentStatus(commentId, status, new Date().toISOString());
+  const updated = await iGM_FindCommentById(commentId);
+  const [dto] = await iGM_AssembleComments(updated ? [updated] : [], user.iGM_Id);
   return dto as iGM_CommentDto;
 }
 
@@ -893,15 +897,15 @@ function iGM_RequireModerator(user: iGM_UserRow): void {
  * 帖子评论平铺列表：
  * 普通访客只见可见评论；评论作者本人可见自己被隐藏的评论；协管员可见全部
  */
-export function iGM_ListPostCommentsService(
+export async function iGM_ListPostCommentsService(
   currentUser: iGM_UserRow | null,
   postId: string,
-): iGM_CommentDto[] {
-  const post = iGM_FindPostById(postId);
+): Promise<iGM_CommentDto[]> {
+  const post = await iGM_FindPostById(postId);
   if (!post) throw new iGM_ContentError("community.errors.postNotFound", 404);
 
   const isModerator = currentUser ? iGM_CanModerate(currentUser) : false;
-  const rows = iGM_ListCommentsByPost(postId, isModerator);
+  const rows = await iGM_ListCommentsByPost(postId, isModerator);
   const visibleRows = isModerator
     ? rows
     : rows.filter(
@@ -909,28 +913,28 @@ export function iGM_ListPostCommentsService(
           row.iGM_Status === "visible" ||
           (currentUser !== null && row.iGM_AuthorId === currentUser.iGM_Id),
       );
-  return iGM_AssembleComments(
+  return (await iGM_AssembleComments(
     visibleRows,
     currentUser?.iGM_Id ?? null,
-  ) as iGM_CommentDto[];
+  )) as iGM_CommentDto[];
 }
 
 /* ---------- 点赞 / 收藏 ---------- */
 
 /** 点赞或取消点赞（帖子或评论） */
-export function iGM_ToggleLikeService(
+export async function iGM_ToggleLikeService(
   user: iGM_UserRow,
   targetType: iGM_LikeTargetType,
   targetId: string,
   liked: boolean,
-): iGM_LikeStateData {
+): Promise<iGM_LikeStateData> {
   if (targetType === "post") {
-    const post = iGM_FindPostById(targetId);
+    const post = await iGM_FindPostById(targetId);
     if (!post || post.iGM_Status !== "published") {
       throw new iGM_ContentError("community.errors.postNotFound", 404);
     }
   } else {
-    const comment = iGM_FindCommentById(targetId);
+    const comment = await iGM_FindCommentById(targetId);
     if (!comment || comment.iGM_Status !== "visible") {
       throw new iGM_ContentError("community.errors.commentNotFound", 404);
     }
@@ -938,55 +942,55 @@ export function iGM_ToggleLikeService(
 
   const now = new Date().toISOString();
   if (liked) {
-    iGM_AddLike(targetType, targetId, user.iGM_Id, now);
+    await iGM_AddLike(targetType, targetId, user.iGM_Id, now);
     // 模块五：被赞积分埋点——点赞时给内容作者加分，自我点赞不发分
     const ownerId =
       targetType === "post"
-        ? (iGM_FindPostById(targetId)?.iGM_AuthorId ?? null)
-        : (iGM_FindCommentById(targetId)?.iGM_AuthorId ?? null);
+        ? ((await iGM_FindPostById(targetId))?.iGM_AuthorId ?? null)
+        : ((await iGM_FindCommentById(targetId))?.iGM_AuthorId ?? null);
     if (ownerId && ownerId !== user.iGM_Id) {
-      iGM_AwardPoints(ownerId, "like_received");
+      await iGM_AwardPoints(ownerId, "like_received");
     }
   } else {
-    iGM_RemoveLike(targetType, targetId, user.iGM_Id);
+    await iGM_RemoveLike(targetType, targetId, user.iGM_Id);
   }
   return {
     targetType,
     targetId,
-    liked: iGM_HasLike(targetType, targetId, user.iGM_Id),
-    likeCount: iGM_CountLikes(targetType, targetId),
+    liked: await iGM_HasLike(targetType, targetId, user.iGM_Id),
+    likeCount: await iGM_CountLikes(targetType, targetId),
   };
 }
 
 /** 收藏或取消收藏帖子 */
-export function iGM_ToggleFavoriteService(
+export async function iGM_ToggleFavoriteService(
   user: iGM_UserRow,
   postId: string,
   favorited: boolean,
-): iGM_FavoriteStateData {
-  const post = iGM_FindPostById(postId);
+): Promise<iGM_FavoriteStateData> {
+  const post = await iGM_FindPostById(postId);
   if (!post || post.iGM_Status !== "published") {
     throw new iGM_ContentError("community.errors.postNotFound", 404);
   }
   if (favorited) {
-    iGM_AddFavorite(postId, user.iGM_Id, new Date().toISOString());
+    await iGM_AddFavorite(postId, user.iGM_Id, new Date().toISOString());
   } else {
-    iGM_RemoveFavorite(postId, user.iGM_Id);
+    await iGM_RemoveFavorite(postId, user.iGM_Id);
   }
   return {
     postId,
-    favorited: iGM_HasFavorite(postId, user.iGM_Id),
-    favoriteCount: iGM_CountFavorites(postId),
+    favorited: await iGM_HasFavorite(postId, user.iGM_Id),
+    favoriteCount: await iGM_CountFavorites(postId),
   };
 }
 
 /* ---------- 用户资料 ---------- */
 
 /** 获取指定用户公开资料（含已发布帖子数与可见评论数） */
-export function iGM_GetPublicProfileService(
+export async function iGM_GetPublicProfileService(
   userId: string,
-): iGM_PublicProfileDto {
-  const user = iGM_FindUserById(userId);
+): Promise<iGM_PublicProfileDto> {
+  const user = await iGM_FindUserById(userId);
   if (!user || user.iGM_Status !== "active") {
     throw new iGM_ContentError("community.errors.userNotFound", 404);
   }
@@ -999,21 +1003,21 @@ export function iGM_GetPublicProfileService(
     website: user.iGM_Website,
     role: user.iGM_Role,
     // 模块七：认证组织徽标（负责人邮箱匹配时带 isOwner 金标）
-    verifiedOrg: iGM_ResolveUserOrgBadge(
+    verifiedOrg: await iGM_ResolveUserOrgBadge(
       user.iGM_VerifiedOrgId ?? null,
       user.iGM_Email,
     ),
     createdAt: user.iGM_CreatedAt,
-    postCount: iGM_CountPostsByAuthor(user.iGM_Id, ["published"]),
-    commentCount: iGM_CountCommentsByAuthor(user.iGM_Id, ["visible"]),
+    postCount: await iGM_CountPostsByAuthor(user.iGM_Id, ["published"]),
+    commentCount: await iGM_CountCommentsByAuthor(user.iGM_Id, ["visible"]),
   };
 }
 
 /** 更新本人公开资料，返回最新的完整用户 DTO */
-export function iGM_UpdateMyProfileService(
+export async function iGM_UpdateMyProfileService(
   user: iGM_UserRow,
   input: iGM_ProfileInput,
-): iGM_UserDto {
+): Promise<iGM_UserDto> {
   const displayName = iGM_NormalizeOptional(
     input.displayName,
     iGM_DisplayNameMaxLength,
@@ -1036,32 +1040,32 @@ export function iGM_UpdateMyProfileService(
     { allowSiteRelative: true },
   );
 
-  iGM_UpdateProfile(user.iGM_Id, {
+  await iGM_UpdateProfile(user.iGM_Id, {
     displayName,
     avatar,
     bio,
     website,
     now: new Date().toISOString(),
   });
-  const refreshed = iGM_FindUserById(user.iGM_Id);
+  const refreshed = await iGM_FindUserById(user.iGM_Id);
   if (!refreshed) throw new Error("iGM_UpdateMyProfileService：更新后查询失败");
-  return iGM_ToUserDto(refreshed);
+  return await iGM_ToUserDto(refreshed);
 }
 
 /** 我的评论列表（含全部状态，附带帖子标题） */
-export function iGM_ListMyCommentsService(
+export async function iGM_ListMyCommentsService(
   user: iGM_UserRow,
   pageRaw?: number,
   pageSizeRaw?: number,
-): { items: iGM_MyCommentItemDto[]; total: number; page: number; pageSize: number; totalPages: number } {
+): Promise<{ items: iGM_MyCommentItemDto[]; total: number; page: number; pageSize: number; totalPages: number }> {
   const { page, pageSize } = iGM_ResolvePagination(pageRaw, pageSizeRaw);
-  const { items, total } = iGM_ListCommentsByAuthor(
+  const { items, total } = await iGM_ListCommentsByAuthor(
     user.iGM_Id,
     ["visible", "hidden"],
     page,
     pageSize,
   );
-  const dtos = iGM_AssembleComments(items, user.iGM_Id);
+  const dtos = await iGM_AssembleComments(items, user.iGM_Id);
   return {
     items: dtos as iGM_MyCommentItemDto[],
     total,
@@ -1072,24 +1076,24 @@ export function iGM_ListMyCommentsService(
 }
 
 /** 指定用户的公开评论列表（仅可见，附带帖子标题） */
-export function iGM_ListUserCommentsService(
+export async function iGM_ListUserCommentsService(
   currentUserId: string | null,
   userId: string,
   pageRaw?: number,
   pageSizeRaw?: number,
-): { items: iGM_MyCommentItemDto[]; total: number; page: number; pageSize: number; totalPages: number } {
-  const target = iGM_FindUserById(userId);
+): Promise<{ items: iGM_MyCommentItemDto[]; total: number; page: number; pageSize: number; totalPages: number }> {
+  const target = await iGM_FindUserById(userId);
   if (!target || target.iGM_Status !== "active") {
     throw new iGM_ContentError("community.errors.userNotFound", 404);
   }
   const { page, pageSize } = iGM_ResolvePagination(pageRaw, pageSizeRaw);
-  const { items, total } = iGM_ListCommentsByAuthor(
+  const { items, total } = await iGM_ListCommentsByAuthor(
     userId,
     ["visible"],
     page,
     pageSize,
   );
-  const dtos = iGM_AssembleComments(items, currentUserId);
+  const dtos = await iGM_AssembleComments(items, currentUserId);
   return {
     items: dtos as iGM_MyCommentItemDto[],
     total,

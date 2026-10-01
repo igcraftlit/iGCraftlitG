@@ -36,13 +36,13 @@ export interface iGM_OnlineUserJoinedRow {
 
 // 核心逻辑 //
 /** 登记一条新的在线连接 */
-export function iGM_InsertOnlineUser(input: {
+export async function iGM_InsertOnlineUser(input: {
   userId: string;
   connectionId: string;
   now: string;
   ipAddress: string | null;
   userAgent: string | null;
-}): iGM_OnlineUserRow {
+}): Promise<iGM_OnlineUserRow> {
   const row: iGM_OnlineUserRow = {
     iGM_Id: iGM_RandomUuid(),
     iGM_UserId: input.userId,
@@ -52,7 +52,7 @@ export function iGM_InsertOnlineUser(input: {
     iGM_IpAddress: input.ipAddress,
     iGM_UserAgent: input.userAgent,
   };
-  iGM_Db.run(
+  await iGM_Db.run(
     `INSERT INTO iGM_OnlineUsers
        (iGM_Id, iGM_UserId, iGM_ConnectionId, iGM_ConnectedAt, iGM_LastHeartbeat, iGM_IpAddress, iGM_UserAgent)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -70,16 +70,16 @@ export function iGM_InsertOnlineUser(input: {
 }
 
 /** 更新某连接的心跳时间 */
-export function iGM_TouchOnlineUser(connectionId: string, now: string): void {
-  iGM_Db.run(
+export async function iGM_TouchOnlineUser(connectionId: string, now: string): Promise<void> {
+  await iGM_Db.run(
     `UPDATE iGM_OnlineUsers SET iGM_LastHeartbeat = ? WHERE iGM_ConnectionId = ?`,
     [now, connectionId],
   );
 }
 
 /** 按连接 ID 删除在线记录（断开连接时调用），返回是否删除成功 */
-export function iGM_DeleteOnlineUserByConnection(connectionId: string): boolean {
-  const result = iGM_Db.run(
+export async function iGM_DeleteOnlineUserByConnection(connectionId: string): Promise<boolean> {
+  const result = await iGM_Db.run(
     `DELETE FROM iGM_OnlineUsers WHERE iGM_ConnectionId = ?`,
     [connectionId],
   );
@@ -87,15 +87,15 @@ export function iGM_DeleteOnlineUserByConnection(connectionId: string): boolean 
 }
 
 /** 清理心跳超时（早于 cutoff）的连接记录，返回被清理的连接 ID 列表 */
-export function iGM_DeleteStaleOnlineUsers(cutoffIso: string): string[] {
-  const stale = iGM_Db
+export async function iGM_DeleteStaleOnlineUsers(cutoffIso: string): Promise<string[]> {
+  const stale = (await iGM_Db
     .query(
       `SELECT iGM_ConnectionId FROM iGM_OnlineUsers WHERE iGM_LastHeartbeat < ?`,
     )
-    .all(cutoffIso) as { iGM_ConnectionId: string }[];
+    .all(cutoffIso)) as { iGM_ConnectionId: string }[];
   if (stale.length === 0) return [];
   const placeholders = stale.map(() => "?").join(", ");
-  iGM_Db.run(
+  await iGM_Db.run(
     `DELETE FROM iGM_OnlineUsers WHERE iGM_ConnectionId IN (${placeholders})`,
     stale.map((row) => row.iGM_ConnectionId),
   );
@@ -106,9 +106,12 @@ export function iGM_DeleteStaleOnlineUsers(cutoffIso: string): string[] {
  * 查询当前在线用户的公开信息（按用户去重，取最早连接时间）
  * 仅返回头像、用户名、昵称与认证组织 ID，绝不返回敏感字段
  */
-export function iGM_ListOnlineUsers(): iGM_OnlineUserJoinedRow[] {
-  return iGM_Db
+export async function iGM_ListOnlineUsers(): Promise<iGM_OnlineUserJoinedRow[]> {
+  return (await iGM_Db
     .query(
+      // 说明：PostgreSQL 要求聚合查询中被选取的非聚合列出现在 GROUP BY 中，
+      //       且不允许仅凭 JOIN 相等条件推断函数依赖（SQLite 允许任意取行），
+      //       故按 iGM_Users 主键分组——分组口径与按 o.iGM_UserId 等价
       `SELECT u.iGM_Id AS iGM_UserId,
               u.iGM_Username,
               u.iGM_DisplayName,
@@ -119,17 +122,17 @@ export function iGM_ListOnlineUsers(): iGM_OnlineUserJoinedRow[] {
          FROM iGM_OnlineUsers o
          JOIN iGM_Users u ON u.iGM_Id = o.iGM_UserId
         WHERE u.iGM_Status = 'active'
-        GROUP BY o.iGM_UserId
+        GROUP BY u.iGM_Id
         ORDER BY iGM_ConnectedAt ASC`,
     )
-    .all() as iGM_OnlineUserJoinedRow[];
+    .all()) as iGM_OnlineUserJoinedRow[];
 }
 
 /** 统计当前在线连接总数 */
-export function iGM_CountOnlineConnections(): number {
-  const row = iGM_Db
+export async function iGM_CountOnlineConnections(): Promise<number> {
+  const row = (await iGM_Db
     .query(`SELECT COUNT(*) AS total FROM iGM_OnlineUsers`)
-    .get() as { total: number };
+    .get()) as { total: number };
   return row.total;
 }
 

@@ -199,8 +199,10 @@ function iGM_ReadClientCredentials(
 }
 
 /** 读取并校验授权流 Cookie（签名不合法或已过期返回 null） */
-function iGM_ReadFlow(ctx: iGM_RouteContext): iGM_AuthorizeRequest | null {
-  return iGM_VerifyCookiePayload<iGM_OAuthFlowPayload>(
+async function iGM_ReadFlow(
+  ctx: iGM_RouteContext,
+): Promise<iGM_AuthorizeRequest | null> {
+  return await iGM_VerifyCookiePayload<iGM_OAuthFlowPayload>(
     iGM_ReadCookie(ctx.request, iGM_Config.oauth.flowCookieName),
   );
 }
@@ -227,13 +229,13 @@ function iGM_BuildConsentUrl(request: iGM_AuthorizeRequest): string {
  * 校验失败时仍可安全回跳的地址：
  * 仅当 client_id 已注册且 redirect_uri 与注册列表完全一致时返回，否则返回 null。
  */
-function iGM_TryErrorRedirectTarget(
+async function iGM_TryErrorRedirectTarget(
   query: Record<string, string | undefined>,
-): string | null {
+): Promise<string | null> {
   const clientId = (query.client_id ?? "").trim();
   const redirectUri = (query.redirect_uri ?? "").trim();
   if (!clientId || !redirectUri) return null;
-  const client = iGM_FindOAuthClientByClientId(clientId);
+  const client = await iGM_FindOAuthClientByClientId(clientId);
   if (!client) return null;
   return iGM_ParseRedirectUris(client.iGM_RedirectUris).includes(redirectUri)
     ? redirectUri
@@ -248,16 +250,16 @@ function iGM_TryErrorRedirectTarget(
  * 2) 已登录且存在覆盖本次 scope 的同意记录 → 直接签发授权码并回跳（静默授权）；
  * 3) 否则下发签名授权流 Cookie 并跳转前端同意页。
  */
-function iGM_HandleAuthorize(ctx: iGM_RouteContext): Response {
+async function iGM_HandleAuthorize(ctx: iGM_RouteContext): Promise<Response> {
   iGM_EnforceRateLimit(ctx, "oauthAuthorize", `ip:${iGM_ClientIp(ctx)}`);
   const query = ctx.query;
 
   let request: iGM_AuthorizeRequest;
   try {
-    request = iGM_ValidateAuthorizeRequest(query).request;
+    request = (await iGM_ValidateAuthorizeRequest(query)).request;
   } catch (error) {
     if (error instanceof iGM_OAuthError) {
-      const target = iGM_TryErrorRedirectTarget(query);
+      const target = await iGM_TryErrorRedirectTarget(query);
       if (target) {
         return iGM_RedirectResponse(
           iGM_BuildRedirect(target, {
@@ -272,13 +274,17 @@ function iGM_HandleAuthorize(ctx: iGM_RouteContext): Response {
   }
 
   const ip = iGM_ClientIp(ctx);
-  const user = iGM_CurrentUser(ctx);
-  if (user && iGM_HasFullConsent(user.iGM_Id, request)) {
-    const { redirectUrl } = iGM_ApproveAuthorizationService(user, request, ip);
+  const user = await iGM_CurrentUser(ctx);
+  if (user && (await iGM_HasFullConsent(user.iGM_Id, request))) {
+    const { redirectUrl } = await iGM_ApproveAuthorizationService(
+      user,
+      request,
+      ip,
+    );
     return iGM_RedirectResponse(redirectUrl);
   }
 
-  const flow = iGM_SignCookiePayload({
+  const flow = await iGM_SignCookiePayload({
     ...request,
     exp: Date.now() + iGM_Config.oauth.flowTtlSeconds * 1000,
   });
@@ -294,20 +300,20 @@ function iGM_HandleAuthorize(ctx: iGM_RouteContext): Response {
 /* ---------- 站内端点：授权同意页 ---------- */
 
 /** GET /G_OAuth/authorize/info：同意页展示所需的应用公开信息 */
-function iGM_HandleAuthorizeInfo(ctx: iGM_RouteContext) {
-  const flow = iGM_ReadFlow(ctx);
+async function iGM_HandleAuthorizeInfo(ctx: iGM_RouteContext) {
+  const flow = await iGM_ReadFlow(ctx);
   if (!flow) throw new iGM_OAuthError("oauth.errors.flowExpired", 400);
   return iGM_Ok({
-    ...iGM_GetAuthorizeInfoService(flow),
-    loggedIn: Boolean(iGM_CurrentUser(ctx)),
+    ...(await iGM_GetAuthorizeInfoService(flow)),
+    loggedIn: Boolean(await iGM_CurrentUser(ctx)),
   });
 }
 
 /** POST /G_OAuth/authorize/decision：用户同意或拒绝，返回第三方回跳地址 */
-function iGM_HandleAuthorizeDecision(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleAuthorizeDecision(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "oauthAuthorize", `user:${user.iGM_Id}`);
-  const flow = iGM_ReadFlow(ctx);
+  const flow = await iGM_ReadFlow(ctx);
   if (!flow) throw new iGM_OAuthError("oauth.errors.flowExpired", 400);
 
   const decision = iGM_Field(ctx.body, "decision");
@@ -317,8 +323,8 @@ function iGM_HandleAuthorizeDecision(ctx: iGM_RouteContext) {
   const ip = iGM_ClientIp(ctx);
   const result =
     decision === "deny"
-      ? iGM_DenyAuthorizationService(user, flow, ip)
-      : iGM_ApproveAuthorizationService(user, flow, ip);
+      ? await iGM_DenyAuthorizationService(user, flow, ip)
+      : await iGM_ApproveAuthorizationService(user, flow, ip);
   // 授权流一次有效：无论同意与否都清除 Cookie
   ctx.set.headers["Set-Cookie"] = iGM_BuildSetCookie(
     iGM_Config.oauth.flowCookieName,
@@ -372,10 +378,10 @@ async function iGM_HandleToken(ctx: iGM_RouteContext): Promise<Response> {
 }
 
 /** GET /oauth/userinfo：按 scope 返回用户公开信息 */
-function iGM_HandleUserInfo(ctx: iGM_RouteContext): Response {
+async function iGM_HandleUserInfo(ctx: iGM_RouteContext): Promise<Response> {
   iGM_EnforceRateLimit(ctx, "oauthUserinfo", `ip:${iGM_ClientIp(ctx)}`);
   try {
-    const claims = iGM_GetUserInfoService(
+    const claims = await iGM_GetUserInfoService(
       ctx.request.headers.get("Authorization") ?? "",
     );
     return iGM_JsonResponse(claims, 200, { "Cache-Control": "no-store" });
@@ -395,12 +401,12 @@ function iGM_HandleUserInfo(ctx: iGM_RouteContext): Response {
 }
 
 /** POST /oauth/revoke：撤销 access_token 或 refresh_token（RFC 7009） */
-function iGM_HandleRevoke(ctx: iGM_RouteContext): Response {
+async function iGM_HandleRevoke(ctx: iGM_RouteContext): Promise<Response> {
   const ip = iGM_ClientIp(ctx);
   iGM_EnforceRateLimit(ctx, "oauthUserinfo", `ip:${ip}`);
   const params = iGM_ReadParams(ctx.body);
   try {
-    iGM_RevokeTokenService({
+    await iGM_RevokeTokenService({
       credentials: iGM_ReadClientCredentials(ctx.request, params),
       token: params.token ?? "",
       ip,
@@ -418,7 +424,7 @@ function iGM_HandleRevoke(ctx: iGM_RouteContext): Response {
 /* ---------- 标准端点：OIDC 发现与 JWKS ---------- */
 
 /** GET /.well-known/openid-configuration */
-function iGM_HandleDiscovery(): Response {
+async function iGM_HandleDiscovery(): Promise<Response> {
   return iGM_JsonResponse(iGM_GetDiscoveryDocumentService(), 200, {
     "Cache-Control": "public, max-age=3600",
   });
@@ -434,8 +440,8 @@ async function iGM_HandleJwks(): Promise<Response> {
 /* ---------- 站内端点：开发者应用管理 ---------- */
 
 /** POST /G_OAuth/apps：提交 OAuth 应用接入申请（待审核） */
-function iGM_HandleApply(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleApply(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "oauthAppWrite", `user:${user.iGM_Id}`);
   const input: iGM_OAuthApplyInput = {
     name: iGM_Field(ctx.body, "name"),
@@ -447,52 +453,57 @@ function iGM_HandleApply(ctx: iGM_RouteContext) {
     contact: iGM_Field(ctx.body, "contact"),
     agreeRules: iGM_BoolField(ctx.body, "agreeRules"),
   };
-  return iGM_Ok(iGM_SubmitOAuthApplyService(user, input), "oauth.messages.applied");
+  return iGM_Ok(
+    await iGM_SubmitOAuthApplyService(user, input),
+    "oauth.messages.applied",
+  );
 }
 
 /** GET /G_OAuth/apps/mine：我提交的 OAuth 应用列表 */
-function iGM_HandleMyApps(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
-  return iGM_Ok({ items: iGM_ListMyOAuthClientsService(user) });
+async function iGM_HandleMyApps(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
+  return iGM_Ok({ items: await iGM_ListMyOAuthClientsService(user) });
 }
 
 /** POST /G_OAuth/apps/withdraw：撤回本人待审核的申请 */
-function iGM_HandleWithdraw(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleWithdraw(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const clientId = iGM_Field(ctx.body, "clientId").trim();
   if (!clientId) throw new iGM_OAuthError("oauth.errors.badRequest", 422);
-  iGM_WithdrawOAuthClientService(user, clientId);
+  await iGM_WithdrawOAuthClientService(user, clientId);
   return iGM_Ok({ clientId }, "oauth.messages.withdrawn");
 }
 
 /** POST /G_OAuth/apps/reset-secret：重置 client_secret（新值仅本次返回） */
-function iGM_HandleResetSecret(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleResetSecret(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "oauthAppWrite", `user:${user.iGM_Id}`);
   const clientId = iGM_Field(ctx.body, "clientId").trim();
   if (!clientId) throw new iGM_OAuthError("oauth.errors.badRequest", 422);
   return iGM_Ok(
-    iGM_ResetClientSecretService(user, clientId),
+    await iGM_ResetClientSecretService(user, clientId),
     "oauth.messages.secretReset",
   );
 }
 
 /** GET /G_OAuth/apps/logs：查看本人应用的接入日志（分页） */
-function iGM_HandleMyLogs(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleMyLogs(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const clientId = iGM_Query(ctx.query, "clientId");
   const { page, pageSize } = iGM_PageQuery(ctx);
-  return iGM_Ok(iGM_ListMyOAuthLogsService(user, clientId, page, pageSize));
+  return iGM_Ok(
+    await iGM_ListMyOAuthLogsService(user, clientId, page, pageSize),
+  );
 }
 
 /* ---------- 站内端点：管理端审核 ---------- */
 
 /** GET /G_OAuth/admin/apps：按状态分页列出全部应用 */
-function iGM_HandleAdminList(ctx: iGM_RouteContext) {
-  iGM_RequireRole(iGM_CurrentUser(ctx), "admin");
+async function iGM_HandleAdminList(ctx: iGM_RouteContext) {
+  iGM_RequireRole(await iGM_CurrentUser(ctx), "admin");
   const { page, pageSize } = iGM_PageQuery(ctx);
   return iGM_Ok(
-    iGM_AdminListOAuthClientsService(
+    await iGM_AdminListOAuthClientsService(
       iGM_Query(ctx.query, "status") || null,
       page,
       pageSize,
@@ -501,15 +512,15 @@ function iGM_HandleAdminList(ctx: iGM_RouteContext) {
 }
 
 /** POST /G_OAuth/admin/review：通过或拒绝应用（通过时发放 client_secret，仅本次返回） */
-function iGM_HandleAdminReview(ctx: iGM_RouteContext) {
-  const reviewer = iGM_RequireRole(iGM_CurrentUser(ctx), "admin");
+async function iGM_HandleAdminReview(ctx: iGM_RouteContext) {
+  const reviewer = iGM_RequireRole(await iGM_CurrentUser(ctx), "admin");
   iGM_EnforceRateLimit(ctx, "adminWrite", `user:${reviewer.iGM_Id}`);
   const action = iGM_Field(ctx.body, "action");
   if (action !== "approve" && action !== "reject") {
     throw new iGM_OAuthError("oauth.errors.badRequest", 422);
   }
   return iGM_Ok(
-    iGM_ReviewOAuthClientService(
+    await iGM_ReviewOAuthClientService(
       reviewer,
       iGM_Field(ctx.body, "clientId").trim(),
       action,
@@ -521,11 +532,11 @@ function iGM_HandleAdminReview(ctx: iGM_RouteContext) {
 }
 
 /** POST /G_OAuth/admin/status：启用或禁用应用 */
-function iGM_HandleAdminStatus(ctx: iGM_RouteContext) {
-  const reviewer = iGM_RequireRole(iGM_CurrentUser(ctx), "admin");
+async function iGM_HandleAdminStatus(ctx: iGM_RouteContext) {
+  const reviewer = iGM_RequireRole(await iGM_CurrentUser(ctx), "admin");
   iGM_EnforceRateLimit(ctx, "adminWrite", `user:${reviewer.iGM_Id}`);
   const disabled = iGM_BoolField(ctx.body, "disabled");
-  iGM_SetOAuthClientDisabledService(
+  await iGM_SetOAuthClientDisabledService(
     reviewer,
     iGM_Field(ctx.body, "clientId").trim(),
     disabled,
@@ -538,30 +549,30 @@ function iGM_HandleAdminStatus(ctx: iGM_RouteContext) {
 }
 
 /** POST /G_OAuth/admin/delete：删除应用及其授权码 / 令牌 / 同意记录 */
-function iGM_HandleAdminDelete(ctx: iGM_RouteContext) {
-  const reviewer = iGM_RequireRole(iGM_CurrentUser(ctx), "admin");
+async function iGM_HandleAdminDelete(ctx: iGM_RouteContext) {
+  const reviewer = iGM_RequireRole(await iGM_CurrentUser(ctx), "admin");
   iGM_EnforceRateLimit(ctx, "adminWrite", `user:${reviewer.iGM_Id}`);
   const clientId = iGM_Field(ctx.body, "clientId").trim();
   if (!clientId) throw new iGM_OAuthError("oauth.errors.badRequest", 422);
-  iGM_DeleteOAuthClientService(reviewer, clientId, iGM_ClientIp(ctx));
+  await iGM_DeleteOAuthClientService(reviewer, clientId, iGM_ClientIp(ctx));
   return iGM_Ok({ clientId }, "oauth.messages.deleted");
 }
 
 /* ---------- 站内端点：用户授权管理 ---------- */
 
 /** GET /G_OAuth/consents/mine：我授权过的应用列表 */
-function iGM_HandleMyConsents(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
-  return iGM_Ok({ items: iGM_ListUserConsentsService(user) });
+async function iGM_HandleMyConsents(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
+  return iGM_Ok({ items: await iGM_ListUserConsentsService(user) });
 }
 
 /** POST /G_OAuth/consents/revoke：撤销对某应用的授权（同时撤销其全部令牌） */
-function iGM_HandleRevokeConsent(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleRevokeConsent(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "oauthAppWrite", `user:${user.iGM_Id}`);
   const clientId = iGM_Field(ctx.body, "clientId").trim();
   if (!clientId) throw new iGM_OAuthError("oauth.errors.badRequest", 422);
-  iGM_RevokeUserConsentService(user, clientId, iGM_ClientIp(ctx));
+  await iGM_RevokeUserConsentService(user, clientId, iGM_ClientIp(ctx));
   return iGM_Ok({ clientId }, "oauth.messages.consentRevoked");
 }
 

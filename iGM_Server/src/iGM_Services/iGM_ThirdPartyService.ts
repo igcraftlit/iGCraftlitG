@@ -186,14 +186,14 @@ export function iGM_SubscribeThirdPartyTask(
 }
 
 /** 进度事件落库 */
-function iGM_PersistThirdPartyProgress(
+async function iGM_PersistThirdPartyProgress(
   boardTaskId: string,
   event: iGM_DownloadEvent,
-): void {
+): Promise<void> {
   const now = new Date().toISOString();
   switch (event.type) {
     case "start":
-      iGM_UpdateDownloadTask(boardTaskId, {
+      await iGM_UpdateDownloadTask(boardTaskId, {
         status: "downloading",
         downloaded: 0,
         progress: 0,
@@ -204,7 +204,7 @@ function iGM_PersistThirdPartyProgress(
       });
       break;
     case "progress":
-      iGM_UpdateDownloadTask(boardTaskId, {
+      await iGM_UpdateDownloadTask(boardTaskId, {
         status: event.payload.status,
         downloaded: event.payload.downloaded,
         progress: event.payload.percent,
@@ -215,7 +215,7 @@ function iGM_PersistThirdPartyProgress(
       });
       break;
     case "complete":
-      iGM_UpdateDownloadTask(boardTaskId, {
+      await iGM_UpdateDownloadTask(boardTaskId, {
         status: "completed",
         downloaded: event.payload.downloaded,
         progress: 100,
@@ -227,7 +227,7 @@ function iGM_PersistThirdPartyProgress(
       });
       break;
     case "error":
-      iGM_UpdateDownloadTask(boardTaskId, {
+      await iGM_UpdateDownloadTask(boardTaskId, {
         status: "failed",
         speed: 0,
         eta: null,
@@ -236,7 +236,7 @@ function iGM_PersistThirdPartyProgress(
       });
       break;
     case "canceled":
-      iGM_UpdateDownloadTask(boardTaskId, {
+      await iGM_UpdateDownloadTask(boardTaskId, {
         status: "canceled",
         speed: 0,
         eta: null,
@@ -287,7 +287,7 @@ export async function iGM_StartThirdPartyDownload(
   const version = iGM_ResolveVersion(versions, versionKey);
   if (!version) throw new iGM_ThirdPartyError("thirdParty.errors.versionNotFound", 404);
 
-  const active = iGM_FindActiveDownloadTask(user.iGM_Id, version.iGM_Id);
+  const active = await iGM_FindActiveDownloadTask(user.iGM_Id, version.iGM_Id);
   if (active) throw new iGM_ThirdPartyError("thirdParty.errors.alreadyDownloading", 409);
 
   const targetDir = await iGM_ValidateThirdPartyTarget(
@@ -295,7 +295,7 @@ export async function iGM_StartThirdPartyDownload(
   );
 
   const now = new Date().toISOString();
-  const task = iGM_CreateDownloadTask({
+  const task = await iGM_CreateDownloadTask({
     userId: user.iGM_Id,
     resourceId: resource.iGM_Id,
     versionId: version.iGM_Id,
@@ -342,9 +342,9 @@ async function iGM_RunThirdPartyTask(runtime: iGM_ThirdPartyRuntime): Promise<vo
       targetDir: runtime.targetDir,
       hooks: {
         signal: runtime.canceled,
-        onEvent: (event) => {
+        onEvent: async (event) => {
           iGM_Dispatch(runtime, event);
-          iGM_PersistThirdPartyProgress(taskId, event);
+          await iGM_PersistThirdPartyProgress(taskId, event);
         },
       },
     });
@@ -357,7 +357,7 @@ async function iGM_RunThirdPartyTask(runtime: iGM_ThirdPartyRuntime): Promise<vo
         ? error.message
         : "thirdParty.errors.downloadFailed";
     if (canceled) {
-      iGM_UpdateDownloadTask(taskId, {
+      await iGM_UpdateDownloadTask(taskId, {
         status: "canceled",
         speed: 0,
         eta: null,
@@ -370,7 +370,7 @@ async function iGM_RunThirdPartyTask(runtime: iGM_ThirdPartyRuntime): Promise<vo
         timestamp: Math.floor(Date.now() / 1000),
       });
     } else {
-      iGM_UpdateDownloadTask(taskId, {
+      await iGM_UpdateDownloadTask(taskId, {
         status: "failed",
         speed: 0,
         eta: null,
@@ -399,8 +399,11 @@ async function iGM_RunThirdPartyTask(runtime: iGM_ThirdPartyRuntime): Promise<vo
 /* ---------- 任务查询与控制 ---------- */
 
 /** 读取任务并校验归属（仅任务所有者可见） */
-function iGM_RequireTask(user: iGM_UserRow, taskId: string): iGM_DownloadTaskRow {
-  const row = iGM_FindDownloadTaskById(taskId);
+async function iGM_RequireTask(
+  user: iGM_UserRow,
+  taskId: string,
+): Promise<iGM_DownloadTaskRow> {
+  const row = await iGM_FindDownloadTaskById(taskId);
   if (!row || row.iGM_UserId !== user.iGM_Id) {
     throw new iGM_ThirdPartyError("thirdParty.errors.taskNotFound", 404);
   }
@@ -408,11 +411,11 @@ function iGM_RequireTask(user: iGM_UserRow, taskId: string): iGM_DownloadTaskRow
 }
 
 /** 查询单个下载任务进度（网站与启动器共用同一 taskId） */
-export function iGM_GetThirdPartyDownload(
+export async function iGM_GetThirdPartyDownload(
   user: iGM_UserRow,
   taskId: string,
-): iGM_DownloadTaskDto {
-  return iGM_ToDownloadTaskDto(iGM_RequireTask(user, taskId));
+): Promise<iGM_DownloadTaskDto> {
+  return iGM_ToDownloadTaskDto(await iGM_RequireTask(user, taskId));
 }
 
 /** 解析任务状态筛选参数（逗号分隔，非法值忽略；空表示不过滤） */
@@ -425,13 +428,15 @@ function iGM_ParseTaskStatuses(raw: string | undefined): iGM_DownloadTaskStatus[
 }
 
 /** 列出该用户的下载任务（下载中心与启动器下载页共用） */
-export function iGM_ListThirdPartyDownloads(
+export async function iGM_ListThirdPartyDownloads(
   user: iGM_UserRow,
   status?: string,
-): iGM_DownloadTaskDto[] {
-  return iGM_ListDownloadTasksByUser(
-    user.iGM_Id,
-    iGM_ParseTaskStatuses(status),
+): Promise<iGM_DownloadTaskDto[]> {
+  return (
+    await iGM_ListDownloadTasksByUser(
+      user.iGM_Id,
+      iGM_ParseTaskStatuses(status),
+    )
   ).map(iGM_ToDownloadTaskDto);
 }
 
@@ -439,12 +444,12 @@ export function iGM_ListThirdPartyDownloads(
  * 暂停 / 恢复下载任务
  * 说明：暂停后引擎在分片之间挂起，已下载分片保留，恢复后继续续传
  */
-export function iGM_PauseThirdPartyDownload(
+export async function iGM_PauseThirdPartyDownload(
   user: iGM_UserRow,
   taskId: string,
   paused: boolean,
-): iGM_DownloadTaskDto {
-  const row = iGM_RequireTask(user, taskId);
+): Promise<iGM_DownloadTaskDto> {
+  const row = await iGM_RequireTask(user, taskId);
   const runtime = iGM_ThirdPartyRuntimes.get(taskId);
 
   if (runtime?.running) {
@@ -464,19 +469,19 @@ export function iGM_PauseThirdPartyDownload(
       },
       timestamp: Math.floor(Date.now() / 1000),
     });
-    return iGM_GetThirdPartyDownload(user, taskId);
+    return await iGM_GetThirdPartyDownload(user, taskId);
   }
 
   // 无运行态（进程重启或任务已结束）：仅同步数据库状态，不伪造进度
   if (paused && (row.iGM_Status === "downloading" || row.iGM_Status === "pending")) {
-    iGM_UpdateDownloadTask(taskId, {
+    await iGM_UpdateDownloadTask(taskId, {
       status: "paused",
       speed: 0,
       eta: null,
       now: new Date().toISOString(),
     });
   }
-  return iGM_GetThirdPartyDownload(user, taskId);
+  return await iGM_GetThirdPartyDownload(user, taskId);
 }
 
 /** 等待任务运行态结束（取消后清理分片前调用，避免引擎继续写入） */
@@ -499,13 +504,13 @@ export async function iGM_CancelThirdPartyDownload(
   taskId: string,
   purge = false,
 ): Promise<iGM_DownloadTaskDto> {
-  const row = iGM_RequireTask(user, taskId);
+  const row = await iGM_RequireTask(user, taskId);
   const runtime = iGM_ThirdPartyRuntimes.get(taskId);
   if (runtime?.running) {
     runtime.canceled.paused = false;
     runtime.canceled.aborted = true;
   } else if (row.iGM_Status !== "completed" && row.iGM_Status !== "failed") {
-    iGM_UpdateDownloadTask(taskId, {
+    await iGM_UpdateDownloadTask(taskId, {
       status: "canceled",
       speed: 0,
       eta: null,
@@ -513,15 +518,15 @@ export async function iGM_CancelThirdPartyDownload(
     });
   }
 
-  if (!purge) return iGM_GetThirdPartyDownload(user, taskId);
+  if (!purge) return await iGM_GetThirdPartyDownload(user, taskId);
 
   await iGM_WaitThirdPartyStop(runtime);
   const dto = iGM_ToDownloadTaskDto(
-    iGM_FindDownloadTaskById(taskId) ?? { ...row, iGM_Status: "canceled" },
+    (await iGM_FindDownloadTaskById(taskId)) ?? { ...row, iGM_Status: "canceled" },
   );
   await iGM_RemovePartialFile(row);
   iGM_ThirdPartyRuntimes.delete(taskId);
-  iGM_DeleteDownloadTask(taskId);
+  await iGM_DeleteDownloadTask(taskId);
   return dto;
 }
 
@@ -538,11 +543,11 @@ async function iGM_RemovePartialFile(row: iGM_DownloadTaskRow): Promise<void> {
  * 重试下载任务（失败或已取消的任务重新执行）
  * 说明：保留 .part 分片，引擎按 Range 续传，已完整且校验通过的文件直接跳过
  */
-export function iGM_RetryThirdPartyDownload(
+export async function iGM_RetryThirdPartyDownload(
   user: iGM_UserRow,
   taskId: string,
-): iGM_DownloadTaskDto {
-  const row = iGM_RequireTask(user, taskId);
+): Promise<iGM_DownloadTaskDto> {
+  const row = await iGM_RequireTask(user, taskId);
   const existing = iGM_ThirdPartyRuntimes.get(taskId);
   if (existing?.running) {
     throw new iGM_ThirdPartyError("thirdParty.errors.taskRunning", 409);
@@ -551,7 +556,7 @@ export function iGM_RetryThirdPartyDownload(
     throw new iGM_ThirdPartyError("thirdParty.errors.taskCompleted", 409);
   }
 
-  iGM_UpdateDownloadTask(taskId, {
+  await iGM_UpdateDownloadTask(taskId, {
     status: "downloading",
     speed: 0,
     eta: null,
@@ -575,7 +580,7 @@ export function iGM_RetryThirdPartyDownload(
   iGM_ThirdPartyRuntimes.set(taskId, runtime);
   void iGM_RunThirdPartyTask(runtime);
 
-  return iGM_GetThirdPartyDownload(user, taskId);
+  return await iGM_GetThirdPartyDownload(user, taskId);
 }
 
 /** 删除下载任务记录（同时清理未完成的 .part 分片；已完成的文件保留在磁盘） */
@@ -583,7 +588,7 @@ export async function iGM_DeleteThirdPartyDownload(
   user: iGM_UserRow,
   taskId: string,
 ): Promise<{ removed: boolean }> {
-  const row = iGM_RequireTask(user, taskId);
+  const row = await iGM_RequireTask(user, taskId);
   const runtime = iGM_ThirdPartyRuntimes.get(taskId);
   if (runtime?.running) {
     throw new iGM_ThirdPartyError("thirdParty.errors.taskRunning", 409);
@@ -592,14 +597,14 @@ export async function iGM_DeleteThirdPartyDownload(
   await iGM_RemovePartialFile(row);
 
   iGM_ThirdPartyRuntimes.delete(taskId);
-  return { removed: iGM_DeleteDownloadTask(taskId) };
+  return { removed: await iGM_DeleteDownloadTask(taskId) };
 }
 
 /** 清空该用户已完成的下载任务记录 */
-export function iGM_ClearCompletedThirdPartyDownloads(
+export async function iGM_ClearCompletedThirdPartyDownloads(
   user: iGM_UserRow,
-): { removed: number } {
-  return { removed: iGM_DeleteCompletedDownloadTasks(user.iGM_Id) };
+): Promise<{ removed: number }> {
+  return { removed: await iGM_DeleteCompletedDownloadTasks(user.iGM_Id) };
 }
 
 // 导出 //

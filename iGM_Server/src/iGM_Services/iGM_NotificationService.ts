@@ -166,22 +166,24 @@ function iGM_ResolvePagination(
 /* ---------- 偏好 ---------- */
 
 /** 读取某用户通知偏好（未设置时返回默认值） */
-export function iGM_GetPreference(userId: string): iGM_NotificationPreferenceDto {
+export async function iGM_GetPreference(
+  userId: string,
+): Promise<iGM_NotificationPreferenceDto> {
   return iGM_ToNotificationPreferenceDto(
-    iGM_FindNotificationPreference(userId),
+    await iGM_FindNotificationPreference(userId),
   );
 }
 
 /** 更新某用户通知偏好 */
-export function iGM_UpdatePreferenceService(
+export async function iGM_UpdatePreferenceService(
   userId: string,
   siteEnabled: boolean,
   emailEnabled: boolean,
-): iGM_NotificationPreferenceDto {
+): Promise<iGM_NotificationPreferenceDto> {
   const now = new Date().toISOString();
-  iGM_UpsertNotificationPreference(userId, siteEnabled, emailEnabled, now);
+  await iGM_UpsertNotificationPreference(userId, siteEnabled, emailEnabled, now);
   return iGM_ToNotificationPreferenceDto(
-    iGM_FindNotificationPreference(userId),
+    await iGM_FindNotificationPreference(userId),
   );
 }
 
@@ -192,14 +194,16 @@ export function iGM_UpdatePreferenceService(
  * 同步写入站内通知；邮件为异步发送，失败仅记录日志不阻断业务
  * @returns 实际创建的通知 DTO；未创建（自我触发/关闭站内通知）返回 null
  */
-export function iGM_Notify(input: iGM_NotifyInput): iGM_NotificationDto | null {
+export async function iGM_Notify(
+  input: iGM_NotifyInput,
+): Promise<iGM_NotificationDto | null> {
   // 自我触发不产生通知
   if (input.actorId && input.actorId === input.userId) return null;
 
-  const recipient = iGM_FindUserById(input.userId);
+  const recipient = await iGM_FindUserById(input.userId);
   if (!recipient || recipient.iGM_Status !== "active") return null;
 
-  const preference = iGM_FindNotificationPreference(input.userId);
+  const preference = await iGM_FindNotificationPreference(input.userId);
   const siteEnabled = preference ? preference.iGM_SiteEnabled === 1 : true;
   const emailEnabled = preference ? preference.iGM_EmailEnabled === 1 : false;
 
@@ -208,7 +212,7 @@ export function iGM_Notify(input: iGM_NotifyInput): iGM_NotificationDto | null {
 
   let created: iGM_NotificationDto | null = null;
   if (siteEnabled) {
-    const row = iGM_CreateNotification({
+    const row = await iGM_CreateNotification({
       userId: input.userId,
       type: input.type,
       title: text.title,
@@ -218,7 +222,7 @@ export function iGM_Notify(input: iGM_NotifyInput): iGM_NotificationDto | null {
     });
     created = iGM_ToNotificationDto(row);
     // 模块九：实时推送给该用户的在线连接（接收者不在线时自动跳过）
-    iGM_PushNotificationToUser(input.userId, created);
+    await iGM_PushNotificationToUser(input.userId, created);
   }
 
   // 邮件通知：异步投递，失败不影响主流程
@@ -244,14 +248,14 @@ export function iGM_Notify(input: iGM_NotifyInput): iGM_NotificationDto | null {
 /* ---------- 通知查询与操作 ---------- */
 
 /** 分页查询本人通知列表（含未读数） */
-export function iGM_ListMyNotificationsService(
+export async function iGM_ListMyNotificationsService(
   userId: string,
   onlyUnread: boolean,
   pageRaw?: number,
   pageSizeRaw?: number,
-): iGM_NotificationListData {
+): Promise<iGM_NotificationListData> {
   const { page, pageSize } = iGM_ResolvePagination(pageRaw, pageSizeRaw);
-  const { items, total } = iGM_ListNotificationsByUser(
+  const { items, total } = await iGM_ListNotificationsByUser(
     userId,
     onlyUnread,
     page,
@@ -263,21 +267,21 @@ export function iGM_ListMyNotificationsService(
     page,
     pageSize,
     totalPages: Math.max(1, Math.ceil(total / pageSize)),
-    unreadCount: iGM_CountUnreadNotifications(userId),
+    unreadCount: await iGM_CountUnreadNotifications(userId),
   };
 }
 
 /** 获取本人未读通知数 */
-export function iGM_GetUnreadCountService(userId: string): number {
+export async function iGM_GetUnreadCountService(userId: string): Promise<number> {
   return iGM_CountUnreadNotifications(userId);
 }
 
 /** 获取单条通知详情（限定本人） */
-export function iGM_GetNotificationService(
+export async function iGM_GetNotificationService(
   userId: string,
   notificationId: string,
-): iGM_NotificationDto {
-  const row = iGM_FindNotificationById(notificationId);
+): Promise<iGM_NotificationDto> {
+  const row = await iGM_FindNotificationById(notificationId);
   if (!row || row.iGM_UserId !== userId) {
     throw new iGM_ContentError("notification.errors.notFound", 404);
   }
@@ -285,34 +289,34 @@ export function iGM_GetNotificationService(
 }
 
 /** 标记单条通知已读 */
-export function iGM_MarkReadService(
+export async function iGM_MarkReadService(
   userId: string,
   notificationId: string,
-): iGM_NotificationDto {
-  const row = iGM_FindNotificationById(notificationId);
+): Promise<iGM_NotificationDto> {
+  const row = await iGM_FindNotificationById(notificationId);
   if (!row || row.iGM_UserId !== userId) {
     throw new iGM_ContentError("notification.errors.notFound", 404);
   }
-  iGM_MarkNotificationRead(notificationId, userId);
-  const updated = iGM_FindNotificationById(notificationId);
+  await iGM_MarkNotificationRead(notificationId, userId);
+  const updated = await iGM_FindNotificationById(notificationId);
   return iGM_ToNotificationDto(updated ?? row);
 }
 
 /** 标记本人全部通知已读，返回受影响条数 */
-export function iGM_MarkAllReadService(userId: string): number {
+export async function iGM_MarkAllReadService(userId: string): Promise<number> {
   return iGM_MarkAllNotificationsRead(userId);
 }
 
 /** 删除单条通知（限定本人） */
-export function iGM_DeleteNotificationService(
+export async function iGM_DeleteNotificationService(
   userId: string,
   notificationId: string,
-): void {
-  const row = iGM_FindNotificationById(notificationId);
+): Promise<void> {
+  const row = await iGM_FindNotificationById(notificationId);
   if (!row || row.iGM_UserId !== userId) {
     throw new iGM_ContentError("notification.errors.notFound", 404);
   }
-  iGM_DeleteNotification(notificationId, userId);
+  await iGM_DeleteNotification(notificationId, userId);
 }
 
 // 导出 //

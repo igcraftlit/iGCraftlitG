@@ -60,9 +60,11 @@ export function iGM_RequireRole(
  * 从请求 Cookie 会话解析当前登录用户：未登录或会话失效返回 null。
  * 模块三 G_Community / G_Post 路由统一使用该助手获取登录态
  */
-export function iGM_ResolveRequestUser(request: Request): iGM_UserRow | null {
+export async function iGM_ResolveRequestUser(
+  request: Request,
+): Promise<iGM_UserRow | null> {
   const rawSessionId = iGM_ReadCookie(request, iGM_Config.auth.cookieName);
-  return iGM_ResolveSession(rawSessionId);
+  return await iGM_ResolveSession(rawSessionId);
 }
 
 /**

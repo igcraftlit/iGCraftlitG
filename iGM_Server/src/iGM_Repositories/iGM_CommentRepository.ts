@@ -39,11 +39,11 @@ export interface iGM_AuthorCommentListResult {
 
 // 核心逻辑 //
 /** 创建评论行 */
-export function iGM_CreateComment(
+export async function iGM_CreateComment(
   params: iGM_CreateCommentParams,
-): iGM_CommentRow {
+): Promise<iGM_CommentRow> {
   const id = iGM_RandomUuid();
-  iGM_Db.run(
+  await iGM_Db.run(
     `INSERT INTO iGM_Comments
        (iGM_Id, iGM_PostId, iGM_AuthorId, iGM_ParentId,
         iGM_Content, iGM_Status, iGM_CreatedAt, iGM_UpdatedAt)
@@ -58,27 +58,29 @@ export function iGM_CreateComment(
       params.now,
     ],
   );
-  const row = iGM_FindCommentById(id);
+  const row = await iGM_FindCommentById(id);
   if (!row) throw new Error("iGM_CreateComment：创建后查询评论失败");
   return row;
 }
 
 /** 按主键查询评论 */
-export function iGM_FindCommentById(id: string): iGM_CommentRow | null {
+export async function iGM_FindCommentById(
+  id: string,
+): Promise<iGM_CommentRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(`SELECT * FROM iGM_Comments WHERE iGM_Id = ?`)
-      .get(id) as iGM_CommentRow | undefined) ?? null
+      .get(id)) as iGM_CommentRow | undefined) ?? null
   );
 }
 
 /** 更新评论内容，并刷新 updatedAt */
-export function iGM_UpdateComment(
+export async function iGM_UpdateComment(
   commentId: string,
   content: string,
   now: string,
-): boolean {
-  const result = iGM_Db.run(
+): Promise<boolean> {
+  const result = await iGM_Db.run(
     `UPDATE iGM_Comments SET iGM_Content = ?, iGM_UpdatedAt = ? WHERE iGM_Id = ?`,
     [content, now, commentId],
   );
@@ -86,12 +88,12 @@ export function iGM_UpdateComment(
 }
 
 /** 更新评论状态（隐藏/恢复） */
-export function iGM_SetCommentStatus(
+export async function iGM_SetCommentStatus(
   commentId: string,
   status: iGM_CommentStatus,
   now: string,
-): boolean {
-  const result = iGM_Db.run(
+): Promise<boolean> {
+  const result = await iGM_Db.run(
     `UPDATE iGM_Comments SET iGM_Status = ?, iGM_UpdatedAt = ? WHERE iGM_Id = ?`,
     [status, now, commentId],
   );
@@ -102,45 +104,47 @@ export function iGM_SetCommentStatus(
  * 删除评论：事务内先将直接子评论的 parentId 置空（成为顶层评论），再删除自身。
  * 该评论自身的点赞由业务层事务提前清理
  */
-export function iGM_DeleteComment(commentId: string): boolean {
-  const txn = iGM_Db.transaction(() => {
-    iGM_Db.run(
+export async function iGM_DeleteComment(commentId: string): Promise<boolean> {
+  const txn = iGM_Db.transaction(async () => {
+    await iGM_Db.run(
       `UPDATE iGM_Comments SET iGM_ParentId = NULL WHERE iGM_ParentId = ?`,
       [commentId],
     );
-    return iGM_Db.run(`DELETE FROM iGM_Comments WHERE iGM_Id = ?`, [commentId]);
+    return iGM_Db.run(`DELETE FROM iGM_Comments WHERE iGM_Id = ?`, [
+      commentId,
+    ]);
   });
-  return txn().changes > 0;
+  return (await txn()).changes > 0;
 }
 
 /**
  * 查询某帖子的评论（平铺，按时间正序，前端按 parentId 组织楼中楼）
  * @param includeHidden 是否包含隐藏评论（作者本人/协管员/管理员查看）
  */
-export function iGM_ListCommentsByPost(
+export async function iGM_ListCommentsByPost(
   postId: string,
   includeHidden: boolean,
-): iGM_CommentRow[] {
+): Promise<iGM_CommentRow[]> {
   const sql = includeHidden
     ? `SELECT * FROM iGM_Comments WHERE iGM_PostId = ? ORDER BY iGM_CreatedAt ASC`
     : `SELECT * FROM iGM_Comments
         WHERE iGM_PostId = ? AND iGM_Status = 'visible'
         ORDER BY iGM_CreatedAt ASC`;
-  return iGM_Db.query(sql).all(postId) as iGM_CommentRow[];
+  return (await iGM_Db.query(sql).all(postId)) as iGM_CommentRow[];
 }
 
 /** 统计某用户在指定状态集合下的评论数 */
-export function iGM_CountCommentsByAuthor(
+export async function iGM_CountCommentsByAuthor(
   authorId: string,
   statuses: iGM_CommentStatus[] = ["visible"],
-): number {
+): Promise<number> {
   const placeholders = statuses.map(() => "?").join(", ");
-  const row = iGM_Db
+  const row = (await iGM_Db
     .query(
       `SELECT COUNT(*) AS iGM_Count FROM iGM_Comments
         WHERE iGM_AuthorId = ? AND iGM_Status IN (${placeholders})`,
     )
-    .get(authorId, ...statuses) as { iGM_Count: number };
+    .get(authorId, ...statuses)) as { iGM_Count: number };
   return row.iGM_Count;
 }
 
@@ -148,23 +152,23 @@ export function iGM_CountCommentsByAuthor(
  * 分页查询某作者的评论（关联帖子标题），按评论时间倒序。
  * 个人主页仅传 visible；我的评论传全部状态
  */
-export function iGM_ListCommentsByAuthor(
+export async function iGM_ListCommentsByAuthor(
   authorId: string,
   statuses: iGM_CommentStatus[],
   page: number,
   pageSize: number,
-): iGM_AuthorCommentListResult {
+): Promise<iGM_AuthorCommentListResult> {
   const placeholders = statuses.map(() => "?").join(", ");
   const offset = (page - 1) * pageSize;
 
-  const totalRow = iGM_Db
+  const totalRow = (await iGM_Db
     .query(
       `SELECT COUNT(*) AS iGM_Count FROM iGM_Comments
         WHERE iGM_AuthorId = ? AND iGM_Status IN (${placeholders})`,
     )
-    .get(authorId, ...statuses) as { iGM_Count: number };
+    .get(authorId, ...statuses)) as { iGM_Count: number };
 
-  const items = iGM_Db
+  const items = (await iGM_Db
     .query(
       `SELECT c.*, p.iGM_Title AS iGM_PostTitle
          FROM iGM_Comments c
@@ -173,7 +177,7 @@ export function iGM_ListCommentsByAuthor(
         ORDER BY c.iGM_CreatedAt DESC
         LIMIT ? OFFSET ?`,
     )
-    .all(authorId, ...statuses, pageSize, offset) as iGM_CommentWithPostRow[];
+    .all(authorId, ...statuses, pageSize, offset)) as iGM_CommentWithPostRow[];
 
   return { items, total: totalRow.iGM_Count };
 }

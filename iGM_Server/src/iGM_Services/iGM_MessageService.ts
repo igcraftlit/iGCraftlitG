@@ -76,14 +76,14 @@ const iGM_MessageMaxLength = 2000;
 const iGM_RecallWindowMs = 2 * 60 * 1000;
 
 /** 用户行转作者简要 DTO（含认证组织徽标） */
-function iGM_ToAuthorDto(user: iGM_UserRow): iGM_AuthorDto {
+async function iGM_ToAuthorDto(user: iGM_UserRow): Promise<iGM_AuthorDto> {
   return {
     id: user.iGM_Id,
     username: user.iGM_Username,
     displayName: user.iGM_DisplayName,
     avatar: user.iGM_Avatar,
     role: user.iGM_Role,
-    verifiedOrg: iGM_ResolveUserOrgBadge(
+    verifiedOrg: await iGM_ResolveUserOrgBadge(
       user.iGM_VerifiedOrgId ?? null,
       user.iGM_Email,
     ),
@@ -93,10 +93,10 @@ function iGM_ToAuthorDto(user: iGM_UserRow): iGM_AuthorDto {
 /* ---------- 通用校验 ---------- */
 
 /** 由会话与当前用户解析对端，非参与方抛 403 */
-function iGM_ResolvePeer(
+async function iGM_ResolvePeer(
   conversation: { iGM_UserAId: string; iGM_UserBId: string },
   user: iGM_UserRow,
-): iGM_UserRow {
+): Promise<iGM_UserRow> {
   const peerId =
     conversation.iGM_UserAId === user.iGM_Id
       ? conversation.iGM_UserBId
@@ -104,7 +104,7 @@ function iGM_ResolvePeer(
         ? conversation.iGM_UserAId
         : null;
   if (!peerId) throw new iGM_MessageError("auth.errors.forbidden", 403);
-  const peer = iGM_FindUserById(peerId);
+  const peer = await iGM_FindUserById(peerId);
   if (!peer || peer.iGM_Status !== "active") {
     throw new iGM_MessageError("social.errors.userNotFound", 404);
   }
@@ -112,24 +112,24 @@ function iGM_ResolvePeer(
 }
 
 /** 双向拉黑拦截 */
-function iGM_RejectBlocked(user: iGM_UserRow, peerId: string): void {
-  if (iGM_GetBlockDirection(user.iGM_Id, peerId)) {
+async function iGM_RejectBlocked(user: iGM_UserRow, peerId: string): Promise<void> {
+  if (await iGM_GetBlockDirection(user.iGM_Id, peerId)) {
     throw new iGM_MessageError("social.errors.blocked", 422);
   }
 }
 
 /** 接收方隐私设置拦截：none 拒绝；friends 仅 accepted 好友可发 */
-function iGM_EnforceRecipientPrivacy(
+async function iGM_EnforceRecipientPrivacy(
   sender: iGM_UserRow,
   recipient: iGM_UserRow,
-): void {
-  const settings = iGM_GetMessageSettings(recipient.iGM_Id);
+): Promise<void> {
+  const settings = await iGM_GetMessageSettings(recipient.iGM_Id);
   const allowFrom: iGM_MessageAllowFrom = settings?.iGM_AllowFrom ?? "everyone";
   if (allowFrom === "none") {
     throw new iGM_MessageError("message.errors.closed", 422);
   }
   if (allowFrom === "friends") {
-    const friendship = iGM_FindFriendEither(sender.iGM_Id, recipient.iGM_Id);
+    const friendship = await iGM_FindFriendEither(sender.iGM_Id, recipient.iGM_Id);
     if (!friendship || friendship.iGM_Status !== "accepted") {
       throw new iGM_MessageError("message.errors.friendsOnly", 422);
     }
@@ -151,36 +151,37 @@ function iGM_ValidateMessageContent(raw: unknown): string {
 /* ---------- 会话列表 / 详情 ---------- */
 
 /** 会话列表：对端信息 + 最后消息 + 未读数 */
-export function iGM_ListConversationsService(
+export async function iGM_ListConversationsService(
   user: iGM_UserRow,
-): iGM_ConversationListData {
-  const rows = iGM_ListConversations(user.iGM_Id);
+): Promise<iGM_ConversationListData> {
+  const rows = await iGM_ListConversations(user.iGM_Id);
   if (rows.length === 0) {
-    return { items: [], unreadCount: iGM_CountAllUnread(user.iGM_Id) };
+    return { items: [], unreadCount: await iGM_CountAllUnread(user.iGM_Id) };
   }
 
   const peerIds = rows.map((row) =>
     row.iGM_UserAId === user.iGM_Id ? row.iGM_UserBId : row.iGM_UserAId,
   );
-  const peers = iGM_FindUsersByIds(peerIds);
+  const peers = await iGM_FindUsersByIds(peerIds);
   const peerMap = new Map(peers.map((item) => [item.iGM_Id, item]));
 
   const lastMessageIds = rows
     .map((row) => row.iGM_LastMessageId)
     .filter((id): id is string => Boolean(id));
-  const lastMessageMap = iGM_GetMessagesByIds(lastMessageIds);
+  const lastMessageMap = await iGM_GetMessagesByIds(lastMessageIds);
 
-  const items: iGM_ConversationListItemDto[] = rows.map((row) => {
+  const items: iGM_ConversationListItemDto[] = [];
+  for (const row of rows) {
     const peerId =
       row.iGM_UserAId === user.iGM_Id ? row.iGM_UserBId : row.iGM_UserAId;
     const peerRow = peerMap.get(peerId);
     const lastMessage = row.iGM_LastMessageId
       ? (lastMessageMap.get(row.iGM_LastMessageId) ?? null)
       : null;
-    return {
+    items.push({
       id: row.iGM_Id,
       peer: peerRow
-        ? iGM_ToAuthorDto(peerRow)
+        ? await iGM_ToAuthorDto(peerRow)
         : {
             id: peerId,
             username: "unknown",
@@ -190,26 +191,26 @@ export function iGM_ListConversationsService(
             verifiedOrg: null,
           },
       lastMessage,
-      unreadCount: iGM_CountConversationUnread(row.iGM_Id, user.iGM_Id),
+      unreadCount: await iGM_CountConversationUnread(row.iGM_Id, user.iGM_Id),
       createdAt: row.iGM_CreatedAt,
       updatedAt: row.iGM_UpdatedAt,
-    };
-  });
+    });
+  }
 
   return {
     items,
-    unreadCount: iGM_CountAllUnread(user.iGM_Id),
+    unreadCount: await iGM_CountAllUnread(user.iGM_Id),
   };
 }
 
 /** 按 ID 批量读取消息并转 DTO（去重），返回 id -> dto 映射 */
-function iGM_GetMessagesByIds(ids: string[]): Map<string, iGM_MessageDto> {
+async function iGM_GetMessagesByIds(ids: string[]): Promise<Map<string, iGM_MessageDto>> {
   const unique = Array.from(new Set(ids)).filter(Boolean);
   const map = new Map<string, iGM_MessageDto>();
   if (unique.length === 0) return map;
   // 列表数量小，逐条按主键查询（复用现有仓储，避免跨层直读）
   for (const id of unique) {
-    const row = iGM_FindMessageById(id);
+    const row = await iGM_FindMessageById(id);
     if (row) map.set(id, iGM_ToMessageDto(row));
   }
   return map;
@@ -219,50 +220,50 @@ function iGM_GetMessagesByIds(ids: string[]): Map<string, iGM_MessageDto> {
  * 打开与指定用户的会话：黑名单与接收方隐私拦截；
  * 不存在则创建；同时将会话内对方消息标记已读。
  */
-export function iGM_OpenConversationService(
+export async function iGM_OpenConversationService(
   user: iGM_UserRow,
   peerId: string,
-): iGM_ConversationDetailDto {
+): Promise<iGM_ConversationDetailDto> {
   if (user.iGM_Id === peerId) {
     throw new iGM_MessageError("social.errors.cannotSelf", 422);
   }
-  const peer = iGM_FindUserById(peerId);
+  const peer = await iGM_FindUserById(peerId);
   if (!peer || peer.iGM_Status !== "active") {
     throw new iGM_MessageError("social.errors.userNotFound", 404);
   }
-  iGM_RejectBlocked(user, peerId);
+  await iGM_RejectBlocked(user, peerId);
 
   const now = new Date().toISOString();
-  const conversation = iGM_GetOrCreateConversation(user.iGM_Id, peerId, now);
-  iGM_MarkConversationReadBy(conversation.iGM_Id, user.iGM_Id);
-  return iGM_BuildConversationDetail(user, conversation.iGM_Id);
+  const conversation = await iGM_GetOrCreateConversation(user.iGM_Id, peerId, now);
+  await iGM_MarkConversationReadBy(conversation.iGM_Id, user.iGM_Id);
+  return await iGM_BuildConversationDetail(user, conversation.iGM_Id);
 }
 
 /** 会话详情：仅参与方可见；已删除时按不存在处理 */
-export function iGM_GetConversationDetailService(
+export async function iGM_GetConversationDetailService(
   user: iGM_UserRow,
   conversationId: string,
-): iGM_ConversationDetailDto {
-  return iGM_BuildConversationDetail(user, conversationId);
+): Promise<iGM_ConversationDetailDto> {
+  return await iGM_BuildConversationDetail(user, conversationId);
 }
 
 /** 组装会话详情 DTO（权限、删除标记、未读数统一处理） */
-function iGM_BuildConversationDetail(
+async function iGM_BuildConversationDetail(
   user: iGM_UserRow,
   conversationId: string,
-): iGM_ConversationDetailDto {
-  const conversation = iGM_FindConversationById(conversationId);
+): Promise<iGM_ConversationDetailDto> {
+  const conversation = await iGM_FindConversationById(conversationId);
   if (!conversation) throw new iGM_MessageError("message.errors.notFound", 404);
-  const peer = iGM_ResolvePeer(conversation, user);
+  const peer = await iGM_ResolvePeer(conversation, user);
   if (iGM_IsConversationHiddenFor(conversation, user.iGM_Id)) {
     throw new iGM_MessageError("message.errors.notFound", 404);
   }
-  const messages = iGM_ListMessages(conversationId).map(iGM_ToMessageDto);
+  const messages = (await iGM_ListMessages(conversationId)).map(iGM_ToMessageDto);
   return {
     id: conversation.iGM_Id,
-    peer: iGM_ToAuthorDto(peer),
+    peer: await iGM_ToAuthorDto(peer),
     messages,
-    unreadCount: iGM_CountConversationUnread(conversationId, user.iGM_Id),
+    unreadCount: await iGM_CountConversationUnread(conversationId, user.iGM_Id),
     updatedAt: conversation.iGM_UpdatedAt,
   };
 }
@@ -274,12 +275,12 @@ function iGM_BuildConversationDetail(
  * 写入消息、更新会话最后消息与对端删除标记；
  * 实时推送给对端；对端离线时写站内/邮件通知（按其通知偏好）。
  */
-export function iGM_SendMessageService(
+export async function iGM_SendMessageService(
   user: iGM_UserRow,
   target: { peerId?: string; conversationId?: string },
   rawContent: unknown,
   locale?: string,
-): iGM_MessageDto {
+): Promise<iGM_MessageDto> {
   const content = iGM_ValidateMessageContent(rawContent);
 
   let conversationId: string | null = null;
@@ -290,32 +291,32 @@ export function iGM_SendMessageService(
     }
     recipientId = target.peerId;
   } else if (target.conversationId) {
-    const conversation = iGM_FindConversationById(target.conversationId);
+    const conversation = await iGM_FindConversationById(target.conversationId);
     if (!conversation) throw new iGM_MessageError("message.errors.notFound", 404);
-    const peer = iGM_ResolvePeer(conversation, user);
+    const peer = await iGM_ResolvePeer(conversation, user);
     recipientId = peer.iGM_Id;
     conversationId = conversation.iGM_Id;
   } else {
     throw new iGM_MessageError("message.errors.targetRequired", 422);
   }
 
-  const recipient = iGM_FindUserById(recipientId);
+  const recipient = await iGM_FindUserById(recipientId);
   if (!recipient || recipient.iGM_Status !== "active") {
     throw new iGM_MessageError("social.errors.userNotFound", 404);
   }
-  iGM_RejectBlocked(user, recipientId);
-  iGM_EnforceRecipientPrivacy(user, recipient);
+  await iGM_RejectBlocked(user, recipientId);
+  await iGM_EnforceRecipientPrivacy(user, recipient);
 
   const now = new Date().toISOString();
   if (!conversationId) {
-    const conversation = iGM_GetOrCreateConversation(user.iGM_Id, recipientId, now);
+    const conversation = await iGM_GetOrCreateConversation(user.iGM_Id, recipientId, now);
     conversationId = conversation.iGM_Id;
   }
-  const conversation = iGM_FindConversationById(conversationId);
+  const conversation = await iGM_FindConversationById(conversationId);
   if (!conversation) throw new iGM_MessageError("message.errors.notFound", 404);
 
-  const messageRow = iGM_CreateMessage(conversationId, user.iGM_Id, content, now);
-  iGM_TouchConversationWithMessage(conversation, messageRow.iGM_Id, user.iGM_Id, now);
+  const messageRow = await iGM_CreateMessage(conversationId, user.iGM_Id, content, now);
+  await iGM_TouchConversationWithMessage(conversation, messageRow.iGM_Id, user.iGM_Id, now);
   const dto = iGM_ToMessageDto(messageRow);
 
   // 实时推送：对端在线走 WebSocket；离线写通知（站内/邮件按通知偏好）
@@ -325,7 +326,7 @@ export function iGM_SendMessageService(
     message: dto,
   });
   if (!iGM_IsUserOnline(recipientId)) {
-    iGM_Notify({
+    await iGM_Notify({
       userId: recipientId,
       actorId: user.iGM_Id,
       actorName: user.iGM_DisplayName ?? user.iGM_Username,
@@ -342,14 +343,14 @@ export function iGM_SendMessageService(
 /* ---------- 已读 ---------- */
 
 /** 标记会话已读，并实时通知发送方更新已读状态 */
-export function iGM_MarkReadService(
+export async function iGM_MarkReadService(
   user: iGM_UserRow,
   conversationId: string,
-): { unreadCount: number } {
-  const conversation = iGM_FindConversationById(conversationId);
+): Promise<{ unreadCount: number }> {
+  const conversation = await iGM_FindConversationById(conversationId);
   if (!conversation) throw new iGM_MessageError("message.errors.notFound", 404);
-  iGM_ResolvePeer(conversation, user);
-  iGM_MarkConversationReadBy(conversationId, user.iGM_Id);
+  await iGM_ResolvePeer(conversation, user);
+  await iGM_MarkConversationReadBy(conversationId, user.iGM_Id);
   iGM_PushMessageEventToUser(
     conversation.iGM_UserAId === user.iGM_Id
       ? conversation.iGM_UserBId
@@ -357,7 +358,7 @@ export function iGM_MarkReadService(
     { type: "messageRead", conversationId, readerId: user.iGM_Id },
   );
   return {
-    unreadCount: iGM_CountConversationUnread(conversationId, user.iGM_Id),
+    unreadCount: await iGM_CountConversationUnread(conversationId, user.iGM_Id),
   };
 }
 
@@ -367,11 +368,11 @@ export function iGM_MarkReadService(
  * 撤回消息：仅发送方本人、消息未撤回且在 2 分钟时限内；
  * 撤回后实时通知对端，内容不再下发。
  */
-export function iGM_RecallMessageService(
+export async function iGM_RecallMessageService(
   user: iGM_UserRow,
   messageId: string,
-): void {
-  const message = iGM_FindMessageById(messageId);
+): Promise<void> {
+  const message = await iGM_FindMessageById(messageId);
   if (!message) throw new iGM_MessageError("message.errors.messageNotFound", 404);
   if (message.iGM_SenderId !== user.iGM_Id) {
     throw new iGM_MessageError("auth.errors.forbidden", 403);
@@ -383,9 +384,9 @@ export function iGM_RecallMessageService(
   if (!Number.isFinite(sentAt) || Date.now() - sentAt > iGM_RecallWindowMs) {
     throw new iGM_MessageError("message.errors.recallExpired", 422);
   }
-  iGM_RecallMessage(messageId);
+  await iGM_RecallMessage(messageId);
 
-  const conversation = iGM_FindConversationById(message.iGM_ConversationId);
+  const conversation = await iGM_FindConversationById(message.iGM_ConversationId);
   const peerId =
     conversation && conversation.iGM_UserAId === user.iGM_Id
       ? conversation.iGM_UserBId
@@ -402,21 +403,21 @@ export function iGM_RecallMessageService(
 /* ---------- 删除会话 ---------- */
 
 /** 删除会话：仅对本人隐藏，不影响对方；有新消息时自动恢复可见 */
-export function iGM_DeleteConversationService(
+export async function iGM_DeleteConversationService(
   user: iGM_UserRow,
   conversationId: string,
-): void {
-  const conversation = iGM_FindConversationById(conversationId);
+): Promise<void> {
+  const conversation = await iGM_FindConversationById(conversationId);
   if (!conversation) return;
-  iGM_ResolvePeer(conversation, user);
-  iGM_MarkConversationDeleted(conversationId, user.iGM_Id);
+  await iGM_ResolvePeer(conversation, user);
+  await iGM_MarkConversationDeleted(conversationId, user.iGM_Id);
 }
 
 /* ---------- 隐私设置 ---------- */
 
 /** 读取私信隐私设置（默认 everyone） */
-export function iGM_GetSettingsService(userId: string): iGM_MessageSettingsDto {
-  const row = iGM_GetMessageSettings(userId);
+export async function iGM_GetSettingsService(userId: string): Promise<iGM_MessageSettingsDto> {
+  const row = await iGM_GetMessageSettings(userId);
   return {
     allowFrom: row?.iGM_AllowFrom ?? "everyone",
     updatedAt: row?.iGM_UpdatedAt ?? null,
@@ -424,20 +425,20 @@ export function iGM_GetSettingsService(userId: string): iGM_MessageSettingsDto {
 }
 
 /** 更新私信隐私设置 */
-export function iGM_UpdateSettingsService(
+export async function iGM_UpdateSettingsService(
   user: iGM_UserRow,
   rawAllowFrom: unknown,
-): iGM_MessageSettingsDto {
+): Promise<iGM_MessageSettingsDto> {
   if (!iGM_IsMessageAllowFrom(rawAllowFrom)) {
     throw new iGM_MessageError("message.errors.allowFromInvalid", 422);
   }
-  iGM_UpsertMessageSettings(user.iGM_Id, rawAllowFrom, new Date().toISOString());
-  return iGM_GetSettingsService(user.iGM_Id);
+  await iGM_UpsertMessageSettings(user.iGM_Id, rawAllowFrom, new Date().toISOString());
+  return await iGM_GetSettingsService(user.iGM_Id);
 }
 
 /** 全部未读数（导航角标使用） */
-export function iGM_GetUnreadCountService(userId: string): number {
-  return iGM_CountAllUnread(userId);
+export async function iGM_GetUnreadCountService(userId: string): Promise<number> {
+  return await iGM_CountAllUnread(userId);
 }
 
 // 导出 //
@@ -453,4 +454,3 @@ export default {
   iGM_UpdateSettingsService,
   iGM_GetUnreadCountService,
 };
-

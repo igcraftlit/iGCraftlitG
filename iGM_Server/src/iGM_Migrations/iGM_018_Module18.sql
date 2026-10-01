@@ -38,10 +38,11 @@ CREATE INDEX IF NOT EXISTS iGM_Idx_ModLoaders_Order
   ON iGM_ModLoaders (iGM_SortOrder);
 
 -- 预置：原版与 Fabric 受支持；Forge / NeoForge 置灰占位
-INSERT OR IGNORE INTO iGM_ModLoaders
+INSERT INTO iGM_ModLoaders
   (iGM_Id, iGM_Name, iGM_Slug, iGM_Description, iGM_IsSupported, iGM_SortOrder, iGM_CreatedAt)
 VALUES
   ('iGM_ModLoader_Vanilla', 'Vanilla', 'none', 'game.loader.noneDescription', 1, 1, '2026-01-01T00:00:00.000Z'),
   ('iGM_ModLoader_Fabric', 'Fabric', 'fabric', 'game.loader.fabricDescription', 1, 2, '2026-01-01T00:00:00.000Z'),
   ('iGM_ModLoader_Forge', 'Forge', 'forge', 'game.loader.forgeDescription', 0, 3, '2026-01-01T00:00:00.000Z'),
-  ('iGM_ModLoader_NeoForge', 'NeoForge', 'neoforge', 'game.loader.neoforgeDescription', 0, 4, '2026-01-01T00:00:00.000Z');
+  ('iGM_ModLoader_NeoForge', 'NeoForge', 'neoforge', 'game.loader.neoforgeDescription', 0, 4, '2026-01-01T00:00:00.000Z')
+ON CONFLICT DO NOTHING;

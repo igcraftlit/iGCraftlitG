@@ -47,38 +47,40 @@ export const iGM_UidScopeTest = "9";
  * 取某区分位的下一个顺序号（在事务内自增 iGM_UIDSequence）。
  * 顺序号只增不减；首次使用某区分位时自动建行，起始值为 1。
  */
-function iGM_NextUidSequence(scope: string): number {
-  const allocate = iGM_Db.transaction((targetScope: string): number => {
-    const row = iGM_Db
-      .query(
-        `SELECT iGM_LastSequence FROM iGM_UIDSequence WHERE iGM_Scope = ?`,
-      )
-      .get(targetScope) as { iGM_LastSequence: number } | undefined;
-    const next = (row?.iGM_LastSequence ?? 0) + 1;
-    iGM_Db.run(
-      `INSERT INTO iGM_UIDSequence (iGM_Id, iGM_Scope, iGM_LastSequence, iGM_UpdatedAt)
+async function iGM_NextUidSequence(scope: string): Promise<number> {
+  const allocate = iGM_Db.transaction(
+    async (targetScope: string): Promise<number> => {
+      const row = (await iGM_Db
+        .query(
+          `SELECT iGM_LastSequence FROM iGM_UIDSequence WHERE iGM_Scope = ?`,
+        )
+        .get(targetScope)) as { iGM_LastSequence: number } | undefined;
+      const next = (row?.iGM_LastSequence ?? 0) + 1;
+      await iGM_Db.run(
+        `INSERT INTO iGM_UIDSequence (iGM_Id, iGM_Scope, iGM_LastSequence, iGM_UpdatedAt)
        VALUES (?, ?, ?, ?)
        ON CONFLICT (iGM_Scope)
        DO UPDATE SET iGM_LastSequence = excluded.iGM_LastSequence,
                      iGM_UpdatedAt = excluded.iGM_UpdatedAt`,
-      [
-        `uid-scope-${targetScope}`,
-        targetScope,
-        next,
-        new Date().toISOString(),
-      ],
-    );
-    return next;
-  });
-  return allocate(scope);
+        [
+          `uid-scope-${targetScope}`,
+          targetScope,
+          next,
+          new Date().toISOString(),
+        ],
+      );
+      return next;
+    },
+  );
+  return await allocate(scope);
 }
 
 /**
  * 按区分位分配 11 位 UID：顺序号不足 10 位时左补 0。
  * 例：scope 1 的第 1 号 → 10000000001。
  */
-export function iGM_AllocateUid(scope: string): string {
-  const sequence = iGM_NextUidSequence(scope);
+export async function iGM_AllocateUid(scope: string): Promise<string> {
+  const sequence = await iGM_NextUidSequence(scope);
   return `${scope}${String(sequence).padStart(10, "0")}`;
 }
 
@@ -86,26 +88,30 @@ export function iGM_AllocateUid(scope: string): string {
  * 按角色分配 UID：管理员 / 官方人员走区分位 0，普通用户走区分位 1。
  * UID 作为认证值，注册后不可修改；唯一索引 iGM_Idx_Users_Uid 兜底。
  */
-export function iGM_GenerateUniqueUid(role: iGM_UserRole = "user"): string {
+export async function iGM_GenerateUniqueUid(
+  role: iGM_UserRole = "user",
+): Promise<string> {
   const scope =
     role === "admin" || role === "moderator"
       ? iGM_UidScopeAdmin
       : iGM_UidScopeUser;
-  return iGM_AllocateUid(scope);
+  return await iGM_AllocateUid(scope);
 }
 
 /** 按 UID 查询用户 */
-export function iGM_FindUserByUid(uid: string): iGM_UserRow | null {
+export async function iGM_FindUserByUid(uid: string): Promise<iGM_UserRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(`SELECT * FROM iGM_Users WHERE iGM_Uid = ?`)
-      .get(uid) as iGM_UserRow | undefined) ?? null
+      .get(uid)) as iGM_UserRow | undefined) ?? null
   );
 }
 
 /** 创建新用户 */
-export function iGM_CreateUser(params: iGM_CreateUserParams): iGM_UserRow {
-  iGM_Db.run(
+export async function iGM_CreateUser(
+  params: iGM_CreateUserParams,
+): Promise<iGM_UserRow> {
+  await iGM_Db.run(
     `INSERT INTO iGM_Users
        (iGM_Id, iGM_Uid, iGM_Username, iGM_Email, iGM_PasswordHash,
         iGM_Role, iGM_Status, iGM_EmailVerified, iGM_VerifiedOrgId,
@@ -126,44 +132,48 @@ export function iGM_CreateUser(params: iGM_CreateUserParams): iGM_UserRow {
       params.now,
     ],
   );
-  const row = iGM_FindUserById(params.id);
+  const row = await iGM_FindUserById(params.id);
   if (!row) throw new Error("iGM_CreateUser：创建后查询用户失败");
   return row;
 }
 
 /** 按主键查询用户 */
-export function iGM_FindUserById(id: string): iGM_UserRow | null {
+export async function iGM_FindUserById(id: string): Promise<iGM_UserRow | null> {
   return (
-    (iGM_Db
+    ((await iGM_Db
       .query(`SELECT * FROM iGM_Users WHERE iGM_Id = ?`)
-      .get(id) as iGM_UserRow | undefined) ?? null
+      .get(id)) as iGM_UserRow | undefined) ?? null
   );
 }
 
 /** 按邮箱查询用户（邮箱存储为小写，唯一索引 NOCASE） */
-export function iGM_FindUserByEmail(email: string): iGM_UserRow | null {
+export async function iGM_FindUserByEmail(
+  email: string,
+): Promise<iGM_UserRow | null> {
   return (
-    (iGM_Db
-      .query(`SELECT * FROM iGM_Users WHERE iGM_Email = ? COLLATE NOCASE`)
-      .get(email) as iGM_UserRow | undefined) ?? null
+    ((await iGM_Db
+      .query(`SELECT * FROM iGM_Users WHERE LOWER(iGM_Email) = LOWER(?)`)
+      .get(email)) as iGM_UserRow | undefined) ?? null
   );
 }
 
 /** 按用户名查询用户 */
-export function iGM_FindUserByUsername(username: string): iGM_UserRow | null {
+export async function iGM_FindUserByUsername(
+  username: string,
+): Promise<iGM_UserRow | null> {
   return (
-    (iGM_Db
-      .query(`SELECT * FROM iGM_Users WHERE iGM_Username = ? COLLATE NOCASE`)
-      .get(username) as iGM_UserRow | undefined) ?? null
+    ((await iGM_Db
+      .query(`SELECT * FROM iGM_Users WHERE LOWER(iGM_Username) = LOWER(?)`)
+      .get(username)) as iGM_UserRow | undefined) ?? null
   );
 }
 
 /** 标记邮箱已验证，并刷新 updatedAt */
-export function iGM_MarkEmailVerified(
+export async function iGM_MarkEmailVerified(
   userId: string,
   now: string,
-): boolean {
-  const result = iGM_Db.run(
+): Promise<boolean> {
+  const result = await iGM_Db.run(
     `UPDATE iGM_Users
        SET iGM_EmailVerified = 1, iGM_UpdatedAt = ?
      WHERE iGM_Id = ?`,
@@ -173,12 +183,12 @@ export function iGM_MarkEmailVerified(
 }
 
 /** 更新密码哈希，并刷新 updatedAt */
-export function iGM_UpdatePassword(
+export async function iGM_UpdatePassword(
   userId: string,
   passwordHash: string,
   now: string,
-): boolean {
-  const result = iGM_Db.run(
+): Promise<boolean> {
+  const result = await iGM_Db.run(
     `UPDATE iGM_Users
        SET iGM_PasswordHash = ?, iGM_UpdatedAt = ?
      WHERE iGM_Id = ?`,
@@ -188,36 +198,39 @@ export function iGM_UpdatePassword(
 }
 
 /** 管理员查询用户列表（分页，按创建时间倒序） */
-export function iGM_ListUsers(limit: number, offset: number): iGM_UserRow[] {
-  return iGM_Db
+export async function iGM_ListUsers(
+  limit: number,
+  offset: number,
+): Promise<iGM_UserRow[]> {
+  return (await iGM_Db
     .query(
       `SELECT * FROM iGM_Users
        ORDER BY iGM_CreatedAt DESC
        LIMIT ? OFFSET ?`,
     )
-    .all(limit, offset) as iGM_UserRow[];
+    .all(limit, offset)) as iGM_UserRow[];
 }
 
 /** 统计用户总数 */
-export function iGM_CountUsers(): number {
-  const row = iGM_Db
+export async function iGM_CountUsers(): Promise<number> {
+  const row = (await iGM_Db
     .query(`SELECT COUNT(*) AS iGM_Count FROM iGM_Users`)
-    .get() as { iGM_Count: number };
+    .get()) as { iGM_Count: number };
   return row.iGM_Count;
 }
 
 /** 按主键批量查询用户（帖子/评论列表组装作者信息，避免 N+1 查询） */
-export function iGM_FindUsersByIds(ids: string[]): iGM_UserRow[] {
+export async function iGM_FindUsersByIds(ids: string[]): Promise<iGM_UserRow[]> {
   const unique = Array.from(new Set(ids)).filter(Boolean);
   if (unique.length === 0) return [];
   const placeholders = unique.map(() => "?").join(", ");
-  return iGM_Db
+  return (await iGM_Db
     .query(`SELECT * FROM iGM_Users WHERE iGM_Id IN (${placeholders})`)
-    .all(...unique) as iGM_UserRow[];
+    .all(...unique)) as iGM_UserRow[];
 }
 
 /** 更新本人公开资料（昵称、头像 URL、简介、网站），并刷新 updatedAt */
-export function iGM_UpdateProfile(
+export async function iGM_UpdateProfile(
   userId: string,
   fields: {
     displayName: string | null;
@@ -226,8 +239,8 @@ export function iGM_UpdateProfile(
     website: string | null;
     now: string;
   },
-): boolean {
-  const result = iGM_Db.run(
+): Promise<boolean> {
+  const result = await iGM_Db.run(
     `UPDATE iGM_Users
        SET iGM_DisplayName = ?, iGM_Avatar = ?, iGM_Bio = ?,
            iGM_Website = ?, iGM_UpdatedAt = ?
@@ -245,10 +258,10 @@ export function iGM_UpdateProfile(
 }
 
 /** （可选）管理员更新角色与状态 */
-export function iGM_UpdateUserAdmin(
+export async function iGM_UpdateUserAdmin(
   userId: string,
   fields: { role?: iGM_UserRole; status?: iGM_UserStatus; now: string },
-): boolean {
+): Promise<boolean> {
   const assignments: string[] = ["iGM_UpdatedAt = ?"];
   const values: string[] = [fields.now];
   if (fields.role) {
@@ -260,7 +273,7 @@ export function iGM_UpdateUserAdmin(
     values.push(fields.status);
   }
   values.push(userId);
-  const result = iGM_Db.run(
+  const result = await iGM_Db.run(
     `UPDATE iGM_Users SET ${assignments.join(", ")} WHERE iGM_Id = ?`,
     values,
   );
@@ -273,8 +286,8 @@ export function iGM_UpdateUserAdmin(
  * 点赞、收藏、通知、积分、认证申请等关联行均按 ON DELETE CASCADE 自动清理；
  * 审核记录等弱关联按 ON DELETE SET NULL 保留留痕。
  */
-export function iGM_DeleteUser(userId: string): boolean {
-  const result = iGM_Db.run(`DELETE FROM iGM_Users WHERE iGM_Id = ?`, [
+export async function iGM_DeleteUser(userId: string): Promise<boolean> {
+  const result = await iGM_Db.run(`DELETE FROM iGM_Users WHERE iGM_Id = ?`, [
     userId,
   ]);
   return result.changes > 0;

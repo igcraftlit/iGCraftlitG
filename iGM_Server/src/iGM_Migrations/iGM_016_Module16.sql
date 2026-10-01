@@ -23,10 +23,11 @@ CREATE TABLE IF NOT EXISTS iGM_UIDSequence (
 --   scope 1（普通用户）：序列号 1、2 预留给两位组织所有者，普通用户从 3 开始
 --   scope 9（测试账号）：序列号 1 预留给网站最高管理者，其他测试账号从 2 开始
 --   scope 0（管理员 / 官方人员）：暂无预置占用
-INSERT OR IGNORE INTO iGM_UIDSequence (iGM_Id, iGM_Scope, iGM_LastSequence, iGM_UpdatedAt) VALUES
+INSERT INTO iGM_UIDSequence (iGM_Id, iGM_Scope, iGM_LastSequence, iGM_UpdatedAt) VALUES
   ('uid-scope-0', '0', 0, '2026-01-01T00:00:00.000Z'),
   ('uid-scope-1', '1', 2, '2026-01-01T00:00:00.000Z'),
-  ('uid-scope-9', '9', 1, '2026-01-01T00:00:00.000Z');
+  ('uid-scope-9', '9', 1, '2026-01-01T00:00:00.000Z')
+ON CONFLICT DO NOTHING;
 
 -- ===== 预置账号 UID：最高管理者、iGCraftLit 所有者、MuoCeon 所有者 =====
 UPDATE iGM_Users SET iGM_Uid = '90000000001' WHERE iGM_Username = 'iGM_Admin';

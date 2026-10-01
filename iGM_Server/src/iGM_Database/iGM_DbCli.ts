@@ -54,14 +54,14 @@ const iGM_SeedUsers = [
 async function iGM_SeedAuthUsers(): Promise<void> {
   const now = new Date().toISOString();
   for (const seed of iGM_SeedUsers) {
-    if (iGM_FindUserByEmail(seed.email)) {
+    if (await iGM_FindUserByEmail(seed.email)) {
       console.log(`[iGM_Database] 种子账号已存在，跳过：${seed.email}`);
       continue;
     }
-    const user = iGM_CreateUser({
+    const user = await iGM_CreateUser({
       id: iGM_RandomUuid(),
       // 模块十六：最高管理者固定 UID；其余按角色区分位顺序分配
-      uid: seed.uid ?? iGM_GenerateUniqueUid(seed.role),
+      uid: seed.uid ?? (await iGM_GenerateUniqueUid(seed.role)),
       username: seed.username,
       email: seed.email,
       passwordHash: await iGM_HashPassword(seed.password),
@@ -69,7 +69,7 @@ async function iGM_SeedAuthUsers(): Promise<void> {
       now,
     });
     // 种子账号直接标记为邮箱已验证
-    iGM_Db.run(
+    await iGM_Db.run(
       `UPDATE iGM_Users SET iGM_EmailVerified = 1 WHERE iGM_Id = ?`,
       [user.iGM_Id],
     );
@@ -84,15 +84,15 @@ async function iGM_Main(): Promise<void> {
 
   switch (command) {
     case "init": {
-      // init：创建数据库文件、迁移记录表并执行全部迁移
-      const executed = await iGM_RunMigrations(iGM_Db);
+      // init：创建迁移记录表并执行全部迁移
+      const executed = await iGM_RunMigrations();
       console.log(
-        `[iGM_Database] 初始化完成：${iGM_Config.databasePath}，本次迁移 ${executed.length} 个`,
+        `[iGM_Database] 初始化完成：${iGM_Config.databaseUrl}，本次迁移 ${executed.length} 个`,
       );
       break;
     }
     case "migrate": {
-      const executed = await iGM_RunMigrations(iGM_Db);
+      const executed = await iGM_RunMigrations();
       console.log(
         `[iGM_Database] 迁移完成，本次执行 ${executed.length} 个迁移文件`,
       );

@@ -41,7 +41,7 @@ const iGM_PublicPaths = [
 ];
 
 /** sitemap 数据 */
-function iGM_HandleSitemap() {
+async function iGM_HandleSitemap() {
   return iGM_Ok({
     siteUrl: iGM_SiteUrl,
     locales: iGM_Locales,
@@ -52,7 +52,7 @@ function iGM_HandleSitemap() {
 }
 
 /** robots 数据 */
-function iGM_HandleRobots() {
+async function iGM_HandleRobots() {
   return iGM_Ok({
     siteUrl: iGM_SiteUrl,
     rules: [

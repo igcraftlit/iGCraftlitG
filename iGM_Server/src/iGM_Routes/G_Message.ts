@@ -40,39 +40,41 @@ import {
 
 // 核心逻辑 //
 /* ---------- 会话列表 / 未读数 ---------- */
-function iGM_HandleList(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
-  return iGM_Ok(iGM_ListConversationsService(user));
+async function iGM_HandleList(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
+  return iGM_Ok(await iGM_ListConversationsService(user));
 }
 
-function iGM_HandleUnreadCount(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
-  return iGM_Ok({ unreadCount: iGM_GetUnreadCountService(user.iGM_Id) });
+async function iGM_HandleUnreadCount(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
+  return iGM_Ok({ unreadCount: await iGM_GetUnreadCountService(user.iGM_Id) });
 }
 
 /* ---------- 会话详情 ---------- */
-function iGM_HandleDetail(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleDetail(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const conversationId = iGM_Query(ctx.query, "conversationId").trim();
   return iGM_Ok({
-    conversation: iGM_GetConversationDetailService(user, conversationId),
+    conversation: await iGM_GetConversationDetailService(user, conversationId),
   });
 }
 
 /* ---------- 打开会话 ---------- */
-function iGM_HandleOpen(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleOpen(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const peerId = iGM_Field(ctx.body, "peerId").trim();
-  return iGM_Ok({ conversation: iGM_OpenConversationService(user, peerId) });
+  return iGM_Ok({
+    conversation: await iGM_OpenConversationService(user, peerId),
+  });
 }
 
 /* ---------- 发送消息 ---------- */
-function iGM_HandleSend(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleSend(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "messageWrite", `user:${user.iGM_Id}`);
   const conversationId = iGM_Field(ctx.body, "conversationId").trim();
   const peerId = iGM_Field(ctx.body, "peerId").trim();
-  const message = iGM_SendMessageService(
+  const message = await iGM_SendMessageService(
     user,
     {
       conversationId: conversationId || undefined,
@@ -85,39 +87,39 @@ function iGM_HandleSend(ctx: iGM_RouteContext) {
 }
 
 /* ---------- 标记已读 ---------- */
-function iGM_HandleRead(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleRead(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const conversationId = iGM_Field(ctx.body, "conversationId").trim();
-  return iGM_Ok(iGM_MarkReadService(user, conversationId));
+  return iGM_Ok(await iGM_MarkReadService(user, conversationId));
 }
 
 /* ---------- 撤回消息 ---------- */
-function iGM_HandleRecall(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleRecall(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "messageWrite", `user:${user.iGM_Id}`);
   const messageId = iGM_Field(ctx.body, "messageId").trim();
-  iGM_RecallMessageService(user, messageId);
+  await iGM_RecallMessageService(user, messageId);
   return iGM_Ok({ recalled: true });
 }
 
 /* ---------- 删除会话 ---------- */
-function iGM_HandleDelete(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleDelete(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const conversationId = iGM_Query(ctx.query, "conversationId").trim();
-  iGM_DeleteConversationService(user, conversationId);
+  await iGM_DeleteConversationService(user, conversationId);
   return iGM_Ok({ deleted: true });
 }
 
 /* ---------- 隐私设置 ---------- */
-function iGM_HandleGetSettings(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
-  return iGM_Ok(iGM_GetSettingsService(user.iGM_Id));
+async function iGM_HandleGetSettings(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
+  return iGM_Ok(await iGM_GetSettingsService(user.iGM_Id));
 }
 
-function iGM_HandleUpdateSettings(ctx: iGM_RouteContext) {
-  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+async function iGM_HandleUpdateSettings(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   return iGM_Ok(
-    iGM_UpdateSettingsService(user, iGM_Field(ctx.body, "allowFrom")),
+    await iGM_UpdateSettingsService(user, iGM_Field(ctx.body, "allowFrom")),
   );
 }
 
