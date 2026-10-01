@@ -11,11 +11,15 @@
 // 导入依赖 //
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { ThemeProvider } from "next-themes";
 import { IGM_LAUNCHER_THEME_STORAGE_KEY } from "@igm-launcher/shared";
 import { iGM_Launcher_LocaleProvider as IGM_Launcher_LocaleProvider } from "./iGM_Launcher_LocaleProvider";
 import { iGM_Launcher_StoreProvider as IGM_Launcher_StoreProvider } from "@/components/iGM_Launcher_Store/iGM_Launcher_StoreProvider";
+import {
+  iGM_Launcher_ApplyGlassPreset as IGM_Launcher_ApplyGlassPreset,
+  iGM_Launcher_ReadGlassPreset as IGM_Launcher_ReadGlassPreset,
+} from "./iGM_Launcher_Glass";
 
 // 类型定义 //
 interface iGM_Launcher_ProvidersProps {
@@ -24,6 +28,11 @@ interface iGM_Launcher_ProvidersProps {
 
 // 核心逻辑 //
 export function iGM_Launcher_Providers({ children }: iGM_Launcher_ProvidersProps) {
+  // 个性化：启动时恢复已保存的玻璃背景预设到 html[data-igm-glass]
+  useEffect(() => {
+    IGM_Launcher_ApplyGlassPreset(IGM_Launcher_ReadGlassPreset());
+  }, []);
+
   return (
     <ThemeProvider
       attribute="data-theme"

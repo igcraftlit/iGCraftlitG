@@ -9,6 +9,8 @@
  *       「前往下载 / 前往安装」入口；根目录优先使用已存在者且可更换，更换后重新扫描；
  *       实例名按 <版本>-<加载器> 自动建议，并即时校验非空、字符合法与重名；
  *       实例 gameDir 自动生成为 <根目录>/instances/<实例名> 并实时预览；
+ *       模块二十一新增「已安装资源」面板：编辑既有实例时展示该实例下玩家
+ *       已放入的模组、光影、材质包与数据包（仅启动器端可见）；
  *       保存经状态中心写入本地实例数据文件，取消返回实例列表
  */
 
@@ -44,6 +46,7 @@ import {
   iGM_Launcher_Textarea as IGM_Launcher_Textarea,
 } from "@/components/iGM_Launcher_Forms/iGM_Launcher_FormControls";
 import { iGM_Launcher_InstanceIcon } from "@/components/iGM_Launcher_Instance/iGM_Launcher_InstanceIcons";
+import { iGM_Launcher_InstanceResourcesPanel as IGM_Launcher_InstanceResourcesPanel } from "@/components/iGM_Launcher_Instance/iGM_Launcher_InstanceResourcesPanel";
 import {
   iGM_Launcher_NewInstanceInput,
   iGM_Launcher_UseStore,
@@ -72,6 +75,8 @@ function IGM_Launcher_EditSection({ title, children }: iGM_Launcher_EditSectionP
 export function iGM_Launcher_InstanceEditPage({ params }: iGM_Launcher_PageProps) {
   const t = useTranslations("instanceEdit");
   const tCommon = useTranslations("common");
+  // 已安装资源面板文案（模组 / 光影 / 材质包 / 数据包分组）
+  const tRes = useTranslations("instanceRes");
   const { navigate } = iGM_Launcher_UseShellLayout();
   const {
     instances,
@@ -568,6 +573,19 @@ export function iGM_Launcher_InstanceEditPage({ params }: iGM_Launcher_PageProps
           </IGM_Launcher_Field>
         </div>
       </IGM_Launcher_EditSection>
+
+      {/*
+        已安装资源：仅编辑既有实例时展示，
+        让玩家在该实例下直接看到已放入的模组、光影、材质包与数据包；
+        新建实例还没有目录，故不渲染。仅启动器端可见，网站不暴露该能力。
+      */}
+      {editing ? (
+        <IGM_Launcher_InstanceResourcesPanel
+          dir={editing.directory}
+          instanceName={editing.name}
+          title={tRes("title")}
+        />
+      ) : null}
 
       {/* 保存 / 取消 */}
       <div className={styles.footer}>

@@ -1,0 +1,113 @@
+/*
+ * 文件路径：apps/launcher-ui/components/iGM_Launcher_Instance/iGM_Launcher_InstanceResourcesPanel.module.css
+ * 所属层：前端 / 组件层样式
+ * 路由：G_Instances_Edit（实例编辑页）
+ * 模块：iGM_Launcher_InstanceResourcesPanel
+ * 作用：实例已安装资源面板样式：分组栅格、文件列表与目录跳转按钮
+ */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.desc {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--igm-text-subtle);
+}
+
+.error {
+  font-size: 12px;
+  color: var(--igm-danger);
+}
+
+.empty {
+  font-size: 13px;
+  color: var(--igm-text-muted);
+}
+
+.hint {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--igm-text-subtle);
+}
+
+.groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-border);
+  background-color: var(--igm-surface-subtle);
+}
+
+.groupHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.groupName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.open {
+  margin-left: auto;
+}
+
+.files {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.file {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--igm-text-muted);
+}
+
+.fileName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--igm-text);
+}
+
+.fileMeta {
+  color: var(--igm-text-subtle);
+  font-variant-numeric: tabular-nums;
+}

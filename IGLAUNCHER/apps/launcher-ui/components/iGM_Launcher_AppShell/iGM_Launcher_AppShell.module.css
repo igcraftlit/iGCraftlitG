@@ -24,6 +24,14 @@
   background-color: var(--igm-bg);
 }
 
+/*
+ * 玻璃背景：壳层让出底色，由 body 上的渐变透出，
+ * 表面（卡片 / 侧边栏 / 顶栏）保持半透明即可呈现玻璃质感
+ */
+:global(html[data-igm-glass]:not([data-igm-glass="none"])) .shell {
+  background-color: transparent;
+}
+
 /* 折叠态：侧边栏收为图标轨，变量只影响本网格实例 */
 .shellRail {
   grid-template-columns: var(--igm-launcher-sidebar-rail-width) 1fr;

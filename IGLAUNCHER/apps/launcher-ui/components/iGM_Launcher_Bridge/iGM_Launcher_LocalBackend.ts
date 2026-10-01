@@ -8,7 +8,8 @@
  * 内容：与 iGM_Launcher_Bridge.ts 同名同参的方法集合，返回同样的
  *       { success, code, message, data } 结构，保证界面在两种运行环境下行为一致；
  *       模块八 instance:launch / instance:launch-status 在浏览器内如实拒绝（无法拉起本机进程）；
- *       模块九 java:detect / java:test 同样如实拒绝（浏览器无权读取本机磁盘、无法运行 java -version）
+ *       模块九 java:detect / java:test 同样如实拒绝（浏览器无权读取本机磁盘、无法运行 java -version）；
+ *       模块二十 thirdParty:* 与 shell:open-path 一并如实拒绝（下载落盘与系统文件管理器均为原生能力）
  *
  * 说明：Electrobun 外壳内的真实读写由 apps/shell/src/iGM_Launcher_Bridge.ts 承担；
  *       本文件只在浏览器调试时启用，账户登录 / 同步同样直连主站 API，
@@ -83,6 +84,14 @@ const IGM_LAUNCHER_LOCAL_LAUNCH_UNAVAILABLE =
  */
 const IGM_LAUNCHER_LOCAL_JAVA_UNAVAILABLE =
   "浏览器调试环境无法读取本机文件系统，检测与测试 Java 请在 iGM 启动器应用内执行";
+
+/**
+ * 浏览器回退层的第三方资源提示：资源搜索、详情与下载任务均由主站后端统一管理，
+ * 但下载文件必须落到本机磁盘（浏览器无权写入），也依赖桌面外壳原生能力，
+ * 因此 thirdParty:* 一律如实拒绝，绝不用假列表或假进度蒙混过关。
+ */
+const IGM_LAUNCHER_LOCAL_THIRD_PARTY_UNAVAILABLE =
+  "浏览器调试环境无法写入本机磁盘，第三方资源下载请在 iGM 启动器应用内进行";
 
 /** 浏览器回退层必须拒绝的模块七原生方法（依赖主进程的文件系统与原生对话框） */
 const IGM_LAUNCHER_LOCAL_MC_NATIVE: ReadonlySet<string> = new Set([
@@ -387,6 +396,14 @@ export async function iGM_Launcher_LocalBackend_Call(
       return await iGM_Launcher_LocalMinecraft(method, data, params);
     }
 
+    // 模块二十：第三方资源（Modrinth / Fabric）需要本机磁盘与原生能力，浏览器内一律如实拒绝
+    if (String(method).startsWith("thirdParty:")) {
+      return iGM_Launcher_Fail(
+        IGM_LAUNCHER_BRIDGE_NOT_IMPLEMENTED,
+        IGM_LAUNCHER_LOCAL_THIRD_PARTY_UNAVAILABLE,
+      );
+    }
+
     switch (method) {
       case "app:load":
         return iGM_Launcher_Ok({ data });
@@ -471,6 +488,13 @@ export async function iGM_Launcher_LocalBackend_Call(
       /* 浏览器内不存在真实进程，启动状态如实返回 null */
       case "instance:launch-status":
         return iGM_Launcher_Ok({ status: null });
+
+      /* 扫描实例资源需要读取本机磁盘，浏览器内如实拒绝 */
+      case "instance:resources":
+        return iGM_Launcher_Fail(
+          IGM_LAUNCHER_BRIDGE_NOT_IMPLEMENTED,
+          IGM_LAUNCHER_LOCAL_FS_UNAVAILABLE,
+        );
 
       /* ---------- Java 运行时 ---------- */
       case "java:list":
@@ -590,6 +614,13 @@ export async function iGM_Launcher_LocalBackend_Call(
         // 未登录保持游客，已登录保留本地会话（不联网校验，避免跨域拦截导致误登出）
         return iGM_Launcher_Ok({ account: data.account }, "已恢复本地会话");
       }
+
+      /* 模块二十补充：浏览器无法调起系统文件管理器，如实拒绝（界面回退展示路径文本） */
+      case "shell:open-path":
+        return iGM_Launcher_Fail(
+          IGM_LAUNCHER_BRIDGE_NOT_IMPLEMENTED,
+          IGM_LAUNCHER_LOCAL_FS_UNAVAILABLE,
+        );
 
       default:
         return iGM_Launcher_Fail(

@@ -135,6 +135,71 @@
   transform: translateX(16px);
 }
 
+/* 个性化：透明玻璃色背景色板 */
+.glassSwatches {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.glassSwatch {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border-strong);
+  background-color: var(--igm-surface-subtle);
+  transition:
+    border-color 140ms ease,
+    transform 140ms ease;
+}
+
+.glassSwatch:hover {
+  transform: translateY(-1px);
+}
+
+.glassSwatchActive {
+  border-color: var(--igm-accent);
+  box-shadow: 0 0 0 2px var(--igm-accent-soft);
+}
+
+/* 各预设的色板渐变（与 iGM_Globals.css 的玻璃底色保持一致） */
+.glassSwatch_none {
+  background-image: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.glassSwatch_none::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom right,
+    transparent calc(50% - 1px),
+    var(--igm-danger) calc(50% - 1px),
+    var(--igm-danger) calc(50% + 1px),
+    transparent calc(50% + 1px)
+  );
+  opacity: 0.75;
+}
+
+.glassSwatch_ice {
+  background-image: linear-gradient(150deg, #e8f1ff, #b9d4ff);
+}
+
+.glassSwatch_warm {
+  background-image: linear-gradient(150deg, #fff1dc, #ffcf9a);
+}
+
+.glassSwatch_mint {
+  background-image: linear-gradient(150deg, #e4f7ec, #a8e6c3);
+}
+
+.glassSwatch_violet {
+  background-image: linear-gradient(150deg, #f0eaff, #c9b6ff);
+}
+
 /* 输入与下拉 */
 .fieldRow {
   display: inline-flex;

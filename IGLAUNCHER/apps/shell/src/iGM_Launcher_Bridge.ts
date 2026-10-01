@@ -16,7 +16,10 @@
  *       （离线模式用离线角色身份、正版模式用已绑定微软账号身份拉真实 Java 进程，
  *        并回写上次游玩时间）；
  *       模块九 Java 真实检测分支（java:detect / java:test / java:add 扫描本机
- *       文件系统并运行 -version 探测，可用性一律以真实结果为准）
+ *       文件系统并运行 -version 探测，可用性一律以真实结果为准）；
+ *       模块二十 thirdParty:* 第三方资源分支（Modrinth / Fabric 资源搜索、详情与
+ *       下载任务转发，全部走主站 /G_ThirdParty 接口，任务由主站后端统一管理），
+ *       以及 shell:open-path 在系统文件管理器中打开下载文件所在目录
  *
  * 说明：模块二只实现“界面可用”的本地持久化与占位业务逻辑，
  *       真实版本清单、下载与游戏启动留待后续模块；
@@ -36,7 +39,7 @@
 
 // 导入依赖 //
 import { existsSync } from "node:fs";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename, dirname, join, normalize } from "node:path";
 import { Utils } from "electrobun/main";
@@ -47,6 +50,8 @@ import {
   IGM_LAUNCHER_API_LOGOUT_PATH,
   IGM_LAUNCHER_API_ME_PATH,
   IGM_LAUNCHER_API_SESSION_COOKIE,
+  IGM_LAUNCHER_API_THIRD_PARTY_PATH,
+  IGM_LAUNCHER_API_THIRD_PARTY_TIMEOUT_MS,
   IGM_LAUNCHER_API_TIMEOUT_MS,
   IGM_LAUNCHER_BRIDGE_FAILED,
   IGM_LAUNCHER_BRIDGE_INVALID,
@@ -65,6 +70,8 @@ import {
   IGM_LAUNCHER_MC_FLOW_EXPIRED,
   IGM_LAUNCHER_OFFLINE_DEFAULT_NAME,
   IGM_LAUNCHER_SESSION_FILE,
+  IGM_LAUNCHER_THIRD_PARTY_INSTANCE_SUBDIRS,
+  IGM_LAUNCHER_THIRD_PARTY_PAGE_SIZE,
   IGM_LAUNCHER_VERSION_LIBRARY_PAGE_SIZE,
   iGM_Launcher_AggregateInstalledLoaders,
   iGM_Launcher_BuildGameDir,
@@ -91,6 +98,8 @@ import {
   type iGM_Launcher_BridgeParams,
   type iGM_Launcher_BridgeResponse,
   type iGM_Launcher_InstanceRecord,
+  type iGM_Launcher_InstanceResourceFile,
+  type iGM_Launcher_InstanceResourceGroup,
   type iGM_Launcher_JavaRuntime,
   type iGM_Launcher_LocalData,
   type iGM_Launcher_MCBinding,
@@ -98,6 +107,7 @@ import {
   type iGM_Launcher_LaunchMode,
   type iGM_Launcher_SiteEnvelope,
   type iGM_Launcher_SiteUser,
+  type iGM_Launcher_ThirdPartyTask,
   type iGM_Launcher_VersionType,
 } from "@igm-launcher/shared";
 import {
@@ -285,17 +295,51 @@ function iGM_Launcher_ReadSessionCookie(rawSetCookie: string | null): string {
 }
 
 /**
+ * 归一化系统目录选择器的返回值。
+ * Electrobun 正常回传 string[]；为兼容不同版本可能出现的
+ * 单字符串（多路径以换行分隔）或空值形态，统一取首个非空路径。
+ * 用户取消选择时返回空串，界面据此保持原值不变。
+ */
+function iGM_Launcher_NormalizeDialogPaths(picked: unknown): string {
+  const first = (value: string): string =>
+    value
+      .split(/\r?\n/)
+      .map((item) => item.trim())
+      .find((item) => item.length > 0) ?? "";
+
+  if (Array.isArray(picked)) {
+    for (const item of picked) {
+      if (typeof item !== "string") continue;
+      const path = first(item);
+      if (path) return path;
+    }
+    return "";
+  }
+  if (typeof picked === "string") return first(picked);
+  return "";
+}
+
+/**
  * 统一主站 API 请求封装。
  * Bun 主进程直接发起请求，不经过浏览器渲染进程，因此不受 CORS 限制；
  * 带超时控制，网络异常与超时统一归纳为 reached=false。
  */
 async function iGM_Launcher_ApiRequest<T>(
   path: string,
-  options: { method?: "GET" | "POST"; body?: unknown; sessionCookie?: string } = {},
+  options: {
+    method?: "GET" | "POST" | "DELETE";
+    body?: unknown;
+    sessionCookie?: string;
+    /** 单次请求超时覆盖（毫秒），缺省用 IGM_LAUNCHER_API_TIMEOUT_MS */
+    timeoutMs?: number;
+  } = {},
 ): Promise<iGM_Launcher_ApiResult<T>> {
-  const { method = "POST", body, sessionCookie = "" } = options;
+  const { method = "POST", body, sessionCookie = "", timeoutMs } = options;
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), IGM_LAUNCHER_API_TIMEOUT_MS);
+  const timer = setTimeout(
+    () => controller.abort(),
+    timeoutMs && timeoutMs > 0 ? timeoutMs : IGM_LAUNCHER_API_TIMEOUT_MS,
+  );
   try {
     const headers: Record<string, string> = { "content-type": "application/json" };
     if (sessionCookie) {
@@ -970,7 +1014,13 @@ async function iGM_Launcher_HandleMinecraft(
           canChooseDirectory: true,
           allowsMultipleSelection: false,
         });
-        return iGM_Launcher_Ok({ path: picked[0] ?? "" });
+        /*
+         * 兼容不同 Electrobun 版本的回传形态：
+         * 正常为 string[]，异常时可能是单个字符串（多路径以换行分隔）或 undefined。
+         * 一律归一化为首个非空路径，避免界面拿到空串而无法回填输入框。
+         */
+        const normalized = iGM_Launcher_NormalizeDialogPaths(picked);
+        return iGM_Launcher_Ok({ path: normalized });
       } catch (error) {
         return iGM_Launcher_Fail(
           IGM_LAUNCHER_BRIDGE_FAILED,
@@ -983,6 +1033,175 @@ async function iGM_Launcher_HandleMinecraft(
       return iGM_Launcher_Fail(
         IGM_LAUNCHER_BRIDGE_NOT_IMPLEMENTED,
         `未实现的离线游戏方法：${String(method)}`,
+      );
+  }
+}
+
+/* ---- 模块二十：第三方资源（Modrinth / Fabric） ---- */
+
+/**
+ * 第三方资源统一请求封装。
+ * 全部走主站 /G_ThirdParty 前缀，由 Bun 主进程直连（不经浏览器，无跨域限制）；
+ * 不可达映射为 IGM_LAUNCHER_BRIDGE_UNREACHABLE，业务失败透传 code 与 message，
+ * 成功用 iGM_Launcher_Ok 包装 data，与其余分支的错误处理口径保持一致。
+ */
+async function iGM_Launcher_ThirdPartyRequest<T>(
+  path: string,
+  options: { method?: "GET" | "POST" | "DELETE"; body?: unknown } = {},
+): Promise<iGM_Launcher_BridgeResponse<T>> {
+  /*
+   * 下载任务由主站后端统一下发与管理，创建 / 取消 / 重试都要求社区账号登录态。
+   * 这里取出启动器已保存的会话 Cookie 一并携带，否则后端会返回 401
+   * （业务错误键 auth.errors.unauthorized）。
+   */
+  const account = await iGM_Launcher_LoadAccount();
+  /* 第三方接口单独放宽超时：首次回源 Modrinth 与建单耗时高于普通接口 */
+  const result = await iGM_Launcher_ApiRequest<T>(path, {
+    ...options,
+    sessionCookie: account.token?.trim() ?? "",
+    timeoutMs: IGM_LAUNCHER_API_THIRD_PARTY_TIMEOUT_MS,
+  });
+  if (!result.reached) {
+    return iGM_Launcher_Fail<T>(IGM_LAUNCHER_BRIDGE_UNREACHABLE, "第三方资源接口不可达");
+  }
+  if (!result.envelope?.success) {
+    const code = result.envelope?.code ?? result.status;
+    return iGM_Launcher_Fail<T>(
+      code > 0 ? code : IGM_LAUNCHER_BRIDGE_FAILED,
+      result.envelope?.message ?? "第三方资源接口返回了无法解析的响应",
+    );
+  }
+  return iGM_Launcher_Ok((result.envelope.data ?? null) as T);
+}
+
+/**
+ * 模块二十的全部桥接分支（第三方资源浏览与下载任务）。
+ * 任务由主站后端统一管理（与网站下载中心共用同一套任务），
+ * 启动器只做请求转发与展示，不落盘、不伪造进度。
+ */
+async function iGM_Launcher_HandleThirdParty(
+  method: iGM_Launcher_BridgeMethod,
+  params: iGM_Launcher_BridgeParams,
+): Promise<iGM_Launcher_BridgeResponse> {
+  switch (method) {
+    /* 搜索资源：q / type / page / pageSize 全部按契约拼进查询串 */
+    case "thirdParty:search": {
+      const query = new URLSearchParams();
+      const keyword = params.query?.trim() ?? "";
+      if (keyword) query.set("q", keyword);
+      if (params.resourceType) query.set("type", params.resourceType);
+      query.set("page", String(params.page && params.page > 0 ? params.page : 1));
+      query.set(
+        "pageSize",
+        String(
+          params.pageSize && params.pageSize > 0
+            ? params.pageSize
+            : IGM_LAUNCHER_THIRD_PARTY_PAGE_SIZE,
+        ),
+      );
+      return iGM_Launcher_ThirdPartyRequest(
+        `${IGM_LAUNCHER_API_THIRD_PARTY_PATH}/search?${query.toString()}`,
+        { method: "GET" },
+      );
+    }
+
+    /* 资源详情：返回资源本身与其全部可下载版本 */
+    case "thirdParty:resource": {
+      const resourceId = params.resourceId?.trim() ?? "";
+      if (!resourceId) return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_INVALID, "缺少资源 id");
+      return iGM_Launcher_ThirdPartyRequest(
+        `${IGM_LAUNCHER_API_THIRD_PARTY_PATH}/resource/${encodeURIComponent(resourceId)}`,
+        { method: "GET" },
+      );
+    }
+
+    /* 发起下载：body 携带 resourceId / versionId / target，返回新建任务 */
+    case "thirdParty:download-start": {
+      const resourceId = params.resourceId?.trim() ?? "";
+      const versionId = params.versionId?.trim() ?? "";
+      const target = params.target?.trim() ?? "";
+      if (!resourceId || !versionId) {
+        return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_INVALID, "缺少资源 id 或版本 id");
+      }
+      if (!target) {
+        return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_INVALID, "缺少下载目标目录");
+      }
+      return iGM_Launcher_ThirdPartyRequest<{ task: iGM_Launcher_ThirdPartyTask }>(
+        `${IGM_LAUNCHER_API_THIRD_PARTY_PATH}/download`,
+        { body: { resourceId, versionId, target } },
+      );
+    }
+
+    /* 查询单个任务（不含任务编号时拒绝，避免误取其它任务） */
+    case "thirdParty:download-status": {
+      const taskId = params.taskId?.trim() ?? "";
+      if (!taskId) return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_INVALID, "缺少下载任务编号");
+      return iGM_Launcher_ThirdPartyRequest<{ task: iGM_Launcher_ThirdPartyTask | null }>(
+        `${IGM_LAUNCHER_API_THIRD_PARTY_PATH}/download/${encodeURIComponent(taskId)}`,
+        { method: "GET" },
+      );
+    }
+
+    /* 任务列表：可按 status 过滤 */
+    case "thirdParty:download-list": {
+      const suffix = params.status ? `?status=${encodeURIComponent(params.status)}` : "";
+      return iGM_Launcher_ThirdPartyRequest(
+        `${IGM_LAUNCHER_API_THIRD_PARTY_PATH}/downloads${suffix}`,
+        { method: "GET" },
+      );
+    }
+
+    /* 取消任务：purge 为真时同时删除已下载文件 */
+    case "thirdParty:download-cancel": {
+      const taskId = params.taskId?.trim() ?? "";
+      if (!taskId) return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_INVALID, "缺少下载任务编号");
+      return iGM_Launcher_ThirdPartyRequest(
+        `${IGM_LAUNCHER_API_THIRD_PARTY_PATH}/download/${encodeURIComponent(taskId)}/cancel`,
+        { body: { purge: params.purge === true } },
+      );
+    }
+
+    /* 暂停 / 继续：paused 缺省按暂停处理 */
+    case "thirdParty:download-pause": {
+      const taskId = params.taskId?.trim() ?? "";
+      if (!taskId) return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_INVALID, "缺少下载任务编号");
+      return iGM_Launcher_ThirdPartyRequest(
+        `${IGM_LAUNCHER_API_THIRD_PARTY_PATH}/download/${encodeURIComponent(taskId)}/pause`,
+        { body: { paused: params.paused !== false } },
+      );
+    }
+
+    /* 重试失败 / 已取消的任务：复用后端 retry 端点，保留 .part 断点续传 */
+    case "thirdParty:download-retry": {
+      const taskId = params.taskId?.trim() ?? "";
+      if (!taskId) return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_INVALID, "缺少下载任务编号");
+      return iGM_Launcher_ThirdPartyRequest(
+        `${IGM_LAUNCHER_API_THIRD_PARTY_PATH}/download/${encodeURIComponent(taskId)}/retry`,
+        { body: {} },
+      );
+    }
+
+    /* 移除任务记录 */
+    case "thirdParty:download-remove": {
+      const taskId = params.taskId?.trim() ?? "";
+      if (!taskId) return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_INVALID, "缺少下载任务编号");
+      return iGM_Launcher_ThirdPartyRequest(
+        `${IGM_LAUNCHER_API_THIRD_PARTY_PATH}/download/${encodeURIComponent(taskId)}`,
+        { method: "DELETE" },
+      );
+    }
+
+    /* 清空已完成任务 */
+    case "thirdParty:download-clear-completed":
+      return iGM_Launcher_ThirdPartyRequest(
+        `${IGM_LAUNCHER_API_THIRD_PARTY_PATH}/downloads/completed`,
+        { method: "DELETE" },
+      );
+
+    default:
+      return iGM_Launcher_Fail(
+        IGM_LAUNCHER_BRIDGE_NOT_IMPLEMENTED,
+        `未实现的第三方资源方法：${String(method)}`,
       );
   }
 }
@@ -1006,6 +1225,11 @@ export async function iGM_Launcher_Bridge_Call(
     // 模块五的离线游戏分支（游戏目录扫描 / 版本解析 / 实例导入 / 版本库同步）
     if (method.startsWith("minecraft:")) {
       return await iGM_Launcher_HandleMinecraft(method, params);
+    }
+
+    // 模块二十：第三方资源（Modrinth / Fabric）分支
+    if (method.startsWith("thirdParty:")) {
+      return await iGM_Launcher_HandleThirdParty(method, params);
     }
 
     switch (method) {
@@ -1189,6 +1413,58 @@ export async function iGM_Launcher_Bridge_Call(
       /* 查询启动状态：不带实例 id 时取最近一次启动的实例；无记录返回 null */
       case "instance:launch-status":
         return iGM_Launcher_Ok({ status: iGM_Launcher_Launch_Status(params.id) });
+
+      /*
+        模块二十补充：扫描实例目录，列出已安装的模组 / 光影 / 材质包 / 数据包。
+        仅启动器端可用（网站端不暴露该能力）；只读取文件元数据
+        （名称 / 大小 / 修改时间），不改动、不复制任何文件；
+        目录不存在或不可读时如实返回 exists=false，绝不虚构文件列表。
+      */
+      case "instance:resources": {
+        const dir = params.instanceDir?.trim() ?? "";
+        if (!dir) {
+          return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_INVALID, "缺少实例目录");
+        }
+        const groups: iGM_Launcher_InstanceResourceGroup[] = [];
+        let total = 0;
+        for (const sub of Object.values(IGM_LAUNCHER_THIRD_PARTY_INSTANCE_SUBDIRS)) {
+          const target = join(dir, sub);
+          const group: iGM_Launcher_InstanceResourceGroup = {
+            key: sub,
+            dir: target,
+            exists: false,
+            files: [],
+          };
+          try {
+            const entries = await readdir(target, { withFileTypes: true });
+            group.exists = true;
+            const files: iGM_Launcher_InstanceResourceFile[] = [];
+            for (const entry of entries) {
+              if (!entry.isFile()) continue;
+              const absolute = join(target, entry.name);
+              try {
+                const info = await stat(absolute);
+                files.push({
+                  name: entry.name,
+                  path: absolute,
+                  size: info.size,
+                  modifiedAt: info.mtime.toISOString(),
+                });
+              } catch {
+                /* 单个文件不可读时跳过，不影响其余条目 */
+              }
+            }
+            // 最近修改的排在前面，便于用户确认刚放进去的资源
+            files.sort((a, b) => b.modifiedAt.localeCompare(a.modifiedAt));
+            group.files = files;
+            total += files.length;
+          } catch {
+            /* 目录不存在或不可读：如实标记 exists=false */
+          }
+          groups.push(group);
+        }
+        return iGM_Launcher_Ok({ resources: { dir, groups, total } });
+      }
 
       /* ---------- Java 运行时 ---------- */
       case "java:list": {
@@ -1405,6 +1681,30 @@ export async function iGM_Launcher_Bridge_Call(
           return iGM_Launcher_Ok({ account: local }, "主站不可达，已恢复本地会话");
         }
         return iGM_Launcher_ResolveAccount(result, local.token);
+      }
+
+      /*
+        模块二十补充：在系统文件管理器中打开下载文件所在目录。
+        用 Electrobun 的 Utils.openExternal 交给系统默认程序处理（原生调用）；
+        系统未接管时如实返回 opened=false，界面回退为展示路径文本。
+      */
+      case "shell:open-path": {
+        const target = params.openPath?.trim() ?? "";
+        if (!target) {
+          return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_INVALID, "缺少要打开的路径");
+        }
+        try {
+          const electrobun = (await import("electrobun/main")) as {
+            Utils?: { openExternal?: (value: string) => boolean };
+          };
+          const opened = electrobun.Utils?.openExternal?.(target) ?? false;
+          return iGM_Launcher_Ok({ opened });
+        } catch (error) {
+          return iGM_Launcher_Fail(
+            IGM_LAUNCHER_BRIDGE_FAILED,
+            error instanceof Error ? error.message : "无法打开该路径",
+          );
+        }
       }
 
       default:

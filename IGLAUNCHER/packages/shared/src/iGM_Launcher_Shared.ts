@@ -9,7 +9,9 @@
  *       模块三追加 Minecraft 正版绑定（MSA 认证链、绑定记录、令牌镜像）类型与端点常量；
  *       模块五追加离线角色 UUID、本机游戏目录扫描、版本库同步的类型与常量；
  *       模块六追加共享根目录、已安装版本与加载器、实例名校验与 gameDir 规则的类型与常量；
- *       模块八追加离线启动（Java 进程）状态类型、启动相关常量与桥接方法
+ *       模块八追加离线启动（Java 进程）状态类型、启动相关常量与桥接方法；
+ *       模块二十追加第三方资源（Modrinth / Fabric）资源、版本与下载任务类型，
+ *       以及 thirdParty:* 桥接方法、接口前缀与分页 / 轮询常量
  */
 
 // 导入依赖 //
@@ -742,6 +744,175 @@ export interface iGM_Launcher_LaunchStatus {
   error: string;
 }
 
+/* ---- 模块二十：第三方资源（Modrinth / Fabric） ---- */
+
+/**
+ * 第三方资源类型。
+ * 当前仅对接 Modrinth 平台、面向 Fabric 加载器；CurseForge 等其他平台不做。
+ */
+export type iGM_Launcher_ThirdPartyResourceType =
+  | "mod"
+  | "shader"
+  | "resourcepack"
+  | "map"
+  | "datapack";
+
+/**
+ * 第三方下载任务状态。
+ * pending 排队 / downloading 下载中 / paused 已暂停 / completed 已完成 /
+ * failed 失败 / canceled 已取消。
+ */
+export type iGM_Launcher_ThirdPartyTaskStatus =
+  | "pending"
+  | "downloading"
+  | "paused"
+  | "completed"
+  | "failed"
+  | "canceled";
+
+/** 第三方资源条目（搜索列表 / 资源详情共用） */
+export interface iGM_Launcher_ThirdPartyResource {
+  /** 资源 id（主站内唯一，任务与版本均以其关联） */
+  id: string;
+  /** 来源平台标识（当前固定为 modrinth） */
+  source: string;
+  /** 来源平台内的资源标识 */
+  sourceId: string;
+  /** 资源短链名（slug） */
+  slug: string;
+  /** 资源名称 */
+  name: string;
+  /** 资源类型 */
+  type: iGM_Launcher_ThirdPartyResourceType;
+  /** 资源简介 */
+  description: string;
+  /** 作者 */
+  author: string;
+  /** 封面图地址 */
+  coverUrl: string;
+  /** 累计下载量 */
+  downloads: number;
+  /** 最近更新时间（ISO 字符串） */
+  updatedAt: string;
+}
+
+/**
+ * 第三方资源版本的发布类型（对应 Modrinth 的 version_type）。
+ * release 正式版 / beta 测试版 / alpha 早期测试版；界面据此区分展示。
+ */
+export type iGM_Launcher_ThirdPartyVersionType = "release" | "beta" | "alpha";
+
+/** 第三方资源的单个可下载版本（Fabric 场景按游戏版本与加载器筛选） */
+export interface iGM_Launcher_ThirdPartyVersion {
+  /** 版本 id（发起下载时使用） */
+  id: string;
+  /** 版本号 */
+  version: string;
+  /** 支持的游戏版本列表，如 1.20.1 */
+  gameVersions: string[];
+  /** 支持的加载器列表（当前仅 fabric） */
+  loaders: string[];
+  /** 版本发布类型：正式版 / 测试版 / 早期测试版 */
+  versionType: iGM_Launcher_ThirdPartyVersionType;
+  /** 下载地址 */
+  downloadUrl: string;
+  /** 文件名 */
+  filename: string;
+  /** 文件大小（字节） */
+  size: number;
+  /** 文件 sha1 校验值 */
+  sha1: string;
+  /** 发布时间（ISO 字符串） */
+  publishedAt: string;
+}
+
+/**
+ * 第三方资源下载任务快照。
+ * 任务由主站后端统一管理（与网站下载中心共用同一套任务），
+ * 启动器只负责展示与转发操作，不做任何进度伪造。
+ */
+export interface iGM_Launcher_ThirdPartyTask {
+  /** 任务编号 */
+  id: string;
+  /** 资源 id */
+  resourceId: string;
+  /** 版本 id */
+  versionId: string;
+  /** 来源平台标识 */
+  source: string;
+  /** 资源名称 */
+  name: string;
+  /** 资源类型 */
+  type: iGM_Launcher_ThirdPartyResourceType;
+  /** 版本号 */
+  version: string;
+  /** 下载地址 */
+  downloadUrl: string;
+  /** 文件名 */
+  filename: string;
+  /** 文件大小（字节） */
+  size: number;
+  /** 文件 sha1 校验值 */
+  sha1: string;
+  /** 当前状态 */
+  status: iGM_Launcher_ThirdPartyTaskStatus;
+  /** 已下载字节数 */
+  downloaded: number;
+  /** 进度百分比 0-100 */
+  progress: number;
+  /** 当前速度（字节/秒） */
+  speed: number;
+  /** 预计剩余秒数，未知为 0 */
+  eta: number;
+  /** 失败原因，未失败为空字符串 */
+  error: string;
+  /** 目标目录（绝对路径） */
+  targetDir: string;
+  /** 落盘文件绝对路径 */
+  filePath: string;
+  /** 创建时间（ISO 字符串） */
+  createdAt: string;
+  /** 最近更新时间（ISO 字符串） */
+  updatedAt: string;
+}
+
+/* ---- 模块二十补充：实例内已安装资源（仅启动器端可查看） ---- */
+
+/** 实例内单个资源文件 */
+export interface iGM_Launcher_InstanceResourceFile {
+  /** 文件名（含扩展名） */
+  name: string;
+  /** 文件绝对路径 */
+  path: string;
+  /** 文件大小（字节） */
+  size: number;
+  /** 最近修改时间（ISO 字符串）；无法取得时为空串 */
+  modifiedAt: string;
+}
+
+/**
+ * 实例内某一类资源的目录分组。
+ * key 与 IGM_LAUNCHER_THIRD_PARTY_INSTANCE_SUBDIRS 的取值保持一致：
+ * mods / shaderpacks / resourcepacks / datapacks。
+ */
+export interface iGM_Launcher_InstanceResourceGroup {
+  key: string;
+  /** 目录绝对路径 */
+  dir: string;
+  /** 目录是否存在（不存在或不可读时为 false） */
+  exists: boolean;
+  files: iGM_Launcher_InstanceResourceFile[];
+}
+
+/** 实例内已安装资源扫描结果 */
+export interface iGM_Launcher_InstanceResources {
+  /** 扫描的实例目录绝对路径 */
+  dir: string;
+  groups: iGM_Launcher_InstanceResourceGroup[];
+  /** 全部资源文件总数 */
+  total: number;
+}
+
 // 类型定义（Bun 桥接层协议） //
 
 /**
@@ -836,7 +1007,26 @@ export type iGM_Launcher_BridgeMethod =
        instance:launch        -> iGM_Launcher_LaunchInstance
        instance:launch-status -> iGM_Launcher_LaunchStatus） */
   | "instance:launch"
-  | "instance:launch-status";
+  | "instance:launch-status"
+  /* 模块二十补充：扫描实例目录，列出已安装的模组 / 光影 / 材质包 / 数据包
+     （仅启动器端可查看，网站端不暴露该能力） */
+  | "instance:resources"
+  /* 模块二十：第三方资源（Modrinth / Fabric）
+     命名与主站 /G_ThirdParty 接口一一对应，任务由主站后端统一管理
+     （与网站下载中心共用同一套任务；启动器只做转发与展示，绝不伪造进度） */
+  | "thirdParty:search"
+  | "thirdParty:resource"
+  | "thirdParty:download-start"
+  | "thirdParty:download-status"
+  | "thirdParty:download-list"
+  | "thirdParty:download-cancel"
+  | "thirdParty:download-pause"
+  | "thirdParty:download-retry"
+  | "thirdParty:download-remove"
+  | "thirdParty:download-clear-completed"
+  /* 模块二十补充：在系统文件管理器中打开下载文件所在目录
+     （主进程原生能力，浏览器回退层如实拒绝） */
+  | "shell:open-path";
 
 /** 桥接层调用入参（按方法取用，未使用的键忽略） */
 export interface iGM_Launcher_BridgeParams {
@@ -882,6 +1072,32 @@ export interface iGM_Launcher_BridgeParams {
   /* ---- 模块八：启动登录方式 ---- */
   /** 启动登录方式：offline 离线 / official 正版（缺省按离线处理） */
   mode?: iGM_Launcher_LaunchMode;
+  /* ---- 模块二十补充：实例内已安装资源 ---- */
+  /** 待扫描的实例目录绝对路径（instance:resources） */
+  instanceDir?: string;
+  /* ---- 模块二十：第三方资源（Modrinth / Fabric） ---- */
+  /** 搜索关键字（搜索接口 q 参数） */
+  query?: string;
+  /** 资源类型（搜索筛选；取值见 IGM_LAUNCHER_THIRD_PARTY_TYPES） */
+  resourceType?: iGM_Launcher_ThirdPartyResourceType;
+  /** 第三方资源 id（资源详情 / 发起下载） */
+  resourceId?: string;
+  /** 第三方资源版本 id（发起下载） */
+  versionId?: string;
+  /** 下载目标目录（绝对路径） */
+  target?: string;
+  /** 分页页码（搜索，缺省 1） */
+  page?: number;
+  /** 分页条数（搜索，缺省 IGM_LAUNCHER_THIRD_PARTY_PAGE_SIZE） */
+  pageSize?: number;
+  /** 任务状态筛选（下载列表，缺省返回全部） */
+  status?: iGM_Launcher_ThirdPartyTaskStatus;
+  /** 暂停 / 继续（true 暂停，false 继续） */
+  paused?: boolean;
+  /** 取消任务时是否同时删除已下载文件 */
+  purge?: boolean;
+  /** 需要在系统文件管理器中打开的文件或目录绝对路径（shell:open-path） */
+  openPath?: string;
 }
 
 /** 统一响应结构（第五节、第六节约定的 { success, code, message, data }） */
@@ -1010,6 +1226,29 @@ export interface iGM_Launcher_BridgeDataMap {
     instances: iGM_Launcher_InstanceRecord[];
   };
   "instance:launch-status": { status: iGM_Launcher_LaunchStatus | null };
+  "instance:resources": { resources: iGM_Launcher_InstanceResources };
+  /* ---- 模块二十：第三方资源（Modrinth / Fabric） ---- */
+  "thirdParty:search": {
+    items: iGM_Launcher_ThirdPartyResource[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  };
+  "thirdParty:resource": {
+    resource: iGM_Launcher_ThirdPartyResource;
+    versions: iGM_Launcher_ThirdPartyVersion[];
+  };
+  "thirdParty:download-start": { task: iGM_Launcher_ThirdPartyTask };
+  "thirdParty:download-status": { task: iGM_Launcher_ThirdPartyTask | null };
+  "thirdParty:download-list": { items: iGM_Launcher_ThirdPartyTask[] };
+  "thirdParty:download-cancel": { task: iGM_Launcher_ThirdPartyTask };
+  "thirdParty:download-pause": { task: iGM_Launcher_ThirdPartyTask };
+  "thirdParty:download-retry": { task: iGM_Launcher_ThirdPartyTask };
+  "thirdParty:download-remove": { removed: boolean };
+  "thirdParty:download-clear-completed": { removed: number };
+  /* 打开文件 / 目录：opened 为 false 表示系统未接管（界面回退展示路径文本） */
+  "shell:open-path": { opened: boolean };
 }
 
 // 核心逻辑（常量） //
@@ -1021,7 +1260,7 @@ export const IGM_LAUNCHER_APP_NAME = "iGM Launcher";
 export const IGM_LAUNCHER_IDENTIFIER = "com.igcraftlit.launcher";
 
 /** 应用版本（界面关于页、窗口标题与启动参数统一显示该值） */
-export const IGM_LAUNCHER_VERSION = "26.1.2 official version";
+export const IGM_LAUNCHER_VERSION = "26.1.3 official version";
 
 /** 窗口标题：应用名称 + 版本号，供原生窗口标题栏与界面标题统一引用 */
 export const IGM_LAUNCHER_APP_TITLE = `${IGM_LAUNCHER_APP_NAME} ${IGM_LAUNCHER_VERSION}`;
@@ -1114,6 +1353,24 @@ export const IGM_LAUNCHER_LOCALE_STORAGE_KEY = "iGM_Launcher_Locale";
 /** localStorage 主题键（与 next-themes storageKey 保持一致） */
 export const IGM_LAUNCHER_THEME_STORAGE_KEY = "iGM_Launcher_Theme";
 
+/**
+ * localStorage 玻璃背景键。
+ * 取值写入 html[data-igm-glass]，仅启动器端读取，网站端不使用。
+ */
+export const IGM_LAUNCHER_GLASS_STORAGE_KEY = "iGM_Launcher_Glass";
+
+/** 玻璃背景可选预设（none 表示关闭），与 iGM_Globals.css 中的选择器一一对应 */
+export const IGM_LAUNCHER_GLASS_PRESETS = [
+  "none",
+  "ice",
+  "warm",
+  "mint",
+  "violet",
+] as const;
+
+/** 玻璃背景预设类型 */
+export type iGM_Launcher_GlassPreset = (typeof IGM_LAUNCHER_GLASS_PRESETS)[number];
+
 /** 模块一支持的语言清单（仅 zh-CN / en） */
 export const IGM_LAUNCHER_LOCALES: readonly {
   value: iGM_Launcher_Locale;
@@ -1165,6 +1422,24 @@ export const IGM_LAUNCHER_API_ME_PATH = "/G_Auth/me";
 
 /** 主站 API 请求超时（毫秒） */
 export const IGM_LAUNCHER_API_TIMEOUT_MS = 8000;
+
+/**
+ * 主站第三方资源接口超时（毫秒）。
+ * 说明：第三方资源首次访问需回源 Modrinth 拉取版本清单，创建下载任务时
+ *       也要等后端建单，耗时明显高于普通接口，故单独放宽，避免误报超时。
+ */
+export const IGM_LAUNCHER_API_THIRD_PARTY_TIMEOUT_MS = 30000;
+
+/**
+ * 界面侧单次桥接调用超时（毫秒），按方法区分：
+ * - 系统目录选择器等原生弹窗需等待用户操作，给足 10 分钟；
+ * - thirdParty:* 回源耗时较长，给 30 秒；
+ * - 其余普通方法沿用 IGM_LAUNCHER_API_TIMEOUT_MS。
+ */
+export const IGM_LAUNCHER_DIALOG_TIMEOUT_MS = 600000;
+
+/** 桥接层单次调用默认超时（毫秒） */
+export const IGM_LAUNCHER_BRIDGE_TIMEOUT_MS = 8000;
 
 /** 浏览器开发模式下模拟落盘所用的 localStorage 键 */
 export const IGM_LAUNCHER_LOCAL_DATA_STORAGE_KEY = "iGM_Launcher_LocalData";
@@ -1514,6 +1789,50 @@ export function iGM_Launcher_SafePlayerName(raw: string): string {
   const cleaned = (raw ?? "").replace(/[^0-9A-Za-z_]/g, "").slice(0, 16);
   return cleaned.length >= 3 ? cleaned : IGM_LAUNCHER_OFFLINE_DEFAULT_NAME;
 }
+
+/* ---- 模块二十常量：第三方资源（Modrinth / Fabric） ---- */
+
+/**
+ * 第三方资源接口前缀。
+ * 主站路由统一使用 G_Xxxxx 命名，第三方资源接口实际路径为 /G_ThirdParty，
+ * 因此启动器按真实路径调用（不使用 /api/ 前缀）。
+ */
+export const IGM_LAUNCHER_API_THIRD_PARTY_PATH = "/G_ThirdParty";
+
+/** 第三方资源类型筛选项（标签由界面 i18n 提供，此处只声明取值顺序） */
+export const IGM_LAUNCHER_THIRD_PARTY_TYPES: readonly iGM_Launcher_ThirdPartyResourceType[] = [
+  "mod",
+  "shader",
+  "resourcepack",
+  "map",
+  "datapack",
+] as const;
+
+/** 第三方资源搜索默认分页条数 */
+export const IGM_LAUNCHER_THIRD_PARTY_PAGE_SIZE = 20;
+
+/** 第三方下载任务列表轮询间隔（毫秒），仅在有进行中任务时轮询 */
+export const IGM_LAUNCHER_THIRD_PARTY_POLL_MS = 1000;
+
+/** 第三方下载任务处于进行中的状态集合（界面据此决定是否轮询） */
+export const IGM_LAUNCHER_THIRD_PARTY_ACTIVE_STATUS: readonly iGM_Launcher_ThirdPartyTaskStatus[] =
+  ["pending", "downloading"] as const;
+
+/**
+ * 资源类型 -> 实例内目标子目录名。
+ * 供「安装到实例」的提示文案使用：mods / shaderpacks / resourcepacks / saves / datapacks，
+ * 与 IGM_LAUNCHER_INSTANCE_SUBDIRS 的目录规则保持一致。
+ */
+export const IGM_LAUNCHER_THIRD_PARTY_INSTANCE_SUBDIRS: Record<
+  iGM_Launcher_ThirdPartyResourceType,
+  string
+> = {
+  mod: "mods",
+  shader: "shaderpacks",
+  resourcepack: "resourcepacks",
+  map: "saves",
+  datapack: "datapacks",
+};
 
 // 核心逻辑（模块二纯函数：Bun 桥接层与界面本地回退共用） //
 

@@ -14,7 +14,10 @@
 
 // 导入依赖 //
 import {
+  IGM_LAUNCHER_API_THIRD_PARTY_TIMEOUT_MS,
   IGM_LAUNCHER_BRIDGE_FAILED,
+  IGM_LAUNCHER_BRIDGE_TIMEOUT_MS,
+  IGM_LAUNCHER_DIALOG_TIMEOUT_MS,
   type iGM_Launcher_BridgeDataMap,
   type iGM_Launcher_BridgeMethod,
   type iGM_Launcher_BridgeParams,
@@ -45,11 +48,20 @@ declare global {
 /** 桥接层回包通道标识（与 apps/shell/src/iGM_Launcher_Ipc.ts 保持一致） */
 const IGM_LAUNCHER_BRIDGE_CHANNEL = "iGM_Launcher_Bridge";
 
-/** 单次桥接调用超时（毫秒），超时按失败处理，避免界面永久等待 */
-const IGM_LAUNCHER_BRIDGE_TIMEOUT_MS = 8000;
-
 /** 请求编号 -> 兑现函数 */
 const iGM_Launcher_BridgePending = new Map<string, iGM_Launcher_BridgeResolver>();
+
+/**
+ * 按方法解析单次调用的等待超时（毫秒）。
+ * 统一 8 秒会把需要等待用户操作或回源上游的方法误判为超时：
+ * - minecraft:pick-dir / installer 目录选择器等原生弹窗需等待用户浏览；
+ * - thirdParty:* 首次回源 Modrinth 拉版本、创建下载任务耗时高于普通接口。
+ */
+function iGM_Launcher_ResolveBridgeTimeout(method: iGM_Launcher_BridgeMethod): number {
+  if (method === "minecraft:pick-dir") return IGM_LAUNCHER_DIALOG_TIMEOUT_MS;
+  if (method.startsWith("thirdParty:")) return IGM_LAUNCHER_API_THIRD_PARTY_TIMEOUT_MS;
+  return IGM_LAUNCHER_BRIDGE_TIMEOUT_MS;
+}
 
 let iGM_Launcher_BridgeReceiverInstalled = false;
 
@@ -139,7 +151,7 @@ export async function iGM_Launcher_BridgeCall<M extends iGM_Launcher_BridgeMetho
         message: "桥接层响应超时",
         data: null,
       });
-    }, IGM_LAUNCHER_BRIDGE_TIMEOUT_MS);
+    }, iGM_Launcher_ResolveBridgeTimeout(method));
 
     iGM_Launcher_BridgePending.set(id, (response) => {
       window.clearTimeout(timer);

@@ -1,13 +1,16 @@
 /*
  * 文件路径：apps/launcher-ui/components/iGM_Launcher_Pages/iGM_Launcher_DownloadsPage.module.css
  * 所属层：前端 / 页面层样式
- * 路由：G_Downloads（/downloads）
+ * 路由：G_Downloads（SPA 页 id：downloads）
  * 模块：iGM_Launcher_DownloadsPage
- * 作用：搜索框、分类 chips、资源卡片栅格
+ * 作用：下载中心样式：搜索框、类型 chips、资源卡片与版本面板、下载任务卡片与进度条
  */
 
 .page {
   max-width: 1080px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 /* 搜索框 */
@@ -15,6 +18,7 @@
   position: relative;
   display: flex;
   align-items: center;
+  gap: 8px;
 }
 
 .searchIcon {
@@ -42,12 +46,11 @@
   border-color: var(--igm-accent);
 }
 
-/* 分类 chips */
+/* 类型 chips */
 .categoryRow {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 14px;
 }
 
 .chip {
@@ -75,52 +78,313 @@
   background-color: var(--igm-accent-soft);
 }
 
-/* 热门资源 */
+/* 区块标题 */
 .sectionTitle {
-  margin: 22px 0 12px;
+  margin: 8px 0 0;
   font-size: 14px;
   font-weight: 600;
 }
 
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+/* 资源列表：横条形紧凑排版，单列铺满，避免卡片过大占屏 */
 .grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .resourceCard {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
-.resourceIcon {
+/* 资源卡片主区（横向一行：封面 + 名称/简介 + 元信息 + 展开箭头） */
+.resourceMain {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 14px;
+  text-align: left;
+  background: none;
+  border: none;
+}
+
+.resourceMain:hover {
+  background-color: var(--igm-surface-subtle);
+}
+
+.cover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
   border-radius: var(--igm-radius);
   background-color: var(--igm-surface-subtle);
   border: 1px solid var(--igm-border);
   color: var(--igm-text-muted);
 }
 
+.coverImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .resourceBody {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.resourceNameRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .resourceName {
   font-size: 13px;
   font-weight: 600;
+  color: var(--igm-text);
 }
 
 .resourceDesc {
-  margin-top: 4px;
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.resourceMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--igm-text-muted);
+  flex: 0 0 auto;
+}
+
+.expandIcon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--igm-text-subtle);
+}
+
+/* 版本选择面板 */
+.versionPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border-top: 1px solid var(--igm-border);
+  background-color: var(--igm-surface-subtle);
+}
+
+.versionMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.targetRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.moreRow {
+  display: flex;
+  justify-content: center;
+}
+
+/* 进度条：与下载进度页保持一致的视觉 */
+.progressTrack {
+  height: 6px;
+  border-radius: 999px;
+  background-color: var(--igm-surface-subtle);
+  border: 1px solid var(--igm-border);
+  overflow: hidden;
+}
+
+.progressBar {
+  height: 100%;
+  background-color: var(--igm-accent);
+  transition: width 0.2s ease;
+}
+
+/* 下载任务卡片 */
+.taskCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+}
+
+.taskHead {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.taskName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.taskVersion {
+  font-size: 12px;
+  color: var(--igm-text-muted);
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.metaText {
+  font-size: 12px;
+  color: var(--igm-text-muted);
+}
+
+.detailRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.metaLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 108px;
   font-size: 12px;
   color: var(--igm-text-subtle);
 }
 
-.downloadButton {
-  align-self: flex-start;
+.pathText {
+  min-width: 0;
+  font-size: 12px;
+  color: var(--igm-text);
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  word-break: break-all;
+}
+
+.taskActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* 安装到实例面板 */
+.installPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-border);
+  background-color: var(--igm-surface-subtle);
+}
+
+.installTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+/* 已完成折叠区 */
+.completedHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.completedToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.completedList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* 文本 */
+.errorText {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--igm-danger);
+}
+
+.okText {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--igm-success, var(--igm-accent));
+}
+
+.hintText {
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+.note {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+/* 加载旋转图标（极简，无花哨动画） */
+.spin {
+  animation: igm-third-party-spin 1s linear infinite;
+}
+
+@keyframes igm-third-party-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.emptyCard {
+  padding: 16px 18px;
 }

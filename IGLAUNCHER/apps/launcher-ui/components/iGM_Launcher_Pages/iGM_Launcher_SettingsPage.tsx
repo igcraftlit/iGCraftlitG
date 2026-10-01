@@ -33,7 +33,15 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useTranslations } from "next-intl";
-import { IGM_LAUNCHER_VERSION, iGM_Launcher_McParentOfRoot } from "@igm-launcher/shared";
+import {
+  IGM_LAUNCHER_VERSION,
+  iGM_Launcher_McParentOfRoot,
+  type iGM_Launcher_GlassPreset,
+} from "@igm-launcher/shared";
+import {
+  iGM_Launcher_ReadGlassPreset as IGM_Launcher_ReadGlassPreset,
+  iGM_Launcher_SaveGlassPreset as IGM_Launcher_SaveGlassPreset,
+} from "@/components/iGM_Launcher_Providers/iGM_Launcher_Glass";
 import {
   iGM_Launcher_Badge as IGM_Launcher_Badge,
   iGM_Launcher_Button as IGM_Launcher_Button,
@@ -62,6 +70,15 @@ interface iGM_Launcher_SettingsRowProps {
 }
 
 // 核心逻辑 //
+/** 玻璃背景预设清单：value 与 iGM_Globals.css 中的 html[data-igm-glass] 对应 */
+const IGM_LAUNCHER_GLASS_OPTIONS: { value: iGM_Launcher_GlassPreset; labelKey: string }[] = [
+  { value: "none", labelKey: "glassNone" },
+  { value: "ice", labelKey: "glassIce" },
+  { value: "warm", labelKey: "glassWarm" },
+  { value: "mint", labelKey: "glassMint" },
+  { value: "violet", labelKey: "glassViolet" },
+];
+
 /** 设置分组卡片 */
 function IGM_Launcher_SettingsGroup({
   id,
@@ -140,8 +157,14 @@ export function iGM_Launcher_SettingsPage() {
   const [newDirPath, setNewDirPath] = useState("");
   // 模块七：下载前置目录的输入草稿（其下自动创建 .minecraft，可放在任意磁盘）
   const [draftRoot, setDraftRoot] = useState("");
+  // 个性化：透明玻璃色背景预设（挂载后从 localStorage 恢复，避免水合不一致）
+  const [glass, setGlass] = useState<iGM_Launcher_GlassPreset>("none");
 
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    setGlass(IGM_Launcher_ReadGlassPreset());
+  }, []);
 
   // 生效根目录（含 .minecraft）反推为前置目录回填，保持输入框与磁盘一致
   useEffect(() => {
@@ -212,6 +235,24 @@ export function iGM_Launcher_SettingsPage() {
           description={t("reduceMotionDesc")}
         >
           <IGM_Launcher_Switch label={t("reduceMotion")} />
+        </IGM_Launcher_SettingsRow>
+        {/* 个性化：透明玻璃色背景，仅启动器端生效 */}
+        <IGM_Launcher_SettingsRow label={t("glassTitle")} description={t("glassDesc")}>
+          <div className={styles.glassSwatches}>
+            {IGM_LAUNCHER_GLASS_OPTIONS.map((option) => (
+              <button
+                type="button"
+                key={option.value}
+                title={t(option.labelKey)}
+                aria-label={t(option.labelKey)}
+                aria-pressed={glass === option.value}
+                className={`${styles.glassSwatch} ${styles[`glassSwatch_${option.value}`]} ${
+                  glass === option.value ? styles.glassSwatchActive : ""
+                }`}
+                onClick={() => setGlass(IGM_Launcher_SaveGlassPreset(option.value))}
+              />
+            ))}
+          </div>
         </IGM_Launcher_SettingsRow>
       </IGM_Launcher_SettingsGroup>
 
@@ -392,7 +433,7 @@ export function iGM_Launcher_SettingsPage() {
       {/* 关于 */}
       <IGM_Launcher_SettingsGroup id="about" title={t("groupAbout")} icon={BadgeInfo}>
         <IGM_Launcher_SettingsRow label={t("aboutVersion")}>
-          {/* 版本号以 IGM_LAUNCHER_VERSION 为准（当前 26.1.2 official version），不再叠加 v 前缀 */}
+          {/* 版本号以 IGM_LAUNCHER_VERSION 为准（当前 26.1.3 official version），不再叠加 v 前缀 */}
           <IGM_Launcher_Badge tone="accent">{IGM_LAUNCHER_VERSION}</IGM_Launcher_Badge>
         </IGM_Launcher_SettingsRow>
         <IGM_Launcher_SettingsRow label={t("aboutCore")}>
