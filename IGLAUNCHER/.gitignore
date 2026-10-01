@@ -6,6 +6,7 @@ out/
 
 # Electrobun / Hutch 构建产物
 .hutch/
+.cottontail-tmp/
 artifacts/
 build/
 apps/shell/iGM_Launcher_Assets/
