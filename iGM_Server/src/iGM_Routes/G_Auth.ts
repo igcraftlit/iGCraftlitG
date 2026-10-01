@@ -50,6 +50,8 @@ import {
   iGM_RequireUser,
   type iGM_NetworkServer,
 } from "../iGM_Middleware/iGM_AuthGuard";
+import { iGM_FindLatestAgreement } from "../iGM_Repositories/iGM_AgreementRepository";
+import { iGM_UserAgreementVersion } from "../iGM_Types/iGM_Agreement";
 
 // 类型定义 //
 /** 路由处理器上下文：只声明实际使用到的 Elysia 上下文字段 */
@@ -119,6 +121,8 @@ async function iGM_HandleRegister(ctx: iGM_RouteContext) {
       username: iGM_Field(ctx.body, "username"),
       email: iGM_Field(ctx.body, "email"),
       password: iGM_Field(ctx.body, "password"),
+      // 模块十五：注册第三步已阅读同意的规定版本（缺省取当前生效版本）
+      agreementVersion: iGM_Field(ctx.body, "agreementVersion") || null,
     },
     iGM_BuildContext(ctx),
   );
@@ -165,6 +169,18 @@ function iGM_HandleLogout(ctx: iGM_RouteContext) {
 function iGM_HandleMe(ctx: iGM_RouteContext) {
   const user = iGM_RequireUser(iGM_ResolveSession(iGM_GetSessionId(ctx.request)));
   return iGM_Ok({ user: iGM_ToUserDto(user) });
+}
+
+/* ---------- 模块十五：我的《用户管理规定》同意状态 ---------- */
+function iGM_HandleAgreement(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(iGM_ResolveSession(iGM_GetSessionId(ctx.request)));
+  const latest = iGM_FindLatestAgreement(user.iGM_Id);
+  return iGM_Ok({
+    version: latest?.iGM_Version ?? null,
+    acceptedAt: latest?.iGM_AcceptedAt ?? null,
+    currentVersion: iGM_UserAgreementVersion,
+    needsReaccept: latest?.iGM_Version !== iGM_UserAgreementVersion,
+  });
 }
 
 /* ---------- 发送邮箱验证码 ---------- */
@@ -303,6 +319,7 @@ export const G_Auth = new Elysia({ name: "G_Auth" })
   .post("/G_Auth/login", iGM_HandleLogin as never)
   .post("/G_Auth/logout", iGM_HandleLogout as never)
   .get("/G_Auth/me", iGM_HandleMe as never)
+  .get("/G_Auth/agreement", iGM_HandleAgreement as never)
   .post("/G_Auth/send-verification", iGM_HandleSendVerification as never)
   .post("/G_Auth/send-password-change-code", iGM_HandleSendPasswordChangeCode as never)
   .post("/G_Auth/verify-email", iGM_HandleVerifyEmail as never)

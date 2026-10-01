@@ -253,6 +253,31 @@ export function iGM_IsMcResourceType(value: unknown): value is iGM_McResourceTyp
   );
 }
 
+/* ---------- 模块十七：Minecraft 本体分区 ---------- */
+/**
+ * 本体分区类型：资源库 Minecraft 分区下的“游戏本体”子分区。
+ * 该类型仅用于分区浏览与筛选，本体数据来自 iGM_MinecraftVersions，
+ * 不作为资源上传类型（上传表单仍只提供 iGM_McResourceTypes）
+ */
+export const iGM_McVersionResourceType = "minecraft_version";
+
+/** 分区筛选可选项：可上传的资源类型 + 本体分区 */
+export const iGM_McPartitionTypes = [
+  ...iGM_McResourceTypes,
+  iGM_McVersionResourceType,
+] as const;
+export type iGM_McPartitionType = (typeof iGM_McPartitionTypes)[number];
+
+/** 判断值是否为合法分区筛选类型 */
+export function iGM_IsMcPartitionType(
+  value: unknown,
+): value is iGM_McPartitionType {
+  return (
+    typeof value === "string" &&
+    (iGM_McPartitionTypes as readonly string[]).includes(value)
+  );
+}
+
 /** 判断值是否为合法加载器 */
 export function iGM_IsMcLoader(value: unknown): value is iGM_McLoader {
   return (

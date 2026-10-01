@@ -18,6 +18,7 @@ import { iGM_AuthError } from "./iGM_Services/iGM_AuthService";
 import { iGM_ContentError } from "./iGM_Services/iGM_ContentService";
 import { iGM_StorageError, iGM_EnsureUploadRoot } from "./iGM_Services/iGM_StorageService";
 import { iGM_PointsError } from "./iGM_Services/iGM_PointsService";
+import { iGM_DeveloperError } from "./iGM_Services/iGM_DeveloperService";
 import { iGM_AdminError } from "./iGM_Services/iGM_AdminService";
 import { iGM_OrgVerifyError } from "./iGM_Services/iGM_OrgVerifyService";
 // 模块十：社交关系与私信业务错误
@@ -42,6 +43,10 @@ import { G_Stats } from "./iGM_Routes/G_Stats";
 import { G_Social } from "./iGM_Routes/G_Social";
 import { G_Message } from "./iGM_Routes/G_Message";
 import { G_Minecraft } from "./iGM_Routes/G_Minecraft";
+import { G_Developer } from "./iGM_Routes/G_Developer";
+// 模块十七：Minecraft 游戏本体下载与自动组装
+import { G_Game } from "./iGM_Routes/G_Game";
+import { iGM_GameError } from "./iGM_Services/iGM_GameService";
 
 // 类型定义 //
 // （本入口无额外类型，统一响应类型见 iGM_Types/iGM_Response.ts）
@@ -83,6 +88,11 @@ const iGM_Server = new Elysia()
       set.status = error.status;
       return iGM_Fail(error.status, error.message);
     }
+    // 模块十五开发者申请业务错误：重复申请/字段非法等
+    if (error instanceof iGM_DeveloperError) {
+      set.status = error.status;
+      return iGM_Fail(error.status, error.message);
+    }
     // 模块五管理后台业务错误：权限/状态冲突等
     if (error instanceof iGM_AdminError) {
       set.status = error.status;
@@ -100,6 +110,11 @@ const iGM_Server = new Elysia()
     }
     // 模块十私信业务错误：隐私设置/撤回时限等
     if (error instanceof iGM_MessageError) {
+      set.status = error.status;
+      return iGM_Fail(error.status, error.message);
+    }
+    // 模块十七游戏本体下载业务错误：路径非法/版本不存在/任务冲突/已取消等
+    if (error instanceof iGM_GameError) {
       set.status = error.status;
       return iGM_Fail(error.status, error.message);
     }
@@ -140,6 +155,10 @@ const iGM_Server = new Elysia()
   .use(G_Message)
   // 模块十：Minecraft 资源分区
   .use(G_Minecraft)
+  // 模块十五：开发者申请（API Key / SDK / 适配器协议）
+  .use(G_Developer)
+  // 模块十七：Minecraft 游戏本体下载与自动组装
+  .use(G_Game)
   // 根路径占位
   .get("/", () => ({
     success: true,

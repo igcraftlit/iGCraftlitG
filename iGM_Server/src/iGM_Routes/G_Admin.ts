@@ -46,6 +46,15 @@ import {
   iGM_OrgVerifyError,
   type iGM_OrgReviewAction,
 } from "../iGM_Services/iGM_OrgVerifyService";
+import {
+  iGM_AdminListExamsService,
+  iGM_ReviewExamService,
+} from "../iGM_Services/iGM_PointsService";
+import {
+  iGM_AdminListDevelopersService,
+  iGM_DeveloperError,
+  iGM_ReviewDeveloperService,
+} from "../iGM_Services/iGM_DeveloperService";
 
 // 类型定义 //
 // （路由层无额外类型，统一响应类型见 iGM_Types/iGM_Response.ts）
@@ -249,6 +258,63 @@ function iGM_HandleOrgVerificationReview(ctx: iGM_RouteContext) {
   );
 }
 
+/* ---------- 模块十五：等级考核申请列表 ---------- */
+function iGM_HandleLevelExams(ctx: iGM_RouteContext) {
+  iGM_RequireRole(iGM_CurrentUser(ctx), "moderator");
+  const page = Number(iGM_Query(ctx.query, "page", "1"));
+  const pageSize = Number(iGM_Query(ctx.query, "pageSize", "10"));
+  return iGM_Ok(
+    iGM_AdminListExamsService(iGM_Query(ctx.query, "status") || null, page, pageSize),
+  );
+}
+
+/* ---------- 模块十五：审核等级考核申请 ---------- */
+function iGM_HandleLevelExamReview(ctx: iGM_RouteContext) {
+  const admin = iGM_RequireRole(iGM_CurrentUser(ctx), "moderator");
+  iGM_EnforceRateLimit(ctx, "adminWrite", `user:${admin.iGM_Id}:${iGM_ClientIp(ctx)}`);
+  const examId = iGM_Field(ctx.body, "examId").trim();
+  const action = iGM_Field(ctx.body, "action").trim();
+  const note = iGM_Field(ctx.body, "note").trim() || null;
+  if (!examId || (action !== "approve" && action !== "reject")) {
+    throw new iGM_AdminError("admin.errors.badRequest", 422);
+  }
+  iGM_ReviewExamService(admin.iGM_Id, examId, action, note);
+  return iGM_Ok(
+    { examId, action },
+    action === "approve"
+      ? "levels.messages.examApproved"
+      : "levels.messages.examRejected",
+  );
+}
+
+/* ---------- 模块十五：开发者申请列表 ---------- */
+function iGM_HandleDevelopers(ctx: iGM_RouteContext) {
+  iGM_RequireRole(iGM_CurrentUser(ctx), "moderator");
+  const page = Number(iGM_Query(ctx.query, "page", "1"));
+  const pageSize = Number(iGM_Query(ctx.query, "pageSize", "10"));
+  return iGM_Ok(
+    iGM_AdminListDevelopersService(iGM_Query(ctx.query, "status") || null, page, pageSize),
+  );
+}
+
+/* ---------- 模块十五：审核开发者申请 ---------- */
+function iGM_HandleDeveloperReview(ctx: iGM_RouteContext) {
+  const admin = iGM_RequireRole(iGM_CurrentUser(ctx), "moderator");
+  iGM_EnforceRateLimit(ctx, "adminWrite", `user:${admin.iGM_Id}:${iGM_ClientIp(ctx)}`);
+  const developerId = iGM_Field(ctx.body, "developerId").trim();
+  const action = iGM_Field(ctx.body, "action").trim();
+  if (!developerId || (action !== "approve" && action !== "reject")) {
+    throw new iGM_DeveloperError("developer.errors.badRequest", 422);
+  }
+  iGM_ReviewDeveloperService(admin.iGM_Id, developerId, action);
+  return iGM_Ok(
+    { developerId, action },
+    action === "approve"
+      ? "developer.messages.approved"
+      : "developer.messages.rejected",
+  );
+}
+
 /**
  * G_Admin 管理后台路由集合
  * 业务错误统一抛 iGM_AdminError / iGM_AuthError，
@@ -270,7 +336,12 @@ export const G_Admin = new Elysia({ name: "G_Admin" })
   // 模块七：组织认证审核
   .get("/G_Admin/org-verifications", iGM_HandleOrgVerifications as never)
   .get("/G_Admin/org-verifications/detail", iGM_HandleOrgVerificationDetail as never)
-  .post("/G_Admin/org-verifications/review", iGM_HandleOrgVerificationReview as never);
+  .post("/G_Admin/org-verifications/review", iGM_HandleOrgVerificationReview as never)
+  // 模块十五：等级考核审核、开发者申请审核
+  .get("/G_Admin/level-exams", iGM_HandleLevelExams as never)
+  .post("/G_Admin/level-exams/review", iGM_HandleLevelExamReview as never)
+  .get("/G_Admin/developers", iGM_HandleDevelopers as never)
+  .post("/G_Admin/developers/review", iGM_HandleDeveloperReview as never);
 
 // 导出 //
 export default G_Admin;

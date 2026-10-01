@@ -117,6 +117,27 @@ function iGM_BuildNotifyText(input: iGM_NotifyInput): iGM_NotifyText {
             title: "Your resource was downloaded",
             content: `${actor} downloaded your resource "${subject}"`,
           };
+    case "friend_request":
+      return zh
+        ? { title: "收到好友申请", content: `${actor} 请求添加你为好友` }
+        : {
+            title: "New friend request",
+            content: `${actor} sent you a friend request`,
+          };
+    case "friend_accept":
+      return zh
+        ? { title: "好友申请已通过", content: `${actor} 通过了你的好友申请` }
+        : {
+            title: "Friend request accepted",
+            content: `${actor} accepted your friend request`,
+          };
+    case "message":
+      return zh
+        ? { title: "收到一条私信", content: `${actor} 给你发了一条私信` }
+        : {
+            title: "New private message",
+            content: `${actor} sent you a private message`,
+          };
     default:
       return zh
         ? { title: "系统通知", content: subject }

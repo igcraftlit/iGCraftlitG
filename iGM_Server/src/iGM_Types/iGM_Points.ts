@@ -38,6 +38,8 @@ export interface iGM_LevelRow {
   iGM_MaxPoints: number | null;
   iGM_Icon: string | null;
   iGM_SortOrder: number;
+  /** 模块十五：是否需通过考核方可升级（1 需考核 / 0 否） */
+  iGM_IsExamRequired: number;
 }
 
 /** iGM_Badges 表数据行 */
@@ -48,6 +50,8 @@ export interface iGM_BadgeRow {
   iGM_Icon: string | null;
   iGM_ConditionType: string;
   iGM_ConditionValue: number;
+  /** 模块十五：稀有度 common 普通 / rare 稀有 / legendary 传说 */
+  iGM_Rarity: string;
 }
 
 /** iGM_UserBadges 表数据行 */
@@ -77,8 +81,11 @@ export interface iGM_TaskRow {
   iGM_Action: string;
   iGM_TargetCount: number;
   iGM_RewardPoints: number;
+  /** weekly 每周任务 / seasonal 每季任务 */
   iGM_TaskType: string;
   iGM_SortOrder: number;
+  /** 模块十五：赛季标识（每季任务使用，weekly 为 NULL） */
+  iGM_SeasonId: string | null;
 }
 
 /** iGM_UserTasks 表数据行 */
@@ -88,6 +95,24 @@ export interface iGM_UserTaskRow {
   iGM_TaskId: string;
   iGM_Progress: number;
   iGM_IsCompleted: number;
+  iGM_UpdatedAt: string;
+  /** 模块十五：奖励是否已领取（1 已领取 / 0 未领取） */
+  iGM_IsClaimed: number;
+  /** 模块十五：当前进度所属周期键（周 / 季），周期变更时自动重置进度 */
+  iGM_CycleKey: string | null;
+}
+
+/** iGM_LevelExams 表数据行（等级考核申请） */
+export interface iGM_LevelExamRow {
+  iGM_Id: string;
+  iGM_UserId: string;
+  iGM_LevelId: string;
+  iGM_Content: string | null;
+  /** pending 待审核 / approved 已通过 / rejected 未通过 */
+  iGM_Status: string;
+  iGM_ReviewerId: string | null;
+  iGM_ReviewNote: string | null;
+  iGM_CreatedAt: string;
   iGM_UpdatedAt: string;
 }
 
@@ -101,6 +126,8 @@ export interface iGM_LevelDto {
   maxPoints: number | null;
   icon: string | null;
   sortOrder: number;
+  /** 模块十五：该等级是否需通过考核方可升级 */
+  isExamRequired: boolean;
 }
 
 /** 积分流水 DTO */
@@ -143,6 +170,8 @@ export interface iGM_BadgeDto {
   icon: string | null;
   conditionType: string;
   conditionValue: number;
+  /** 模块十五：稀有度 common 普通 / rare 稀有 / legendary 传说 */
+  rarity: string;
   /** 当前登录用户是否已获得（未登录为 false） */
   granted: boolean;
   grantedAt: string | null;
@@ -157,9 +186,53 @@ export interface iGM_TaskDto {
   targetCount: number;
   rewardPoints: number;
   taskType: string;
+  seasonId: string | null;
   sortOrder: number;
   progress: number;
   isCompleted: boolean;
+  /** 模块十五：奖励是否已领取 */
+  isClaimed: boolean;
+}
+
+/** 等级考核记录 DTO */
+export interface iGM_LevelExamDto {
+  id: string;
+  levelId: string;
+  levelName: string | null;
+  status: string;
+  content: string | null;
+  reviewNote: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** 升级进度 DTO */
+export interface iGM_LevelProgressDto {
+  totalPoints: number;
+  /** 当前生效等级（考核未通过的等级不计入） */
+  level: iGM_LevelDto | null;
+  /** 下一个可升级目标等级（已到顶为 null） */
+  nextLevel: iGM_LevelDto | null;
+  /** 距下一等级还差积分（已达标或到顶为 0） */
+  pointsToNext: number;
+  /** 积分是否已满足下一等级要求 */
+  pointsReached: boolean;
+  /** 下一等级是否需考核 */
+  nextLevelExamRequired: boolean;
+  /** 对该等级的考核状态：none / pending / approved / rejected */
+  examStatus: string;
+  /** 是否已满足升级条件（积分达标且考核要求已满足） */
+  canLevelUp: boolean;
+}
+
+/** 任务奖励领取结果 DTO */
+export interface iGM_TaskClaimResultDto {
+  taskId: string;
+  pointsEarned: number;
+  totalPoints: number;
+  level: iGM_LevelDto | null;
+  levelUp: boolean;
+  newBadges: iGM_BadgeDto[];
 }
 
 /** 签到状态 DTO */

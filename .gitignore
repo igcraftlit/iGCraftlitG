@@ -9,5 +9,6 @@ uploads/
 .DS_Store
 .trae/
 *.tsbuildinfo
+scripts/logs/
 screenshots/
 RUN.txt

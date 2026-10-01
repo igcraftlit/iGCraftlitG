@@ -17,18 +17,23 @@ import { iGM_RequireUser } from "../iGM_Middleware/iGM_AuthGuard";
 import {
   iGM_CurrentUser,
   iGM_EnforceRateLimit,
+  iGM_Field,
   iGM_Query,
   type iGM_RouteContext,
 } from "./iGM_RouteSupport";
 import {
   iGM_CheckinService,
+  iGM_ClaimTaskRewardService,
   iGM_GetBadgesService,
   iGM_GetCheckinStatusService,
   iGM_GetLeaderboardService,
+  iGM_GetLevelProgressService,
   iGM_GetLevelRulesService,
+  iGM_GetMyExamsService,
   iGM_GetMyPointsService,
   iGM_GetTasksService,
   iGM_ListMyRecordsService,
+  iGM_SubmitLevelExamService,
 } from "../iGM_Services/iGM_PointsService";
 
 // 类型定义 //
@@ -67,16 +72,62 @@ function iGM_HandleLevels(_ctx: iGM_RouteContext) {
   return iGM_Ok({ levels: iGM_GetLevelRulesService() });
 }
 
-/* ---------- 勋章列表（含我的状态） ---------- */
-function iGM_HandleBadges(ctx: iGM_RouteContext) {
-  const user = iGM_CurrentUser(ctx);
-  return iGM_Ok({ badges: iGM_GetBadgesService(user?.iGM_Id ?? null) });
+/* ---------- 模块十五：我的等级与升级进度 ---------- */
+function iGM_HandleLevelProgress(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+  return iGM_Ok(iGM_GetLevelProgressService(user.iGM_Id));
 }
 
-/* ---------- 任务列表与进度 ---------- */
+/* ---------- 模块十五：提交等级考核申请 ---------- */
+function iGM_HandleSubmitExam(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+  iGM_EnforceRateLimit(ctx, "examWrite", `user:${user.iGM_Id}`);
+  const levelId = iGM_Field(ctx.body, "levelId").trim();
+  const content = iGM_Field(ctx.body, "content").trim() || null;
+  return iGM_Ok(
+    iGM_SubmitLevelExamService(user.iGM_Id, levelId, content),
+    "levels.messages.examSubmitted",
+  );
+}
+
+/* ---------- 模块十五：我的考核记录与状态 ---------- */
+function iGM_HandleMyExams(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+  return iGM_Ok({
+    progress: iGM_GetLevelProgressService(user.iGM_Id),
+    exams: iGM_GetMyExamsService(user.iGM_Id),
+  });
+}
+
+/* ---------- 勋章列表（含我的状态；rarity 可选筛选） ---------- */
+function iGM_HandleBadges(ctx: iGM_RouteContext) {
+  const user = iGM_CurrentUser(ctx);
+  const rarity = iGM_Query(ctx.query, "rarity") || null;
+  return iGM_Ok({ badges: iGM_GetBadgesService(user?.iGM_Id ?? null, rarity) });
+}
+
+/* ---------- 任务列表与进度（type 可选 weekly / seasonal） ---------- */
 function iGM_HandleTasks(ctx: iGM_RouteContext) {
   const user = iGM_CurrentUser(ctx);
-  return iGM_Ok({ tasks: iGM_GetTasksService(user?.iGM_Id ?? null) });
+  const type = iGM_Query(ctx.query, "type");
+  const tasks = iGM_GetTasksService(user?.iGM_Id ?? null);
+  return iGM_Ok({
+    tasks:
+      type === "weekly" || type === "seasonal"
+        ? tasks.filter((task) => task.taskType === type)
+        : tasks,
+  });
+}
+
+/* ---------- 模块十五：领取任务奖励 ---------- */
+function iGM_HandleClaimTask(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(iGM_CurrentUser(ctx));
+  iGM_EnforceRateLimit(ctx, "taskClaim", `user:${user.iGM_Id}`);
+  const taskId = iGM_Field(ctx.body, "taskId").trim();
+  return iGM_Ok(
+    iGM_ClaimTaskRewardService(user.iGM_Id, taskId),
+    "tasks.messages.claimed",
+  );
 }
 
 /* ---------- 排行榜 ---------- */
@@ -100,8 +151,12 @@ export const G_Points = new Elysia({ name: "G_Points" })
   .post("/G_Points/checkin", iGM_HandleCheckin as never)
   .get("/G_Points/checkin-status", iGM_HandleCheckinStatus as never)
   .get("/G_Points/levels", iGM_HandleLevels as never)
+  .get("/G_Points/levels/progress", iGM_HandleLevelProgress as never)
+  .get("/G_Points/levels/exams", iGM_HandleMyExams as never)
+  .post("/G_Points/levels/exam", iGM_HandleSubmitExam as never)
   .get("/G_Points/badges", iGM_HandleBadges as never)
   .get("/G_Points/tasks", iGM_HandleTasks as never)
+  .post("/G_Points/tasks/claim", iGM_HandleClaimTask as never)
   .get("/G_Points/leaderboard", iGM_HandleLeaderboard as never);
 
 // 导出 //

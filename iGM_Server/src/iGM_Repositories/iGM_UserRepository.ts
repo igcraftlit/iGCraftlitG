@@ -9,7 +9,6 @@
  */
 
 // 导入依赖 //
-import { randomInt } from "node:crypto";
 import { iGM_Db } from "../iGM_Database/iGM_Database";
 import type {
   iGM_UserRole,
@@ -36,18 +35,63 @@ export interface iGM_CreateUserParams {
 
 // 核心逻辑 //
 /**
- * 生成 11 位全局唯一 UID：首位 1-9、其余随机，碰撞时重试。
+ * UID 区分位（模块十六，共 11 位：第 1 位为区分位 + 后 10 位全局顺序号）。
+ * 0 管理员 / 官方人员、1-8 普通用户（当前统一使用 1，其余位保留扩展）、9 测试账号。
+ * 顺序号从 1 开始、按注册顺序递增、全局唯一、不使用 0，一经分配不可更改。
+ */
+export const iGM_UidScopeAdmin = "0";
+export const iGM_UidScopeUser = "1";
+export const iGM_UidScopeTest = "9";
+
+/**
+ * 取某区分位的下一个顺序号（在事务内自增 iGM_UIDSequence）。
+ * 顺序号只增不减；首次使用某区分位时自动建行，起始值为 1。
+ */
+function iGM_NextUidSequence(scope: string): number {
+  const allocate = iGM_Db.transaction((targetScope: string): number => {
+    const row = iGM_Db
+      .query(
+        `SELECT iGM_LastSequence FROM iGM_UIDSequence WHERE iGM_Scope = ?`,
+      )
+      .get(targetScope) as { iGM_LastSequence: number } | undefined;
+    const next = (row?.iGM_LastSequence ?? 0) + 1;
+    iGM_Db.run(
+      `INSERT INTO iGM_UIDSequence (iGM_Id, iGM_Scope, iGM_LastSequence, iGM_UpdatedAt)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT (iGM_Scope)
+       DO UPDATE SET iGM_LastSequence = excluded.iGM_LastSequence,
+                     iGM_UpdatedAt = excluded.iGM_UpdatedAt`,
+      [
+        `uid-scope-${targetScope}`,
+        targetScope,
+        next,
+        new Date().toISOString(),
+      ],
+    );
+    return next;
+  });
+  return allocate(scope);
+}
+
+/**
+ * 按区分位分配 11 位 UID：顺序号不足 10 位时左补 0。
+ * 例：scope 1 的第 1 号 → 10000000001。
+ */
+export function iGM_AllocateUid(scope: string): string {
+  const sequence = iGM_NextUidSequence(scope);
+  return `${scope}${String(sequence).padStart(10, "0")}`;
+}
+
+/**
+ * 按角色分配 UID：管理员 / 官方人员走区分位 0，普通用户走区分位 1。
  * UID 作为认证值，注册后不可修改；唯一索引 iGM_Idx_Users_Uid 兜底。
  */
-export function iGM_GenerateUniqueUid(maxAttempts = 10): string {
-  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-    const uid = `${randomInt(1, 10)}${String(randomInt(0, 1e10)).padStart(10, "0")}`;
-    const exists = iGM_Db
-      .query(`SELECT 1 FROM iGM_Users WHERE iGM_Uid = ? LIMIT 1`)
-      .get(uid);
-    if (!exists) return uid;
-  }
-  throw new Error("iGM_GenerateUniqueUid：连续碰撞超出重试上限");
+export function iGM_GenerateUniqueUid(role: iGM_UserRole = "user"): string {
+  const scope =
+    role === "admin" || role === "moderator"
+      ? iGM_UidScopeAdmin
+      : iGM_UidScopeUser;
+  return iGM_AllocateUid(scope);
 }
 
 /** 按 UID 查询用户 */

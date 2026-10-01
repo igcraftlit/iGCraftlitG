@@ -14,6 +14,7 @@ import { iGM_Db } from "../iGM_Database/iGM_Database";
 import type {
   iGM_BadgeRow,
   iGM_CheckinRow,
+  iGM_LevelExamRow,
   iGM_LevelRow,
   iGM_PointsRecordRow,
   iGM_TaskRow,
@@ -162,9 +163,13 @@ export function iGM_FindLevelByPoints(totalPoints: number): iGM_LevelRow | null 
 
 /* ---------- 勋章 ---------- */
 
-/** 全部勋章定义 */
+/** 全部勋章定义（按稀有度普通→稀有→传说、再按条件值升序） */
 export function iGM_ListBadges(): iGM_BadgeRow[] {
-  return iGM_Db.query(`SELECT * FROM iGM_Badges ORDER BY iGM_ConditionValue ASC`).all() as iGM_BadgeRow[];
+  return iGM_Db.query(
+    `SELECT * FROM iGM_Badges
+     ORDER BY CASE iGM_Rarity WHEN 'common' THEN 0 WHEN 'rare' THEN 1 ELSE 2 END ASC,
+              iGM_ConditionValue ASC`,
+  ).all() as iGM_BadgeRow[];
 }
 
 /** 授予勋章（幂等：已拥有返回 false） */
@@ -278,16 +283,20 @@ export function iGM_FindUserTask(userId: string, taskId: string): iGM_UserTaskRo
   );
 }
 
-/** 递增任务进度并返回最新行；已完成任务不再累加 */
-export function iGM_IncrementTaskProgress(
-  userId: string,
-  taskId: string,
-  targetCount: number,
-  now: string,
-): { row: iGM_UserTaskRow; justCompleted: boolean } {
+/** 递增任务进度并返回最新行；已完成任务不再累加，周期变更时自动重置 */
+export function iGM_IncrementTaskProgress(params: {
+  userId: string;
+  taskId: string;
+  targetCount: number;
+  /** 当前周期键（周 / 季）；与行内不一致时视为新周期并重置进度 */
+  cycleKey: string;
+  now: string;
+}): { row: iGM_UserTaskRow; justCompleted: boolean } {
+  const { userId, taskId, targetCount, cycleKey, now } = params;
   const existing = iGM_FindUserTask(userId, taskId);
+  const completed = targetCount <= 1 ? 1 : 0;
+
   if (!existing) {
-    const completed = targetCount <= 1 ? 1 : 0;
     const row: iGM_UserTaskRow = {
       iGM_Id: randomUUID(),
       iGM_UserId: userId,
@@ -295,14 +304,48 @@ export function iGM_IncrementTaskProgress(
       iGM_Progress: 1,
       iGM_IsCompleted: completed,
       iGM_UpdatedAt: now,
+      iGM_IsClaimed: 0,
+      iGM_CycleKey: cycleKey,
     };
     iGM_Db.run(
       `INSERT INTO iGM_UserTasks
-         (iGM_Id, iGM_UserId, iGM_TaskId, iGM_Progress, iGM_IsCompleted, iGM_UpdatedAt)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [row.iGM_Id, row.iGM_UserId, row.iGM_TaskId, row.iGM_Progress, row.iGM_IsCompleted, row.iGM_UpdatedAt],
+         (iGM_Id, iGM_UserId, iGM_TaskId, iGM_Progress, iGM_IsCompleted,
+          iGM_UpdatedAt, iGM_IsClaimed, iGM_CycleKey)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        row.iGM_Id,
+        row.iGM_UserId,
+        row.iGM_TaskId,
+        row.iGM_Progress,
+        row.iGM_IsCompleted,
+        row.iGM_UpdatedAt,
+        row.iGM_IsClaimed,
+        row.iGM_CycleKey,
+      ],
     );
     return { row, justCompleted: completed === 1 };
+  }
+
+  // 周期变更：重置进度与领取状态，开始新一周 / 新一季
+  if (existing.iGM_CycleKey !== cycleKey) {
+    iGM_Db.run(
+      `UPDATE iGM_UserTasks
+       SET iGM_Progress = 1, iGM_IsCompleted = ?, iGM_IsClaimed = 0,
+           iGM_CycleKey = ?, iGM_UpdatedAt = ?
+       WHERE iGM_UserId = ? AND iGM_TaskId = ?`,
+      [completed, cycleKey, now, userId, taskId],
+    );
+    return {
+      row: {
+        ...existing,
+        iGM_Progress: 1,
+        iGM_IsCompleted: completed,
+        iGM_IsClaimed: 0,
+        iGM_CycleKey: cycleKey,
+        iGM_UpdatedAt: now,
+      },
+      justCompleted: completed === 1,
+    };
   }
 
   if (existing.iGM_IsCompleted === 1) {
@@ -321,6 +364,170 @@ export function iGM_IncrementTaskProgress(
     row: { ...existing, iGM_Progress: progress, iGM_IsCompleted: justCompleted ? 1 : 0 },
     justCompleted,
   };
+}
+
+/** 标记任务奖励已领取（仅当前周期内有效） */
+export function iGM_MarkTaskClaimed(
+  userId: string,
+  taskId: string,
+  now: string,
+): boolean {
+  const result = iGM_Db.run(
+    `UPDATE iGM_UserTasks
+     SET iGM_IsClaimed = 1, iGM_UpdatedAt = ?
+     WHERE iGM_UserId = ? AND iGM_TaskId = ? AND iGM_IsCompleted = 1`,
+    [now, userId, taskId],
+  );
+  return result.changes > 0;
+}
+
+/** 统计用户当前周期内已完成的任务数（勋章条件：季度任务用） */
+export function iGM_CountCompletedTasksByType(
+  userId: string,
+  taskType: string,
+): number {
+  const row = iGM_Db.query(
+    `SELECT COUNT(*) AS total FROM iGM_UserTasks ut
+     JOIN iGM_Tasks t ON t.iGM_Id = ut.iGM_TaskId
+     WHERE ut.iGM_UserId = ? AND ut.iGM_IsCompleted = 1 AND t.iGM_TaskType = ?`,
+  ).get(userId, taskType) as { total: number };
+  return row.total;
+}
+
+/* ---------- 等级考核 ---------- */
+
+/** 写入一条等级考核申请 */
+export function iGM_InsertLevelExam(params: {
+  userId: string;
+  levelId: string;
+  content: string | null;
+  now: string;
+}): iGM_LevelExamRow {
+  const row: iGM_LevelExamRow = {
+    iGM_Id: randomUUID(),
+    iGM_UserId: params.userId,
+    iGM_LevelId: params.levelId,
+    iGM_Content: params.content,
+    iGM_Status: "pending",
+    iGM_ReviewerId: null,
+    iGM_ReviewNote: null,
+    iGM_CreatedAt: params.now,
+    iGM_UpdatedAt: params.now,
+  };
+  iGM_Db.run(
+    `INSERT INTO iGM_LevelExams
+       (iGM_Id, iGM_UserId, iGM_LevelId, iGM_Content, iGM_Status,
+        iGM_ReviewerId, iGM_ReviewNote, iGM_CreatedAt, iGM_UpdatedAt)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      row.iGM_Id,
+      row.iGM_UserId,
+      row.iGM_LevelId,
+      row.iGM_Content,
+      row.iGM_Status,
+      row.iGM_ReviewerId,
+      row.iGM_ReviewNote,
+      row.iGM_CreatedAt,
+      row.iGM_UpdatedAt,
+    ],
+  );
+  return row;
+}
+
+/** 用户对指定等级最近一条考核记录 */
+export function iGM_FindLatestExamByLevel(
+  userId: string,
+  levelId: string,
+): iGM_LevelExamRow | null {
+  return (
+    (iGM_Db.query(
+      `SELECT * FROM iGM_LevelExams
+       WHERE iGM_UserId = ? AND iGM_LevelId = ?
+       ORDER BY iGM_CreatedAt DESC LIMIT 1`,
+    ).get(userId, levelId) as iGM_LevelExamRow | undefined) ?? null
+  );
+}
+
+/** 用户全部考核记录（按时间倒序） */
+export function iGM_ListExamsByUser(userId: string): iGM_LevelExamRow[] {
+  return iGM_Db.query(
+    `SELECT * FROM iGM_LevelExams WHERE iGM_UserId = ? ORDER BY iGM_CreatedAt DESC`,
+  ).all(userId) as iGM_LevelExamRow[];
+}
+
+/** 用户已通过考核的等级 ID 集合（等级解析时校验考核门槛） */
+export function iGM_ListPassedExamLevelIds(userId: string): string[] {
+  const rows = iGM_Db.query(
+    `SELECT DISTINCT iGM_LevelId FROM iGM_LevelExams
+     WHERE iGM_UserId = ? AND iGM_Status = 'approved'`,
+  ).all(userId) as Array<{ iGM_LevelId: string }>;
+  return rows.map((row) => row.iGM_LevelId);
+}
+
+/** 统计用户通过的考核次数（勋章条件：考核通过） */
+export function iGM_CountPassedExams(userId: string): number {
+  const row = iGM_Db.query(
+    `SELECT COUNT(*) AS total FROM iGM_LevelExams
+     WHERE iGM_UserId = ? AND iGM_Status = 'approved'`,
+  ).get(userId) as { total: number };
+  return row.total;
+}
+
+/** 考核管理列表行（连用户名与等级名，供管理后台审核） */
+export interface iGM_LevelExamAdminRow extends iGM_LevelExamRow {
+  iGM_Username: string;
+  iGM_DisplayName: string | null;
+  iGM_LevelName: string | null;
+}
+
+/** 按主键读取一条考核记录 */
+export function iGM_FindExamById(examId: string): iGM_LevelExamRow | null {
+  return (
+    (iGM_Db.query(`SELECT * FROM iGM_LevelExams WHERE iGM_Id = ?`)
+      .get(examId) as iGM_LevelExamRow | undefined) ?? null
+  );
+}
+
+/** 管理端分页查询考核记录（可按状态筛选） */
+export function iGM_ListExamsForAdmin(params: {
+  status: string | null;
+  limit: number;
+  offset: number;
+}): { items: iGM_LevelExamAdminRow[]; total: number } {
+  const where = params.status ? `WHERE e.iGM_Status = ?` : "";
+  const args: Array<string | number> = params.status ? [params.status] : [];
+  const total = (
+    iGM_Db.query(
+      `SELECT COUNT(*) AS total FROM iGM_LevelExams e ${where}`,
+    ).get(...args) as { total: number }
+  ).total;
+  const items = iGM_Db.query(
+    `SELECT e.*, u.iGM_Username, u.iGM_DisplayName, l.iGM_Name AS iGM_LevelName
+     FROM iGM_LevelExams e
+     JOIN iGM_Users u ON u.iGM_Id = e.iGM_UserId
+     LEFT JOIN iGM_Levels l ON l.iGM_Id = e.iGM_LevelId
+     ${where}
+     ORDER BY e.iGM_CreatedAt DESC
+     LIMIT ? OFFSET ?`,
+  ).all(...args, params.limit, params.offset) as iGM_LevelExamAdminRow[];
+  return { items, total };
+}
+
+/** 审核考核申请：更新状态、审核人与审核意见 */
+export function iGM_ReviewExam(params: {
+  examId: string;
+  status: string;
+  reviewerId: string;
+  note: string | null;
+  now: string;
+}): boolean {
+  const result = iGM_Db.run(
+    `UPDATE iGM_LevelExams
+     SET iGM_Status = ?, iGM_ReviewerId = ?, iGM_ReviewNote = ?, iGM_UpdatedAt = ?
+     WHERE iGM_Id = ? AND iGM_Status = 'pending'`,
+    [params.status, params.reviewerId, params.note, params.now, params.examId],
+  );
+  return result.changes > 0;
 }
 
 /* ---------- 排行榜 ---------- */

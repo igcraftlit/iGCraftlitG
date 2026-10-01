@@ -55,6 +55,8 @@ import {
   iGM_SendVerificationMail,
 } from "./iGM_MailService";
 import { iGM_ResetRateLimit } from "./iGM_RateLimitService";
+import { iGM_InsertAgreement } from "../iGM_Repositories/iGM_AgreementRepository";
+import { iGM_UserAgreementVersion } from "../iGM_Types/iGM_Agreement";
 import {
   iGM_ToUserDto,
   type iGM_UserDto,
@@ -177,11 +179,17 @@ async function iGM_IssueVerifyCode(
 
 /**
  * 注册：校验输入、查重、写入用户（默认 user 角色）、
- *       自动登录、发送邮箱验证码
+ *       记录《用户管理规定》同意版本与 IP、自动登录、发送邮箱验证码
  * @returns 会话信息，路由负责写 Cookie
  */
 export async function iGM_Register(
-  input: { username: string; email: string; password: string },
+  input: {
+    username: string;
+    email: string;
+    password: string;
+    /** 模块十五：注册第三步已阅读同意的规定版本号（缺省取当前生效版本） */
+    agreementVersion?: string | null;
+  },
   context: iGM_RequestContext,
 ): Promise<iGM_AuthResult & { mailSent: boolean }> {
   const username = input.username.trim();
@@ -203,7 +211,8 @@ export async function iGM_Register(
   const ownerOrg = iGM_FindOwnerOrgByEmail(email);
   const user = iGM_CreateUser({
     id: iGM_RandomUuid(),
-    uid: iGM_GenerateUniqueUid(),
+    // 模块十五：UID 首位为区分位，普通用户取 1-8
+    uid: iGM_GenerateUniqueUid("user"),
     username,
     email,
     passwordHash,
@@ -211,6 +220,14 @@ export async function iGM_Register(
     verifiedOrgId: ownerOrg ? ownerOrg.orgId : null,
     // 模块八：注册前已在独立规定页阅读并同意，记录同意时的客户端 IP 与时间
     rulesAcceptedIp: context.ip,
+    now,
+  });
+
+  // 模块十五：同意记录写入 iGM_UserAgreements（含版本号与 IP），供版本变更时提示重读
+  iGM_InsertAgreement({
+    userId: user.iGM_Id,
+    version: input.agreementVersion?.trim() || iGM_UserAgreementVersion,
+    acceptedIp: context.ip,
     now,
   });
 

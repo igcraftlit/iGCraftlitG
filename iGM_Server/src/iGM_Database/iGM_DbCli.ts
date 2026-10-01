@@ -21,25 +21,32 @@ import { iGM_HashPassword, iGM_RandomUuid } from "../iGM_Services/iGM_SecuritySe
 type iGM_DbCommand = "init" | "migrate" | "seed";
 
 // 核心逻辑 //
-/** 模块二种子账号：三种角色各一个，仅用于本地权限自检 */
+/**
+ * 模块二种子账号：三种角色各一个，仅用于本地权限自检。
+ * 模块十六：网站最高管理者固定预置为测试账号，序列号 1，UID 90000000001；
+ * 其余账号按角色走 iGM_UIDSequence 顺序分配（管理员区分位 0、普通用户区分位 1）。
+ */
 const iGM_SeedUsers = [
   {
     username: "iGM_Admin",
     email: "admin@igcraftlit.com",
     password: "Admin12345",
     role: "admin" as const,
+    uid: "90000000001",
   },
   {
     username: "iGM_Moderator",
     email: "moderator@igcraftlit.com",
     password: "Moderator12345",
     role: "moderator" as const,
+    uid: null,
   },
   {
     username: "iGM_User",
     email: "user@igcraftlit.com",
     password: "User12345",
     role: "user" as const,
+    uid: null,
   },
 ];
 
@@ -53,7 +60,8 @@ async function iGM_SeedAuthUsers(): Promise<void> {
     }
     const user = iGM_CreateUser({
       id: iGM_RandomUuid(),
-      uid: iGM_GenerateUniqueUid(),
+      // 模块十六：最高管理者固定 UID；其余按角色区分位顺序分配
+      uid: seed.uid ?? iGM_GenerateUniqueUid(seed.role),
       username: seed.username,
       email: seed.email,
       passwordHash: await iGM_HashPassword(seed.password),

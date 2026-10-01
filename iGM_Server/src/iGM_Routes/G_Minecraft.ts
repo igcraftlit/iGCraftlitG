@@ -5,7 +5,8 @@
  * 模块：G_Minecraft
  * 作用：Minecraft 资源分区接口集合
  * 内容：分区资源列表（类型/版本/加载器/平台筛选与搜索）、表单选项字典、
- *       资源详情、创建、编辑、删除、下载（二进制流）
+ *       资源详情、创建、编辑、删除、下载（二进制流）、
+ *       模块十七新增：Minecraft 本体版本列表与版本详情
  * 约束：统一响应 { success, code, message, data }；
  *       写入要求登录并做基础限流；下载直接返回文件流并单独限流
  */
@@ -37,16 +38,29 @@ import {
 } from "../iGM_Services/iGM_ResourceService";
 import {
   iGM_McLoaders,
+  iGM_McPartitionTypes,
   iGM_McPlatforms,
   iGM_McResourceTypes,
   iGM_McVersionOptions,
   type iGM_ResourceInput,
 } from "../iGM_Types/iGM_Resource";
+// 模块十七：Minecraft 本体版本查询（复用下载模块的版本服务）
+import {
+  iGM_GameError,
+  iGM_GetGameVersion,
+  iGM_ListGameVersions,
+} from "../iGM_Services/iGM_GameService";
 
 // 类型定义 //
-// （路由层无额外类型，统一响应类型见 iGM_Types/iGM_Response.ts）
+/** 带路径参数的路由上下文（Elysia 的 params 未纳入通用上下文类型） */
+type iGM_MinecraftContext = iGM_RouteContext & { params?: Record<string, string> };
 
 // 核心逻辑 //
+/** 读取路径参数 */
+function iGM_MinecraftParam(ctx: iGM_MinecraftContext, key: string): string {
+  const value = ctx.params?.[key];
+  return typeof value === "string" ? value : "";
+}
 /** 从请求体提取 Minecraft 资源写入入参（创建与编辑共用） */
 function iGM_ReadMinecraftInput(body: unknown): iGM_ResourceInput {
   const source = (body ?? {}) as Record<string, unknown>;
@@ -96,10 +110,33 @@ function iGM_HandleList(ctx: iGM_RouteContext) {
 function iGM_HandleOptions() {
   return iGM_Ok({
     resourceTypes: iGM_McResourceTypes,
+    /** 分区浏览类型（含本体分区，仅用于列表筛选，不作为上传类型） */
+    partitionTypes: iGM_McPartitionTypes,
     versionOptions: iGM_McVersionOptions,
     loaders: iGM_McLoaders,
     platforms: iGM_McPlatforms,
   });
+}
+
+/* ---------- 模块十七：本体版本列表 ---------- */
+function iGM_HandleVersions(ctx: iGM_RouteContext) {
+  const { page, pageSize } = iGM_PageQuery(ctx);
+  return iGM_Ok(
+    iGM_ListGameVersions(iGM_CurrentUser(ctx), {
+      type: iGM_Query(ctx.query, "type") || undefined,
+      search: iGM_Query(ctx.query, "search") || undefined,
+      sort: iGM_Query(ctx.query, "sort") || undefined,
+      page,
+      pageSize,
+    }),
+  );
+}
+
+/* ---------- 模块十七：本体版本详情 ---------- */
+function iGM_HandleVersionDetail(ctx: iGM_MinecraftContext) {
+  const versionId = iGM_MinecraftParam(ctx, "id");
+  if (!versionId) throw new iGM_GameError("game.errors.versionNotFound", 404);
+  return iGM_Ok({ version: iGM_GetGameVersion(iGM_CurrentUser(ctx), versionId) });
 }
 
 /* ---------- 资源详情 ---------- */
@@ -166,6 +203,8 @@ async function iGM_HandleDownload(ctx: iGM_RouteContext) {
 export const G_Minecraft = new Elysia({ name: "G_Minecraft" })
   .get("/G_Minecraft/list", iGM_HandleList as never)
   .get("/G_Minecraft/options", iGM_HandleOptions as never)
+  .get("/G_Minecraft/versions", iGM_HandleVersions as never)
+  .get("/G_Minecraft/version/:id", iGM_HandleVersionDetail as never)
   .get("/G_Minecraft/detail", iGM_HandleDetail as never)
   .post("/G_Minecraft/create", iGM_HandleCreate as never)
   .put("/G_Minecraft/edit", iGM_HandleEdit as never)

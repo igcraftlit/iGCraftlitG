@@ -6,11 +6,12 @@
  * 作用：统一读取本地后端运行所需的环境配置
  * 内容：服务端口、SQLite 文件路径、CORS 白名单、认证会话参数、
  *       邮箱验证码与重置令牌时效、基础限流参数、163 邮箱 SMTP 邮件配置、
- *       模块四本地文件上传存储配置
+ *       模块四本地文件上传存储配置、模块十七 Minecraft 本体下载配置
  */
 
 // 导入依赖 //
 import { resolve } from "node:path";
+import { homedir } from "node:os";
 
 // 类型定义 //
 /** 认证与令牌相关配置 */
@@ -68,6 +69,43 @@ export interface iGM_UploadConfig {
   allowedMimeTypes: string[];
 }
 
+/** 模块十七：Minecraft 本体下载配置 */
+export interface iGM_GameConfig {
+  /** Mojang 官方版本清单地址 */
+  manifestUrl: string;
+  /** 默认安装目录（用户未指定时使用）；最终目录为 <该目录>/<版本目录名> */
+  defaultInstallDir: string;
+  /**
+   * assets 资源对象的下载根地址（Mojang 官方资源 CDN）
+   * 说明：版本 JSON 里的 assetIndex.url 指向 piston-meta 的索引文件本身，
+   *       其目录结构与资源对象无关，不能据其拼接对象地址；对象地址固定为
+   *       <assetBaseUrl>/<hash 前两位>/<hash>
+   */
+  assetBaseUrl: string;
+  /**
+   * Fabric 元数据基础地址
+   * 说明：模块十八支持 Fabric 加载器，profile JSON 与依赖库均来自 Fabric 官方 meta
+   */
+  fabricMetaUrl: string;
+  /** 默认并发下载数 */
+  concurrency: number;
+  /** 并发上限（任何情况下不得超过该值） */
+  maxConcurrency: number;
+  /**
+   * 全局每秒请求数上限（滑动窗口限速）
+   * 说明：Minecraft 资源以大量小文件为主（本项目版本约 5200 个，平均不足 100KB），
+   *       吞吐由请求并发度而非带宽决定，故限速以「整体速率」为口径。
+   *       取 0 表示不限速；官方 CDN 本身为高并发设计，该值兼顾速度与风控。
+   */
+  maxRequestsPerSecond: number;
+  /** 429/503 指数退避的最大重试次数 */
+  maxRetries: number;
+  /** 连续失败达到该次数后进入冷却 */
+  maxConsecutiveFailures: number;
+  /** 冷却时长（毫秒） */
+  cooldownMs: number;
+}
+
 export interface iGM_AppConfig {
   /** 后端监听端口 */
   port: number;
@@ -85,6 +123,8 @@ export interface iGM_AppConfig {
   mail: iGM_MailConfig;
   /** 模块四：本地文件上传存储配置 */
   upload: iGM_UploadConfig;
+  /** 模块十七：Minecraft 本体下载配置 */
+  game: iGM_GameConfig;
 }
 
 // 核心逻辑 //
@@ -163,6 +203,18 @@ export const iGM_Config: iGM_AppConfig = {
     messageWrite: { windowMs: 60 * 1000, max: 30 },
     // 模块十：Minecraft 资源写操作——10 分钟内最多 20 次
     mcWrite: { windowMs: 10 * 60 * 1000, max: 20 },
+    // 模块十五：等级考核申请提交——10 分钟内最多 5 次
+    examWrite: { windowMs: 10 * 60 * 1000, max: 5 },
+    // 模块十五：任务奖励领取——1 分钟内最多 10 次（业务层另有周期内唯一领取约束）
+    taskClaim: { windowMs: 60 * 1000, max: 10 },
+    // 模块十五：开发者申请提交——10 分钟内最多 5 次
+    developerApply: { windowMs: 10 * 60 * 1000, max: 5 },
+    // 模块十七：游戏本体下载任务创建——10 分钟内最多 5 次
+    gameInstall: { windowMs: 10 * 60 * 1000, max: 5 },
+    // 模块十七：已安装版本管理写操作（校验/修复/删除）——1 分钟内最多 30 次
+    gameWrite: { windowMs: 60 * 1000, max: 30 },
+    // 模块十七：原生文件夹选择器——1 分钟内最多 10 次
+    gameFolderPick: { windowMs: 60 * 1000, max: 10 },
   },
   mail: {
     // 163 邮箱 SMTP：465 端口隐式 SSL；密码使用客户端授权码（非登录密码），
@@ -209,6 +261,28 @@ export const iGM_Config: iGM_AppConfig = {
       "application/json", "application/xml", "text/xml", "text/yaml",
       "application/java-archive",
     ],
+  },
+  game: {
+    // Mojang 官方版本清单（同步脚本与下载引擎共用）
+    manifestUrl:
+      process.env.IGM_GAME_MANIFEST_URL ??
+      "https://launchermeta.mojang.com/mc/game/version_manifest_v2.json",
+    // 默认安装目录：系统用户目录下的 .minecraft（各版本在其下独立成目录）
+    defaultInstallDir:
+      process.env.IGM_GAME_INSTALL_DIR ?? resolve(homedir(), ".minecraft"),
+    // assets 资源对象根地址（Mojang 官方资源 CDN，与索引所在站点不同）
+    assetBaseUrl:
+      process.env.IGM_GAME_ASSET_BASE_URL ??
+      "https://resources.download.minecraft.net",
+    // Fabric 官方 meta：/versions/loader、/versions/loader/{game}/{loader}/profile/json
+    fabricMetaUrl:
+      process.env.IGM_GAME_FABRIC_META_URL ?? "https://meta.fabricmc.net/v2",
+    concurrency: Number(process.env.IGM_GAME_CONCURRENCY ?? 32),
+    maxConcurrency: 64,
+    maxRequestsPerSecond: Number(process.env.IGM_GAME_MAX_RPS ?? 80),
+    maxRetries: 5,
+    maxConsecutiveFailures: 10,
+    cooldownMs: 60 * 1000,
   },
 };
 
