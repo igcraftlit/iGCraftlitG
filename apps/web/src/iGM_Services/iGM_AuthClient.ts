@@ -85,9 +85,12 @@ export function iGM_ApiLogout(): Promise<iGM_ApiResponse<null>> {
   return iGM_Post("/G_Auth/logout");
 }
 
-/** 获取当前登录用户（刷新页面后恢复会话） */
+/**
+ * 获取当前登录用户（刷新页面后恢复会话）
+ * 说明：未登录时后端本来就返回 401，属预期的会话探测，故跳过 401 过期提示
+ */
 export function iGM_ApiMe(): Promise<iGM_ApiResponse<iGM_AuthData>> {
-  return iGM_Get("/G_Auth/me");
+  return iGM_Get("/G_Auth/me", { skipAuthNotice: true });
 }
 
 /** 重新发送邮箱验证码 */

@@ -46,6 +46,8 @@
     "minecraftUpload": "Upload MC Resource",
     "minecraftVersions": "Version Library",
     "gameInstalled": "Install Manager",
+    "thirdPartyResources": "Third-party Resources",
+    "downloadCenter": "Download Center",
     "feed": "Feed",
     "friends": "Friends",
     "userRelations": "Following & Followers",
@@ -58,7 +60,9 @@
     "developerReview": "Application Review",
     "userAgreement": "User Agreement",
     "levels": "Levels & Exams",
-    "tasks": "Task Center"
+    "tasks": "Task Center",
+    "authorizedApps": "Authorized Apps",
+    "adminOAuth": "OAuth App Review"
   },
   "topbar": {
     "menu": "Menu",
@@ -400,6 +404,30 @@
     "gameInstalled": {
       "title": "Installed Minecraft Versions",
       "description": "Inspect, verify, repair or remove installed Minecraft game files"
+    },
+    "thirdPartyResources": {
+      "title": "Third-party Resources",
+      "description": "Browse Fabric-compatible mods, shaders, resource packs, maps and datapacks from Modrinth"
+    },
+    "thirdPartyDetail": {
+      "title": "Resource Details",
+      "description": "View third-party resource information and versions, then start a download"
+    },
+    "downloadCenter": {
+      "title": "Download Center",
+      "description": "Manage third-party resource download tasks"
+    },
+    "adminOAuth": {
+      "title": "OAuth App Review",
+      "description": "Review third-party app requests: approve, reject, disable or delete, with every action logged"
+    },
+    "authorizedApps": {
+      "title": "Authorized Apps",
+      "description": "View and revoke third-party apps that you have authorized"
+    },
+    "oauthAuthorize": {
+      "title": "Authorize Sign-in",
+      "description": "Confirm whether a third-party app may use your iGCraftLit account information"
     }
   },
   "placeholder": {
@@ -1871,6 +1899,8 @@
     "filterVersion": "MC version",
     "filterLoader": "Loader",
     "filterPlatform": "Platform",
+    "sourceSite": "Local resources",
+    "sourceThirdParty": "Third-party resources",
     "searchPlaceholder": "Search resource names or tags…",
     "stateLoading": "Loading…",
     "downloadCount": "{count} downloads",
@@ -2101,6 +2131,218 @@
       "fabricUnreachable": "Could not reach the Fabric metadata service, please try again later",
       "fabricLoaderEmpty": "No Fabric Loader is available for this version",
       "fabricProfileInvalid": "Failed to parse the Fabric profile, please try again later"
+    }
+  },
+  "thirdParty": {
+    "title": "Third-party Resources",
+    "description": "Browse and download Fabric-compatible mods, shaders, resource packs, maps and datapacks from Modrinth",
+    "searchPlaceholder": "Search resource name or author…",
+    "filterType": "Type",
+    "all": "All",
+    "sourceModrinth": "Modrinth",
+    "downloadCount": "{count} downloads",
+    "detail": "View details",
+    "unspecified": "N/A",
+    "stateLoading": "Loading…",
+    "empty": "No matching resources",
+    "emptyDescription": "Try adjusting the filters or using another keyword",
+    "notFound": "Resource not found or removed",
+    "backToList": "Back to resources",
+    "sourceLabel": "Source",
+    "slugLabel": "Slug",
+    "versionsTitle": "Versions",
+    "noVersions": "No downloadable version is available for this resource",
+    "gameVersionsLabel": "Game versions",
+    "loadersLabel": "Loaders",
+    "download": "Download",
+    "downloadSettings": "Download settings",
+    "targetDirLabel": "Target directory",
+    "targetDirPlaceholder": "Leave empty to use the default directory",
+    "targetDirHint": "The file is downloaded to your computer; leave empty to use the backend default directory",
+    "browse": "Browse",
+    "confirmDownload": "Start download",
+    "cancel": "Cancel",
+    "resourceTypes": {
+      "mod": "Mod",
+      "shader": "Shader",
+      "resourcepack": "Resource Pack",
+      "map": "Map",
+      "datapack": "Datapack"
+    },
+    "versionType": {
+      "release": "Release",
+      "beta": "Beta",
+      "alpha": "Alpha"
+    }
+  },
+  "downloadCenter": {
+    "title": "Download Center",
+    "description": "Track and manage every third-party resource download task",
+    "stateLoading": "Loading…",
+    "empty": "No download tasks",
+    "emptyDescription": "Pick a resource in the third-party library and start a download",
+    "browseResources": "Browse resources",
+    "activeTitle": "In progress",
+    "activeEmpty": "No in-progress tasks",
+    "completedTitle": "Finished",
+    "completedEmpty": "No finished tasks",
+    "completedHint": "Download completed",
+    "clearCompleted": "Clear finished",
+    "clearCompletedConfirm": "Remove all finished tasks from the list? Files already downloaded to your computer are kept.",
+    "openFolder": "Show file location",
+    "filePathPending": "File path not available yet",
+    "versionLabel": "Version",
+    "progressText": "{downloaded} / {total}",
+    "speed": "Speed {speed}/s",
+    "remainingUnknown": "Remaining: calculating",
+    "remainingSeconds": "Remaining: {seconds}s",
+    "remainingMinutes": "Remaining: {minutes}m {seconds}s",
+    "pause": "Pause",
+    "resume": "Resume",
+    "cancel": "Cancel",
+    "cancelConfirm": "Cancel this download task? Downloaded files are kept.",
+    "retry": "Retry",
+    "status": {
+      "pending": "Queued",
+      "downloading": "Downloading",
+      "paused": "Paused",
+      "completed": "Completed",
+      "failed": "Failed",
+      "canceled": "Canceled"
+    }
+  },
+  "oauth": {
+    "session": {
+      "loginExpired": "Your session has expired, please sign in again",
+      "tokenExpired": "Your authorization has expired, please sign in again",
+      "reloginHint": "For account security, please sign in again to continue.",
+      "relogin": "Sign in again",
+      "dismiss": "Dismiss"
+    },
+    "errors": {
+      "invalidClient": "Client verification failed, please check the client_id",
+      "invalidClientSecret": "The client_secret is incorrect",
+      "clientNotApproved": "This application is not approved or has been disabled",
+      "invalidCode": "The authorization code is invalid",
+      "codeUsed": "The authorization code has already been used",
+      "codeExpired": "The authorization code has expired, please start authorization again",
+      "invalidGrant": "The authorization credentials are invalid",
+      "refreshExpired": "The refresh token is no longer valid, please authorize again",
+      "invalidRedirectUri": "The redirect URI does not match the registered value",
+      "pkceFailed": "PKCE verification failed",
+      "userUnavailable": "The user does not exist or is currently unavailable",
+      "invalidScope": "The requested scope is invalid",
+      "invalidToken": "The access token is invalid or has expired",
+      "unsupportedResponseType": "Unsupported response type",
+      "unsupportedGrantType": "Unsupported grant type",
+      "unsupportedPkce": "Only code_challenge_method=S256 is supported",
+      "flowExpired": "The authorization request has expired, please start again",
+      "badRequest": "Invalid request parameters",
+      "nameInvalid": "The application name format is invalid",
+      "descriptionInvalid": "The application description format is invalid",
+      "redirectInvalid": "The redirect URI format is invalid",
+      "redirectInsecure": "Redirect URIs must use HTTPS",
+      "purposeInvalid": "The intended use format is invalid",
+      "contactInvalid": "The contact format is invalid",
+      "agreeRequired": "Please accept the integration rules first",
+      "appNotFound": "Application not found",
+      "withdrawNotAllowed": "This application cannot be withdrawn in its current state",
+      "appNotApproved": "The application has not been approved yet",
+      "appReviewed": "This application has already been reviewed"
+    },
+    "clientTypes": {
+      "web": "Web application",
+      "desktop": "Desktop application",
+      "mobile": "Mobile application",
+      "service": "Server-side service",
+      "other": "Other"
+    },
+    "scopes": {
+      "openid": "Basic identity openid",
+      "profile": "Public profile profile",
+      "email": "Email address email",
+      "org": "Organization verification org"
+    },
+    "scopeHints": {
+      "openid": "Returns the stable user identifier sub (iGMUid)",
+      "profile": "Returns display name and avatar URL",
+      "email": "Returns the email bound to the account",
+      "org": "Returns approved organization verification info"
+    },
+    "status": {
+      "pending": "Pending review",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "disabled": "Disabled",
+      "withdrawn": "Withdrawn"
+    },
+    "apps": {
+      "intro": "Review the OAuth applications you submitted, reset the client_secret and inspect integration logs.",
+      "newApply": "Register a new application",
+      "empty": "You have not submitted any OAuth application yet",
+      "loadFailed": "Failed to load applications, please try again later",
+      "typeLabel": "Application type",
+      "clientId": "client_id",
+      "descriptionLabel": "Description",
+      "scopes": "Scopes",
+      "redirectUris": "Redirect URIs",
+      "purpose": "Intended use",
+      "contact": "Contact",
+      "createdAt": "Submitted at",
+      "reviewComment": "Review comment",
+      "secretOnce": "The client_secret is shown only once and cannot be viewed again after closing or refreshing — save it immediately",
+      "copy": "Copy",
+      "copied": "Copied",
+      "resetSecret": "Reset client_secret",
+      "resetConfirm": "The old secret becomes invalid immediately after resetting, and third parties using it will no longer be able to exchange tokens. Continue?",
+      "withdraw": "Withdraw application",
+      "withdrawConfirm": "Withdraw this pending application?",
+      "viewLogs": "View integration logs",
+      "hideLogs": "Hide logs",
+      "logsEmpty": "No integration logs yet",
+      "logsTitle": "Integration logs"
+    },
+    "admin": {
+      "all": "All",
+      "empty": "No applications match the current filter",
+      "loadFailed": "Failed to load applications, please try again later",
+      "applicant": "Applicant",
+      "comment": "Review comment",
+      "commentPlaceholder": "Optional note on approval or rejection, shown to the applicant",
+      "approve": "Approve",
+      "reject": "Reject",
+      "disable": "Disable",
+      "enable": "Enable",
+      "delete": "Delete",
+      "approved": "Application approved — copy and hand over the client_secret now",
+      "rejected": "Application rejected",
+      "disabled": "Application disabled and all its issued tokens revoked",
+      "enabled": "Application re-enabled",
+      "deleted": "Application and its authorization data deleted",
+      "disableConfirm": "Once disabled, the application can no longer exchange tokens and all issued tokens will be revoked. Continue?",
+      "deleteConfirm": "Deleting will also remove the application's authorization codes, tokens and consents, and cannot be undone. Continue?",
+      "secretOnce": "The client_secret is shown only once — copy and hand it to the applicant now, as it cannot be viewed again after closing"
+    },
+    "authorized": {
+      "intro": "The following third-party applications have your authorization. You can revoke any you no longer trust.",
+      "empty": "You have not authorized any third-party application",
+      "loadFailed": "Failed to load authorized applications, please try again later",
+      "grantedAt": "Authorized at",
+      "revoke": "Revoke authorization",
+      "revokeConfirm": "After revoking, the application loses access immediately and must guide you through authorization again. Continue?",
+      "revoked": "Authorization revoked"
+    },
+    "consent": {
+      "intro": "A third-party application is requesting access to your iGCraftLit account information. Please confirm whether to authorize it.",
+      "clientId": "Application ID",
+      "scopesTitle": "This application will receive the following information",
+      "warning": "Once authorized, the application can read the information within the scopes above. Only authorize applications you trust. You can revoke authorization at any time in \"Authorized Apps\".",
+      "approve": "Authorize",
+      "deny": "Deny",
+      "loginRequired": "You are not signed in. Please sign in with your iGCraftLit account before continuing.",
+      "goLogin": "Sign in to continue",
+      "redirecting": "Returning to the third-party application…",
+      "flowExpired": "This authorization request is invalid or has expired. Please start the sign-in again from the third-party application."
     }
   }
 }

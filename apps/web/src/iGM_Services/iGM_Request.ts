@@ -5,12 +5,14 @@
  * 模块：iGM_Request
  * 作用：全站唯一的 HTTP 请求封装，所有后端调用必须经过此模块
  * 内容：统一前缀拼接、JSON 头、8 秒超时、统一响应结构解包、错误归一化、
- *       跨端口携带 HttpOnly 会话 Cookie（credentials）、自动附带界面语言头
+ *       跨端口携带 HttpOnly 会话 Cookie（credentials）、自动附带界面语言头、
+ *       401 统一拦截（清除失效令牌 + 广播失效事件，由界面层给出多语言提示）
  */
 
 // 导入依赖 //
 import { iGM_Config } from "./iGM_Config";
 import { iGM_LocaleCookieName } from "../iGM_i18n/iGM_Locales";
+import { iGM_HandleUnauthorized } from "./iGM_OAuthTokenStore";
 
 // 类型定义 //
 /** 与后端 iGM_Types/iGM_Response.ts 保持一致的统一响应结构 */
@@ -29,6 +31,12 @@ export interface iGM_RequestOptions {
   headers?: Record<string, string>;
   /** 超时毫秒数，默认 8000 */
   timeoutMs?: number;
+  /**
+   * 跳过 401 统一拦截（不广播登录过期提示）。
+   * 仅用于「会话探测」类接口（如 /G_Auth/me 未登录时本就返回 401），
+   * 避免匿名访客首次进入页面即弹出「登录已过期」提示。
+   */
+  skipAuthNotice?: boolean;
 }
 
 /** 请求失败时抛出的归一化错误 */
@@ -62,7 +70,13 @@ export async function iGM_Request<T>(
   path: string,
   options: iGM_RequestOptions = {},
 ): Promise<iGM_ApiResponse<T>> {
-  const { method = "GET", body, headers = {}, timeoutMs = 8000 } = options;
+  const {
+    method = "GET",
+    body,
+    headers = {},
+    timeoutMs = 8000,
+    skipAuthNotice = false,
+  } = options;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -81,6 +95,11 @@ export async function iGM_Request<T>(
       body: body !== undefined ? JSON.stringify(body) : undefined,
       signal: controller.signal,
     });
+
+    // 401 统一拦截：清除失效令牌并广播失效事件（界面层据此给出多语言提示）
+    if (response.status === 401 && !skipAuthNotice) {
+      iGM_HandleUnauthorized("session");
+    }
 
     const payload = (await response.json()) as iGM_ApiResponse<T>;
 
@@ -108,8 +127,11 @@ export async function iGM_Request<T>(
 }
 
 /** GET 快捷方法 */
-export function iGM_Get<T>(path: string): Promise<iGM_ApiResponse<T>> {
-  return iGM_Request<T>(path, { method: "GET" });
+export function iGM_Get<T>(
+  path: string,
+  options: { skipAuthNotice?: boolean } = {},
+): Promise<iGM_ApiResponse<T>> {
+  return iGM_Request<T>(path, { method: "GET", ...options });
 }
 
 /** POST 快捷方法（可自定义超时，邮件类接口建议 15000ms） */
@@ -168,6 +190,10 @@ export async function iGM_Upload<T>(
     }
 
     xhr.onload = () => {
+      // 401 统一拦截：与 fetch 路径保持同一口径
+      if (xhr.status === 401) {
+        iGM_HandleUnauthorized("session");
+      }
       let payload: iGM_ApiResponse<T> | null = null;
       try {
         payload = JSON.parse(xhr.responseText) as iGM_ApiResponse<T>;

@@ -46,6 +46,8 @@
     "minecraftUpload": "发布 MC 资源",
     "minecraftVersions": "版本资料库",
     "gameInstalled": "安装管理",
+    "thirdPartyResources": "第三方资源",
+    "downloadCenter": "下载中心",
     "feed": "动态",
     "friends": "好友",
     "userRelations": "关注与粉丝",
@@ -58,7 +60,9 @@
     "developerReview": "申请审核",
     "userAgreement": "用户管理规定",
     "levels": "等级与考核",
-    "tasks": "任务中心"
+    "tasks": "任务中心",
+    "authorizedApps": "已授权应用",
+    "adminOAuth": "OAuth 应用审核"
   },
   "topbar": {
     "menu": "菜单",
@@ -400,6 +404,30 @@
     "gameInstalled": {
       "title": "已安装的 Minecraft 版本",
       "description": "查看、校验、修复或移除已安装的 Minecraft 游戏本体"
+    },
+    "thirdPartyResources": {
+      "title": "第三方资源",
+      "description": "浏览 Modrinth 上兼容 Fabric 的模组、光影、资源包、地图与数据包"
+    },
+    "thirdPartyDetail": {
+      "title": "第三方资源详情",
+      "description": "查看第三方资源信息与版本并开始下载"
+    },
+    "downloadCenter": {
+      "title": "下载中心",
+      "description": "管理第三方资源的下载任务"
+    },
+    "adminOAuth": {
+      "title": "OAuth 应用审核",
+      "description": "审核第三方应用接入申请，通过、拒绝、禁用或删除并记录操作日志"
+    },
+    "authorizedApps": {
+      "title": "已授权应用",
+      "description": "查看并撤销已获得你授权的第三方应用"
+    },
+    "oauthAuthorize": {
+      "title": "授权登录",
+      "description": "确认是否允许第三方应用使用你的 iGCraftLit 账号信息"
     }
   },
   "placeholder": {
@@ -1871,6 +1899,8 @@
     "filterVersion": "MC 版本",
     "filterLoader": "加载器",
     "filterPlatform": "平台",
+    "sourceSite": "本站资源",
+    "sourceThirdParty": "第三方资源",
     "searchPlaceholder": "搜索资源名称、标签…",
     "stateLoading": "正在加载…",
     "downloadCount": "{count} 次下载",
@@ -2101,6 +2131,218 @@
       "fabricUnreachable": "无法连接 Fabric 元数据服务，请稍后重试",
       "fabricLoaderEmpty": "该版本暂无可用的 Fabric Loader",
       "fabricProfileInvalid": "Fabric 配置解析失败，请稍后重试"
+    }
+  },
+  "thirdParty": {
+    "title": "第三方资源",
+    "description": "浏览并从 Modrinth 下载兼容 Fabric 的模组、光影、资源包、地图与数据包",
+    "searchPlaceholder": "搜索资源名称或作者…",
+    "filterType": "资源类型",
+    "all": "全部",
+    "sourceModrinth": "Modrinth",
+    "downloadCount": "{count} 次下载",
+    "detail": "查看详情",
+    "unspecified": "暂无",
+    "stateLoading": "正在加载…",
+    "empty": "没有符合条件的资源",
+    "emptyDescription": "试试调整筛选条件或更换关键词",
+    "notFound": "资源不存在或已被移除",
+    "backToList": "返回资源列表",
+    "sourceLabel": "来源平台",
+    "slugLabel": "标识",
+    "versionsTitle": "版本列表",
+    "noVersions": "该资源暂无可下载的版本",
+    "gameVersionsLabel": "游戏版本",
+    "loadersLabel": "加载器",
+    "download": "下载",
+    "downloadSettings": "下载设置",
+    "targetDirLabel": "目标目录",
+    "targetDirPlaceholder": "留空则使用默认目录",
+    "targetDirHint": "文件将下载到本机；留空则由后端使用默认下载目录",
+    "browse": "浏览",
+    "confirmDownload": "开始下载",
+    "cancel": "取消",
+    "resourceTypes": {
+      "mod": "模组 Mod",
+      "shader": "光影 Shader",
+      "resourcepack": "资源包 Resource Pack",
+      "map": "地图 Map",
+      "datapack": "数据包 Datapack"
+    },
+    "versionType": {
+      "release": "正式版",
+      "beta": "测试版",
+      "alpha": "早期测试版"
+    }
+  },
+  "downloadCenter": {
+    "title": "下载中心",
+    "description": "集中跟踪与管理第三方资源的下载任务",
+    "stateLoading": "正在加载…",
+    "empty": "暂无下载任务",
+    "emptyDescription": "前往第三方资源库选择资源并开始下载",
+    "browseResources": "浏览资源",
+    "activeTitle": "进行中",
+    "activeEmpty": "暂无进行中的任务",
+    "completedTitle": "已结束",
+    "completedEmpty": "暂无已结束的任务",
+    "completedHint": "下载已完成",
+    "clearCompleted": "清空已完成",
+    "clearCompletedConfirm": "确定从列表移除全部已结束的任务吗？已下载到本机的文件不会被删除。",
+    "openFolder": "查看文件位置",
+    "filePathPending": "尚未生成文件路径",
+    "versionLabel": "版本",
+    "progressText": "{downloaded} / {total}",
+    "speed": "速度 {speed}/s",
+    "remainingUnknown": "预计剩余：计算中",
+    "remainingSeconds": "预计剩余：{seconds} 秒",
+    "remainingMinutes": "预计剩余：{minutes} 分 {seconds} 秒",
+    "pause": "暂停",
+    "resume": "继续",
+    "cancel": "取消",
+    "cancelConfirm": "确定取消该下载任务吗？已下载的文件会保留。",
+    "retry": "重试",
+    "status": {
+      "pending": "排队中",
+      "downloading": "下载中",
+      "paused": "已暂停",
+      "completed": "已完成",
+      "failed": "失败",
+      "canceled": "已取消"
+    }
+  },
+  "oauth": {
+    "session": {
+      "loginExpired": "登录已过期，请重新登录",
+      "tokenExpired": "授权已失效，请重新登录",
+      "reloginHint": "为保障账号安全，请重新登录后继续操作。",
+      "relogin": "重新登录",
+      "dismiss": "关闭"
+    },
+    "errors": {
+      "invalidClient": "客户端校验失败，请检查 client_id 是否正确",
+      "invalidClientSecret": "client_secret 不正确",
+      "clientNotApproved": "该应用未通过审核或已被禁用",
+      "invalidCode": "授权码无效",
+      "codeUsed": "授权码已被使用",
+      "codeExpired": "授权码已过期，请重新发起授权",
+      "invalidGrant": "授权凭据无效",
+      "refreshExpired": "刷新令牌已失效，请重新授权",
+      "invalidRedirectUri": "回调地址与登记值不匹配",
+      "pkceFailed": "PKCE 校验失败",
+      "userUnavailable": "用户不存在或当前不可用",
+      "invalidScope": "请求的权限范围无效",
+      "invalidToken": "访问令牌无效或已过期",
+      "unsupportedResponseType": "不支持的响应类型",
+      "unsupportedGrantType": "不支持的授权类型",
+      "unsupportedPkce": "仅支持 code_challenge_method=S256",
+      "flowExpired": "授权请求已失效，请重新发起",
+      "badRequest": "请求参数有误",
+      "nameInvalid": "应用名称格式不正确",
+      "descriptionInvalid": "应用描述格式不正确",
+      "redirectInvalid": "回调地址格式不正确",
+      "redirectInsecure": "回调地址必须使用 HTTPS",
+      "purposeInvalid": "用途说明格式不正确",
+      "contactInvalid": "联系方式格式不正确",
+      "agreeRequired": "请先同意接入规范",
+      "appNotFound": "未找到该应用",
+      "withdrawNotAllowed": "当前状态不可撤回",
+      "appNotApproved": "应用尚未通过审核",
+      "appReviewed": "该申请已审核完成"
+    },
+    "clientTypes": {
+      "web": "网页应用",
+      "desktop": "桌面应用",
+      "mobile": "移动应用",
+      "service": "服务端应用",
+      "other": "其他"
+    },
+    "scopes": {
+      "openid": "基础身份 openid",
+      "profile": "公开资料 profile",
+      "email": "邮箱地址 email",
+      "org": "组织认证信息 org"
+    },
+    "scopeHints": {
+      "openid": "返回稳定的用户标识 sub（iGMUid）",
+      "profile": "返回昵称与头像地址",
+      "email": "返回账号绑定的邮箱地址",
+      "org": "返回已通过审核的组织认证信息"
+    },
+    "status": {
+      "pending": "待审核",
+      "approved": "已通过",
+      "rejected": "已拒绝",
+      "disabled": "已禁用",
+      "withdrawn": "已撤回"
+    },
+    "apps": {
+      "intro": "查看你提交的 OAuth 应用，重置 client_secret 并查询接入日志。",
+      "newApply": "新建应用接入",
+      "empty": "你还没有提交过 OAuth 应用接入申请",
+      "loadFailed": "应用列表加载失败，请稍后重试",
+      "typeLabel": "应用类型",
+      "clientId": "client_id",
+      "descriptionLabel": "应用描述",
+      "scopes": "权限范围",
+      "redirectUris": "回调地址",
+      "purpose": "使用用途",
+      "contact": "联系方式",
+      "createdAt": "提交时间",
+      "reviewComment": "审核意见",
+      "secretOnce": "client_secret 仅在本次展示，关闭或刷新后无法再次查看，请立即妥善保存",
+      "copy": "复制",
+      "copied": "已复制",
+      "resetSecret": "重置 client_secret",
+      "resetConfirm": "重置后旧密钥立即失效，使用旧密钥的第三方将无法换取令牌。确定继续吗？",
+      "withdraw": "撤回申请",
+      "withdrawConfirm": "确定撤回该待审核申请吗？",
+      "viewLogs": "查看接入日志",
+      "hideLogs": "收起日志",
+      "logsEmpty": "暂无接入日志",
+      "logsTitle": "接入日志"
+    },
+    "admin": {
+      "all": "全部",
+      "empty": "当前筛选条件下没有应用",
+      "loadFailed": "应用列表加载失败，请稍后重试",
+      "applicant": "申请人",
+      "comment": "审核意见",
+      "commentPlaceholder": "可填写通过或拒绝的说明，将展示给申请人",
+      "approve": "通过",
+      "reject": "拒绝",
+      "disable": "禁用",
+      "enable": "启用",
+      "delete": "删除",
+      "approved": "已通过该应用申请，请立即复制并转交 client_secret",
+      "rejected": "已拒绝该应用申请",
+      "disabled": "已禁用该应用，并撤销其已签发的全部令牌",
+      "enabled": "已重新启用该应用",
+      "deleted": "已删除该应用及其授权数据",
+      "disableConfirm": "禁用后该应用无法再换取令牌，且已签发的令牌将被撤销。确定继续吗？",
+      "deleteConfirm": "删除后将同时清理该应用的授权码、令牌与同意记录，且不可恢复。确定继续吗？",
+      "secretOnce": "client_secret 仅在本次展示，请立即复制并转交申请人，关闭后无法再次查看"
+    },
+    "authorized": {
+      "intro": "以下第三方应用已获得你的授权，可撤销不再信任的应用。",
+      "empty": "你还没有授权任何第三方应用",
+      "loadFailed": "已授权应用加载失败，请稍后重试",
+      "grantedAt": "授权时间",
+      "revoke": "撤销授权",
+      "revokeConfirm": "撤销后该应用将立即失去访问权限，需重新引导你授权。确定继续吗？",
+      "revoked": "已撤销该应用的授权"
+    },
+    "consent": {
+      "intro": "第三方应用正在请求访问你的 iGCraftLit 账号信息，请确认是否授权。",
+      "clientId": "应用标识",
+      "scopesTitle": "该应用将获取以下信息",
+      "warning": "授权后该应用可读取上述范围内的信息，请仅授权你信任的应用。你可随时在「已授权应用」中撤销授权。",
+      "approve": "同意授权",
+      "deny": "拒绝",
+      "loginRequired": "你尚未登录，请先登录 iGCraftLit 账号后再继续授权",
+      "goLogin": "登录后继续",
+      "redirecting": "正在返回第三方应用…",
+      "flowExpired": "授权请求已失效或已过期，请重新从第三方应用发起登录"
     }
   }
 }

@@ -76,6 +76,15 @@ export const iGM_SeoDisallowPatterns = [
   "/*/G_GameInstall",
   "/*/G_GameProgress",
   "/*/G_GameInstalled",
+  // 模块二十：第三方资源详情（带查询参数）与下载中心（登录态/用户私有，不收录）
+  "/*/G_ThirdPartyDetail",
+  "/*/G_DownloadCenter",
+  // 模块二十一：实时在线状态已移入管理后台（仅 moderator/admin），不收录
+  "/*/G_Realtime",
+  // 模块二十一：OAuth 管理端审核、授权同意与已授权应用（登录态/私有，不收录）
+  "/*/G_AdminOAuth",
+  "/*/G_AuthorizedApps",
+  "/*/G_OAuthAuthorize",
   "/G_Game",
 ] as const;
 

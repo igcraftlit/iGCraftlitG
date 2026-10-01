@@ -46,6 +46,8 @@
     "minecraftUpload": "MC リソース投稿",
     "minecraftVersions": "バージョン資料室",
     "gameInstalled": "インストール管理",
+    "thirdPartyResources": "サードパーティリソース",
+    "downloadCenter": "ダウンロードセンター",
     "feed": "フィード",
     "friends": "フレンド",
     "userRelations": "フォローとフォロワー",
@@ -58,7 +60,9 @@
     "developerReview": "申請審査",
     "userAgreement": "利用規約",
     "levels": "レベルと審査",
-    "tasks": "タスクセンター"
+    "tasks": "タスクセンター",
+    "authorizedApps": "認可済みアプリ",
+    "adminOAuth": "OAuth アプリ審査"
   },
   "topbar": {
     "menu": "メニュー",
@@ -400,6 +404,30 @@
     "gameInstalled": {
       "title": "インストール済みの Minecraft バージョン",
       "description": "インストール済み本体の確認・検証・修復・削除を行います"
+    },
+    "thirdPartyResources": {
+      "title": "サードパーティリソース",
+      "description": "Modrinth で Fabric 対応の Mod・シェーダー・リソースパック・マップ・データパックを閲覧"
+    },
+    "thirdPartyDetail": {
+      "title": "リソース詳細",
+      "description": "サードパーティリソースの情報とバージョンを確認してダウンロード"
+    },
+    "downloadCenter": {
+      "title": "ダウンロードセンター",
+      "description": "サードパーティリソースのダウンロードタスクを管理"
+    },
+    "adminOAuth": {
+      "title": "OAuth アプリ審査",
+      "description": "サードパーティアプリの連携申請を審査し、承認・拒否・無効化・削除を行い操作ログを記録します"
+    },
+    "authorizedApps": {
+      "title": "認可済みアプリ",
+      "description": "認可済みのサードパーティアプリを確認し、認可を取消できます"
+    },
+    "oauthAuthorize": {
+      "title": "認可ログイン",
+      "description": "サードパーティアプリがあなたの iGCraftLit アカウント情報を利用することを許可するか確認します"
     }
   },
   "placeholder": {
@@ -1871,6 +1899,8 @@
     "filterVersion": "MC バージョン",
     "filterLoader": "ローダー",
     "filterPlatform": "プラットフォーム",
+    "sourceSite": "サイト内リソース",
+    "sourceThirdParty": "サードパーティリソース",
     "searchPlaceholder": "リソース名やタグで検索…",
     "stateLoading": "読み込み中…",
     "downloadCount": "{count} 回ダウンロード",
@@ -2101,6 +2131,218 @@
       "fabricUnreachable": "Fabric メタデータサービスに接続できません。しばらくしてからお試しください",
       "fabricLoaderEmpty": "このバージョンで利用可能な Fabric Loader がありません",
       "fabricProfileInvalid": "Fabric プロファイルの解析に失敗しました。しばらくしてからお試しください"
+    }
+  },
+  "thirdParty": {
+    "title": "サードパーティリソース",
+    "description": "Modrinth から Fabric 対応の Mod・シェーダー・リソースパック・マップ・データパックを閲覧してダウンロード",
+    "searchPlaceholder": "リソース名や作者で検索…",
+    "filterType": "種類",
+    "all": "すべて",
+    "sourceModrinth": "Modrinth",
+    "downloadCount": "ダウンロード {count} 回",
+    "detail": "詳細を見る",
+    "unspecified": "未設定",
+    "stateLoading": "読み込み中…",
+    "empty": "条件に合うリソースがありません",
+    "emptyDescription": "フィルターやキーワードを変更してみてください",
+    "notFound": "リソースが存在しないか削除されています",
+    "backToList": "リソース一覧へ戻る",
+    "sourceLabel": "配布元",
+    "slugLabel": "識別子",
+    "versionsTitle": "バージョン一覧",
+    "noVersions": "ダウンロード可能なバージョンがありません",
+    "gameVersionsLabel": "ゲームバージョン",
+    "loadersLabel": "ローダー",
+    "download": "ダウンロード",
+    "downloadSettings": "ダウンロード設定",
+    "targetDirLabel": "保存先フォルダ",
+    "targetDirPlaceholder": "空欄の場合は既定のフォルダを使用",
+    "targetDirHint": "ファイルはお使いの PC に保存されます。空欄の場合はバックエンドの既定フォルダが使われます",
+    "browse": "参照",
+    "confirmDownload": "ダウンロード開始",
+    "cancel": "キャンセル",
+    "resourceTypes": {
+      "mod": "Mod",
+      "shader": "Shader",
+      "resourcepack": "Resource Pack",
+      "map": "Map",
+      "datapack": "Datapack"
+    },
+    "versionType": {
+      "release": "正式版",
+      "beta": "ベータ版",
+      "alpha": "アルファ版"
+    }
+  },
+  "downloadCenter": {
+    "title": "ダウンロードセンター",
+    "description": "サードパーティリソースのダウンロードタスクをまとめて管理",
+    "stateLoading": "読み込み中…",
+    "empty": "ダウンロードタスクがありません",
+    "emptyDescription": "サードパーティリソース一覧からリソースを選んでダウンロードを開始してください",
+    "browseResources": "リソースを見る",
+    "activeTitle": "進行中",
+    "activeEmpty": "進行中のタスクはありません",
+    "completedTitle": "終了済み",
+    "completedEmpty": "終了済みのタスクはありません",
+    "completedHint": "ダウンロード完了",
+    "clearCompleted": "終了済みを消去",
+    "clearCompletedConfirm": "終了済みのタスクをすべて一覧から削除しますか？PC に保存済みのファイルは削除されません。",
+    "openFolder": "ファイルの場所を表示",
+    "filePathPending": "ファイルパスはまだありません",
+    "versionLabel": "バージョン",
+    "progressText": "{downloaded} / {total}",
+    "speed": "速度 {speed}/s",
+    "remainingUnknown": "残り時間：計算中",
+    "remainingSeconds": "残り時間：{seconds} 秒",
+    "remainingMinutes": "残り時間：{minutes} 分 {seconds} 秒",
+    "pause": "一時停止",
+    "resume": "再開",
+    "cancel": "キャンセル",
+    "cancelConfirm": "このダウンロードタスクを中止しますか？保存済みのファイルは残ります。",
+    "retry": "再試行",
+    "status": {
+      "pending": "待機中",
+      "downloading": "ダウンロード中",
+      "paused": "一時停止",
+      "completed": "完了",
+      "failed": "失敗",
+      "canceled": "中止"
+    }
+  },
+  "oauth": {
+    "session": {
+      "loginExpired": "ログインの有効期限が切れました。再度ログインしてください",
+      "tokenExpired": "認可の有効期限が切れました。再度ログインしてください",
+      "reloginHint": "アカウントの安全のため、再度ログインしてから操作を続けてください。",
+      "relogin": "再度ログイン",
+      "dismiss": "閉じる"
+    },
+    "errors": {
+      "invalidClient": "クライアントの検証に失敗しました。client_id を確認してください",
+      "invalidClientSecret": "client_secret が正しくありません",
+      "clientNotApproved": "このアプリは未承認または無効化されています",
+      "invalidCode": "認可コードが無効です",
+      "codeUsed": "認可コードは既に使用されています",
+      "codeExpired": "認可コードの有効期限が切れました。再度認可を開始してください",
+      "invalidGrant": "認可資格情報が無効です",
+      "refreshExpired": "リフレッシュトークンが失効しました。再度認可してください",
+      "invalidRedirectUri": "リダイレクト URI が登録値と一致しません",
+      "pkceFailed": "PKCE の検証に失敗しました",
+      "userUnavailable": "ユーザーが存在しないか現在利用できません",
+      "invalidScope": "要求されたスコープが無効です",
+      "invalidToken": "アクセストークンが無効または期限切れです",
+      "unsupportedResponseType": "サポートされていない response_type です",
+      "unsupportedGrantType": "サポートされていない grant_type です",
+      "unsupportedPkce": "code_challenge_method=S256 のみ対応しています",
+      "flowExpired": "認可リクエストが失効しました。再度開始してください",
+      "badRequest": "リクエストパラメータが不正です",
+      "nameInvalid": "アプリ名の形式が正しくありません",
+      "descriptionInvalid": "アプリの説明の形式が正しくありません",
+      "redirectInvalid": "リダイレクト URI の形式が正しくありません",
+      "redirectInsecure": "リダイレクト URI は HTTPS を使用する必要があります",
+      "purposeInvalid": "利用目的の形式が正しくありません",
+      "contactInvalid": "連絡先の形式が正しくありません",
+      "agreeRequired": "先に連携規約に同意してください",
+      "appNotFound": "アプリが見つかりません",
+      "withdrawNotAllowed": "現在の状態では取り消せません",
+      "appNotApproved": "アプリはまだ承認されていません",
+      "appReviewed": "この申請は既に審査済みです"
+    },
+    "clientTypes": {
+      "web": "ウェブアプリ",
+      "desktop": "デスクトップアプリ",
+      "mobile": "モバイルアプリ",
+      "service": "サーバーサイドサービス",
+      "other": "その他"
+    },
+    "scopes": {
+      "openid": "基本識別 openid",
+      "profile": "公開プロフィール profile",
+      "email": "メールアドレス email",
+      "org": "組織認証情報 org"
+    },
+    "scopeHints": {
+      "openid": "安定したユーザー識別子 sub（iGMUid）を返します",
+      "profile": "表示名とアバター URL を返します",
+      "email": "アカウントに紐づくメールアドレスを返します",
+      "org": "審査を通過した組織認証情報を返します"
+    },
+    "status": {
+      "pending": "審査待ち",
+      "approved": "承認済み",
+      "rejected": "拒否済み",
+      "disabled": "無効化済み",
+      "withdrawn": "取消済み"
+    },
+    "apps": {
+      "intro": "申請した OAuth アプリの確認、client_secret の再発行、連携ログの照会ができます。",
+      "newApply": "新しいアプリ連携を申請",
+      "empty": "OAuth アプリ連携の申請はまだありません",
+      "loadFailed": "アプリ一覧の読み込みに失敗しました。しばらくしてから再試行してください",
+      "typeLabel": "アプリの種類",
+      "clientId": "client_id",
+      "descriptionLabel": "アプリの説明",
+      "scopes": "スコープ",
+      "redirectUris": "リダイレクト URI",
+      "purpose": "利用目的",
+      "contact": "連絡先",
+      "createdAt": "送信日時",
+      "reviewComment": "審査コメント",
+      "secretOnce": "client_secret は今回のみ表示され、閉じるか更新すると再度確認できません。直ちに安全に保管してください",
+      "copy": "コピー",
+      "copied": "コピーしました",
+      "resetSecret": "client_secret を再発行",
+      "resetConfirm": "再発行すると旧シークレットは直ちに無効となり、旧シークレットを使うサードパーティはトークンを取得できなくなります。続行しますか？",
+      "withdraw": "申請を取消",
+      "withdrawConfirm": "この審査待ちの申請を取り消しますか？",
+      "viewLogs": "連携ログを表示",
+      "hideLogs": "ログを閉じる",
+      "logsEmpty": "連携ログはまだありません",
+      "logsTitle": "連携ログ"
+    },
+    "admin": {
+      "all": "すべて",
+      "empty": "現在の絞り込み条件に一致するアプリはありません",
+      "loadFailed": "アプリ一覧の読み込みに失敗しました。しばらくしてから再試行してください",
+      "applicant": "申請者",
+      "comment": "審査コメント",
+      "commentPlaceholder": "承認または拒否の説明（任意）。申請者に表示されます",
+      "approve": "承認",
+      "reject": "拒否",
+      "disable": "無効化",
+      "enable": "有効化",
+      "delete": "削除",
+      "approved": "申請を承認しました。直ちに client_secret をコピーして申請者へ渡してください",
+      "rejected": "申請を拒否しました",
+      "disabled": "アプリを無効化し、発行済みのすべてのトークンを取り消しました",
+      "enabled": "アプリを再度有効化しました",
+      "deleted": "アプリとその認可データを削除しました",
+      "disableConfirm": "無効化するとアプリはトークンを取得できなくなり、発行済みのトークンもすべて取り消されます。続行しますか？",
+      "deleteConfirm": "削除するとアプリの認可コード・トークン・同意記録もすべて削除され、元に戻せません。続行しますか？",
+      "secretOnce": "client_secret は今回のみ表示されます。直ちにコピーして申請者へ渡してください。閉じると再度確認できません"
+    },
+    "authorized": {
+      "intro": "以下のサードパーティアプリはあなたの認可を受けています。信頼しなくなったアプリは取り消せます。",
+      "empty": "認可したサードパーティアプリはありません",
+      "loadFailed": "認可済みアプリの読み込みに失敗しました。しばらくしてから再試行してください",
+      "grantedAt": "認可日時",
+      "revoke": "認可を取消",
+      "revokeConfirm": "取り消すとアプリは直ちにアクセスできなくなり、再度ユーザーの認可を案内する必要があります。続行しますか？",
+      "revoked": "認可を取り消しました"
+    },
+    "consent": {
+      "intro": "サードパーティアプリがあなたの iGCraftLit アカウント情報へのアクセスを求めています。認可するか確認してください。",
+      "clientId": "アプリ識別子",
+      "scopesTitle": "このアプリは以下の情報を取得します",
+      "warning": "認可すると、アプリは上記スコープ内の情報を読み取れます。信頼できるアプリのみ認可してください。「認可済みアプリ」でいつでも取り消せます。",
+      "approve": "認可する",
+      "deny": "拒否",
+      "loginRequired": "まだログインしていません。先に iGCraftLit アカウントでログインしてから認可を続けてください",
+      "goLogin": "ログインして続行",
+      "redirecting": "サードパーティアプリへ戻っています…",
+      "flowExpired": "認可リクエストは無効または期限切れです。サードパーティアプリから再度ログインを開始してください"
     }
   }
 }

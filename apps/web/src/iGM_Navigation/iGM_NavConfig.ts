@@ -27,6 +27,7 @@ import {
   HardDriveDownload,
   GraduationCap,
   Home,
+  KeySquare,
   Library,
   ListChecks,
   Mail,
@@ -93,13 +94,6 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
     items: [
       { href: "/G_Home", icon: Home, labelKey: "nav.home" },
       { href: "/G_Notification", icon: Bell, labelKey: "nav.notifications" },
-      {
-        // 模块九：实时在线状态（登录用户可见，页面另有 RequireAuth 校验）
-        href: "/G_Realtime",
-        icon: Radio,
-        labelKey: "nav.realtime",
-        roles: ["user", "moderator", "admin"],
-      },
       {
         // 模块十六：开发者入口不再位于主区块，改置于导航栏最下边独立分区
         // （见文件末尾 groupDeveloper），此处仅保留用户管理规定
@@ -168,6 +162,13 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
               },
             ],
           },
+          {
+            // 模块二十：下载中心（登录用户；页面另有 RequireAuth 校验）
+            href: "/G_DownloadCenter",
+            icon: HardDriveDownload,
+            labelKey: "nav.downloadCenter",
+            roles: ["user", "moderator", "admin"],
+          },
         ],
       },
       {
@@ -213,6 +214,13 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
             href: "/G_NotificationSettings",
             icon: BellRing,
             labelKey: "nav.notificationSettings",
+          },
+          {
+            // 模块二十一：用户侧已授权第三方应用（查看与撤销）
+            href: "/G_AuthorizedApps",
+            icon: ShieldCheck,
+            labelKey: "nav.authorizedApps",
+            roles: ["user", "moderator", "admin"],
           },
         ],
       },
@@ -317,6 +325,12 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
             labelKey: "nav.adminUsers",
           },
           {
+            // 模块二十一：实时在线状态移入管理后台
+            href: "/G_Realtime",
+            icon: Radio,
+            labelKey: "nav.realtime",
+          },
+          {
             // 模块九：运营看板（moderator 及以上，继承父节点角色）
             href: "/G_Dashboard",
             icon: ChartColumn,
@@ -355,6 +369,13 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
             roles: ["admin"],
           },
           {
+            // 模块二十一：OAuth 应用审核（仅 admin，后端 iGM_RequireRole 二次校验）
+            href: "/G_AdminOAuth",
+            icon: KeySquare,
+            labelKey: "nav.adminOAuth",
+            roles: ["admin"],
+          },
+          {
             // 以下两项仅 admin（后端接口同样限 admin）
             href: "/G_AdminSettings",
             icon: Settings,
@@ -375,6 +396,8 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
     // 模块十六：开发者入口——置于导航栏最下边；登录用户可见，
     // 目标由 iGM_Sidebar 解析：组织所有者与已通过者进接入界面（外链），
     // 待审核进状态页，其余进申请页
+    // 模块二十一：OAuth 应用接入（申请 / 我的应用 / 接入文档）已迁至开发者平台
+    //（CLI 站 cli.igcraftlit.com 的「OAuth 接入」分区），主站不再单独列出
     titleKey: "nav.developer",
     items: [
       {

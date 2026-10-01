@@ -4,7 +4,8 @@
  * 路由：G_Minecraft、G_MinecraftUpload、G_MinecraftDetail
  * 模块：iGM_Minecraft
  * 作用：Minecraft 资源分区三页面的专用样式（苦力怕论坛风格）
- * 内容：分区横幅、分组筛选条、资源栅格卡片、多选胶囊组、详情封面与兼容性区
+ * 内容：分区横幅、来源切换标签、分组筛选条、资源与第三方资源横条卡片、
+ *       多选胶囊组、上传表单、详情封面与兼容性区
  */
 
 /* ===== 分区横幅 ===== */
@@ -119,45 +120,66 @@
   font-size: 13.5px;
 }
 
-/* ===== 资源栅格 ===== */
+/* ===== 来源切换标签 ===== */
+.sourceTabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  background: var(--igm-surface-subtle);
+}
+
+.sourceTab {
+  padding: 7px 16px;
+  border: none;
+  border-radius: var(--igm-radius);
+  background: transparent;
+  font-size: 13px;
+  color: var(--igm-text-muted);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.sourceTab:hover {
+  color: var(--igm-text);
+}
+
+.sourceTabActive {
+  background: var(--igm-accent);
+  color: var(--igm-accent-contrast);
+  font-weight: 500;
+}
+
+/* ===== 资源横条列表 ===== */
 .mcGrid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-}
-
-@media (min-width: 640px) {
-  .mcGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 1024px) {
-  .mcGrid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .mcCard {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 12px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
   background: var(--igm-surface);
   border: 1px solid var(--igm-border);
   border-radius: var(--igm-radius-lg);
   box-shadow: var(--igm-shadow);
-  transition: transform 0.15s ease, border-color 0.15s ease;
+  transition: border-color 0.15s ease;
 }
 
 .mcCard:hover {
-  transform: translateY(-2px);
   border-color: var(--igm-border-strong);
 }
 
 .mcCardCover {
   position: relative;
-  aspect-ratio: 16 / 9;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
   border-radius: var(--igm-radius);
   overflow: hidden;
   background: var(--igm-surface-subtle);
@@ -178,6 +200,15 @@
   color: var(--igm-text-subtle);
 }
 
+.mcCardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* 列表中的类型标记：复用详情页的静态胶囊样式 */
 .mcCardType {
   position: absolute;
   left: 8px;
@@ -189,9 +220,12 @@
   font-size: 11px;
 }
 
-/* 详情页内联使用时取消绝对定位 */
+/* 详情页与列表内联使用时取消绝对定位 */
 .mcCardTypeStatic {
   position: static;
+  left: auto;
+  top: auto;
+  flex-shrink: 0;
   background: var(--igm-surface-subtle);
   color: var(--igm-accent);
   border: 1px solid color-mix(in srgb, var(--igm-accent) 35%, transparent);
@@ -214,7 +248,7 @@
 .mcCardMeta {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 12px;
   font-size: 12px;
   color: var(--igm-text-subtle);
 }
@@ -237,6 +271,104 @@
   background: var(--igm-surface-subtle);
   font-size: 11px;
   color: var(--igm-text-muted);
+}
+
+/* ===== 第三方资源横条 ===== */
+.tpCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--igm-surface);
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  box-shadow: var(--igm-shadow);
+  transition: border-color 0.15s ease;
+}
+
+.tpCard:hover {
+  border-color: var(--igm-border-strong);
+}
+
+.tpCover {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--igm-radius);
+  overflow: hidden;
+  background: var(--igm-surface-subtle);
+  text-decoration: none;
+}
+
+.tpCover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tpCoverFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--igm-text-subtle);
+}
+
+.tpBody {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+
+.tpTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--igm-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-decoration: none;
+}
+
+.tpTitle:hover {
+  color: var(--igm-accent);
+}
+
+.tpMeta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+.tpSource {
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid color-mix(in srgb, var(--igm-accent) 35%, transparent);
+  background: var(--igm-surface-subtle);
+  color: var(--igm-accent);
+  font-size: 11px;
+}
+
+.tpMetaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tpType {
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--igm-surface-subtle);
+  color: var(--igm-accent);
+  border: 1px solid color-mix(in srgb, var(--igm-accent) 35%, transparent);
+  font-size: 11px;
 }
 
 /* ===== 上传表单 ===== */

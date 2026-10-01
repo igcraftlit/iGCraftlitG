@@ -46,6 +46,8 @@
     "minecraftUpload": "發布 MC 資源",
     "minecraftVersions": "版本資料庫",
     "gameInstalled": "安裝管理",
+    "thirdPartyResources": "第三方資源",
+    "downloadCenter": "下載中心",
     "feed": "動態",
     "friends": "好友",
     "userRelations": "關注與粉絲",
@@ -58,7 +60,9 @@
     "developerReview": "申請審核",
     "userAgreement": "使用者管理規定",
     "levels": "等級與考核",
-    "tasks": "任務中心"
+    "tasks": "任務中心",
+    "authorizedApps": "已授權應用",
+    "adminOAuth": "OAuth 應用審核"
   },
   "topbar": {
     "menu": "選單",
@@ -400,6 +404,30 @@
     "gameInstalled": {
       "title": "已安裝的 Minecraft 版本",
       "description": "查看、校驗、修復或移除已安裝的 Minecraft 遊戲本體"
+    },
+    "thirdPartyResources": {
+      "title": "第三方資源",
+      "description": "瀏覽 Modrinth 上相容 Fabric 的模組、光影、資源包、地圖與資料包"
+    },
+    "thirdPartyDetail": {
+      "title": "第三方資源詳情",
+      "description": "查看第三方資源資訊與版本並開始下載"
+    },
+    "downloadCenter": {
+      "title": "下載中心",
+      "description": "管理第三方資源的下載任務"
+    },
+    "adminOAuth": {
+      "title": "OAuth 應用審核",
+      "description": "審核第三方應用接入申請，通過、拒絕、停用或刪除並記錄操作日誌"
+    },
+    "authorizedApps": {
+      "title": "已授權應用",
+      "description": "查看並撤銷已獲得你授權的第三方應用"
+    },
+    "oauthAuthorize": {
+      "title": "授權登入",
+      "description": "確認是否允許第三方應用使用你的 iGCraftLit 帳號資訊"
     }
   },
   "placeholder": {
@@ -1871,6 +1899,8 @@
     "filterVersion": "MC 版本",
     "filterLoader": "載入器",
     "filterPlatform": "平台",
+    "sourceSite": "本站資源",
+    "sourceThirdParty": "第三方資源",
     "searchPlaceholder": "搜尋資源名稱、標籤…",
     "stateLoading": "正在載入…",
     "downloadCount": "{count} 次下載",
@@ -2101,6 +2131,218 @@
       "fabricUnreachable": "無法連線 Fabric 中繼資料服務，請稍後重試",
       "fabricLoaderEmpty": "該版本暫無可用的 Fabric Loader",
       "fabricProfileInvalid": "Fabric 設定解析失敗，請稍後重試"
+    }
+  },
+  "thirdParty": {
+    "title": "第三方資源",
+    "description": "瀏覽並從 Modrinth 下載相容 Fabric 的模組、光影、資源包、地圖與資料包",
+    "searchPlaceholder": "搜尋資源名稱或作者…",
+    "filterType": "資源類型",
+    "all": "全部",
+    "sourceModrinth": "Modrinth",
+    "downloadCount": "{count} 次下載",
+    "detail": "查看詳情",
+    "unspecified": "暫無",
+    "stateLoading": "正在載入…",
+    "empty": "沒有符合條件的資源",
+    "emptyDescription": "試試調整篩選條件或更換關鍵字",
+    "notFound": "資源不存在或已被移除",
+    "backToList": "返回資源列表",
+    "sourceLabel": "來源平台",
+    "slugLabel": "識別碼",
+    "versionsTitle": "版本列表",
+    "noVersions": "此資源暫無可下載的版本",
+    "gameVersionsLabel": "遊戲版本",
+    "loadersLabel": "載入器",
+    "download": "下載",
+    "downloadSettings": "下載設定",
+    "targetDirLabel": "目標目錄",
+    "targetDirPlaceholder": "留空則使用預設目錄",
+    "targetDirHint": "檔案將下載到本機；留空則由後端使用預設下載目錄",
+    "browse": "瀏覽",
+    "confirmDownload": "開始下載",
+    "cancel": "取消",
+    "resourceTypes": {
+      "mod": "模組 Mod",
+      "shader": "光影 Shader",
+      "resourcepack": "資源包 Resource Pack",
+      "map": "地圖 Map",
+      "datapack": "資料包 Datapack"
+    },
+    "versionType": {
+      "release": "正式版",
+      "beta": "測試版",
+      "alpha": "早期測試版"
+    }
+  },
+  "downloadCenter": {
+    "title": "下載中心",
+    "description": "集中追蹤與管理第三方資源的下載任務",
+    "stateLoading": "正在載入…",
+    "empty": "暫無下載任務",
+    "emptyDescription": "前往第三方資源庫選擇資源並開始下載",
+    "browseResources": "瀏覽資源",
+    "activeTitle": "進行中",
+    "activeEmpty": "暫無進行中的任務",
+    "completedTitle": "已結束",
+    "completedEmpty": "暫無已結束的任務",
+    "completedHint": "下載已完成",
+    "clearCompleted": "清空已完成",
+    "clearCompletedConfirm": "確定從列表移除全部已結束的任務嗎？已下載到本機的檔案不會被刪除。",
+    "openFolder": "查看檔案位置",
+    "filePathPending": "尚未產生檔案路徑",
+    "versionLabel": "版本",
+    "progressText": "{downloaded} / {total}",
+    "speed": "速度 {speed}/s",
+    "remainingUnknown": "預計剩餘：計算中",
+    "remainingSeconds": "預計剩餘：{seconds} 秒",
+    "remainingMinutes": "預計剩餘：{minutes} 分 {seconds} 秒",
+    "pause": "暫停",
+    "resume": "繼續",
+    "cancel": "取消",
+    "cancelConfirm": "確定取消該下載任務嗎？已下載的檔案會保留。",
+    "retry": "重試",
+    "status": {
+      "pending": "排隊中",
+      "downloading": "下載中",
+      "paused": "已暫停",
+      "completed": "已完成",
+      "failed": "失敗",
+      "canceled": "已取消"
+    }
+  },
+  "oauth": {
+    "session": {
+      "loginExpired": "登入已過期，請重新登入",
+      "tokenExpired": "授權已失效，請重新登入",
+      "reloginHint": "為保障帳號安全，請重新登入後繼續操作。",
+      "relogin": "重新登入",
+      "dismiss": "關閉"
+    },
+    "errors": {
+      "invalidClient": "用戶端驗證失敗，請檢查 client_id 是否正確",
+      "invalidClientSecret": "client_secret 不正確",
+      "clientNotApproved": "該應用未通過審核或已被停用",
+      "invalidCode": "授權碼無效",
+      "codeUsed": "授權碼已被使用",
+      "codeExpired": "授權碼已過期，請重新發起授權",
+      "invalidGrant": "授權憑證無效",
+      "refreshExpired": "重新整理權杖已失效，請重新授權",
+      "invalidRedirectUri": "回呼網址與登記值不符",
+      "pkceFailed": "PKCE 驗證失敗",
+      "userUnavailable": "使用者不存在或目前無法使用",
+      "invalidScope": "請求的權限範圍無效",
+      "invalidToken": "存取權杖無效或已過期",
+      "unsupportedResponseType": "不支援的回應類型",
+      "unsupportedGrantType": "不支援的授權類型",
+      "unsupportedPkce": "僅支援 code_challenge_method=S256",
+      "flowExpired": "授權請求已失效，請重新發起",
+      "badRequest": "請求參數有誤",
+      "nameInvalid": "應用名稱格式不正確",
+      "descriptionInvalid": "應用說明格式不正確",
+      "redirectInvalid": "回呼網址格式不正確",
+      "redirectInsecure": "回呼網址必須使用 HTTPS",
+      "purposeInvalid": "用途說明格式不正確",
+      "contactInvalid": "聯絡方式格式不正確",
+      "agreeRequired": "請先同意接入規範",
+      "appNotFound": "找不到該應用",
+      "withdrawNotAllowed": "目前狀態不可撤回",
+      "appNotApproved": "應用尚未通過審核",
+      "appReviewed": "該申請已完成審核"
+    },
+    "clientTypes": {
+      "web": "網頁應用",
+      "desktop": "桌面應用",
+      "mobile": "行動應用",
+      "service": "伺服器端應用",
+      "other": "其他"
+    },
+    "scopes": {
+      "openid": "基礎身分 openid",
+      "profile": "公開資料 profile",
+      "email": "電子郵件 email",
+      "org": "組織認證資訊 org"
+    },
+    "scopeHints": {
+      "openid": "回傳穩定的使用者識別碼 sub（iGMUid）",
+      "profile": "回傳暱稱與頭像位址",
+      "email": "回傳帳號綁定的電子郵件",
+      "org": "回傳已通過審核的組織認證資訊"
+    },
+    "status": {
+      "pending": "待審核",
+      "approved": "已通過",
+      "rejected": "已拒絕",
+      "disabled": "已停用",
+      "withdrawn": "已撤回"
+    },
+    "apps": {
+      "intro": "查看你提交的 OAuth 應用，重設 client_secret 並查詢接入日誌。",
+      "newApply": "新增應用接入",
+      "empty": "你還沒有提交過 OAuth 應用接入申請",
+      "loadFailed": "應用清單載入失敗，請稍後再試",
+      "typeLabel": "應用類型",
+      "clientId": "client_id",
+      "descriptionLabel": "應用說明",
+      "scopes": "權限範圍",
+      "redirectUris": "回呼位址",
+      "purpose": "使用用途",
+      "contact": "聯絡方式",
+      "createdAt": "提交時間",
+      "reviewComment": "審核意見",
+      "secretOnce": "client_secret 僅在本次顯示，關閉或重新整理後無法再次查看，請立即妥善保存",
+      "copy": "複製",
+      "copied": "已複製",
+      "resetSecret": "重設 client_secret",
+      "resetConfirm": "重設後舊金鑰立即失效，使用舊金鑰的第三方將無法換取權杖。確定繼續嗎？",
+      "withdraw": "撤回申請",
+      "withdrawConfirm": "確定撤回該待審核申請嗎？",
+      "viewLogs": "查看接入日誌",
+      "hideLogs": "收合日誌",
+      "logsEmpty": "尚無接入日誌",
+      "logsTitle": "接入日誌"
+    },
+    "admin": {
+      "all": "全部",
+      "empty": "目前篩選條件下沒有應用",
+      "loadFailed": "應用清單載入失敗，請稍後再試",
+      "applicant": "申請人",
+      "comment": "審核意見",
+      "commentPlaceholder": "可填寫通過或拒絕的說明，將顯示給申請人",
+      "approve": "通過",
+      "reject": "拒絕",
+      "disable": "停用",
+      "enable": "啟用",
+      "delete": "刪除",
+      "approved": "已通過該應用申請，請立即複製並轉交 client_secret",
+      "rejected": "已拒絕該應用申請",
+      "disabled": "已停用該應用，並撤銷其已簽發的全部權杖",
+      "enabled": "已重新啟用該應用",
+      "deleted": "已刪除該應用及其授權資料",
+      "disableConfirm": "停用後該應用無法再換取權杖，且已簽發的權杖將被撤銷。確定繼續嗎？",
+      "deleteConfirm": "刪除後將同時清理該應用的授權碼、權杖與同意紀錄，且無法復原。確定繼續嗎？",
+      "secretOnce": "client_secret 僅在本次顯示，請立即複製並轉交申請人，關閉後無法再次查看"
+    },
+    "authorized": {
+      "intro": "以下第三方應用已獲得你的授權，可撤銷不再信任的應用。",
+      "empty": "你還沒有授權任何第三方應用",
+      "loadFailed": "已授權應用載入失敗，請稍後再試",
+      "grantedAt": "授權時間",
+      "revoke": "撤銷授權",
+      "revokeConfirm": "撤銷後該應用將立即失去存取權限，需重新引導你授權。確定繼續嗎？",
+      "revoked": "已撤銷該應用的授權"
+    },
+    "consent": {
+      "intro": "第三方應用正在請求存取你的 iGCraftLit 帳號資訊，請確認是否授權。",
+      "clientId": "應用識別碼",
+      "scopesTitle": "該應用將取得以下資訊",
+      "warning": "授權後該應用可讀取上述範圍內的資訊，請僅授權你信任的應用。你可隨時在「已授權應用」中撤銷授權。",
+      "approve": "同意授權",
+      "deny": "拒絕",
+      "loginRequired": "你尚未登入，請先登入 iGCraftLit 帳號後再繼續授權",
+      "goLogin": "登入後繼續",
+      "redirecting": "正在返回第三方應用…",
+      "flowExpired": "授權請求已失效或已過期，請重新從第三方應用發起登入"
     }
   }
 }

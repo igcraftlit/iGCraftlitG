@@ -1,0 +1,89 @@
+/**
+ * 文件路径：apps/web/src/iGM_Components/iGM_SessionExpiredToast/iGM_SessionExpiredToast.module.css
+ * 所属层：前端 / 通用组件层
+ * 路由：全局（挂载于 iGM_Providers）
+ * 模块：iGM_SessionExpiredToast
+ * 作用：令牌失效提示条的极简样式（右下角浮层，深浅色自适应）
+ */
+
+.toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(420px, calc(100vw - 40px));
+  padding: 12px 14px;
+  border: 1px solid var(--igm-border);
+  border-radius: 10px;
+  background: var(--igm-surface);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
+}
+
+.icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  color: var(--igm-danger, #d9534f);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  color: var(--igm-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.desc {
+  margin: 0;
+  color: var(--igm-text-muted);
+  font-size: 12px;
+}
+
+.action {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border: 1px solid var(--igm-border);
+  border-radius: 7px;
+  background: var(--igm-surface-2, transparent);
+  color: var(--igm-text);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.action:hover {
+  border-color: var(--igm-accent, #4a7dff);
+  color: var(--igm-accent, #4a7dff);
+}
+
+.close {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--igm-text-muted);
+  cursor: pointer;
+}
+
+.close:hover {
+  background: var(--igm-surface-2, rgb(0 0 0 / 4%));
+  color: var(--igm-text);
+}

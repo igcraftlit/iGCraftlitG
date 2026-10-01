@@ -1,0 +1,288 @@
+/*
+ * 文件路径：apps/web/src/iGM_Pages/G_ThirdPartyDetail/iGM_ThirdPartyDetailPage.module.css
+ * 所属层：前端 / 页面样式
+ * 路由：/G_ThirdPartyDetail
+ * 模块：G_ThirdPartyDetail
+ * 作用：第三方资源详情页专用样式
+ * 内容：封面与信息双栏布局、资源元信息行、键值表、版本列表与兼容性标签、
+ *       下载设置面板与目标目录选择行
+ * 说明：极简排版，颜色取自全局主题变量，无动画与装饰符号
+ */
+
+/* ===== 资源信息 ===== */
+.detailLayout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+@media (min-width: 960px) {
+  .detailLayout {
+    grid-template-columns: 340px 1fr;
+    align-items: start;
+  }
+}
+
+.detailCover {
+  border-radius: var(--igm-radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--igm-border);
+  background: var(--igm-surface);
+}
+
+.detailCover img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.detailCoverFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 16 / 9;
+  color: var(--igm-text-subtle);
+}
+
+.detailMain {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.detailTitle {
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.detailMetaRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+  color: var(--igm-text-muted);
+}
+
+.typeBadge {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--igm-surface-subtle);
+  color: var(--igm-accent);
+  border: 1px solid color-mix(in srgb, var(--igm-accent) 35%, transparent);
+  font-size: 11px;
+}
+
+.sourceBadge {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--igm-surface-subtle);
+  color: var(--igm-text-muted);
+  border: 1px solid var(--igm-border);
+  font-size: 11px;
+}
+
+.metaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.description {
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--igm-text);
+  white-space: pre-wrap;
+}
+
+/* ===== 键值表 ===== */
+.kvList {
+  display: flex;
+  flex-direction: column;
+}
+
+.kvRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  font-size: 13px;
+}
+
+.kvRow + .kvRow {
+  border-top: 1px solid var(--igm-border);
+}
+
+.kvKey {
+  flex: none;
+  color: var(--igm-text-muted);
+}
+
+.kvValue {
+  text-align: right;
+  color: var(--igm-text);
+  overflow-wrap: anywhere;
+}
+
+/* ===== 版本列表 ===== */
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.versionList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.versionItem {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  background: var(--igm-surface);
+}
+
+.versionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.versionInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.versionNameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.versionName {
+  font-size: 14.5px;
+  font-weight: 650;
+  color: var(--igm-text);
+  overflow-wrap: anywhere;
+}
+
+/* ===== 版本发布类型徽章 ===== */
+.vtBadge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 11px;
+}
+
+.vtRelease {
+  background: var(--igm-success-soft);
+  color: var(--igm-success);
+  border-color: color-mix(in srgb, var(--igm-success) 40%, transparent);
+}
+
+.vtBeta {
+  background: var(--igm-surface-subtle);
+  color: var(--igm-accent);
+  border-color: color-mix(in srgb, var(--igm-accent) 35%, transparent);
+}
+
+.vtAlpha {
+  background: var(--igm-surface-subtle);
+  color: var(--igm-text-muted);
+  border-color: var(--igm-border);
+}
+
+.versionMeta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+  color: var(--igm-text-muted);
+}
+
+/* ===== 兼容性标签 ===== */
+.compatRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.compatGroup {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.compatLabel {
+  flex-shrink: 0;
+  width: 76px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--igm-text-muted);
+}
+
+.compatChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.compatChip {
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: var(--igm-surface-subtle);
+  border: 1px solid var(--igm-border);
+  font-size: 12px;
+  color: var(--igm-text);
+}
+
+/* ===== 下载设置面板 ===== */
+.downloadPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 2px;
+  padding-top: 14px;
+  border-top: 1px solid var(--igm-border);
+}
+
+.downloadPanelTitle {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.pathRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pathInput {
+  flex: 1;
+  min-width: 0;
+}
+
+.downloadActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}

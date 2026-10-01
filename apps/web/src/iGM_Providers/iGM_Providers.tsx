@@ -3,8 +3,9 @@
  * 所属层：前端 / Provider 层
  * 路由：全局
  * 模块：iGM_Providers
- * 作用：聚合全站客户端 Provider（主题 + 语言 + 认证）
- * 内容：统一在根布局中包裹一次，避免布局文件堆叠多层 Provider
+ * 作用：聚合全站客户端 Provider（主题 + 语言 + 认证）与全局提示
+ * 内容：统一在根布局中包裹一次，避免布局文件堆叠多层 Provider；
+ *       认证层内挂载令牌失效提示条（模块二十一，401 优雅提示）
  */
 
 // 导入依赖 //
@@ -15,6 +16,7 @@ import { iGM_ThemeProvider as IGM_ThemeProvider } from "./iGM_ThemeProvider";
 import { iGM_LocaleProvider as IGM_LocaleProvider } from "./iGM_LocaleProvider";
 import { iGM_AuthProvider as IGM_AuthProvider } from "./iGM_AuthProvider";
 import { iGM_WebSocketProvider as IGM_WebSocketProvider } from "./iGM_WebSocketProvider";
+import { iGM_SessionExpiredToast as IGM_SessionExpiredToast } from "../iGM_Components/iGM_SessionExpiredToast/iGM_SessionExpiredToast";
 
 // 类型定义 //
 interface iGM_ProvidersProps {
@@ -30,6 +32,7 @@ export function iGM_Providers({ children, initialLocale }: iGM_ProvidersProps) {
     <IGM_ThemeProvider>
       <IGM_LocaleProvider initialLocale={initialLocale}>
         <IGM_AuthProvider>
+          <IGM_SessionExpiredToast />
           <IGM_WebSocketProvider>{children}</IGM_WebSocketProvider>
         </IGM_AuthProvider>
       </IGM_LocaleProvider>
