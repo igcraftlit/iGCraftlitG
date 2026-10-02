@@ -6,6 +6,7 @@
  * 作用：下载进度独立页，由下载安装页点「开始下载」后跳转，展示真实下载进度条
  * 内容：按 taskId 轮询 minecraft:download-status 读取主进程内的任务快照，
  *       展示阶段、百分比、文件数、字节数、当前文件与安装目录；
+ *       引擎为 sdk 时状态文案显示「SDK 调用下载中」，不暴露原始 i18n 键值；
  *       支持取消下载；完成后重新扫描共享根目录刷新已安装版本并引导前往实例管理；
  *       任务编号缺失时给出返回下载安装页的引导
  *
@@ -169,7 +170,11 @@ export function iGM_Launcher_DownloadProgressPage({ params }: iGM_Launcher_PageP
                     : "neutral"
               }
             >
-              {tGame(`stage_${progress.stage}`)}
+              {/* 引擎为 SDK 时状态文案改为引擎提示，避免与真实阶段混淆 */}
+              {params?.engine === "sdk" &&
+              !IGM_LAUNCHER_DOWNLOAD_PROGRESS_TERMINAL.has(progress.stage)
+                ? t("engineSdk")
+                : tGame(`stage_${progress.stage}`)}
             </IGM_Launcher_Badge>
           ) : null}
         </div>

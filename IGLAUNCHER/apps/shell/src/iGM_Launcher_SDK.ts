@@ -44,6 +44,30 @@ export interface iGM_Launcher_SDK_DownloadRequest {
   targetDir: string;
 }
 
+/**
+ * 直链下载入参：直接给出完整 URL 与目标文件绝对路径，跳过 Modrinth 解析。
+ * 游戏本体文件清单（走官方 CDN）与第三方直链下载共用此入参；
+ * URL 必须是完整地址（含协议与主机），引擎不再拼接任何 base url。
+ */
+export interface iGM_Launcher_SDK_UrlDownloadRequest {
+  /** 完整下载地址 */
+  url: string;
+  /** 目标文件绝对路径（已含文件名，父目录不存在时引擎会自动创建） */
+  destPath: string;
+  /** 期望 sha1，空串表示跳过校验 */
+  sha1?: string;
+  /** 期望大小（字节），0 表示未知 */
+  size?: number;
+  /** 回显字段：资源 id（第三方资源用，游戏本体可留空） */
+  resourceId?: string;
+  /** 回显字段：版本 id / 版本号 */
+  version?: string;
+  /** 回显字段：加载器标识 */
+  loader?: string;
+  /** 回显字段：目标目录（缺省取 destPath 所在目录） */
+  targetDir?: string;
+}
+
 /** SDK 任务状态（与 iGM_Launcher_ThirdPartyTaskStatus 对齐） */
 export type iGM_Launcher_SDK_TaskStatus =
   | "pending"
@@ -92,6 +116,10 @@ const iGM_Launcher_SDK_FfiSpec = {
     args: [FFIType.ptr, FFIType.ptr, FFIType.ptr, FFIType.ptr],
     returns: FFIType.ptr,
   },
+  iGM_Launcher_Download_CreateFileTask: {
+    args: [FFIType.ptr, FFIType.ptr, FFIType.ptr, FFIType.i64],
+    returns: FFIType.ptr,
+  },
   iGM_Launcher_Download_SetProgressCallback: {
     args: [FFIType.ptr, FFIType.function, FFIType.ptr],
     returns: FFIType.void,
@@ -116,6 +144,8 @@ interface iGM_Launcher_SDK_TaskRecord {
   callback: JSCallback;
   /** 最新快照 */
   snapshot: iGM_Launcher_SDK_TaskSnapshot;
+  /** 终态等待者：任务进入完成 / 失败 / 取消时统一唤醒（供逐文件顺序编排使用） */
+  waiters: Array<(snapshot: iGM_Launcher_SDK_TaskSnapshot) => void>;
 }
 
 /** 任务登记表：键为启动器侧任务编号（sdk-<序号>，序号同时作为回调 user_data 传给 SDK） */
@@ -320,43 +350,47 @@ function iGM_Launcher_SDK_ParseProgress(pointer: unknown): {
   return { sdkTaskId, status, downloaded, total, percent, speed, eta, error };
 }
 
+/** 任务是否已进入终态（完成 / 失败 / 取消） */
+function iGM_Launcher_SDK_IsTerminal(status: iGM_Launcher_SDK_TaskStatus): boolean {
+  return status === "completed" || status === "failed" || status === "canceled";
+}
+
+/** 唤醒并清空某个任务的终态等待者 */
+function iGM_Launcher_SDK_FlushWaiters(record: iGM_Launcher_SDK_TaskRecord): void {
+  if (!iGM_Launcher_SDK_IsTerminal(record.snapshot.status) || record.waiters.length === 0) return;
+  const waiters = record.waiters.splice(0, record.waiters.length);
+  for (const resolve of waiters) resolve({ ...record.snapshot });
+}
+
 /**
- * 创建并启动下载任务。
- * 通过 user_data 传入启动器侧任务序号，回调据此定位登记项（SDK 只透传该指针，不解引用）。
+ * 内部：登记任务、注册进度回调、启动线程并广播初始快照。
+ * createHandle 由调用方提供（Modrinth 解析模式用 CreateTask，直链模式用 CreateFileTask），
+ * 其余流程完全一致，避免两条路径出现行为分叉。
  */
-export function iGM_Launcher_SDK_Start(
-  request: iGM_Launcher_SDK_DownloadRequest,
+function iGM_Launcher_SDK_Launch(
+  echo: { resourceId: string; version: string; loader: string; targetDir: string },
+  createHandle: () => Pointer | null,
 ): iGM_Launcher_SDK_TaskSnapshot {
   if (!iGM_Launcher_SDK_IsAvailable() || !iGM_Launcher_SDK_Handle) {
     throw new Error("SDK 动态库未加载");
   }
   const symbols = iGM_Launcher_SDK_Handle.symbols;
-
-  const resourceId = request.resourceId.trim();
-  const version = request.version.trim();
-  const loader = request.loader.trim();
-  const targetDir = request.targetDir.trim();
-  if (!resourceId) throw new Error("缺少资源 id");
+  const targetDir = echo.targetDir.trim();
   if (!targetDir) throw new Error("缺少下载目标目录");
 
   console.log(`[SDK] 准备创建任务，目标路径: ${targetDir}`);
 
   let handle: Pointer | null = null;
   try {
-    handle = symbols.iGM_Launcher_Download_CreateTask(
-      Buffer.from(`${resourceId}\0`, "utf8"),
-      Buffer.from(`${version}\0`, "utf8"),
-      Buffer.from(`${loader}\0`, "utf8"),
-      Buffer.from(`${targetDir}\0`, "utf8"),
-    ) as Pointer | null;
+    handle = createHandle();
   } catch (error) {
     // bun:ffi 调用本身抛错（符号缺失 / 参数非法）也统一收敛为可读错误
     const detail = error instanceof Error ? error.message : String(error);
-    console.error(`[SDK] 调用 CreateTask 异常：${detail}`);
-    throw new Error(`调用 CreateTask 异常：${detail}`);
+    console.error(`[SDK] 调用创建任务异常：${detail}`);
+    throw new Error(`调用创建任务异常：${detail}`);
   }
-  console.log(`[SDK] 调用 CreateTask 返回: ${handle ? "0 (成功)" : "null (失败)"}`);
-  if (!handle) throw new Error("调用 CreateTask 返回空任务句柄");
+  console.log(`[SDK] 调用创建任务返回: ${handle ? "0 (成功)" : "null (失败)"}`);
+  if (!handle) throw new Error("创建任务返回空任务句柄");
 
   iGM_Launcher_SDK_TaskSeq += 1;
   const taskId = `sdk-${iGM_Launcher_SDK_TaskSeq}`;
@@ -370,9 +404,9 @@ export function iGM_Launcher_SDK_Start(
     speed: 0,
     eta: 0,
     error: "",
-    resourceId,
-    version,
-    loader,
+    resourceId: echo.resourceId,
+    version: echo.version,
+    loader: echo.loader,
     targetDir,
     createdAt: new Date().toISOString(),
   };
@@ -402,11 +436,13 @@ export function iGM_Launcher_SDK_Start(
       };
       // 实时广播：独立下载进度窗口据此刷新，而不是只靠任务列表轮询
       iGM_Launcher_SDK_Notify(record.snapshot);
+      // 终态唤醒：逐文件编排在等待单个文件完成时依赖此回调
+      iGM_Launcher_SDK_FlushWaiters(record);
     },
     { args: [FFIType.ptr, FFIType.ptr], returns: FFIType.void, threadsafe: true },
   );
 
-  iGM_Launcher_SDK_Tasks.set(taskId, { handle, callback, snapshot });
+  iGM_Launcher_SDK_Tasks.set(taskId, { handle, callback, snapshot, waiters: [] });
   iGM_Launcher_SDK_LastTaskId = taskId;
 
   // 注册回调：threadsafe 回调须传 JSCallback 本体（Bun 需据此建立线程安全引用），
@@ -431,6 +467,84 @@ export function iGM_Launcher_SDK_Start(
   // 通知订阅者任务已创建，便于进度窗口立即拿到初始快照
   iGM_Launcher_SDK_Notify(snapshot);
   return { ...snapshot };
+}
+
+/**
+ * 创建并启动「Modrinth 解析」下载任务（资源 id + 版本 + 加载器）。
+ * 通过 user_data 传入启动器侧任务序号，回调据此定位登记项（SDK 只透传该指针，不解引用）。
+ */
+export function iGM_Launcher_SDK_Start(
+  request: iGM_Launcher_SDK_DownloadRequest,
+): iGM_Launcher_SDK_TaskSnapshot {
+  const resourceId = request.resourceId.trim();
+  const version = request.version.trim();
+  const loader = request.loader.trim();
+  const targetDir = request.targetDir.trim();
+  if (!resourceId) throw new Error("缺少资源 id");
+  if (!targetDir) throw new Error("缺少下载目标目录");
+
+  return iGM_Launcher_SDK_Launch({ resourceId, version, loader, targetDir }, () => {
+    const symbols = iGM_Launcher_SDK_Handle!.symbols;
+    return symbols.iGM_Launcher_Download_CreateTask(
+      Buffer.from(`${resourceId}\0`, "utf8"),
+      Buffer.from(`${version}\0`, "utf8"),
+      Buffer.from(`${loader}\0`, "utf8"),
+      Buffer.from(`${targetDir}\0`, "utf8"),
+    ) as Pointer | null;
+  });
+}
+
+/**
+ * 创建并启动「直链文件」下载任务：引擎直接使用完整 URL，不再拼接任何 base url，
+ * 因此不会因把本地 id 当作 Modrinth 版本 id 而产生 404。
+ * 目标文件绝对路径由调用方拼好，引擎负责建父目录、断点续传、SHA1 校验与原子改名。
+ */
+export function iGM_Launcher_SDK_StartUrl(
+  request: iGM_Launcher_SDK_UrlDownloadRequest,
+): iGM_Launcher_SDK_TaskSnapshot {
+  const url = request.url.trim();
+  const destPath = request.destPath.trim();
+  const sha1 = (request.sha1 ?? "").trim();
+  const size = Number.isFinite(request.size)
+    ? Math.max(0, Math.trunc(request.size ?? 0))
+    : 0;
+  if (!url) throw new Error("缺少下载直链");
+  if (!destPath) throw new Error("缺少目标文件路径");
+
+  const resourceId = (request.resourceId ?? "").trim();
+  const version = (request.version ?? "").trim();
+  const loader = (request.loader ?? "").trim();
+  const fallbackDir = destPath.slice(
+    0,
+    Math.max(destPath.lastIndexOf("\\"), destPath.lastIndexOf("/")),
+  );
+  const targetDir = (request.targetDir ?? fallbackDir).trim();
+
+  return iGM_Launcher_SDK_Launch({ resourceId, version, loader, targetDir }, () => {
+    const symbols = iGM_Launcher_SDK_Handle!.symbols;
+    return symbols.iGM_Launcher_Download_CreateFileTask(
+      Buffer.from(`${url}\0`, "utf8"),
+      Buffer.from(`${destPath}\0`, "utf8"),
+      Buffer.from(`${sha1}\0`, "utf8"),
+      BigInt(size),
+    ) as Pointer | null;
+  });
+}
+
+/**
+ * 等待任务进入终态并返回最终快照。
+ * 逐文件顺序编排（游戏本体清单）据此在单个文件下载完成后再推进下一个，
+ * 避免一次性把成千上万个文件同时压给引擎。
+ */
+export function iGM_Launcher_SDK_Await(taskId: string): Promise<iGM_Launcher_SDK_TaskSnapshot> {
+  const record = iGM_Launcher_SDK_Tasks.get(taskId);
+  if (!record) return Promise.reject(new Error("下载任务不存在"));
+  if (iGM_Launcher_SDK_IsTerminal(record.snapshot.status)) {
+    return Promise.resolve({ ...record.snapshot });
+  }
+  return new Promise((resolve) => {
+    record.waiters.push(resolve);
+  });
 }
 
 /** 查询任务快照：不带 taskId 时取最近一次任务 */
@@ -497,6 +611,9 @@ export function iGM_Launcher_SDK_Cancel(taskId?: string): iGM_Launcher_SDK_TaskS
 export function iGM_Launcher_SDK_Release(taskId: string): void {
   const record = iGM_Launcher_SDK_Tasks.get(taskId);
   if (!record) return;
+  // 释放前把等待者唤醒并置为已取消，避免逐文件编排永久挂起
+  record.snapshot = { ...record.snapshot, status: "canceled" };
+  iGM_Launcher_SDK_FlushWaiters(record);
   if (iGM_Launcher_SDK_Handle) {
     iGM_Launcher_SDK_Handle.symbols.iGM_Launcher_Download_CancelTask(record.handle);
     iGM_Launcher_SDK_Handle.symbols.iGM_Launcher_Download_FreeTask(record.handle);

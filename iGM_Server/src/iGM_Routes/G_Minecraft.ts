@@ -50,6 +50,8 @@ import {
   iGM_GetGameVersion,
   iGM_ListGameVersions,
 } from "../iGM_Services/iGM_GameService";
+// 模块十七：版本文件清单（启动器「清单来自本站、字节直连官方 CDN」模式）
+import { iGM_BuildVersionFiles } from "../iGM_Services/iGM_VersionFilesService";
 
 // 类型定义 //
 /** 带路径参数的路由上下文（Elysia 的 params 未纳入通用上下文类型） */
@@ -141,6 +143,19 @@ async function iGM_HandleVersionDetail(ctx: iGM_MinecraftContext) {
   });
 }
 
+/* ---------- 模块十七：版本文件清单（启动器直连官方 CDN） ---------- */
+async function iGM_HandleVersionFiles(ctx: iGM_RouteContext) {
+  const version = iGM_Query(ctx.query, "version").trim();
+  if (!version) throw new iGM_GameError("game.errors.versionRequired", 400);
+  return iGM_Ok(
+    await iGM_BuildVersionFiles({
+      version,
+      loader: iGM_Query(ctx.query, "loader", "vanilla"),
+      loaderVersion: iGM_Query(ctx.query, "loaderVersion") || undefined,
+    }),
+  );
+}
+
 /* ---------- 资源详情 ---------- */
 async function iGM_HandleDetail(ctx: iGM_RouteContext) {
   const resourceId = iGM_Query(ctx.query, "resourceId");
@@ -210,6 +225,7 @@ export const G_Minecraft = new Elysia({ name: "G_Minecraft" })
   .get("/G_Minecraft/options", iGM_HandleOptions as never)
   .get("/G_Minecraft/versions", iGM_HandleVersions as never)
   .get("/G_Minecraft/version/:id", iGM_HandleVersionDetail as never)
+  .get("/G_Minecraft/version-files", iGM_HandleVersionFiles as never)
   .get("/G_Minecraft/detail", iGM_HandleDetail as never)
   .post("/G_Minecraft/create", iGM_HandleCreate as never)
   .put("/G_Minecraft/edit", iGM_HandleEdit as never)

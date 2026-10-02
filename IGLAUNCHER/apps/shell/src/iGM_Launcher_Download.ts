@@ -4,9 +4,12 @@
  * 路由：全局（不对外暴露 URL，仅被 iGM_Launcher_Bridge 调用）
  * 模块：iGM_Launcher_Download
  * 作用：按官方目录规则把 Minecraft 游戏本体真实下载到共享根目录（.minecraft 根）
- * 内容：官方版本清单与版本 json 解析、客户端 jar、依赖库（含 natives 分类器）、
- *       资源索引与资源对象、Fabric 加载器 profile 与其依赖库；
- *       分阶段并发下载并实时维护进度快照，支持取消与失败重试
+ * 内容：清单驱动主流程——主站下发版本文件清单，文本文件原样写盘、二进制文件逐文件
+ *       经 Zig 引擎（bun:ffi）直链下载并实时叠加进度；
+ *       旧 Mojang 直连流程作为兜底保留：官方版本清单与版本 json 解析、客户端 jar、
+ *       依赖库（含 natives 分类器）、资源索引与资源对象、Fabric 加载器 profile 与其依赖库；
+ *       分阶段下载并实时维护进度快照，支持取消与失败重试；
+ *       通过 iGM_Launcher_Download_Subscribe 向独立进度窗口广播进度
  *
  * 说明：目录规则与模块六一致——versions / libraries / assets 为全部实例共享、只存一份；
  *       同版本不同加载器在 versions 下按 <version> 与 <version>-<loader> 区分，
@@ -34,7 +37,15 @@ import {
   type iGM_Launcher_DownloadProgress,
   type iGM_Launcher_DownloadStage,
   type iGM_Launcher_LoaderType,
+  type iGM_Launcher_VersionFilesManifest,
 } from "@igm-launcher/shared";
+import {
+  iGM_Launcher_SDK_Await,
+  iGM_Launcher_SDK_IsAvailable,
+  iGM_Launcher_SDK_Release,
+  iGM_Launcher_SDK_StartUrl,
+  iGM_Launcher_SDK_Subscribe,
+} from "./iGM_Launcher_SDK";
 
 // 类型定义 //
 
@@ -135,13 +146,49 @@ export interface iGM_Launcher_DownloadTarget {
   loader: iGM_Launcher_LoaderType;
   loaderVersion?: string;
   rootDir: string;
+  /**
+   * 主站下发的版本文件清单。
+   * 提供时走「清单驱动」流程（文本写盘 + 二进制逐文件走 Zig 引擎直连下载）；
+   * 缺省时回退为启动器自解析 Mojang 清单的兜底流程。
+   */
+  manifest?: iGM_Launcher_VersionFilesManifest;
 }
+
+/** 下载进度订阅回调（独立进度窗口据此实时刷新） */
+export type iGM_Launcher_DownloadListener = (progress: iGM_Launcher_DownloadProgress) => void;
 
 // 核心逻辑 //
 
 /** 任务表与最近一次任务编号（界面不带 taskId 时取最近一次） */
 const iGM_Launcher_DownloadTasks = new Map<string, iGM_Launcher_DownloadTask>();
 let iGM_Launcher_DownloadLastTaskId: string | null = null;
+
+/** 下载进度订阅者集合（同一时刻通常只有下载进度窗口） */
+const iGM_Launcher_DownloadListeners = new Set<iGM_Launcher_DownloadListener>();
+
+/**
+ * 订阅下载进度：返回取消订阅函数。
+ * 每次阶段变化、文件完成与 SDK 子进度更新都会经 iGM_Launcher_Download_Notify 广播。
+ */
+export function iGM_Launcher_Download_Subscribe(
+  listener: iGM_Launcher_DownloadListener,
+): () => void {
+  iGM_Launcher_DownloadListeners.add(listener);
+  return () => {
+    iGM_Launcher_DownloadListeners.delete(listener);
+  };
+}
+
+/** 广播一次进度快照；单个订阅者抛错不影响其余订阅者 */
+function iGM_Launcher_Download_Notify(progress: iGM_Launcher_DownloadProgress): void {
+  for (const listener of [...iGM_Launcher_DownloadListeners]) {
+    try {
+      listener({ ...progress });
+    } catch (error) {
+      console.warn("[iGM_Launcher_Download] 进度订阅回调异常：", error);
+    }
+  }
+}
 
 /* ---- 通用工具 ---- */
 
@@ -187,6 +234,27 @@ function iGM_Launcher_Download_AbsPath(rootDir: string, relativePath: string): s
     throw new Error(`非法下载路径：${relativePath}`);
   }
   return abs;
+}
+
+/**
+ * 按文件相对路径推断下载阶段：
+ * versions 下按是否为目标加载器版本目录区分「客户端」与「加载器」；
+ * libraries / assets 各归对应阶段；其余沿用上一阶段。
+ */
+function iGM_Launcher_Download_StageOfPath(
+  path: string,
+  loader: iGM_Launcher_LoaderType,
+  versionId: string,
+  previous: iGM_Launcher_DownloadStage,
+): iGM_Launcher_DownloadStage {
+  const posix = path.replace(/\\/g, "/");
+  if (posix.startsWith("versions/")) {
+    const inLoaderDir = loader !== "vanilla" && posix.startsWith(`versions/${versionId}/`);
+    return inLoaderDir ? "loader" : "client";
+  }
+  if (posix.startsWith("libraries/")) return "libraries";
+  if (posix.startsWith("assets/")) return "assets";
+  return previous;
 }
 
 /** 校验 sha1（未提供期望值时跳过） */
@@ -451,7 +519,164 @@ export function iGM_Launcher_Download_Start(
 /* ---- 下载主流程 ---- */
 
 /**
+ * 清单驱动下载主流程（清单由自己网站下发）：
+ * 1) 建根目录，把 manifest.texts 逐个原样写盘（每写一个计一个文件）；
+ * 2) 按清单顺序逐文件下载：本地已存在且大小一致则跳过，否则优先走 Zig 引擎直链下载
+ *    （SDK 不可用时回退旧的 HTTP 直连），逐文件等待终态并累加进度；
+ * 3) 收尾校验目标版本 json 真实存在。
+ * 全程经 iGM_Launcher_Download_Notify 广播进度，任一文件失败即如实标记 failed。
+ */
+async function iGM_Launcher_Download_ExecuteFromManifest(
+  task: iGM_Launcher_DownloadTask,
+  manifest: iGM_Launcher_VersionFilesManifest,
+): Promise<void> {
+  const { progress } = task;
+
+  // 回填清单解析结果，保证进度快照与真实安装目标一致
+  if (manifest.versionId) progress.versionId = manifest.versionId;
+  if (manifest.loaderVersion) progress.loaderVersion = manifest.loaderVersion;
+
+  // 当前活动 SDK 任务编号：订阅据此只叠加当前文件的实时字节
+  let activeTaskId = "";
+  let sdkFileBase = progress.bytesDone;
+
+  /*
+   * 逐文件下载期间把 SDK 快照的 downloaded 叠加到已完成基数上，
+   * 使进度条在单个大文件下载过程中也能平滑推进（而不是只在文件之间跳）。
+   */
+  const unsubscribe = iGM_Launcher_SDK_Subscribe((snapshot) => {
+    if (!activeTaskId || snapshot.taskId !== activeTaskId) return;
+    progress.bytesDone = sdkFileBase + snapshot.downloaded;
+    iGM_Launcher_Download_Notify(progress);
+  });
+
+  try {
+    await mkdir(progress.rootDir, { recursive: true });
+
+    // 1) 文本文件原样写盘（版本 json / Fabric profile / 资源索引）
+    progress.stage = "version-json";
+    iGM_Launcher_Download_Notify(progress);
+    for (const text of manifest.texts ?? []) {
+      if (task.cancelled) return iGM_Launcher_Download_Finish(task, "cancelled");
+      const absPath = iGM_Launcher_Download_AbsPath(progress.rootDir, text.path);
+      await mkdir(dirname(absPath), { recursive: true });
+      await writeFile(absPath, text.content, "utf8");
+      progress.currentFile = text.path;
+      progress.filesTotal += 1;
+      progress.filesDone += 1;
+      iGM_Launcher_Download_Notify(progress);
+    }
+
+    // 2) 二进制文件逐文件下载
+    const files = manifest.files ?? [];
+    progress.filesTotal += files.length;
+    progress.bytesTotal += files.reduce((sum, file) => sum + (file.size || 0), 0);
+    iGM_Launcher_Download_Notify(progress);
+
+    for (const file of files) {
+      if (task.cancelled) return iGM_Launcher_Download_Finish(task, "cancelled");
+
+      // 本文件的已完成基数：SDK 实时叠加与最终累加都以此为准，避免重复计数
+      const fileBase = progress.bytesDone;
+      progress.currentFile = file.path;
+      progress.stage = iGM_Launcher_Download_StageOfPath(
+        file.path,
+        progress.loader,
+        progress.versionId,
+        progress.stage,
+      );
+      iGM_Launcher_Download_Notify(progress);
+
+      const absPath = iGM_Launcher_Download_AbsPath(progress.rootDir, file.path);
+
+      // 本地已存在且大小一致则跳过，避免重复下载
+      if (existsSync(absPath)) {
+        const info = await stat(absPath);
+        if (info.size > 0 && (file.size === 0 || info.size === file.size)) {
+          progress.bytesDone = fileBase + info.size;
+          progress.filesDone += 1;
+          iGM_Launcher_Download_Notify(progress);
+          continue;
+        }
+      }
+
+      let written = 0;
+      let sdkTaskId = "";
+      if (iGM_Launcher_SDK_IsAvailable()) {
+        try {
+          const snapshot = iGM_Launcher_SDK_StartUrl({
+            url: file.url,
+            destPath: absPath,
+            sha1: file.sha1,
+            size: file.size,
+            version: progress.version,
+            loader: manifest.loader,
+            targetDir: progress.rootDir,
+          });
+          sdkTaskId = snapshot.taskId;
+          activeTaskId = sdkTaskId;
+          sdkFileBase = fileBase;
+          const final = await iGM_Launcher_SDK_Await(sdkTaskId);
+          if (final.status !== "completed") {
+            throw new Error(final.error || `文件下载未完成：${file.path}`);
+          }
+          written = final.downloaded > 0 ? final.downloaded : file.size;
+        } catch (error) {
+          /*
+           * SDK 创建阶段失败（符号缺失 / 参数非法等）不阻断整体安装，
+           * 回退到旧的 HTTP 直连下载，保证仍能完成安装；
+           * 已创建任务后的失败（含校验失败 / 404）则如实抛出，不掩盖真实原因。
+           */
+          if (sdkTaskId) throw error;
+          console.warn(
+            `[iGM_Launcher_Download] SDK 直链下载创建失败，回退 HTTP：${file.path}`,
+            error,
+          );
+        } finally {
+          activeTaskId = "";
+          if (sdkTaskId) iGM_Launcher_SDK_Release(sdkTaskId);
+        }
+      }
+
+      // SDK 不可用或创建失败时，回退旧的 HTTP 逐文件下载
+      if (!sdkTaskId) {
+        written = await iGM_Launcher_Download_File(progress.rootDir, {
+          url: file.url,
+          path: file.path,
+          size: file.size,
+          sha1: file.sha1,
+        });
+      }
+
+      if (task.cancelled) return iGM_Launcher_Download_Finish(task, "cancelled");
+      progress.bytesDone = fileBase + written;
+      progress.filesDone += 1;
+      iGM_Launcher_Download_Notify(progress);
+    }
+
+    // 3) 收尾校验：目标版本 json 必须真实存在，否则视为安装未完成
+    progress.stage = "finalizing";
+    iGM_Launcher_Download_Notify(progress);
+    const finalJsonPath = iGM_Launcher_Download_AbsPath(
+      progress.rootDir,
+      `versions/${progress.versionId}/${progress.versionId}.json`,
+    );
+    if (!existsSync(finalJsonPath)) {
+      throw new Error("版本 json 未落盘，安装未完成");
+    }
+    iGM_Launcher_Download_Finish(task, "done");
+  } catch (error) {
+    progress.error = error instanceof Error ? error.message : "下载过程发生未知错误";
+    iGM_Launcher_Download_Finish(task, "failed");
+  } finally {
+    unsubscribe();
+  }
+}
+
+/**
  * 下载主流程：
+ * 提供 manifest 时走清单驱动流程（见 iGM_Launcher_Download_ExecuteFromManifest）；
+ * 否则回退旧的 Mojang 直连兜底流程：
  * 1) 拉取官方版本清单定位目标版本，取得版本 json；
  * 2) 写入 versions/<version>/<version>.json（原版清单，加载器 profile 依赖它）；
  * 3) 下载客户端 jar、依赖库（含 natives）、资源索引与资源对象；
@@ -463,6 +688,11 @@ async function iGM_Launcher_Download_Execute(
   task: iGM_Launcher_DownloadTask,
   target: iGM_Launcher_DownloadTarget,
 ): Promise<void> {
+  // 优先走主站清单驱动流程；清单缺省时才回退旧的 Mojang 直连兜底流程
+  if (target.manifest) {
+    return iGM_Launcher_Download_ExecuteFromManifest(task, target.manifest);
+  }
+
   const { progress } = task;
   const osName = iGM_Launcher_Download_OsName();
   try {
@@ -624,6 +854,8 @@ function iGM_Launcher_Download_Finish(
   task.progress.stage = stage;
   task.progress.currentFile = "";
   task.progress.finishedAt = new Date().toISOString();
+  // 终态也广播一次，保证独立进度窗口即时收敛（旧兜底流程同样受益）
+  iGM_Launcher_Download_Notify(task.progress);
 }
 
 // 导出 //

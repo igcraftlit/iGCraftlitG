@@ -843,6 +843,7 @@
     "noTask": "No download task id was found. Start the download again from the version library.",
     "unknownVersion": "Unknown version",
     "waiting": "Reading task status…",
+    "engineSdk": "Downloading via SDK…",
     "retryDownload": "Download again",
     "note": "Progress comes from the real main-process download engine; completed files are kept and skipped on retry."
   }

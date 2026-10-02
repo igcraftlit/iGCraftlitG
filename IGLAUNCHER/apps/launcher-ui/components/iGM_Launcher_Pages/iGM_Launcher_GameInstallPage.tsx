@@ -55,7 +55,10 @@ import {
   iGM_Launcher_Input as IGM_Launcher_Input,
   iGM_Launcher_Select as IGM_Launcher_Select,
 } from "@/components/iGM_Launcher_Forms/iGM_Launcher_FormControls";
-import { iGM_Launcher_BridgeCall } from "@/components/iGM_Launcher_Bridge/iGM_Launcher_BridgeClient";
+import {
+  iGM_Launcher_BridgeCall,
+  iGM_Launcher_SendHostMessage,
+} from "@/components/iGM_Launcher_Bridge/iGM_Launcher_BridgeClient";
 import { iGM_Launcher_UseStore } from "@/components/iGM_Launcher_Store/iGM_Launcher_StoreProvider";
 import { iGM_Launcher_UseShellLayout } from "@/components/iGM_Launcher_AppShell/iGM_Launcher_AppShell";
 import type { iGM_Launcher_PageProps } from "./iGM_Launcher_PageRegistry";
@@ -249,7 +252,21 @@ export function iGM_Launcher_GameInstallPage({ params }: iGM_Launcher_PageProps)
         setStartError(response.message || t("startFailed"));
         return;
       }
-      navigate("downloadProgress", { taskId: response.data.progress.taskId, version });
+      const progress = response.data.progress;
+      navigate("downloadProgress", { taskId: progress.taskId, version, engine: "sdk" });
+      /*
+       * 游戏本体下载与模组下载一致，额外弹出独立进度窗口：
+       * 宿主据此创建窄窗，并把清单驱动的 SDK 下载进度实时推送过去。
+       */
+      iGM_Launcher_SendHostMessage({
+        type: "window:open-download-progress",
+        taskId: progress.taskId,
+        resourceName: progress.versionId || version,
+        version: progress.versionId,
+        targetDir: progress.rootDir,
+        engine: "sdk",
+        engineError: "",
+      });
     } finally {
       setStarting(false);
     }

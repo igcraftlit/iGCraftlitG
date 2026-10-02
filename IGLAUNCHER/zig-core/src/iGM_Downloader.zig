@@ -138,6 +138,14 @@ pub const iGM_Launcher_Download_Task = struct {
     version: []u8,
     loader: []u8,
     target_dir: []u8,
+    /// 直链模式：非空时跳过 Modrinth 解析，直接下载该 URL（游戏本体清单 / 第三方直链共用）
+    direct_url: []u8 = &.{},
+    /// 直链模式的目标文件绝对路径（由调用方拼好，Zig 侧仅做下载与校验）
+    direct_dest: []u8 = &.{},
+    /// 直链模式的期望 SHA1（空串表示跳过校验）
+    direct_sha1: []u8 = &.{},
+    /// 直链模式的期望大小（0 表示未知）
+    direct_size: i64 = 0,
     cb: iGM_Launcher_ProgressCallback = null,
     user_data: ?*anyopaque = null,
     cancel: std.atomic.Value(bool) = .init(false),
@@ -397,7 +405,9 @@ fn iGM_Downloader_DownloadFile(
         resume_offset = size;
     }
 
-    iGM_Downloader_ApplyJitter(rt);
+    // 直链模式（游戏本体清单走官方 CDN，按清单逐文件下载）不做随机抖动，
+    // 否则数千个资源对象会被 100-300ms 的间隔拖到不可用；第三方资源仍保留抖动限速。
+    if (task.direct_url.len == 0) iGM_Downloader_ApplyJitter(rt);
 
     const uri = try std.Uri.parse(url);
     const tick_nanoseconds: i96 = @as(i96, IGM_LAUNCHER_PROGRESS_TICK_MS) * std.time.ns_per_ms;
@@ -425,8 +435,8 @@ fn iGM_Downloader_DownloadFile(
         var redirect_buffer: [4096]u8 = undefined;
         var response = try request.receiveHead(&redirect_buffer);
         const status = @intFromEnum(response.head.status);
-        iGM_Downloader_Log("正在请求 Modrinth 直链: {s}", .{url});
-        iGM_Downloader_Log("第三方返回状态码: {d}", .{status});
+        iGM_Downloader_Log("正在请求下载直链: {s}", .{url});
+        iGM_Downloader_Log("下载源返回状态码: {d}", .{status});
         task.last_status.store(status, .release);
 
         // 429 / 503 指数退避
@@ -559,6 +569,8 @@ fn iGM_Downloader_ErrorText(
     buffer: []u8,
 ) []const u8 {
     const status = task.last_status.load(.acquire);
+    // 版本已被作者删除 / 直链失效：给出可操作提示，而不是笼统的「无法连接」
+    if (status == 404) return "该版本已失效，请选择其他版本";
     return switch (err) {
         error.ModrinthStatusFailed => std.fmt.bufPrint(
             buffer,
@@ -607,7 +619,26 @@ fn iGM_Downloader_Run(task: *iGM_Launcher_Download_Task) void {
     defer arena_state.deinit();
     const arena = arena_state.allocator();
 
-    const resolved = iGM_Downloader_Resolve(
+    // 直链模式：调用方已给出完整 URL 与目标文件绝对路径，跳过 Modrinth 解析
+    const is_direct = task.direct_url.len > 0;
+    const resolved = if (is_direct) blk: {
+        if (task.direct_dest.len == 0) {
+            iGM_Downloader_Emit(task, iGM_Launcher_Status_Failed, 0, 0, 0.0, -1, "缺少目标文件路径");
+            return;
+        }
+        break :blk iGM_Downloader_Resolved{
+            .url = arena.dupe(u8, task.direct_url) catch {
+                iGM_Downloader_Emit(task, iGM_Launcher_Status_Failed, 0, 0, 0.0, -1, "分配下载地址失败");
+                return;
+            },
+            .filename = "",
+            .size = task.direct_size,
+            .sha1 = arena.dupe(u8, task.direct_sha1) catch {
+                iGM_Downloader_Emit(task, iGM_Launcher_Status_Failed, 0, 0, 0.0, -1, "分配校验值失败");
+                return;
+            },
+        };
+    } else iGM_Downloader_Resolve(
         &rt,
         &client,
         task,
@@ -631,13 +662,19 @@ fn iGM_Downloader_Run(task: *iGM_Launcher_Download_Task) void {
         return;
     };
 
-    const dest_path = iGM_FileManager.iGM_FileManager_JoinPath(
-        arena,
-        &.{ task.target_dir, resolved.filename },
-    ) catch {
-        iGM_Downloader_Emit(task, iGM_Launcher_Status_Failed, 0, 0, 0.0, -1, "分配目标路径失败");
-        return;
-    };
+    const dest_path = if (is_direct)
+        arena.dupe(u8, task.direct_dest) catch {
+            iGM_Downloader_Emit(task, iGM_Launcher_Status_Failed, 0, 0, 0.0, -1, "分配目标路径失败");
+            return;
+        }
+    else
+        iGM_FileManager.iGM_FileManager_JoinPath(
+            arena,
+            &.{ task.target_dir, resolved.filename },
+        ) catch {
+            iGM_Downloader_Emit(task, iGM_Launcher_Status_Failed, 0, 0, 0.0, -1, "分配目标路径失败");
+            return;
+        };
     const part_path = std.fmt.allocPrint(arena, "{s}.part", .{dest_path}) catch {
         iGM_Downloader_Emit(task, iGM_Launcher_Status_Failed, 0, 0, 0.0, -1, "分配临时路径失败");
         return;
@@ -797,6 +834,59 @@ export fn iGM_Launcher_Download_CreateTask(
     return @ptrCast(task);
 }
 
+/// 创建「直链文件」下载任务：把 url 直接下载到 dest_path，用 sha1 校验（可空串跳过）。
+/// 用于游戏本体文件清单与第三方直链，跳过 Modrinth 解析与随机抖动限速。参数非法返回 null。
+export fn iGM_Launcher_Download_CreateFileTask(
+    url: ?[*:0]const u8,
+    dest_path: ?[*:0]const u8,
+    sha1: ?[*:0]const u8,
+    expected_size: i64,
+) ?*anyopaque {
+    const allocator = iGM_FileManager.iGM_FileManager_Allocator;
+    const url_value = std.mem.span(url orelse return null);
+    const dest_value = std.mem.span(dest_path orelse return null);
+    const sha1_value = std.mem.span(sha1 orelse "");
+    if (std.mem.trim(u8, url_value, " \t").len == 0) return null;
+    if (std.mem.trim(u8, dest_value, " \t").len == 0) return null;
+
+    const task = allocator.create(iGM_Launcher_Download_Task) catch return null;
+    errdefer allocator.destroy(task);
+
+    const sequence = iGM_Launcher_Task_Sequence.fetchAdd(1, .monotonic) + 1;
+    const task_id = std.fmt.allocPrintSentinel(allocator, "igm-sdk-{d}", .{sequence}, 0) catch return null;
+    errdefer allocator.free(task_id);
+
+    const resource_owned = allocator.dupe(u8, "") catch return null;
+    errdefer allocator.free(resource_owned);
+    const version_owned = allocator.dupe(u8, "") catch return null;
+    errdefer allocator.free(version_owned);
+    const loader_owned = allocator.dupe(u8, "") catch return null;
+    errdefer allocator.free(loader_owned);
+    const target_owned = allocator.dupe(u8, "") catch return null;
+    errdefer allocator.free(target_owned);
+    const url_owned = allocator.dupe(u8, url_value) catch return null;
+    errdefer allocator.free(url_owned);
+    const dest_owned = allocator.dupe(u8, dest_value) catch return null;
+    errdefer allocator.free(dest_owned);
+    const sha1_owned = allocator.alloc(u8, sha1_value.len) catch return null;
+    errdefer allocator.free(sha1_owned);
+    _ = std.ascii.lowerString(sha1_owned, sha1_value);
+
+    task.* = .{
+        .task_id = task_id,
+        .resource_id = resource_owned,
+        .version = version_owned,
+        .loader = loader_owned,
+        .target_dir = target_owned,
+        .direct_url = url_owned,
+        .direct_dest = dest_owned,
+        .direct_sha1 = sha1_owned,
+        .direct_size = expected_size,
+    };
+    iGM_Downloader_Log("创建直链下载任务 {s}: dest={s}", .{ task_id, dest_owned });
+    return @ptrCast(task);
+}
+
 /// 注册进度回调与用户数据（须在 StartTask 之前调用）
 export fn iGM_Launcher_Download_SetProgressCallback(
     task: ?*anyopaque,
@@ -875,5 +965,8 @@ export fn iGM_Launcher_Download_FreeTask(task: ?*anyopaque) void {
     allocator.free(handle.version);
     allocator.free(handle.loader);
     allocator.free(handle.target_dir);
+    allocator.free(handle.direct_url);
+    allocator.free(handle.direct_dest);
+    allocator.free(handle.direct_sha1);
     allocator.destroy(handle);
 }

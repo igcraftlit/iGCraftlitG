@@ -268,9 +268,18 @@ export function iGM_Launcher_DownloadsPage() {
     setStarting(true);
     setStartError("");
     setStartNotice("");
+    /*
+     * 把所选版本的完整 downloadUrl 与文件名一并交给主进程：
+     * 引擎按直链下载，不再把本地版本 id 当作 Modrinth version id 二次解析，避免 404。
+     */
+    const selected = versions[resource.id]?.find((item) => item.id === versionId);
     const response = await iGM_Launcher_BridgeCall("thirdParty:download-start", {
       resourceId: resource.id,
       versionId,
+      downloadUrl: selected?.downloadUrl ?? "",
+      filename: selected?.filename ?? "",
+      sha1: selected?.sha1 ?? "",
+      size: selected?.size ?? 0,
       target,
     });
     setStarting(false);

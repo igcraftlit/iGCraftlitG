@@ -1149,6 +1149,14 @@ export interface iGM_Launcher_BridgeParams {
   resourceId?: string;
   /** 第三方资源版本 id（发起下载） */
   versionId?: string;
+  /** 第三方资源版本的完整下载地址（发起下载时优先使用，引擎按直链下载不再二次解析） */
+  downloadUrl?: string;
+  /** 下载文件名（与 downloadUrl 配套，用于拼目标文件路径） */
+  filename?: string;
+  /** 文件 sha1 校验值（发起下载时透传给引擎做流式校验，可空） */
+  sha1?: string;
+  /** 文件大小（字节），0 表示未知 */
+  size?: number;
   /** 下载目标目录（绝对路径） */
   target?: string;
   /** 分页页码（搜索，缺省 1） */
@@ -1747,6 +1755,51 @@ export const IGM_LAUNCHER_VERSION_LIBRARY_FILE = "minecraft/version_library.json
  * 因此启动器按真实路径调用（不使用 /api/ 前缀）。
  */
 export const IGM_LAUNCHER_API_MC_VERSIONS_PATH = "/G_Minecraft/versions";
+
+/**
+ * 版本文件清单接口路径。
+ * 清单（文件 URL / 落盘相对路径 / 大小 / sha1 与需写入的文本文件）由自己网站下发，
+ * 文件字节由 Zig 引擎按清单从官方 CDN 直连下载，不再由启动器自行解析 Mojang 清单。
+ */
+export const IGM_LAUNCHER_API_MC_VERSION_FILES_PATH = "/G_Minecraft/version-files";
+
+/** 版本文件清单中需要原样写入磁盘的文本文件（版本 json / Fabric profile / 资源索引） */
+export interface iGM_Launcher_VersionTextFile {
+  /** 相对共享 .minecraft 根目录的 POSIX 相对路径 */
+  path: string;
+  /** 文件文本内容 */
+  content: string;
+}
+
+/** 版本文件清单中需要下载的二进制文件 */
+export interface iGM_Launcher_VersionBinaryFile {
+  /** 完整下载地址（官方 CDN 直链，引擎直接使用，不再拼接 base url） */
+  url: string;
+  /** 相对共享 .minecraft 根目录的 POSIX 相对路径 */
+  path: string;
+  /** 文件大小（字节），0 表示未知 */
+  size: number;
+  /** 文件 sha1 校验值，空串表示跳过校验 */
+  sha1: string;
+}
+
+/** 主站下发的版本文件清单 */
+export interface iGM_Launcher_VersionFilesManifest {
+  /** 目标 Minecraft 版本号，如 1.20.1 */
+  version: string;
+  /** 加载器标识：vanilla / fabric */
+  loader: string;
+  /** 实际解析到的加载器版本，vanilla 为空串 */
+  loaderVersion: string;
+  /** 版本目录名：vanilla 为 <version>，fabric 为 <version>-<loader> */
+  versionId: string;
+  /** 需原样写入的文本文件 */
+  texts: iGM_Launcher_VersionTextFile[];
+  /** 需下载的二进制文件 */
+  files: iGM_Launcher_VersionBinaryFile[];
+  /** 计数汇总 */
+  counts: { files: number; bytes: number };
+}
 
 /** 版本库单页拉取条数（一次拉全量，便于按年份分组展示） */
 export const IGM_LAUNCHER_VERSION_LIBRARY_PAGE_SIZE = 500;

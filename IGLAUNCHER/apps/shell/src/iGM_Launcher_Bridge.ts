@@ -46,6 +46,7 @@ import { Utils } from "electrobun/main";
 import {
   IGM_LAUNCHER_API_BASE,
   IGM_LAUNCHER_API_LOGIN_PATH,
+  IGM_LAUNCHER_API_MC_VERSION_FILES_PATH,
   IGM_LAUNCHER_API_MC_VERSIONS_PATH,
   IGM_LAUNCHER_API_LOGOUT_PATH,
   IGM_LAUNCHER_API_ME_PATH,
@@ -108,6 +109,7 @@ import {
   type iGM_Launcher_SiteEnvelope,
   type iGM_Launcher_SiteUser,
   type iGM_Launcher_ThirdPartyTask,
+  type iGM_Launcher_VersionFilesManifest,
   type iGM_Launcher_VersionType,
 } from "@igm-launcher/shared";
 import {
@@ -115,7 +117,6 @@ import {
   iGM_Launcher_GameDir_EnsureInstanceDir,
   iGM_Launcher_GameDir_InstalledVersions,
   iGM_Launcher_GameDir_InstalledVersionsOf,
-  iGM_Launcher_GameDir_LastScan,
   iGM_Launcher_GameDir_Load,
   iGM_Launcher_GameDir_ParseVersionJson,
   iGM_Launcher_GameDir_Remove,
@@ -140,6 +141,7 @@ import {
   iGM_Launcher_SDK_Resume,
   iGM_Launcher_SDK_Retry,
   iGM_Launcher_SDK_Start,
+  iGM_Launcher_SDK_StartUrl,
   iGM_Launcher_SDK_Status,
   type iGM_Launcher_SDK_TaskSnapshot,
 } from "./iGM_Launcher_SDK";
@@ -674,14 +676,33 @@ interface iGM_Launcher_ApiVersionListData {
 /** 版本库同步一次最多翻页数，避免远端分页异常导致长时间循环 */
 const IGM_LAUNCHER_VERSION_SYNC_MAX_PAGES = 10;
 
-/** 取本地已安装版本集合（优先复用最近一次扫描缓存，无缓存时先扫描一次） */
+/** 取本地已安装版本集合：始终重新扫描磁盘，保证删除文件后立刻反映为「未下载」 */
 async function iGM_Launcher_InstalledVersions(): Promise<Set<string>> {
-  const scans = iGM_Launcher_GameDir_LastScan() ?? (await iGM_Launcher_GameDir_ScanAll()).results;
+  const scans = (await iGM_Launcher_GameDir_ScanAll()).results;
   const instances = await iGM_Launcher_LoadInstances();
   return iGM_Launcher_GameDir_InstalledVersions(
     scans,
     instances.map((item) => item.minecraftVersion),
   );
+}
+
+/**
+ * 按本地实际文件回填版本库条目的 installed 标记。
+ * 规则：以磁盘上 versions/<目录>/<目录>.json 是否真实存在为准；
+ * 目录不存在或 versions 为空时全部为 false（强制显示「未下载」，允许用户重新下载），
+ * 绝不沿用上一次同步或后端返回的缓存状态。
+ */
+function iGM_Launcher_ApplyInstalledState(
+  library: iGM_Launcher_VersionLibrary,
+  installed: Set<string>,
+): iGM_Launcher_VersionLibrary {
+  return {
+    ...library,
+    entries: library.entries.map((entry) => ({
+      ...entry,
+      installed: installed.has(entry.version.trim().toLowerCase()),
+    })),
+  };
 }
 
 /**
@@ -784,8 +805,8 @@ async function iGM_Launcher_SyncVersionLibrary(): Promise<iGM_Launcher_BridgeRes
         type: iGM_Launcher_NormalizeVersionType(item.type) as iGM_Launcher_VersionType,
         releaseTime: typeof item.releaseTime === "string" ? item.releaseTime : null,
         totalSize: typeof item.totalSize === "number" ? item.totalSize : null,
-        // 本地已安装优先，兼容主站按登录用户返回的已安装标记
-        installed: installed.has(version.toLowerCase()) || item.installed === true,
+        // 只认本地实际文件：不采用主站按登录用户返回的 installed 标记，避免删文件后仍显示已下载
+        installed: installed.has(version.toLowerCase()),
       });
     }
 
@@ -873,9 +894,12 @@ async function iGM_Launcher_HandleMinecraft(
       return iGM_Launcher_Ok({ gameDirs: gameDirs as iGM_Launcher_GameDir[] });
     }
 
-    /* 读取版本库缓存（不联网） */
-    case "minecraft:library":
-      return iGM_Launcher_Ok({ library: await iGM_Launcher_VersionLibrary_Load() });
+    /* 读取版本库缓存并按本地实际文件重算安装状态（不联网、不沿用缓存状态） */
+    case "minecraft:library": {
+      const library = await iGM_Launcher_VersionLibrary_Load();
+      const installed = await iGM_Launcher_InstalledVersions();
+      return iGM_Launcher_Ok({ library: iGM_Launcher_ApplyInstalledState(library, installed) });
+    }
 
     /* 与主站版本资料库同步 */
     case "minecraft:sync-versions":
@@ -979,11 +1003,44 @@ async function iGM_Launcher_HandleMinecraft(
         return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_INVALID, "尚未确定下载目录");
       }
       try {
+        /*
+         * 先向自己网站拉取版本文件清单（文件 URL / 相对路径 / 大小 / sha1 与文本文件）；
+         * 拿到后交给下载引擎按清单逐文件走 Zig 引擎直连下载。
+         * 清单接口不可达或失败时不阻断安装，降级为启动器自解析 Mojang 清单的兜底流程。
+         */
+        const account = await iGM_Launcher_LoadAccount();
+        const query = new URLSearchParams({
+          version: params.version ?? "",
+          loader: params.loader ?? "vanilla",
+        });
+        if (params.loader === "fabric" && params.loaderVersion) {
+          query.set("loaderVersion", params.loaderVersion);
+        }
+        const manifestResult = await iGM_Launcher_ApiRequest<iGM_Launcher_VersionFilesManifest>(
+          `${IGM_LAUNCHER_API_MC_VERSION_FILES_PATH}?${query.toString()}`,
+          { method: "GET", sessionCookie: account.token?.trim() ?? "" },
+        );
+        let manifest: iGM_Launcher_VersionFilesManifest | undefined;
+        if (
+          manifestResult.reached &&
+          manifestResult.envelope?.success &&
+          manifestResult.envelope.data
+        ) {
+          manifest = manifestResult.envelope.data;
+        } else {
+          console.warn(
+            "[iGM_Launcher_Bridge] 版本文件清单接口不可用，已降级为自解析 Mojang 清单下载：",
+            manifestResult.reached ? manifestResult.status : "网络不可达",
+            manifestResult.envelope?.message ?? "",
+          );
+        }
+
         const progress = iGM_Launcher_Download_Start({
           version: params.version ?? "",
           loader: params.loader ?? "vanilla",
           loaderVersion: params.loaderVersion,
           rootDir: rootDir.path,
+          manifest,
         });
         return iGM_Launcher_Ok({ progress });
       } catch (error) {
@@ -1190,21 +1247,34 @@ async function iGM_Launcher_HandleThirdParty(
       );
     }
 
-    /* 发起下载：优先走原生 SDK 直连 Modrinth，不可用时回退主站后端统一下发（@deprecated 兜底） */
+    /* 发起下载：优先走原生 SDK 直链（完整 downloadUrl + 文件名），不可用时回退主站后端统一下发 */
     case "thirdParty:download-start": {
       const resourceId = params.resourceId?.trim() ?? "";
       const versionId = params.versionId?.trim() ?? "";
+      const downloadUrl = params.downloadUrl?.trim() ?? "";
       const target = params.target?.trim() ?? "";
-      if (!resourceId || !versionId) {
-        return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_INVALID, "缺少资源 id 或版本 id");
+      if (!versionId) {
+        return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_INVALID, "缺少版本 id");
       }
       if (!target) {
         return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_INVALID, "缺少下载目标目录");
       }
       console.log(`[SDK] 准备创建任务，目标路径: ${target}`);
-      if (iGM_Launcher_SDK_IsAvailable()) {
+
+      /*
+       * 主路径（直链）：界面已从资源详情拿到后端下发的完整 downloadUrl 与文件名，
+       * 直接交给引擎按 URL 下载。引擎不再把「本地版本 id」当成 Modrinth version id 二次解析，
+       * 从根上消除 project/{id}/version/{本地id} 造成的 404。
+       */
+      if (iGM_Launcher_SDK_IsAvailable() && downloadUrl) {
         try {
-          const snapshot = iGM_Launcher_SDK_Start({
+          const filename =
+            params.filename?.trim() || basename(new URL(downloadUrl).pathname) || "download.bin";
+          const snapshot = iGM_Launcher_SDK_StartUrl({
+            url: downloadUrl,
+            destPath: join(target, filename),
+            sha1: params.sha1 ?? "",
+            size: params.size ?? 0,
             resourceId,
             version: versionId,
             loader: params.loader ?? "fabric",
@@ -1230,12 +1300,37 @@ async function iGM_Launcher_HandleThirdParty(
         }
       }
 
+      // 兜底：界面未提供直链时，仍按资源 id + 版本 id 走 Modrinth 解析（老路径）
+      if (iGM_Launcher_SDK_IsAvailable() && resourceId) {
+        try {
+          const snapshot = iGM_Launcher_SDK_Start({
+            resourceId,
+            version: versionId,
+            loader: params.loader ?? "fabric",
+            targetDir: target,
+          });
+          return iGM_Launcher_Ok({
+            task: iGM_Launcher_SDK_ToThirdPartyTask(snapshot),
+            engine: "sdk" as const,
+            engineError: "",
+          });
+        } catch (error) {
+          const detail = error instanceof Error ? error.message : String(error);
+          console.error(`[SDK] Zig 引擎调用失败：${detail}`);
+          return iGM_Launcher_Ok({
+            task: null,
+            engine: "sdk" as const,
+            engineError: `Zig 引擎调用失败：${detail}`,
+          });
+        }
+      }
+
       // 动态库缺失 / 加载失败：回退主站后端统一下发的 HTTP 任务，并明确告知已降级
       console.warn("[SDK] Zig 引擎不可用，已降级为 HTTP 下载");
       const fallback = await iGM_Launcher_ThirdPartyRequest<{
         task: iGM_Launcher_ThirdPartyTask;
       }>(`${IGM_LAUNCHER_API_THIRD_PARTY_PATH}/download`, {
-        body: { resourceId, versionId, target },
+        body: { resourceId, versionId, downloadUrl, filename: params.filename, sha1: params.sha1, target },
       });
       if (!fallback.success || !fallback.data) {
         return iGM_Launcher_Fail(

@@ -4,9 +4,9 @@
   "versionLabel": "26.2.4 official version",
   "platform": "Windows x64",
   "fileName": "iGM-CraftCeon-Launcher-Setup-26.2.4.zip",
-  "fileSize": 70384400,
-  "fileSizeLabel": "67.12 MB",
-  "sha256": "a4a7c392ac41d9387f94576ab306bfaae7f07bfbf25947a9d9bde2a66326c442",
+  "fileSize": 70405521,
+  "fileSizeLabel": "67.14 MB",
+  "sha256": "155839ba86d7387173d0e05ffbeb584f8842465f4c6daa91e9496849733f0679",
   "releasedAt": "2026-10-02",
   "archiveEntries": [
     "iGM Installer-Setup.exe",

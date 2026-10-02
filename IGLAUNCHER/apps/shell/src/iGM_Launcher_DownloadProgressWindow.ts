@@ -6,7 +6,8 @@
  * 作用：把资源下载独立为窄进度窗口——下载中心点「开始下载」后由主进程创建，
  *       加载 G_DownloadProgress 界面，并把 SDK 进度实时推送给该窗口
  * 内容：窗口创建 / 复用与关闭、宿主消息处理（窗口控制 + downloadProgress:init +
- *       bridge:call）、引擎信息回填、SDK 进度订阅与 IPC 推送
+ *       bridge:call）、引擎信息回填、SDK 进度订阅与 IPC 推送、
+ *       游戏本体下载进度订阅（iGM_Launcher_Download_Subscribe）并映射为任务结构推送
  *
  * 说明：进度窗口是独立渲染进程，无法访问主窗口内存，故：
  *       1) 创建时把任务与引擎信息暂存在主进程，窗口就绪后经 init 事件回填；
@@ -23,11 +24,18 @@ import {
   IGM_LAUNCHER_PROGRESS_DEV_URL,
   IGM_LAUNCHER_PROGRESS_PACKAGED_ENTRY,
   IGM_LAUNCHER_PROGRESS_WINDOW_SIZE,
+  type iGM_Launcher_DownloadProgress,
   type iGM_Launcher_DownloadProgressEvent,
   type iGM_Launcher_HostMessage,
   type iGM_Launcher_ThirdPartyEngine,
+  type iGM_Launcher_ThirdPartyTask,
+  type iGM_Launcher_ThirdPartyTaskStatus,
 } from "@igm-launcher/shared";
 import { iGM_Launcher_SDK_ToThirdPartyTask } from "./iGM_Launcher_Bridge";
+import {
+  iGM_Launcher_Download_Status,
+  iGM_Launcher_Download_Subscribe,
+} from "./iGM_Launcher_Download";
 import { iGM_Launcher_Ipc_HandleMessage, iGM_Launcher_Ipc_ParseHostMessage } from "./iGM_Launcher_Ipc";
 import {
   iGM_Launcher_SDK_Status,
@@ -55,6 +63,9 @@ let iGM_Launcher_ProgressWindowParams: iGM_Launcher_ProgressWindowParams | null 
 
 /** 当前 SDK 进度订阅的取消函数 */
 let iGM_Launcher_ProgressWindowUnsubscribe: (() => void) | null = null;
+
+/** 当前游戏本体下载进度订阅的取消函数 */
+let iGM_Launcher_ProgressWindowDownloadUnsubscribe: (() => void) | null = null;
 
 /** 解析窗口起始 URL（开发模式走 dev server，否则走打包静态产物） */
 function iGM_Launcher_ProgressWindowUrl(): string {
@@ -90,6 +101,68 @@ function iGM_Launcher_ProgressWindowPushInit(): void {
   // init 后立即补一次已有快照，避免窗口首帧空白（任务尚在解析清单时 total 为 0）
   const snapshot = params.taskId ? iGM_Launcher_SDK_Status(params.taskId) : null;
   if (snapshot) iGM_Launcher_ProgressWindowPushSnapshot(snapshot);
+
+  // 游戏本体下载的进度由下载引擎维护，init 后同样补一次，避免窗口首帧空白
+  const gameProgress = params.taskId ? iGM_Launcher_Download_Status(params.taskId) : null;
+  if (gameProgress) iGM_Launcher_ProgressWindowPushGameProgress(gameProgress);
+}
+
+/**
+ * 把游戏本体下载进度映射为第三方任务结构，沿用同一进度窗口事件通道。
+ * 游戏本体并非第三方资源，source 固定为 minecraft、type 取枚举里最中性的 mod
+ * （独立进度窗口不展示 type 徽章，不会造成误导）。
+ */
+function iGM_Launcher_ProgressWindowToThirdPartyTask(
+  progress: iGM_Launcher_DownloadProgress,
+  params: iGM_Launcher_ProgressWindowParams,
+): iGM_Launcher_ThirdPartyTask {
+  const status: iGM_Launcher_ThirdPartyTaskStatus =
+    progress.stage === "done"
+      ? "completed"
+      : progress.stage === "failed"
+        ? "failed"
+        : progress.stage === "cancelled"
+          ? "canceled"
+          : "downloading";
+  return {
+    id: progress.taskId,
+    resourceId: "",
+    versionId: progress.versionId,
+    source: "minecraft",
+    name: params.resourceName || progress.version,
+    type: "mod",
+    version: progress.versionId,
+    downloadUrl: "",
+    filename: progress.currentFile,
+    size: progress.bytesTotal,
+    sha1: "",
+    status,
+    downloaded: progress.bytesDone,
+    progress:
+      progress.bytesTotal > 0 ? (progress.bytesDone / progress.bytesTotal) * 100 : 0,
+    speed: 0,
+    eta: 0,
+    error: progress.error,
+    targetDir: params.targetDir,
+    filePath: "",
+    createdAt: progress.startedAt,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+/** 把游戏本体下载进度推送给进度窗口（仅推送当前窗口对应的任务） */
+function iGM_Launcher_ProgressWindowPushGameProgress(
+  progress: iGM_Launcher_DownloadProgress,
+): void {
+  const params = iGM_Launcher_ProgressWindowParams;
+  if (!params || !params.taskId || progress.taskId !== params.taskId) return;
+  iGM_Launcher_ProgressWindowPush({
+    channel: IGM_LAUNCHER_DOWNLOAD_PROGRESS_CHANNEL,
+    type: "progress",
+    taskId: progress.taskId,
+    task: iGM_Launcher_ProgressWindowToThirdPartyTask(progress, params),
+    engineError: "",
+  });
 }
 
 /** 把 SDK 快照推送给进度窗口（仅推送当前窗口对应的任务） */
@@ -175,6 +248,13 @@ export function iGM_Launcher_ProgressWindow_Open(params: iGM_Launcher_ProgressWi
     iGM_Launcher_ProgressWindowPushSnapshot(snapshot);
   });
 
+  // 订阅游戏本体下载进度广播：清单驱动的逐文件下载进度据此实时推送
+  iGM_Launcher_ProgressWindowDownloadUnsubscribe = iGM_Launcher_Download_Subscribe(
+    (progress) => {
+      iGM_Launcher_ProgressWindowPushGameProgress(progress);
+    },
+  );
+
   console.log(
     `[SDK] 已打开独立下载进度窗口：taskId=${params.taskId || "(空)"} engine=${params.engine} 加载=${url}`,
   );
@@ -185,6 +265,10 @@ export function iGM_Launcher_ProgressWindow_Dispose(): void {
   if (iGM_Launcher_ProgressWindowUnsubscribe) {
     iGM_Launcher_ProgressWindowUnsubscribe();
     iGM_Launcher_ProgressWindowUnsubscribe = null;
+  }
+  if (iGM_Launcher_ProgressWindowDownloadUnsubscribe) {
+    iGM_Launcher_ProgressWindowDownloadUnsubscribe();
+    iGM_Launcher_ProgressWindowDownloadUnsubscribe = null;
   }
   if (iGM_Launcher_ProgressWindowRef) {
     try {

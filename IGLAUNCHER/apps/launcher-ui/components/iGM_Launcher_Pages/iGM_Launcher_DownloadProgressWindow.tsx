@@ -6,7 +6,8 @@
  * 作用：独立下载进度窗口——下载中心点「开始下载」后由主进程创建的窄窗界面，
  *       展示资源名称 / 版本、实时进度、引擎状态与错误，并提供取消 / 打开文件夹
  * 内容：就绪握手（downloadProgress:init）拉取任务与引擎信息；
- *       订阅主进程推送的下载进度事件并按常量周期轮询任务快照作为兜底；
+ *       订阅主进程推送的下载进度事件并按常量周期轮询任务快照作为兜底
+ *       （游戏本体下载任务编号以 dl- 开头，走 minecraft:* 且不轮询第三方后端）；
  *       5 秒无任何回调时熔断提示「Zig 引擎无响应」；
  *       引擎级错误（未捕获异常 / 动态库缺失降级）以红字或降级提示展示；
  *       无边框窗口自绘拖动区与最小化 / 关闭按钮
@@ -160,9 +161,15 @@ export function iGM_Launcher_DownloadProgressWindow() {
   /* ---------- 任务快照轮询（作为主动推送的兜底） ---------- */
 
   const taskId = meta?.taskId ?? "";
+  /*
+   * 游戏本体下载任务的编号前缀为 dl-（由下载引擎 iGM_Launcher_NewId("dl") 生成），
+   * 其状态与取消走 minecraft:* 桥接、进度由主进程主动推送，
+   * 不轮询第三方后端（否则会对不存在的第三方任务误报红字错误）。
+   */
+  const isGameDownload = taskId.startsWith("dl-");
 
   useEffect(() => {
-    if (!taskId) return;
+    if (!taskId || isGameDownload) return;
     let stopped = false;
     const tick = async () => {
       if (stopped || terminalRef.current) return;
@@ -182,7 +189,7 @@ export function iGM_Launcher_DownloadProgressWindow() {
       stopped = true;
       window.clearInterval(timer);
     };
-  }, [taskId, applyTask]);
+  }, [taskId, isGameDownload, applyTask]);
 
   /* ---------- 操作 ---------- */
 
@@ -190,6 +197,13 @@ export function iGM_Launcher_DownloadProgressWindow() {
     if (!taskId || canceling) return;
     setCanceling(true);
     setActionError("");
+    // 游戏本体下载走 minecraft:download-cancel，终态由主进程进度推送回填，不伪造快照
+    if (isGameDownload) {
+      const response = await iGM_Launcher_BridgeCall("minecraft:download-cancel", { taskId });
+      setCanceling(false);
+      if (!response.success) setActionError(response.message);
+      return;
+    }
     const response = await iGM_Launcher_BridgeCall("thirdParty:download-cancel", { taskId });
     setCanceling(false);
     if (!response.success) {

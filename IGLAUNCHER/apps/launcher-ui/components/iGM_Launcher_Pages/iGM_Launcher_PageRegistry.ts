@@ -11,7 +11,10 @@
 
 // 导入依赖 //
 import type { ComponentType } from "react";
-import type { iGM_Launcher_LaunchMode } from "@igm-launcher/shared";
+import type {
+  iGM_Launcher_LaunchMode,
+  iGM_Launcher_ThirdPartyEngine,
+} from "@igm-launcher/shared";
 import { iGM_Launcher_HomePage } from "./iGM_Launcher_HomePage";
 import { iGM_Launcher_InstancesPage } from "./iGM_Launcher_InstancesPage";
 import { iGM_Launcher_InstanceEditPage } from "./iGM_Launcher_InstanceEditPage";
@@ -68,6 +71,8 @@ export interface iGM_Launcher_PageParams {
   version?: string;
   /** 下载进度页的下载任务编号 */
   taskId?: string;
+  /** 下载进度页实际使用的下载引擎（sdk 时展示「SDK 调用下载中」） */
+  engine?: iGM_Launcher_ThirdPartyEngine;
   /** 启动进度页的登录方式（由实例管理页的登录方式选择对话框传入） */
   mode?: iGM_Launcher_LaunchMode;
 }
