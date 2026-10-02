@@ -1016,8 +1016,10 @@ async function iGM_Launcher_HandleMinecraft(
         if (rootRecord) await iGM_Launcher_GameDir_SetDefault(rootRecord.id);
 
         /*
-         * 先向自己网站拉取版本文件清单（文件 URL / 相对路径 / 大小 / sha1 与文本文件）；
-         * 拿到后交给下载引擎按清单逐文件走 Zig 引擎直连下载。
+         * 版本文件清单改为「后台惰性拉取」：此处只注入获取器，不在应答前发请求。
+         * 清单接口耗时随版本膨胀（大版本 JSON 可达数 MB，跨隧道十余秒），若同步
+         * 等待会超过桥接 8 秒应答上限，界面误报「桥接层响应超时」并放弃跳转，
+         * 而主进程仍在继续下载，出现「提示失败但文件仍在下载」的错位。
          * 清单接口不可达或失败时不阻断安装，降级为启动器自解析 Mojang 清单的兜底流程。
          */
         const account = await iGM_Launcher_LoadAccount();
@@ -1028,31 +1030,32 @@ async function iGM_Launcher_HandleMinecraft(
         if (params.loader === "fabric" && params.loaderVersion) {
           query.set("loaderVersion", params.loaderVersion);
         }
-        const manifestResult = await iGM_Launcher_ApiRequest<iGM_Launcher_VersionFilesManifest>(
-          `${IGM_LAUNCHER_API_MC_VERSION_FILES_PATH}?${query.toString()}`,
-          { method: "GET", sessionCookie: account.token?.trim() ?? "" },
-        );
-        let manifest: iGM_Launcher_VersionFilesManifest | undefined;
-        if (
-          manifestResult.reached &&
-          manifestResult.envelope?.success &&
-          manifestResult.envelope.data
-        ) {
-          manifest = manifestResult.envelope.data;
-        } else {
+        const resolveManifest = async (): Promise<iGM_Launcher_VersionFilesManifest | undefined> => {
+          const manifestResult = await iGM_Launcher_ApiRequest<iGM_Launcher_VersionFilesManifest>(
+            `${IGM_LAUNCHER_API_MC_VERSION_FILES_PATH}?${query.toString()}`,
+            { method: "GET", sessionCookie: account.token?.trim() ?? "" },
+          );
+          if (
+            manifestResult.reached &&
+            manifestResult.envelope?.success &&
+            manifestResult.envelope.data
+          ) {
+            return manifestResult.envelope.data;
+          }
           console.warn(
             "[iGM_Launcher_Bridge] 版本文件清单接口不可用，已降级为自解析 Mojang 清单下载：",
             manifestResult.reached ? manifestResult.status : "网络不可达",
             manifestResult.envelope?.message ?? "",
           );
-        }
+          return undefined;
+        };
 
         const progress = iGM_Launcher_Download_Start({
           version: params.version ?? "",
           loader: params.loader ?? "vanilla",
           loaderVersion: params.loaderVersion,
           rootDir: rootDir.path,
-          manifest,
+          resolveManifest,
         });
         return iGM_Launcher_Ok({ progress });
       } catch (error) {

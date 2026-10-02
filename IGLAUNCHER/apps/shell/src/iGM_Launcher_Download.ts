@@ -150,11 +150,14 @@ export interface iGM_Launcher_DownloadTarget {
   loaderVersion?: string;
   rootDir: string;
   /**
-   * 主站下发的版本文件清单。
-   * 提供时走「清单驱动」流程（文本写盘 + 二进制逐文件走 Zig 引擎直连下载）；
-   * 缺省时回退为启动器自解析 Mojang 清单的兜底流程。
+   * 主站版本文件清单的惰性获取器。
+   * 由桥接层注入，在下载任务真正开始后才被调用（不在桥接应答路径上）：
+   * 大版本清单体积可达数 MB、跨隧道耗时十余秒，若在应答前同步等待会超过
+   * 桥接应答上限，界面误报「桥接层响应超时」并放弃跳转，出现「提示失败但
+   * 文件仍在下载」的错位。返回 undefined 表示清单不可用，回退为启动器
+   * 自解析 Mojang 清单的兜底流程。
    */
-  manifest?: iGM_Launcher_VersionFilesManifest;
+  resolveManifest?: () => Promise<iGM_Launcher_VersionFilesManifest | undefined>;
 }
 
 /** 下载进度订阅回调（独立进度窗口据此实时刷新） */
@@ -712,8 +715,9 @@ async function iGM_Launcher_Download_ExecuteFromManifest(
 
 /**
  * 下载主流程：
- * 提供 manifest 时走清单驱动流程（见 iGM_Launcher_Download_ExecuteFromManifest）；
- * 否则回退旧的 Mojang 直连兜底流程：
+ * 目标带清单获取器时，先在后台拉取主站清单，成功则走清单驱动流程
+ * （见 iGM_Launcher_Download_ExecuteFromManifest）；
+ * 清单不可用或缺省时回退旧的 Mojang 直连兜底流程：
  * 1) 拉取官方版本清单定位目标版本，取得版本 json；
  * 2) 写入 versions/<version>/<version>.json（原版清单，加载器 profile 依赖它）；
  * 3) 下载客户端 jar、依赖库（含 natives）、资源索引与资源对象；
@@ -725,9 +729,11 @@ async function iGM_Launcher_Download_Execute(
   task: iGM_Launcher_DownloadTask,
   target: iGM_Launcher_DownloadTarget,
 ): Promise<void> {
-  // 优先走主站清单驱动流程；清单缺省时才回退旧的 Mojang 直连兜底流程
-  if (target.manifest) {
-    return iGM_Launcher_Download_ExecuteFromManifest(task, target.manifest);
+  // 优先走主站清单驱动流程：清单在后台惰性拉取，不占用桥接应答时间
+  if (target.resolveManifest) {
+    const manifest = await target.resolveManifest();
+    if (task.cancelled) return iGM_Launcher_Download_Finish(task, "cancelled");
+    if (manifest) return iGM_Launcher_Download_ExecuteFromManifest(task, manifest);
   }
 
   const { progress } = task;
