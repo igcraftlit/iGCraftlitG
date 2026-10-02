@@ -95,8 +95,8 @@
     "currentTag": "現在のバージョン",
     "entries": [
       {
-        "version": "26.1.2 official version",
-        "date": "2026-10-01",
+        "version": "26.2.4 official version",
+        "date": "2026-10-02",
         "items": [
           "最初の正式版。インスタンス・Java・リソース・アカウントの四つの中核機能を確立。",
           "インスタンス管理を追加：MOD・設定・ワールドを分離して管理。",
@@ -158,7 +158,7 @@
         "title": "検証と起動",
         "lead": "ダウンロード後、PowerShell でインストーラーの完全性を検証できます：",
         "codeLabel": "powershell",
-        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.1.2.zip -Algorithm SHA256",
+        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.2.4.zip -Algorithm SHA256",
         "after": "計算結果をダウンロードページの SHA256 と比較し、一致すればファイルは完全です。"
       },
       "notes": {

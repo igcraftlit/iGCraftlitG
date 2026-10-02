@@ -95,8 +95,8 @@
     "currentTag": "Current version",
     "entries": [
       {
-        "version": "26.1.2 official version",
-        "date": "2026-10-01",
+        "version": "26.2.4 official version",
+        "date": "2026-10-02",
         "items": [
           "First official release, establishing four core capabilities: instances, Java, resources, and accounts.",
           "Added instance management: isolated mods, settings, and worlds.",
@@ -158,7 +158,7 @@
         "title": "Verification and launch",
         "lead": "After downloading, verify the installer integrity in PowerShell:",
         "codeLabel": "powershell",
-        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.1.2.zip -Algorithm SHA256",
+        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.2.4.zip -Algorithm SHA256",
         "after": "Compare the result with the SHA256 shown on the download page; a match means the file is intact."
       },
       "notes": {

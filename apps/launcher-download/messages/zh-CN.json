@@ -95,8 +95,8 @@
     "currentTag": "当前版本",
     "entries": [
       {
-        "version": "26.1.2 official version",
-        "date": "2026-10-01",
+        "version": "26.2.4 official version",
+        "date": "2026-10-02",
         "items": [
           "首个正式版本，确立实例、Java、资源与账号四大核心能力。",
           "新增实例管理：独立隔离模组、配置与存档。",
@@ -158,7 +158,7 @@
         "title": "校验与启动",
         "lead": "下载完成后，可在 PowerShell 中校验安装包完整性：",
         "codeLabel": "powershell",
-        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.1.2.zip -Algorithm SHA256",
+        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.2.4.zip -Algorithm SHA256",
         "after": "将计算结果与下载页给出的 SHA256 比对，一致则表示文件完整。"
       },
       "notes": {

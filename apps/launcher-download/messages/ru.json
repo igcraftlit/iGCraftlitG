@@ -95,8 +95,8 @@
     "currentTag": "Текущая версия",
     "entries": [
       {
-        "version": "26.1.2 official version",
-        "date": "2026-10-01",
+        "version": "26.2.4 official version",
+        "date": "2026-10-02",
         "items": [
           "Первый официальный выпуск с четырьмя ключевыми возможностями: сборки, Java, ресурсы и аккаунты.",
           "Добавлено управление сборками: изоляция модов, настроек и миров.",
@@ -158,7 +158,7 @@
         "title": "Проверка и запуск",
         "lead": "После загрузки проверьте целостность установщика в PowerShell:",
         "codeLabel": "powershell",
-        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.1.2.zip -Algorithm SHA256",
+        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.2.4.zip -Algorithm SHA256",
         "after": "Сравните результат с SHA256 со страницы загрузки: совпадение означает целостность файла."
       },
       "notes": {
