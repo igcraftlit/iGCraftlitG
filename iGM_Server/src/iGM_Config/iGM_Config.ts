@@ -141,6 +141,8 @@ export interface iGM_OAuthConfig {
   issuer: string;
   /** 前端授权同意页路径（后端 /oauth/authorize 校验后跳转到此页） */
   consentPath: string;
+  /** 授权同意页的语言前缀（前端为 URL 前缀式多语言路由，须带 /{locale}） */
+  consentLocale: string;
   /** access_token 有效期（秒），默认 1 小时 */
   accessTokenTtlSeconds: number;
   /** refresh_token 最长有效期（秒），默认 180 天（两个季度） */
@@ -381,6 +383,8 @@ export const iGM_Config: iGM_AppConfig = {
     issuer: process.env.IGM_OAUTH_ISSUER ?? "https://api.igcraftlit.com",
     // 后端 /oauth/authorize 校验通过后跳转的前端授权同意页
     consentPath: "/G_OAuthAuthorize",
+    // 同意页语言前缀（前端路由为 /{locale}/G_OAuthAuthorize，缺前缀会 404）
+    consentLocale: process.env.IGM_OAUTH_CONSENT_LOCALE ?? "zh-CN",
     // access_token 短有效期：1 小时
     accessTokenTtlSeconds: Number(process.env.IGM_OAUTH_ACCESS_TTL ?? 60 * 60),
     // refresh_token 最长两个季度（约 180 天），到期必须重新授权

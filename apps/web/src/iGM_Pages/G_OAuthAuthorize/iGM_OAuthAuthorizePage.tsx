@@ -5,9 +5,10 @@
  * 模块：G_OAuthAuthorize
  * 作用：OAuth 2.0 / OIDC 授权同意页——展示申请方信息与申请 scope，用户同意或拒绝
  * 内容：授权流读取（依赖后端下发的签名 iGM_OAuthFlow Cookie）、未登录引导登录、
- *       同意 / 拒绝决策并跳回第三方 redirect_uri
+ *       同意 / 拒绝决策并跳回第三方 redirect_uri、URL error 参数的错误展示
  * 说明：纯静态 SSG；授权请求参数以后端 Cookie 为真源，页面查询串仅作展示回跳；
- *       同意与否均由后端生成最终回跳地址（含 code 或 error 与 state）；
+ *       同意与否均由后端生成最终回跳地址（含 code 或 error 与 state），
+ *       前端拿到后必须立即用 window.location.href 跳出本站，严禁跳站内页面；
  *       授权流一次有效，决策后后端立即清除 Cookie
  */
 
@@ -43,6 +44,16 @@ export function iGM_OAuthAuthorizePage() {
   const [errorText, setErrorText] = useState<string | null>(null);
   /** 决策提交中：显示跳转中状态 */
   const [deciding, setDeciding] = useState(false);
+  /** 后端在授权请求校验失败时通过 URL error 参数带回的文案键（如回调地址不匹配） */
+  const [urlError, setUrlError] = useState<string | null>(null);
+  const [urlErrorChecked, setUrlErrorChecked] = useState(false);
+
+  /** 读取 URL error 参数：校验失败时优先展示明确错误，而非静默回首页 */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setUrlError(params.get("error_description") ?? params.get("error"));
+    setUrlErrorChecked(true);
+  }, []);
 
   /** 读取授权流信息（Cookie 为真源） */
   const iGM_Load = useCallback(() => {
@@ -64,7 +75,11 @@ export function iGM_OAuthAuthorizePage() {
     };
   }, []);
 
-  useEffect(() => iGM_Load(), [iGM_Load]);
+  // 仅在无 URL 错误时读取授权流（有错误时直接展示错误，不再请求）
+  useEffect(() => {
+    if (!urlErrorChecked || urlError) return;
+    return iGM_Load();
+  }, [urlErrorChecked, urlError, iGM_Load]);
 
   /** 引导登录：携带当前授权页完整地址以便登录后回跳 */
   function iGM_GoLogin() {
@@ -79,8 +94,15 @@ export function iGM_OAuthAuthorizePage() {
     setDeciding(true);
     iGM_ApiDecideAuthorize(decision)
       .then((response) => {
-        if (response.data?.redirectUrl) {
-          window.location.href = response.data.redirectUrl;
+        const target = response.data?.redirectUrl;
+        if (target) {
+          // 关键：拿到 code 后立即跳出本站，跳转到开发者登记的回调地址
+          const params = new URL(target).searchParams;
+          console.log(`[OAuth Debug] 准备重定向至：${target}`);
+          console.log(
+            `[OAuth Debug] 参数：code=${params.get("code") ?? ""}, state=${params.get("state") ?? ""}`,
+          );
+          window.location.href = target;
           return;
         }
         throw new Error("oauth.errors.badRequest");
@@ -89,6 +111,25 @@ export function iGM_OAuthAuthorizePage() {
         setErrorText(iGM_ResolveErrorText(t, error));
         setDeciding(false);
       });
+  }
+
+  // 授权请求校验失败：展示明确错误（如「回调地址与登记值不匹配」），不静默跳回首页
+  if (urlError) {
+    return (
+      <div className={pageStyles.page}>
+        <header className={pageStyles.pageHeader}>
+          <h1 className={pageStyles.pageTitle}>
+            <span className={pageStyles.pageTitleIcon}>
+              <ShieldCheck size={22} strokeWidth={1.8} />
+            </span>
+            {t("pages.oauthAuthorize.title")}
+          </h1>
+        </header>
+        <div className={`${uiStyles.alert} ${uiStyles.alertError}`}>
+          {iGM_ResolveErrorText(t, new Error(urlError))}
+        </div>
+      </div>
+    );
   }
 
   if (loading) {

@@ -55,6 +55,7 @@ import {
   iGM_GetDiscoveryDocumentService,
   iGM_GetUserInfoService,
   iGM_HasFullConsent,
+  iGM_IsRedirectUriAllowed,
   iGM_ListMyOAuthClientsService,
   iGM_ListMyOAuthLogsService,
   iGM_ListUserConsentsService,
@@ -208,9 +209,17 @@ async function iGM_ReadFlow(
   );
 }
 
-/** 构造前端授权同意页地址（携带完整授权请求参数） */
+/**
+ * 构造前端授权同意页地址（携带完整授权请求参数）。
+ * 前端为 URL 前缀式多语言路由，路径必须是 /{locale}/G_OAuthAuthorize，
+ * 缺少语言前缀会命中 404（此前的线上问题根因）。
+ */
 function iGM_BuildConsentUrl(request: iGM_AuthorizeRequest): string {
   const base = iGM_Config.auth.webBaseUrl.replace(/\/$/, "");
+  const locale = iGM_Config.oauth.consentLocale.replace(/^\/|\/$/g, "");
+  const path = iGM_Config.oauth.consentPath.startsWith("/")
+    ? iGM_Config.oauth.consentPath
+    : `/${iGM_Config.oauth.consentPath}`;
   const params = new URLSearchParams({
     client_id: request.clientId,
     redirect_uri: request.redirectUri,
@@ -223,12 +232,26 @@ function iGM_BuildConsentUrl(request: iGM_AuthorizeRequest): string {
     params.set("code_challenge", request.codeChallenge);
     params.set("code_challenge_method", "S256");
   }
-  return `${base}${iGM_Config.oauth.consentPath}?${params.toString()}`;
+  return `${base}/${locale}${path}?${params.toString()}`;
+}
+
+/** 构造前端授权同意页的错误展示地址（授权请求校验失败、无法安全回跳第三方时使用） */
+function iGM_BuildConsentErrorUrl(error: iGM_OAuthError): string {
+  const base = iGM_Config.auth.webBaseUrl.replace(/\/$/, "");
+  const locale = iGM_Config.oauth.consentLocale.replace(/^\/|\/$/g, "");
+  const path = iGM_Config.oauth.consentPath.startsWith("/")
+    ? iGM_Config.oauth.consentPath
+    : `/${iGM_Config.oauth.consentPath}`;
+  const params = new URLSearchParams({
+    error: iGM_OAuthErrorCode(error),
+    error_description: error.message,
+  });
+  return `${base}/${locale}${path}?${params.toString()}`;
 }
 
 /**
  * 校验失败时仍可安全回跳的地址：
- * 仅当 client_id 已注册且 redirect_uri 与注册列表完全一致时返回，否则返回 null。
+ * 仅当 client_id 已注册且 redirect_uri 命中注册列表（含附加查询串）时返回，否则 null。
  */
 async function iGM_TryErrorRedirectTarget(
   query: Record<string, string | undefined>,
@@ -238,9 +261,25 @@ async function iGM_TryErrorRedirectTarget(
   if (!clientId || !redirectUri) return null;
   const client = await iGM_FindOAuthClientByClientId(clientId);
   if (!client) return null;
-  return iGM_ParseRedirectUris(client.iGM_RedirectUris).includes(redirectUri)
+  return iGM_IsRedirectUriAllowed(
+    iGM_ParseRedirectUris(client.iGM_RedirectUris),
+    redirectUri,
+  )
     ? redirectUri
     : null;
+}
+
+/** 打印跳转调试日志（重定向前后均可读） */
+function iGM_LogRedirect(
+  target: string,
+  params: Record<string, string | null>,
+): void {
+  console.log(`[OAuth Debug] 准备重定向至：${target}`);
+  const detail = Object.entries(params)
+    .filter(([, value]) => value !== null && value !== "")
+    .map(([key, value]) => `${key}=${value}`)
+    .join(", ");
+  console.log(`[OAuth Debug] 参数：${detail}`);
 }
 
 /* ---------- 标准端点：授权 ---------- */
@@ -260,16 +299,18 @@ async function iGM_HandleAuthorize(ctx: iGM_RouteContext): Promise<Response> {
     request = (await iGM_ValidateAuthorizeRequest(query)).request;
   } catch (error) {
     if (error instanceof iGM_OAuthError) {
+      // 回调地址合法 → 按 OAuth 规范带 error 回跳第三方；否则跳到本站同意页展示明确错误
       const target = await iGM_TryErrorRedirectTarget(query);
-      if (target) {
-        return iGM_RedirectResponse(
-          iGM_BuildRedirect(target, {
-            error: iGM_OAuthErrorCode(error),
-            error_description: error.message,
-            state: (query.state ?? "").length > 0 ? query.state! : null,
-          }),
-        );
-      }
+      const errorParams = {
+        error: iGM_OAuthErrorCode(error),
+        error_description: error.message,
+        state: (query.state ?? "").length > 0 ? query.state! : null,
+      };
+      const location = target
+        ? iGM_BuildRedirect(target, errorParams)
+        : iGM_BuildConsentErrorUrl(error);
+      iGM_LogRedirect(location, errorParams);
+      return iGM_RedirectResponse(location);
     }
     throw error;
   }
@@ -282,6 +323,10 @@ async function iGM_HandleAuthorize(ctx: iGM_RouteContext): Promise<Response> {
       request,
       ip,
     );
+    iGM_LogRedirect(redirectUrl, {
+      code: new URL(redirectUrl).searchParams.get("code"),
+      state: request.state || null,
+    });
     return iGM_RedirectResponse(redirectUrl);
   }
 
@@ -289,7 +334,13 @@ async function iGM_HandleAuthorize(ctx: iGM_RouteContext): Promise<Response> {
     ...request,
     exp: Date.now() + iGM_Config.oauth.flowTtlSeconds * 1000,
   });
-  return iGM_RedirectResponse(iGM_BuildConsentUrl(request), {
+  const consentUrl = iGM_BuildConsentUrl(request);
+  iGM_LogRedirect(consentUrl, {
+    client_id: request.clientId,
+    redirect_uri: request.redirectUri,
+    state: request.state || null,
+  });
+  return iGM_RedirectResponse(consentUrl, {
     "Set-Cookie": iGM_BuildSetCookie(
       iGM_Config.oauth.flowCookieName,
       flow,
@@ -332,6 +383,10 @@ async function iGM_HandleAuthorizeDecision(ctx: iGM_RouteContext) {
     "",
     0,
   );
+  iGM_LogRedirect(result.redirectUrl, {
+    code: new URL(result.redirectUrl).searchParams.get("code"),
+    state: flow.state || null,
+  });
   return iGM_Ok({ redirectUrl: result.redirectUrl });
 }
 

@@ -131,6 +131,26 @@ export function iGM_ParseRedirectUris(raw: string): string[] {
   }
 }
 
+/**
+ * 回调地址匹配：在「严格字符串一致」基础上，允许在已登记地址后附加查询串 / 锚点。
+ * 例如登记 http://localhost:5600/callback/igcraftlit，
+ * 请求 http://localhost:5600/callback/igcraftlit?foo=bar 视为匹配
+ * （回跳时保留原 query 并追加 code / state）。
+ * 其余情况一律拒绝：前缀相同但下一字符不是 ? / # 的（防 .../callbackEvil）不匹配。
+ */
+export function iGM_IsRedirectUriAllowed(
+  registered: string[],
+  requested: string,
+): boolean {
+  if (!requested) return false;
+  if (registered.includes(requested)) return true;
+  return registered.some((base) => {
+    if (!base || !requested.startsWith(base)) return false;
+    const next = requested.charAt(base.length);
+    return next === "?" || next === "#";
+  });
+}
+
 /** 写一条操作日志（失败不影响主流程） */
 async function iGM_Log(params: {
   clientId: string | null;
@@ -579,9 +599,9 @@ export async function iGM_ValidateAuthorizeRequest(query: {
   if (client.iGM_Status !== "approved") {
     throw new iGM_OAuthError("oauth.errors.clientNotApproved", 403);
   }
-  // 回调地址严格匹配：必须是注册列表中完全一致的字符串
+  // 回调地址严格匹配：与注册列表一致，或为注册地址追加查询串（保留原参数）
   const registered = iGM_ParseRedirectUris(client.iGM_RedirectUris);
-  if (!redirectUri || !registered.includes(redirectUri)) {
+  if (!iGM_IsRedirectUriAllowed(registered, redirectUri)) {
     throw new iGM_OAuthError("oauth.errors.invalidRedirectUri", 400);
   }
   if (responseType !== "code") {
@@ -1093,6 +1113,7 @@ export default {
   iGM_DeleteOwnOAuthClientService,
   iGM_DeleteOAuthClientService,
   iGM_ParseRedirectUris,
+  iGM_IsRedirectUriAllowed,
   iGM_IsAcceptableRedirectUri,
   iGM_IsLocalTestRedirectUri,
   iGM_BuildRedirect,

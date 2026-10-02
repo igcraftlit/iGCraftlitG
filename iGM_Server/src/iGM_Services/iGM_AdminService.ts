@@ -511,13 +511,26 @@ export async function iGM_ListLogsService(
 
 /** 系统信息（只读，admin 专用） */
 export function iGM_GetSettingsService(): Record<string, unknown> {
+  // 实际使用 PostgreSQL（pg 连接池）；仅展示主机/端口/库名，不暴露账号密码
+  let databaseInfo: Record<string, string> = {
+    provider: "PostgreSQL (pg)",
+  };
+  try {
+    const dbUrl = new URL(iGM_Config.databaseUrl);
+    databaseInfo = {
+      provider: "PostgreSQL (pg)",
+      host: dbUrl.hostname,
+      port: dbUrl.port || "5432",
+      name: decodeURIComponent(dbUrl.pathname.replace(/^\//, "")),
+    };
+  } catch {
+    // 连接串无法解析时仅回退展示 provider，避免影响整个系统信息接口
+  }
   return {
     version: iGM_Config.version,
     port: iGM_Config.port,
     corsOrigins: iGM_Config.corsOrigins,
-    database: {
-      provider: "SQLite (bun:sqlite)",
-    },
+    database: databaseInfo,
     upload: {
       maxFileSizeMb: Math.round(iGM_Config.upload.maxFileSize / (1024 * 1024)),
       imageMaxDimension: iGM_Config.upload.imageMaxDimension,
