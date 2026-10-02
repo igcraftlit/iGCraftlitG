@@ -32,6 +32,7 @@ import {
   IGM_LAUNCHER_MSA_TIMEOUT_MS,
   IGM_LAUNCHER_MC_CLIENT_ID_MISSING,
   IGM_LAUNCHER_MC_FLOW_EXPIRED,
+  IGM_LAUNCHER_MC_FLOW_TTL_MS,
   IGM_LAUNCHER_MC_NOT_OWNED,
   IGM_LAUNCHER_BRIDGE_FAILED,
   IGM_LAUNCHER_BRIDGE_INVALID,
@@ -163,9 +164,6 @@ interface iGM_Launcher_McProfilePayload {
 // 核心逻辑 //
 
 /* ---- 通用工具 ---- */
-
-/** 流程编号有效期：15 分钟，超时后令牌上下文一并丢弃 */
-const IGM_LAUNCHER_MC_FLOW_TTL_MS = 15 * 60 * 1000;
 
 /** 浏览器授权回调最长等待时间（毫秒） */
 const IGM_LAUNCHER_MC_BROWSER_WAIT_MS = 180 * 1000;
@@ -638,11 +636,16 @@ export async function iGM_Launcher_Msa_StartDeviceCode(): Promise<
   flow.pollInterval = payload.interval ?? 5;
   flow.expiresAt = Date.now() + (payload.expires_in ?? 900) * 1000;
 
+  // 取得设备代码后自动打开默认浏览器到微软授权页；
+  // 非 Electrobun 环境静默失败，由界面保留的「复制代码 / 打开授权页」按钮兜底
+  const verificationUri = payload.verification_uri ?? "https://microsoft.com/link";
+  void iGM_Launcher_MsaOpenExternal(verificationUri);
+
   return iGM_Launcher_MsaOk({
     deviceCode: {
       flowId: flow.id,
       userCode: payload.user_code,
-      verificationUri: payload.verification_uri ?? "https://microsoft.com/link",
+      verificationUri,
       expiresIn: payload.expires_in ?? 900,
       interval: flow.pollInterval,
       message: payload.message ?? "",

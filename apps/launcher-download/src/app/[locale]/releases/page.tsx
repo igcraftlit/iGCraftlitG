@@ -3,25 +3,21 @@
  * 所属层：前端 / 页面层
  * 路由：/{locale}/releases
  * 模块：iGM_LauncherDl_Downloader
- * 作用：版本列表页——展示当前发布记录的字段信息与下载/更新日志入口
- * 内容：纯静态 SSG 服务端页面，文案全部来自语言包；当前仅 Windows x64 构建
+ * 作用：历史版本页——按版本渲染完整发布记录（版本号、日期、更新类型、新增 / 优化 / 修复内容）
+ * 内容：纯静态 SSG 服务端页面，数据取自构建期常量 public/release-history.json；
+ *       最新版置顶并加「最新」标记，其余按发布日期倒序；每版保留下载与发布页入口
  */
 
 // 导入依赖 //
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Download, ScrollText } from "lucide-react";
+import { Download, ExternalLink, ScrollText } from "lucide-react";
 import { iGM_LauncherDl_GetMessages } from "../../../i18n/iGM_LauncherDl_Messages";
 import { iGM_LauncherDl_IsLocale } from "../../../i18n/iGM_LauncherDl_Locales";
 import { iGM_LauncherDl_LocalePath } from "../../../i18n/iGM_LauncherDl_LocalePath";
 import {
-  iGM_LauncherDl_DownloadHref,
-  iGM_LauncherDl_FileName,
-  iGM_LauncherDl_FileSizeLabel,
-  iGM_LauncherDl_Platform,
-  iGM_LauncherDl_ReleaseDate,
-  iGM_LauncherDl_Sha256,
-  iGM_LauncherDl_VersionLabel,
+  iGM_LauncherDl_GetReleaseHistory,
+  iGM_LauncherDl_GetReleaseNotes,
 } from "../../../i18n/iGM_LauncherDl_ReleaseInfo";
 import styles from "../iGM_LauncherDl_Page.module.css";
 
@@ -31,7 +27,7 @@ interface iGM_LauncherDl_ReleasesPageProps {
 }
 
 // 核心逻辑 //
-/** 版本列表页 */
+/** 历史版本页 */
 export default async function iGM_LauncherDl_ReleasesPage({
   params,
 }: iGM_LauncherDl_ReleasesPageProps) {
@@ -40,14 +36,7 @@ export default async function iGM_LauncherDl_ReleasesPage({
 
   const messages = iGM_LauncherDl_GetMessages(locale);
   const page = messages.releases;
-
-  const fields: { label: string; value: string; variant?: string }[] = [
-    { label: page.platform, value: iGM_LauncherDl_Platform },
-    { label: page.releasedAt, value: iGM_LauncherDl_ReleaseDate },
-    { label: page.file, value: iGM_LauncherDl_FileName, variant: styles.fieldValueMono },
-    { label: page.fileSize, value: iGM_LauncherDl_FileSizeLabel },
-    { label: page.sha256, value: iGM_LauncherDl_Sha256, variant: styles.fieldValueMono },
-  ];
+  const releases = iGM_LauncherDl_GetReleaseHistory();
 
   return (
     <div className={styles.page}>
@@ -56,38 +45,75 @@ export default async function iGM_LauncherDl_ReleasesPage({
         <p className={styles.lead}>{page.lead}</p>
       </header>
 
-      <div className={styles.card}>
-        <div className={styles.timelineHead}>
-          <span className={styles.timelineVersion}>
-            {iGM_LauncherDl_VersionLabel}
-          </span>
-          <span className={styles.badge}>{page.currentTag}</span>
-        </div>
+      <ol className={styles.releaseList}>
+        {releases.map((release) => {
+          const notes = iGM_LauncherDl_GetReleaseNotes(release.notes, locale);
+          const noteGroups = [
+            { key: "added", label: page.noteGroups.added, items: notes.added ?? [] },
+            {
+              key: "improved",
+              label: page.noteGroups.improved,
+              items: notes.improved ?? [],
+            },
+            { key: "fixed", label: page.noteGroups.fixed, items: notes.fixed ?? [] },
+          ].filter((group) => group.items.length > 0);
 
-        <dl className={styles.fieldGrid}>
-          {fields.map((field) => (
-            <div key={field.label} className={styles.field}>
-              <dt className={styles.fieldLabel}>{field.label}</dt>
-              <dd className={[styles.fieldValue, field.variant].join(" ")}>
-                {field.value}
-              </dd>
-            </div>
-          ))}
-        </dl>
+          return (
+            <li key={release.id} className={styles.releaseCard}>
+              <div className={styles.releaseHead}>
+                <span className={styles.timelineVersion}>{release.version}</span>
+                <span className={styles.timelineDate}>{release.releasedAt}</span>
+                <span className={styles.updateTypeTag}>
+                  {page.updateType[release.updateType]}
+                </span>
+                {release.isLatest ? (
+                  <span className={styles.badgeLatest}>{page.latestTag}</span>
+                ) : null}
+              </div>
 
-        <div className={styles.actions}>
-          <a className={styles.primaryButton} href={iGM_LauncherDl_DownloadHref}>
-            <Download size={17} aria-hidden />
-            {page.downloadAction}
-          </a>
-          <Link
-            className={styles.secondaryButton}
-            href={iGM_LauncherDl_LocalePath("/changelog", locale)}
-          >
-            <ScrollText size={16} aria-hidden />
-            {page.viewChangelog}
-          </Link>
-        </div>
+              <div className={styles.noteGroups}>
+                {noteGroups.map((group) => (
+                  <div key={group.key} className={styles.noteGroup}>
+                    <p className={styles.noteGroupTitle}>{group.label}</p>
+                    <ul className={styles.timelineList}>
+                      {group.items.map((item) => (
+                        <li key={item} className={styles.timelineListItem}>
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+
+              <div className={styles.actions}>
+                <a className={styles.primaryButton} href={release.downloadUrl}>
+                  <Download size={17} aria-hidden />
+                  {page.downloadAction}
+                </a>
+                <a
+                  className={styles.secondaryButton}
+                  href={release.releasePageUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <ExternalLink size={16} aria-hidden />
+                  {page.releasePageAction}
+                </a>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+
+      <div className={styles.actions}>
+        <Link
+          className={styles.secondaryButton}
+          href={iGM_LauncherDl_LocalePath("/changelog", locale)}
+        >
+          <ScrollText size={16} aria-hidden />
+          {page.viewChangelog}
+        </Link>
       </div>
     </div>
   );

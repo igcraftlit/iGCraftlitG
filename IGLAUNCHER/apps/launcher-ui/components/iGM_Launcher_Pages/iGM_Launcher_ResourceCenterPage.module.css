@@ -1,9 +1,11 @@
 /*
- * 文件路径：apps/launcher-ui/components/iGM_Launcher_Pages/iGM_Launcher_DownloadsPage.module.css
+ * 文件路径：apps/launcher-ui/components/iGM_Launcher_Pages/iGM_Launcher_ResourceCenterPage.module.css
  * 所属层：前端 / 页面层样式
- * 路由：G_Downloads（SPA 页 id：downloads）
- * 模块：iGM_Launcher_DownloadsPage
- * 作用：下载中心样式：搜索框、类型 chips、资源卡片与版本面板、下载任务卡片与进度条
+ * 路由：G_ResourceCenter（SPA 页 id：resourceCenter）
+ * 模块：iGM_Launcher_ResourceCenterPage
+ * 作用：资源中心样式：上半部资源下载清单（搜索框 / 类型 chips / 资源卡片与版本面板 /
+ *       下载任务卡片与进度条）与版本库（同步状态 / 类型筛选 / 年份分组 / 版本卡片），
+ *       下半部关系图容器与分区卡片（极简风格）
  */
 
 .page {
@@ -11,6 +13,75 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+/* 分区卡片：上下两个大区块（资源下载清单 / 关系图） */
+.sectionCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px;
+  scroll-margin-top: 12px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.sectionDesc {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+.sectionBody {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 上半部视图切换（资源下载 / 版本库） */
+.viewTabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border);
+  background-color: var(--igm-surface-subtle);
+}
+
+.tab {
+  height: 28px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: none;
+  background: none;
+  font-size: 12px;
+  color: var(--igm-text-muted);
+  transition:
+    background-color 140ms ease,
+    color 140ms ease;
+}
+
+.tab:hover {
+  color: var(--igm-text);
+}
+
+.tabActive {
+  background-color: var(--igm-surface);
+  color: var(--igm-accent);
 }
 
 /* 搜索框 */
@@ -46,7 +117,7 @@
   border-color: var(--igm-accent);
 }
 
-/* 类型 chips */
+/* 类型 chips（资源类型与版本类型共用） */
 .categoryRow {
   display: flex;
   flex-wrap: wrap;
@@ -54,6 +125,9 @@
 }
 
 .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   height: 30px;
   padding: 0 14px;
   border-radius: 999px;
@@ -78,13 +152,16 @@
   background-color: var(--igm-accent-soft);
 }
 
-/* 区块标题 */
-.sectionTitle {
-  margin: 8px 0 0;
-  font-size: 14px;
-  font-weight: 600;
+.chipCount {
+  font-size: 11px;
+  color: var(--igm-text-subtle);
 }
 
+.chipActive .chipCount {
+  color: var(--igm-accent);
+}
+
+/* 区块标题 */
 .sectionHead {
   display: flex;
   align-items: center;
@@ -199,10 +276,18 @@
   background-color: var(--igm-surface-subtle);
 }
 
+/* 资源视图：已选版本信息行 */
 .versionMeta {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+/* 版本视图：版本卡片内信息列表 */
+.versionMetaList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .targetRow {
@@ -311,6 +396,7 @@
 }
 
 .installTitle {
+  margin: 0;
   font-size: 13px;
   font-weight: 600;
   color: var(--igm-text);
@@ -376,10 +462,10 @@
 
 /* 加载旋转图标（极简，无花哨动画） */
 .spin {
-  animation: igm-third-party-spin 1s linear infinite;
+  animation: igm-resource-center-spin 1s linear infinite;
 }
 
-@keyframes igm-third-party-spin {
+@keyframes igm-resource-center-spin {
   to {
     transform: rotate(360deg);
   }
@@ -387,4 +473,139 @@
 
 .emptyCard {
   padding: 16px 18px;
+}
+
+/* 版本库视图：同步状态条 */
+.statusCard {
+  padding: 14px 18px;
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.statusLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.statusMeta {
+  font-size: 12px;
+  color: var(--igm-text-muted);
+}
+
+/* 版本类型筛选卡片 */
+.filterCard {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 18px;
+}
+
+.filterLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* 年份分组 */
+.yearGroup {
+  margin-top: 8px;
+}
+
+.yearTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--igm-text);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--igm-border);
+}
+
+/* 版本卡片栅格 */
+.versionGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(232px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.versionCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+}
+
+.versionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.versionName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--igm-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.metaItem dt {
+  color: var(--igm-text-subtle);
+}
+
+.metaItem dd {
+  margin: 0;
+  color: var(--igm-text-muted);
+}
+
+.versionActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-height: 28px;
+}
+
+/* 空状态 */
+.emptyTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.emptyDesc {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--igm-text-muted);
+  max-width: 520px;
 }

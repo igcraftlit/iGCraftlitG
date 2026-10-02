@@ -5,7 +5,8 @@
  * 模块：G_Resource
  * 作用：资源库列表、详情、创建、编辑、删除、上下架与下载接口集合
  * 内容：资源分页列表（分类/标签筛选与关键词搜索）、分类字典、资源详情、
- *       创建资源、编辑资源、删除资源、上架下架、下载资源附件（二进制流）
+ *       创建资源、编辑资源、删除资源、上架下架、下载资源附件（二进制流）、
+ *       模块二十六：资源关系图（资源中心树状视图，返回 nodes + edges）
  * 约束：统一响应 { success, code, message, data }；
  *       写入要求登录并做基础限流；下载直接返回文件流并单独限流
  */
@@ -40,6 +41,8 @@ import {
   iGM_IsResourceStatus,
   type iGM_ResourceInput,
 } from "../iGM_Types/iGM_Resource";
+// 模块二十六：资源中心树状关系图
+import { iGM_GetResourceGraph } from "../iGM_Services/iGM_ResourceRelationService";
 
 // 类型定义 //
 // （路由层无额外类型，统一响应类型见 iGM_Types/iGM_Response.ts）
@@ -171,6 +174,19 @@ async function iGM_HandleDownloadByIdentifier(ctx: iGM_RouteContext) {
   return iGM_BuildFileResponse(content, false);
 }
 
+/* ---------- 资源关系图（资源中心树状视图） ---------- */
+async function iGM_HandleGraph(ctx: iGM_RouteContext) {
+  const graph = await iGM_GetResourceGraph({
+    version: iGM_Query(ctx.query, "version") || undefined,
+    resourceId: iGM_Query(ctx.query, "resourceId") || undefined,
+    depth: iGM_Query(ctx.query, "depth")
+      ? Number(iGM_Query(ctx.query, "depth"))
+      : undefined,
+  });
+  if (!graph) throw new iGM_ContentError("resource.errors.notFound", 404);
+  return iGM_Ok(graph);
+}
+
 /**
  * G_Resource 资源路由集合
  * 下载接口直接返回二进制 Response（不套统一响应结构）
@@ -178,6 +194,7 @@ async function iGM_HandleDownloadByIdentifier(ctx: iGM_RouteContext) {
 export const G_Resource = new Elysia({ name: "G_Resource" })
   .get("/G_Resource/list", iGM_HandleList as never)
   .get("/G_Resource/categories", iGM_HandleCategories as never)
+  .get("/G_Resource/graph", iGM_HandleGraph as never)
   .get("/G_Resource/detail", iGM_HandleDetail as never)
   .post("/G_Resource/create", iGM_HandleCreate as never)
   .put("/G_Resource/edit", iGM_HandleEdit as never)

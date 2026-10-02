@@ -67,11 +67,16 @@ const iGM_Launcher_DownloadProgressListeners = new Set<iGM_Launcher_DownloadProg
  * 按方法解析单次调用的等待超时（毫秒）。
  * 统一 8 秒会把需要等待用户操作或回源上游的方法误判为超时：
  * - minecraft:pick-dir / installer 目录选择器等原生弹窗需等待用户浏览；
- * - thirdParty:* 首次回源 Modrinth 拉版本、创建下载任务耗时高于普通接口。
+ * - thirdParty:* 首次回源 Modrinth 拉版本、创建下载任务耗时高于普通接口；
+ * - resource:graph 首次访问会触发关系重算，耗时同样高于普通接口。
  */
 function iGM_Launcher_ResolveBridgeTimeout(method: iGM_Launcher_BridgeMethod): number {
-  if (method === "minecraft:pick-dir") return IGM_LAUNCHER_DIALOG_TIMEOUT_MS;
-  if (method.startsWith("thirdParty:")) return IGM_LAUNCHER_API_THIRD_PARTY_TIMEOUT_MS;
+  if (method === "minecraft:pick-dir" || method === "appearance:pick-background") {
+    return IGM_LAUNCHER_DIALOG_TIMEOUT_MS;
+  }
+  if (method.startsWith("thirdParty:") || method.startsWith("resource:")) {
+    return IGM_LAUNCHER_API_THIRD_PARTY_TIMEOUT_MS;
+  }
   return IGM_LAUNCHER_BRIDGE_TIMEOUT_MS;
 }
 

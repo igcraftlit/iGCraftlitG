@@ -122,6 +122,12 @@
   color: var(--igm-danger);
 }
 
+.errorCode {
+  margin-left: 8px;
+  font-family: var(--igm-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  color: var(--igm-text-subtle);
+}
+
 .successLine {
   color: var(--igm-success);
 }

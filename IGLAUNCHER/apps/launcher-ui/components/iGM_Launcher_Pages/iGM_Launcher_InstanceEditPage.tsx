@@ -410,7 +410,7 @@ export function iGM_Launcher_InstanceEditPage({ params }: iGM_Launcher_PageProps
             <span>
               {currentVersionMissing ? t("versionMissingHint") : t("loaderMissingHint")}
             </span>
-            <IGM_Launcher_Button variant="secondary" onClick={() => navigate("versions")}>
+            <IGM_Launcher_Button variant="secondary" onClick={() => navigate("resourceCenter")}>
               <Download size={14} strokeWidth={1.8} />
               {t("gotoLibrary")}
             </IGM_Launcher_Button>

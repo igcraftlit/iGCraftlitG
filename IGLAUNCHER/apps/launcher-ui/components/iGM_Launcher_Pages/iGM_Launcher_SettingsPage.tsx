@@ -6,7 +6,10 @@
  * 作用：设置页，按通用 / 外观 / Java / 游戏目录 / 下载 / 关于分组展示配置项
  * 内容：语言与明暗模式为可用控件（真实生效并持久化）；
  *       模块五「游戏目录」分组可管理已识别的 .minecraft 目录（扫描 / 手动添加 /
- *       设为默认 / 移除记录）；其余开关、路径、下拉均为静态占位
+ *       设为默认 / 移除记录）；
+ *       模块二十六 B 把外观重内容收敛到独立外观页（此处保留明暗模式与入口），
+ *       并把 Java 管理作为页内子入口（跳转 Java 页）；
+ *       其余开关、路径、下拉均为静态占位
  */
 
 // 导入依赖 //
@@ -26,6 +29,7 @@ import {
   Palette,
   RefreshCw,
   Settings2,
+  SlidersHorizontal,
   Star,
   Sun,
   Trash2,
@@ -52,6 +56,7 @@ import {
 import { iGM_Launcher_Input as IGM_Launcher_Input } from "@/components/iGM_Launcher_Forms/iGM_Launcher_FormControls";
 import { iGM_Launcher_UseStore } from "@/components/iGM_Launcher_Store/iGM_Launcher_StoreProvider";
 import { iGM_Launcher_UseLocale } from "@/components/iGM_Launcher_Providers/iGM_Launcher_LocaleProvider";
+import { iGM_Launcher_UseShellLayout } from "@/components/iGM_Launcher_AppShell/iGM_Launcher_AppShell";
 import { IGM_LAUNCHER_LOCALE_LABELS } from "@/i18n/iGM_Launcher_Locales";
 import styles from "./iGM_Launcher_SettingsPage.module.css";
 
@@ -136,6 +141,7 @@ export function iGM_Launcher_SettingsPage() {
   const tCommon = useTranslations("common");
   const { theme, setTheme } = useTheme();
   const { locale, setLocale } = iGM_Launcher_UseLocale();
+  const { navigate } = iGM_Launcher_UseShellLayout();
   const {
     gameDirs,
     scanningGameDirs,
@@ -254,6 +260,13 @@ export function iGM_Launcher_SettingsPage() {
             ))}
           </div>
         </IGM_Launcher_SettingsRow>
+        {/* 模块二十六 B：外观重内容（预设主题 / 主色 / 背景图 / 模糊）收敛到独立外观页 */}
+        <IGM_Launcher_SettingsRow label={t("openAppearance")} description={t("openAppearanceDesc")}>
+          <IGM_Launcher_Button variant="secondary" onClick={() => navigate("appearance")}>
+            <SlidersHorizontal size={14} strokeWidth={1.8} />
+            {t("openAppearance")}
+          </IGM_Launcher_Button>
+        </IGM_Launcher_SettingsRow>
       </IGM_Launcher_SettingsGroup>
 
       {/*
@@ -278,6 +291,13 @@ export function iGM_Launcher_SettingsPage() {
               </option>
             ))}
           </select>
+        </IGM_Launcher_SettingsRow>
+        {/* 模块二十六 B：Java 的检测 / 新增 / 测试 / 移除收敛到独立 Java 管理页 */}
+        <IGM_Launcher_SettingsRow label={t("manageJava")} description={t("manageJavaDesc")}>
+          <IGM_Launcher_Button variant="secondary" onClick={() => navigate("java")}>
+            <Coffee size={14} strokeWidth={1.8} />
+            {t("manageJava")}
+          </IGM_Launcher_Button>
         </IGM_Launcher_SettingsRow>
       </IGM_Launcher_SettingsGroup>
 
@@ -433,7 +453,7 @@ export function iGM_Launcher_SettingsPage() {
       {/* 关于 */}
       <IGM_Launcher_SettingsGroup id="about" title={t("groupAbout")} icon={BadgeInfo}>
         <IGM_Launcher_SettingsRow label={t("aboutVersion")}>
-          {/* 版本号以 IGM_LAUNCHER_VERSION 为准（当前 26.3.1 official version），不再叠加 v 前缀 */}
+          {/* 版本号以 IGM_LAUNCHER_VERSION 为准（当前 26.3.2 official version），不再叠加 v 前缀 */}
           <IGM_Launcher_Badge tone="accent">{IGM_LAUNCHER_VERSION}</IGM_Launcher_Badge>
         </IGM_Launcher_SettingsRow>
         <IGM_Launcher_SettingsRow label={t("aboutCore")}>

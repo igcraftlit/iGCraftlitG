@@ -53,6 +53,8 @@ import { iGM_ThirdPartyError } from "./iGM_Services/iGM_ThirdPartyService";
 // 模块二十一：OAuth 2.0 + OpenID Connect 身份提供方
 import { G_OAuth } from "./iGM_Routes/G_OAuth";
 import { iGM_OAuthError } from "./iGM_Services/iGM_OAuthService";
+// 模块二十六（启动器 26.3.2）：启动器发布历史
+import { G_LauncherRelease } from "./iGM_Routes/G_LauncherRelease";
 
 // 类型定义 //
 // （本入口无额外类型，统一响应类型见 iGM_Types/iGM_Response.ts）
@@ -180,6 +182,8 @@ const iGM_Server = new Elysia()
   .use(G_ThirdParty)
   // 模块二十一：OAuth 2.0 + OIDC 身份提供方
   .use(G_OAuth)
+  // 模块二十六（启动器 26.3.2）：启动器发布历史（官网下载页与启动器共用）
+  .use(G_LauncherRelease)
   // 根路径占位
   .get("/", () => ({
     success: true,

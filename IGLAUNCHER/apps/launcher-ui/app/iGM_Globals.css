@@ -4,7 +4,9 @@
  * 路由：全局
  * 模块：iGM_Globals
  * 作用：导入设计令牌并提供基础重置、滚动条与焦点样式
- * 内容：@import 令牌、盒模型重置、字体基线、细滚动条、可达性焦点
+ * 内容：@import 令牌、盒模型重置、字体基线、细滚动条、可达性焦点；
+ *       模块二十六 B 追加底层背景图（body::before）与半透明面板配合机制；
+ *       模块二十六 F 追加品牌艺术字体 @font-face（Orbitron，SIL OFL 1.1 开源可商用）
  */
 
 /* 导入依赖 */
@@ -14,6 +16,19 @@
 /* （样式文件无类型） */
 
 /* 核心逻辑 */
+
+/*
+ * 品牌艺术字体：Orbitron 可变字重（wght 400-900），
+ * 文件随静态产物分发（apps/launcher-ui/public/fonts），打包后经 views:// 读取；
+ * 仅用于品牌标题，正文与控件仍使用 --igm-font-sans。
+ */
+@font-face {
+  font-family: "iGM Orbitron";
+  src: url("/fonts/iGM_Orbitron_Variable.woff2") format("woff2");
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
 
 /* 基础重置 */
 *,
@@ -55,6 +70,29 @@ body {
 html[data-igm-glass]:not([data-igm-glass="none"]) body {
   background-image: linear-gradient(160deg, var(--igm-glass-a), var(--igm-glass-b) 62%, var(--igm-glass-c));
   background-attachment: fixed;
+}
+
+/*
+ * 模块二十六 B：自定义背景图铺在底层。
+ * body::before 以负 z-index 位于所有内容之后（html 底色为其兜底），
+ * 模糊强度绑定 --igm-launcher-bg-blur；四周外扩 24px 避免模糊后出现透明边缘。
+ */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -24px;
+  z-index: -1;
+  background-image: var(--igm-launcher-bg-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(var(--igm-launcher-bg-blur));
+  pointer-events: none;
+}
+
+/* 有背景图时 body 让出底色，全界面半透明，露出底层背景图 */
+html[data-igm-bg="image"] body {
+  background-color: transparent;
 }
 
 /* 玻璃态下把表面改为半透明，让底色渐变透出 */

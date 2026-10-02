@@ -1,6 +1,6 @@
 {
   "name": "igm-installer-shell",
-  "version": "26.3.1",
+  "version": "26.3.2",
   "private": true,
   "module": "src/iGM_Installer_Main.ts",
   "scripts": {

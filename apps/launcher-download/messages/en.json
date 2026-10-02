@@ -78,22 +78,49 @@
     "cliHint": "You can also read the version and checksum with iGM CLI:"
   },
   "releases": {
-    "title": "Releases",
-    "lead": "Release history of iGM CraftCeon Launcher. Only the Windows x64 build is provided for now.",
+    "title": "Release history",
+    "lead": "The full release history of iGM CraftCeon Launcher. The latest version is pinned on top, with older versions sorted by release date.",
     "currentTag": "Current version",
+    "latestTag": "Latest",
     "platform": "Platform",
     "releasedAt": "Released",
     "fileSize": "File size",
     "sha256": "SHA256",
     "file": "File",
     "downloadAction": "Download",
-    "viewChangelog": "View changelog"
+    "releasePageAction": "Release page",
+    "viewChangelog": "View changelog",
+    "updateType": {
+      "major": "Major",
+      "minor": "Minor",
+      "patch": "Patch"
+    },
+    "noteGroups": {
+      "added": "Added",
+      "improved": "Improved",
+      "fixed": "Fixed"
+    }
   },
   "changelog": {
     "title": "Changelog",
     "lead": "Changes in each release of iGM CraftCeon Launcher.",
     "currentTag": "Current version",
     "entries": [
+      {
+        "version": "26.3.2 official version",
+        "date": "2026-10-03",
+        "items": [
+          "Rebuilt home page with a Start Game button that launches the currently selected instance, plus an account panel for the community account, the official Minecraft account and offline accounts.",
+          "Offline accounts now support up to 6 entries with add, edit, delete and quick switching; launching uses the switched identity.",
+          "The home page shows total usage hours and automatically collapses the sidebar to free up content space.",
+          "New appearance system: five preset themes (Minimal White, Night Black, Star Blue, Aurora Green, Sunset Orange), a live custom accent color, custom wallpaper and blur strength control.",
+          "Appearance is now a top-level menu; Java management, language and light/dark mode moved into Settings.",
+          "Improved official sign-in: the browser opens automatically after a device code is issued, expired progress is cleaned up so only the active step is shown, and failures report an error code with a localized reason.",
+          "Download Center and Library merged into Resource Center, with a zoomable and draggable relation graph using compatible, dependency and derived links.",
+          "Branding: the window title now uses the full name iGM CraftCeon Launcher, with the open-source Orbitron typeface.",
+          "The download site now keeps a full history of releases from 26.3.1, each with its own notes and download entry."
+        ]
+      },
       {
         "version": "26.3.1 official version",
         "date": "2026-10-02",
@@ -176,7 +203,7 @@
         "title": "Verification and launch",
         "lead": "After downloading, verify the installer integrity in PowerShell:",
         "codeLabel": "powershell",
-        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.3.1.zip -Algorithm SHA256",
+        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.3.2.zip -Algorithm SHA256",
         "after": "Compare the result with the SHA256 shown on the download page; a match means the file is intact."
       },
       "notes": {

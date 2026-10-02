@@ -78,22 +78,49 @@
     "cliHint": "也可用 iGM CLI 查看版本与校验信息："
   },
   "releases": {
-    "title": "版本列表",
-    "lead": "iGM CraftCeon Launcher 的发布记录，当前仅提供 Windows x64 构建。",
+    "title": "版本历史",
+    "lead": "iGM CraftCeon Launcher 的完整发布记录，最新版置顶，其余按发布时间倒序排列。",
     "currentTag": "当前版本",
+    "latestTag": "最新",
     "platform": "平台",
     "releasedAt": "发布时间",
     "fileSize": "文件大小",
     "sha256": "SHA256",
     "file": "文件",
     "downloadAction": "下载",
-    "viewChangelog": "查看更新日志"
+    "releasePageAction": "发布页",
+    "viewChangelog": "查看更新日志",
+    "updateType": {
+      "major": "大版本",
+      "minor": "小版本",
+      "patch": "修复"
+    },
+    "noteGroups": {
+      "added": "新增",
+      "improved": "优化",
+      "fixed": "修复"
+    }
   },
   "changelog": {
     "title": "更新日志",
     "lead": "记录 iGM CraftCeon Launcher 各版本的变更内容。",
     "currentTag": "当前版本",
     "entries": [
+      {
+        "version": "26.3.2 official version",
+        "date": "2026-10-03",
+        "items": [
+          "首页重构：新增「开始游戏」主按钮，可直接启动当前选中实例；新增右侧账户面板，集中展示社区账号、正版账号与离线账户。",
+          "离线账户支持最多 6 个，可添加、编辑、删除与快速切换，切换后启动即使用对应角色身份。",
+          "首页显示累计使用时长（小时），并自动折叠左侧导航栏，为内容区留出更多空间。",
+          "新增外观与主题系统：五套预设主题（极简白、暗夜黑、星图蓝、极光绿、落日橙）、自定义主色实时预览、自定义背景图与模糊强度调节。",
+          "外观独立为一级菜单；Java 管理、语言切换与明暗模式移入设置页。",
+          "正版登录优化：取得设备代码后自动打开浏览器完成授权；认证进度到期自动清理，只显示进行中的步骤；失败时给出错误码与中英双语原因。",
+          "下载中心与资源库合并为「资源中心」：版本与资源关系改为可缩放、可拖拽的树状关系图，按兼容、依赖、衍生三类连线展示。",
+          "品牌更新：窗口标题启用完整名称 iGM CraftCeon Launcher，并引入开源免费可商用的艺术字体 Orbitron。",
+          "官网下载页新增历史版本管理，从 26.3.1 起保留全部历史版本的下载入口与更新说明。"
+        ]
+      },
       {
         "version": "26.3.1 official version",
         "date": "2026-10-02",
@@ -176,7 +203,7 @@
         "title": "校验与启动",
         "lead": "下载完成后，可在 PowerShell 中校验安装包完整性：",
         "codeLabel": "powershell",
-        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.3.1.zip -Algorithm SHA256",
+        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.3.2.zip -Algorithm SHA256",
         "after": "将计算结果与下载页给出的 SHA256 比对，一致则表示文件完整。"
       },
       "notes": {

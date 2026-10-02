@@ -284,7 +284,7 @@ export function iGM_Launcher_GameInstallPage({ params }: iGM_Launcher_PageProps)
         title={t("title")}
         description={t("subtitle")}
         actions={
-          <IGM_Launcher_Button variant="ghost" onClick={() => navigate("versions")}>
+          <IGM_Launcher_Button variant="ghost" onClick={() => navigate("resourceCenter")}>
             <ArrowLeft size={15} strokeWidth={1.8} />
             {t("back")}
           </IGM_Launcher_Button>
@@ -517,7 +517,7 @@ export function iGM_Launcher_GameInstallPage({ params }: iGM_Launcher_PageProps)
       ) : null}
 
       <div className={styles.footer}>
-        <IGM_Launcher_Button variant="secondary" onClick={() => navigate("versions")}>
+        <IGM_Launcher_Button variant="secondary" onClick={() => navigate("resourceCenter")}>
           {tCommon("back")}
         </IGM_Launcher_Button>
         <IGM_Launcher_Button

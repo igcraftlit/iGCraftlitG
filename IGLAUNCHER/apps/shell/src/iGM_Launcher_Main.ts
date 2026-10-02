@@ -5,7 +5,8 @@
  * 模块：iGM_Launcher_Main
  * 作用：Electrobun 主进程入口：创建主窗口、加载静态界面、处理窗口控制消息并预留原生核心
  * 内容：窗口默认 1280x800 居中；开发模式加载 dev server，生产模式加载
- *       views://launcher/index.html；经 host-message 处理最小化 / 最大化切换 / 关闭
+ *       views://launcher/index.html；经 host-message 处理最小化 / 最大化切换 / 关闭；
+ *       模块二十六 C：启动时调用 iGM_Launcher_Usage_Start 记录累计使用时长
  *
  * 说明：Electrobun 2.0.1 的 BrowserWindowOptions 没有 minWidth/minHeight 字段，
  *       窗口最小可用尺寸（1024x640）由界面层 CSS 兜底，详见 AppShell 样式与验收报告。
@@ -25,6 +26,7 @@ import { IGM_LAUNCHER_BRIDGE_DATA_ROOT } from "./iGM_Launcher_Bridge";
 import { iGM_Launcher_Msa_IsConfigured } from "./iGM_Launcher_MsaAuth";
 import { iGM_Launcher_Ipc_HandleMessage } from "./iGM_Launcher_Ipc";
 import { iGM_Launcher_ProgressWindow_Open } from "./iGM_Launcher_DownloadProgressWindow";
+import { iGM_Launcher_Usage_Start } from "./iGM_Launcher_Usage";
 
 // 类型定义 //
 /** 主进程启动模式 */
@@ -136,6 +138,8 @@ function iGM_Launcher_Bootstrap(): void {
     }（v${coreState.version}）`,
   );
   console.log(`[iGM Launcher] 本地数据目录：${IGM_LAUNCHER_BRIDGE_DATA_ROOT}`);
+  // 模块二十六 C：记录累计使用时长（首次心跳 + 每 60 秒一次）
+  iGM_Launcher_Usage_Start();
   // 模块三：正版认证可用性（Client ID 内置，安装版无需环境变量即可用）
   console.log(
     `[iGM Launcher] Minecraft 正版认证：${

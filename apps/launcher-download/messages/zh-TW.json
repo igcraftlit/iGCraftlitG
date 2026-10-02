@@ -78,22 +78,49 @@
     "cliHint": "也可用 iGM CLI 查看版本與校驗資訊："
   },
   "releases": {
-    "title": "版本列表",
-    "lead": "iGM CraftCeon Launcher 的發佈記錄，當前僅提供 Windows x64 構建。",
+    "title": "版本歷史",
+    "lead": "iGM CraftCeon Launcher 的完整發佈記錄，最新版置頂，其餘依發佈時間倒序排列。",
     "currentTag": "當前版本",
+    "latestTag": "最新",
     "platform": "平台",
     "releasedAt": "發佈時間",
     "fileSize": "檔案大小",
     "sha256": "SHA256",
     "file": "檔案",
     "downloadAction": "下載",
-    "viewChangelog": "查看更新日誌"
+    "releasePageAction": "發佈頁",
+    "viewChangelog": "查看更新日誌",
+    "updateType": {
+      "major": "大版本",
+      "minor": "小版本",
+      "patch": "修復"
+    },
+    "noteGroups": {
+      "added": "新增",
+      "improved": "優化",
+      "fixed": "修復"
+    }
   },
   "changelog": {
     "title": "更新日誌",
     "lead": "記錄 iGM CraftCeon Launcher 各版本的變更內容。",
     "currentTag": "當前版本",
     "entries": [
+      {
+        "version": "26.3.2 official version",
+        "date": "2026-10-03",
+        "items": [
+          "首頁重構：新增「開始遊戲」主按鈕，可直接啟動目前選取的執行個體；新增右側帳戶面板，集中顯示社群帳號、正版帳號與離線帳號。",
+          "離線帳號最多支援 6 個，可新增、編輯、刪除與快速切換，切換後啟動即使用對應角色身分。",
+          "首頁顯示累計使用時長（小時），並自動收合左側導覽列，為內容區留出更多空間。",
+          "新增外觀與主題系統：五套預設主題（極簡白、暗夜黑、星圖藍、極光綠、落日橙）、自訂主色即時預覽、自訂背景圖與模糊強度調整。",
+          "外觀獨立為一級選單；Java 管理、語言切換與明暗模式移入設定頁。",
+          "正版登入最佳化：取得裝置代碼後自動開啟瀏覽器完成授權；認證進度到期自動清理，只顯示進行中的步驟；失敗時給出錯誤碼與中英雙語原因。",
+          "下載中心與資源庫合併為「資源中心」：版本與資源關係改為可縮放、可拖曳的樹狀關係圖，以相容、相依、衍生三類連線呈現。",
+          "品牌更新：視窗標題啟用完整名稱 iGM CraftCeon Launcher，並導入開源免費可商用的藝術字型 Orbitron。",
+          "官網下載頁新增歷史版本管理，自 26.3.1 起保留全部歷史版本的下載入口與更新說明。"
+        ]
+      },
       {
         "version": "26.3.1 official version",
         "date": "2026-10-02",
@@ -176,7 +203,7 @@
         "title": "校驗與啟動",
         "lead": "下載完成後，可在 PowerShell 中校驗安裝包完整性：",
         "codeLabel": "powershell",
-        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.3.1.zip -Algorithm SHA256",
+        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.3.2.zip -Algorithm SHA256",
         "after": "將計算結果與下載頁給出的 SHA256 比對，一致則表示檔案完整。"
       },
       "notes": {

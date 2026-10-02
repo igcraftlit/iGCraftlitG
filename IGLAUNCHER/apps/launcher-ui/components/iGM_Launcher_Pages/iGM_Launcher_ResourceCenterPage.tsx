@@ -1,22 +1,22 @@
 /**
- * 文件路径：apps/launcher-ui/components/iGM_Launcher_Pages/iGM_Launcher_DownloadsPage.tsx
+ * 文件路径：apps/launcher-ui/components/iGM_Launcher_Pages/iGM_Launcher_ResourceCenterPage.tsx
  * 所属层：前端 / 页面层
- * 路由：G_Downloads（SPA 页 id：downloads）
- * 模块：iGM_Launcher_DownloadsPage
- * 作用：下载中心，上半部分浏览 Modrinth 第三方资源，下半部分展示当前下载任务
- * 内容：资源搜索（thirdParty:search，支持关键字与类型筛选）、资源卡片列表
- *       （封面 / 名称 / 类型徽章 / 作者 / Modrinth 来源标识）；
- *       点击卡片展开版本选择（thirdParty:resource），选择版本 + 目标目录后
- *       发起下载（thirdParty:download-start）；
- *       任务列表（thirdParty:download-list）在存在进行中任务时按固定间隔轮询，
- *       每个任务展示资源名称 / 类型 / 版本、进度条、已下载与总大小、速度、剩余时间，
- *       支持暂停/继续、取消、重试、移除、打开文件所在目录；
- *       已完成任务折叠展示，支持一键清空已完成，并提供「安装到实例」路径提示
+ * 路由：G_ResourceCenter（SPA 页 id：resourceCenter）
+ * 模块：iGM_Launcher_ResourceCenterPage
+ * 作用：资源中心页，合并原「下载中心」与「资源库」两个入口：
+ *       上半部资源下载清单（资源搜索 / 详情 / 下载任务 + 版本库列表 / 类型筛选 / 下载安装入口），
+ *       下半部版本与资源关系图（iGM_Launcher_RelationGraph）
+ * 内容：资源视图——资源搜索（thirdParty:search，关键字与类型筛选）、资源卡片列表、
+ *       点击展开版本选择（thirdParty:resource）、选版本 + 目标目录后发起下载
+ *       （thirdParty:download-start）；任务列表（thirdParty:download-list）在有进行中任务时轮询，
+ *       支持暂停/继续、取消、重试、移除、打开文件所在目录，已完成任务折叠与一键清空；
+ *       版本视图——同步状态条、版本类型筛选、按年份分组、已安装标记与下载 / 重新下载入口；
+ *       关系图——以 store 中最新正式版为初始中心，节点点击重新居中，
+ *       版本节点提供下载安装入口、资源节点切回资源视图并按名称检索。
  *
- * 说明：本页只支持 Fabric 加载器与 Modrinth 平台；资源文件不落本站，
- *       下载任务由主站后端统一管理（与网站下载中心共用同一套任务），
+ * 说明：资源文件不落本站，下载任务由主站后端统一管理（与网站下载中心共用同一套任务），
  *       界面进度与状态全部来自后端返回值，不伪造任何进度；
- *       浏览器调试环境无本机磁盘与原生能力，桥接层会如实拒绝并回传原因。
+ *       关系图资源节点与第三方资源 id 分属不同资源空间，故资源入口按资源名检索而非按 id 详情。
  */
 
 // 导入依赖 //
@@ -25,6 +25,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   AlertCircle,
+  Boxes,
   CheckCircle2,
   ChevronDown,
   ChevronRight,
@@ -47,19 +48,23 @@ import {
   IGM_LAUNCHER_THIRD_PARTY_POLL_MS,
   IGM_LAUNCHER_THIRD_PARTY_TYPES,
   iGM_Launcher_FormatSize,
+  iGM_Launcher_GroupVersionsByYear,
   iGM_Launcher_JoinPath,
   type iGM_Launcher_BridgeResponse,
+  type iGM_Launcher_ResourceGraphNode,
   type iGM_Launcher_ThirdPartyResource,
   type iGM_Launcher_ThirdPartyResourceType,
   type iGM_Launcher_ThirdPartyTask,
   type iGM_Launcher_ThirdPartyTaskStatus,
   type iGM_Launcher_ThirdPartyVersion,
+  type iGM_Launcher_VersionType,
 } from "@igm-launcher/shared";
 import {
   iGM_Launcher_Badge as IGM_Launcher_Badge,
   iGM_Launcher_Button as IGM_Launcher_Button,
   iGM_Launcher_Card as IGM_Launcher_Card,
   iGM_Launcher_PageHeader as IGM_Launcher_PageHeader,
+  iGM_Launcher_PlaceholderNote as IGM_Launcher_PlaceholderNote,
 } from "@/components/iGM_Launcher_Primitives/iGM_Launcher_Primitives";
 import {
   iGM_Launcher_Field as IGM_Launcher_Field,
@@ -72,11 +77,39 @@ import {
 } from "@/components/iGM_Launcher_Bridge/iGM_Launcher_BridgeClient";
 import { iGM_Launcher_ResolveServerMessage } from "@/components/iGM_Launcher_Bridge/iGM_Launcher_ServerError";
 import { iGM_Launcher_UseStore } from "@/components/iGM_Launcher_Store/iGM_Launcher_StoreProvider";
-import styles from "./iGM_Launcher_DownloadsPage.module.css";
+import { iGM_Launcher_UseShellLayout } from "@/components/iGM_Launcher_AppShell/iGM_Launcher_AppShell";
+import { iGM_Launcher_RelationGraph as IGM_Launcher_RelationGraph } from "@/components/iGM_Launcher_Graph/iGM_Launcher_RelationGraph";
+import styles from "./iGM_Launcher_ResourceCenterPage.module.css";
 
 // 类型定义 //
-/** 类型筛选值：空串表示全部 */
+/** 资源中心上半部视图：resources 资源下载清单 / versions 版本库 */
+type iGM_Launcher_ResourceCenterView = "resources" | "versions";
+
+/** 第三方资源类型筛选值：空串表示全部 */
 type iGM_Launcher_ThirdPartyTypeFilter = iGM_Launcher_ThirdPartyResourceType | "";
+
+/** 版本类型筛选值：空串表示全部 */
+type iGM_Launcher_VersionTypeFilter = iGM_Launcher_VersionType | "";
+
+/** 版本类型筛选选项（与网站 G_MinecraftVersions 的筛选项保持一致） */
+const IGM_VERSION_TYPE_FILTERS: iGM_Launcher_VersionType[] = [
+  "release",
+  "snapshot",
+  "old_beta",
+  "old_alpha",
+];
+
+/** 版本类型到徽章色调 */
+const IGM_VERSION_TYPE_TONE: Record<
+  iGM_Launcher_VersionType,
+  "neutral" | "accent" | "success" | "muted"
+> = {
+  release: "accent",
+  snapshot: "neutral",
+  old_beta: "muted",
+  old_alpha: "muted",
+  unknown: "muted",
+};
 
 /** 任务状态到徽章色调（基础徽章无危险色，失败与取消统一用弱化色） */
 function iGM_Launcher_TaskTone(
@@ -106,14 +139,31 @@ function iGM_Launcher_EtaText(seconds: number): string {
   return minutes > 0 ? `${minutes}m ${rest}s` : `${rest}s`;
 }
 
+/** ISO 时间格式化为 YYYY-MM-DD HH:mm，空值回退占位符 */
+function iGM_Launcher_FormatSyncedAt(value: string | null): string {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  const pad = (input: number) => String(input).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(
+    date.getHours(),
+  )}:${pad(date.getMinutes())}`;
+}
+
 // 核心逻辑 //
-export function iGM_Launcher_DownloadsPage() {
+export function iGM_Launcher_ResourceCenterPage() {
   const t = useTranslations("thirdParty");
   const tCommon = useTranslations("common");
-  const { instances, pickDir } = iGM_Launcher_UseStore();
+  const tVersions = useTranslations("versions");
+  const tRC = useTranslations("resourceCenter");
+  const { instances, pickDir, versionLibrary, syncingLibrary, syncVersionLibrary, refreshVersionLibrary } =
+    iGM_Launcher_UseStore();
+  const { navigate } = iGM_Launcher_UseShellLayout();
+
+  // 上半部视图切换：资源下载清单 / 版本库
+  const [view, setView] = useState<iGM_Launcher_ResourceCenterView>("resources");
 
   /* ---------- 资源浏览状态 ---------- */
-
   const [keyword, setKeyword] = useState("");
   const [typeFilter, setTypeFilter] = useState<iGM_Launcher_ThirdPartyTypeFilter>("");
   const [resources, setResources] = useState<iGM_Launcher_ThirdPartyResource[]>([]);
@@ -138,7 +188,6 @@ export function iGM_Launcher_DownloadsPage() {
   const [startNotice, setStartNotice] = useState("");
 
   /* ---------- 下载任务状态 ---------- */
-
   const [tasks, setTasks] = useState<iGM_Launcher_ThirdPartyTask[]>([]);
   const [tasksError, setTasksError] = useState("");
   const [tasksLoading, setTasksLoading] = useState(false);
@@ -146,6 +195,9 @@ export function iGM_Launcher_DownloadsPage() {
   const [installTaskId, setInstallTaskId] = useState("");
   const [installInstanceId, setInstallInstanceId] = useState("");
   const [revealedPath, setRevealedPath] = useState("");
+
+  /* ---------- 版本库状态 ---------- */
+  const [versionTypeFilter, setVersionTypeFilter] = useState<iGM_Launcher_VersionTypeFilter>("");
 
   /* ---------- 下载目标的自动匹配 ---------- */
 
@@ -201,6 +253,11 @@ export function iGM_Launcher_DownloadsPage() {
   useEffect(() => {
     void loadResources(1, "", "");
   }, [loadResources]);
+
+  // 每次进入资源中心都实时重算版本库安装状态（以本机真实文件为准，不沿用缓存）
+  useEffect(() => {
+    void refreshVersionLibrary();
+  }, [refreshVersionLibrary]);
 
   const handleSearchSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -262,7 +319,10 @@ export function iGM_Launcher_DownloadsPage() {
     void refreshTasks();
   }, [refreshTasks]);
 
-  const hasActiveTask = useMemo(() => tasks.some((task) => iGM_Launcher_TaskActive(task.status)), [tasks]);
+  const hasActiveTask = useMemo(
+    () => tasks.some((task) => iGM_Launcher_TaskActive(task.status)),
+    [tasks],
+  );
 
   // 仅在有进行中的任务时轮询，空闲时不打网络
   useEffect(() => {
@@ -359,7 +419,69 @@ export function iGM_Launcher_DownloadsPage() {
   };
 
   const activeTasks = useMemo(() => tasks.filter((task) => task.status !== "completed"), [tasks]);
-  const completedTasks = useMemo(() => tasks.filter((task) => task.status === "completed"), [tasks]);
+  const completedTasks = useMemo(
+    () => tasks.filter((task) => task.status === "completed"),
+    [tasks],
+  );
+
+  /* ---------- 关系图联动 ---------- */
+
+  /** 关系图初始中心：取 store 版本库中首个正式版（无正式版则取首个版本） */
+  const graphCenterVersion = useMemo(() => {
+    const entries = versionLibrary.entries;
+    const release = entries.find((item) => item.type === "release");
+    return release?.version ?? entries[0]?.version ?? "";
+  }, [versionLibrary.entries]);
+
+  /** 版本节点入口：跳转到下载安装页 */
+  const handleOpenVersion = (version: string) => {
+    navigate("gameInstall", { version });
+  };
+
+  /**
+   * 资源节点入口：切回资源视图并按资源名检索。
+   * 关系图资源来自主站资源库，与第三方资源 id 分属不同空间，
+   * 故按标题检索而非按 id 拉详情，保证点击始终有可用结果。
+   */
+  const handleOpenResource = (node: iGM_Launcher_ResourceGraphNode) => {
+    setView("resources");
+    setKeyword(node.label);
+    setTypeFilter("");
+    void loadResources(1, node.label, "");
+    document.getElementById("resourceCenter-downloads")?.scrollIntoView({ block: "start" });
+  };
+
+  /* ---------- 版本库视图数据 ---------- */
+
+  const filteredEntries = useMemo(
+    () =>
+      versionTypeFilter
+        ? versionLibrary.entries.filter((item) => item.type === versionTypeFilter)
+        : versionLibrary.entries,
+    [versionLibrary.entries, versionTypeFilter],
+  );
+
+  const versionGroups = useMemo(
+    () => iGM_Launcher_GroupVersionsByYear(filteredEntries),
+    [filteredEntries],
+  );
+
+  const installedCount = useMemo(
+    () => versionLibrary.entries.filter((item) => item.installed).length,
+    [versionLibrary.entries],
+  );
+
+  const versionTypeCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const item of versionLibrary.entries) {
+      counts[item.type] = (counts[item.type] ?? 0) + 1;
+    }
+    return counts;
+  }, [versionLibrary.entries]);
+
+  const versionTypeLabel = (type: iGM_Launcher_VersionType): string => tVersions(`type_${type}`);
+
+  /* ---------- 下载任务卡片 ---------- */
 
   /** 单个任务卡片 */
   const renderTask = (task: iGM_Launcher_ThirdPartyTask) => {
@@ -472,9 +594,7 @@ export function iGM_Launcher_DownloadsPage() {
               variant="secondary"
               onClick={() =>
                 void handleTaskAction(() =>
-                  iGM_Launcher_BridgeCall("thirdParty:download-retry", {
-                    taskId: task.id,
-                  }),
+                  iGM_Launcher_BridgeCall("thirdParty:download-retry", { taskId: task.id }),
                 )
               }
             >
@@ -571,10 +691,10 @@ export function iGM_Launcher_DownloadsPage() {
     );
   };
 
-  return (
-    <div className={styles.page}>
-      <IGM_Launcher_PageHeader title={t("title")} description={t("subtitle")} />
+  /* ---------- 资源下载清单视图 ---------- */
 
+  const renderResourcesView = () => (
+    <>
       {/* 搜索框：真实调用 thirdParty:search */}
       <form className={styles.searchBox} onSubmit={handleSearchSubmit}>
         <Search size={15} strokeWidth={1.8} className={styles.searchIcon} />
@@ -654,7 +774,9 @@ export function iGM_Launcher_DownloadsPage() {
                   <span className={styles.resourceBody}>
                     <span className={styles.resourceNameRow}>
                       <span className={styles.resourceName}>{resource.name}</span>
-                      <IGM_Launcher_Badge tone="neutral">{t(`type_${resource.type}`)}</IGM_Launcher_Badge>
+                      <IGM_Launcher_Badge tone="neutral">
+                        {t(`type_${resource.type}`)}
+                      </IGM_Launcher_Badge>
                     </span>
                     <span className={styles.resourceDesc}>{resource.description}</span>
                   </span>
@@ -826,11 +948,7 @@ export function iGM_Launcher_DownloadsPage() {
 
       {searchPage < totalPages ? (
         <div className={styles.moreRow}>
-          <IGM_Launcher_Button
-            variant="secondary"
-            disabled={searching}
-            onClick={handleLoadMore}
-          >
+          <IGM_Launcher_Button variant="secondary" disabled={searching} onClick={handleLoadMore}>
             <Download size={14} strokeWidth={1.8} />
             {t("loadMore")}
           </IGM_Launcher_Button>
@@ -896,9 +1014,212 @@ export function iGM_Launcher_DownloadsPage() {
           ) : null}
         </>
       )}
+    </>
+  );
+
+  /* ---------- 版本库视图 ---------- */
+
+  const renderVersionsView = () => (
+    <>
+      {/* 同步状态 */}
+      <IGM_Launcher_Card className={styles.statusCard}>
+        <div className={styles.statusRow}>
+          <span className={styles.statusLabel}>
+            <RefreshCw size={15} strokeWidth={1.8} />
+            {tVersions("syncStatus")}
+          </span>
+          <IGM_Launcher_Badge tone={versionLibrary.source === "empty" ? "muted" : "success"}>
+            {tVersions(`source_${versionLibrary.source}`)}
+          </IGM_Launcher_Badge>
+          <span className={styles.statusMeta}>
+            {tVersions("lastSynced", { time: iGM_Launcher_FormatSyncedAt(versionLibrary.syncedAt) })}
+          </span>
+          <span className={styles.statusMeta}>
+            {tVersions("counts", {
+              total: versionLibrary.total || versionLibrary.entries.length,
+              installed: installedCount,
+            })}
+          </span>
+          <IGM_Launcher_Button
+            variant="secondary"
+            disabled={syncingLibrary}
+            onClick={() => void syncVersionLibrary()}
+          >
+            <RefreshCw size={15} strokeWidth={1.8} />
+            {syncingLibrary ? tVersions("syncing") : tVersions("syncNow")}
+          </IGM_Launcher_Button>
+        </div>
+      </IGM_Launcher_Card>
+
+      {/* 版本类型筛选：与网站版本资料库一致，先按类型区分再按年份分组 */}
+      <IGM_Launcher_Card className={styles.filterCard}>
+        <span className={styles.filterLabel}>{tVersions("filterType")}</span>
+        <div className={styles.chips}>
+          <button
+            type="button"
+            className={`${styles.chip} ${versionTypeFilter === "" ? styles.chipActive : ""}`}
+            onClick={() => setVersionTypeFilter("")}
+          >
+            {tVersions("typeAll")}
+          </button>
+          {IGM_VERSION_TYPE_FILTERS.map((value) => (
+            <button
+              key={value}
+              type="button"
+              className={`${styles.chip} ${versionTypeFilter === value ? styles.chipActive : ""}`}
+              onClick={() => setVersionTypeFilter(value)}
+            >
+              {versionTypeLabel(value)}
+              <span className={styles.chipCount}>{versionTypeCounts[value] ?? 0}</span>
+            </button>
+          ))}
+        </div>
+      </IGM_Launcher_Card>
+
+      {versionGroups.length === 0 ? (
+        versionLibrary.entries.length > 0 ? (
+          <IGM_Launcher_Card className={styles.emptyCard}>
+            <h2 className={styles.emptyTitle}>{tVersions("filteredEmptyTitle")}</h2>
+            <p className={styles.emptyDesc}>{tVersions("filteredEmptyDesc")}</p>
+            <IGM_Launcher_Button variant="secondary" onClick={() => setVersionTypeFilter("")}>
+              {tVersions("showAll")}
+            </IGM_Launcher_Button>
+          </IGM_Launcher_Card>
+        ) : (
+          <IGM_Launcher_Card className={styles.emptyCard}>
+            <h2 className={styles.emptyTitle}>{tVersions("emptyTitle")}</h2>
+            <p className={styles.emptyDesc}>{tVersions("emptyDesc")}</p>
+            <IGM_Launcher_Button
+              variant="primary"
+              disabled={syncingLibrary}
+              onClick={() => void syncVersionLibrary()}
+            >
+              <RefreshCw size={15} strokeWidth={1.8} />
+              {tVersions("syncNow")}
+            </IGM_Launcher_Button>
+          </IGM_Launcher_Card>
+        )
+      ) : (
+        versionGroups.map((group) => (
+          <section key={group.year} className={styles.yearGroup}>
+            <h2 className={styles.yearTitle}>
+              {group.year === "—" ? tVersions("yearUnknown") : group.year}
+            </h2>
+            <div className={styles.versionGrid}>
+              {group.entries.map((entry) => (
+                <IGM_Launcher_Card key={entry.id} className={styles.versionCard}>
+                  <div className={styles.versionHead}>
+                    <span className={styles.versionName}>{entry.version}</span>
+                    <IGM_Launcher_Badge tone={IGM_VERSION_TYPE_TONE[entry.type]}>
+                      {versionTypeLabel(entry.type)}
+                    </IGM_Launcher_Badge>
+                  </div>
+                  <dl className={styles.versionMetaList}>
+                    <div className={styles.metaItem}>
+                      <dt>{tVersions("releaseTime")}</dt>
+                      <dd>{entry.releaseTime ? entry.releaseTime.slice(0, 10) : "—"}</dd>
+                    </div>
+                    <div className={styles.metaItem}>
+                      <dt>{tVersions("totalSize")}</dt>
+                      <dd>
+                        {iGM_Launcher_FormatSize(entry.totalSize) || tVersions("sizePending")}
+                      </dd>
+                    </div>
+                  </dl>
+                  <div className={styles.versionActions}>
+                    {entry.installed ? (
+                      <>
+                        {/* 已下载仍允许重新下载：用于覆盖修复（本地文件被删改后可恢复） */}
+                        <IGM_Launcher_Badge tone="success">{tVersions("installed")}</IGM_Launcher_Badge>
+                        <IGM_Launcher_Button
+                          variant="ghost"
+                          onClick={() => navigate("gameInstall", { version: entry.version })}
+                        >
+                          <RefreshCw size={14} strokeWidth={1.8} />
+                          {tVersions("redownload")}
+                        </IGM_Launcher_Button>
+                      </>
+                    ) : (
+                      <IGM_Launcher_Button
+                        variant="secondary"
+                        onClick={() => navigate("gameInstall", { version: entry.version })}
+                      >
+                        <Download size={14} strokeWidth={1.8} />
+                        {tRC("downloadInstall")}
+                      </IGM_Launcher_Button>
+                    )}
+                  </div>
+                </IGM_Launcher_Card>
+              ))}
+            </div>
+          </section>
+        ))
+      )}
+
+      {installedCount > 0 ? (
+        <IGM_Launcher_Button variant="ghost" onClick={() => navigate("instances")}>
+          <Boxes size={15} strokeWidth={1.8} />
+          {tVersions("viewInstances")}
+        </IGM_Launcher_Button>
+      ) : null}
+
+      <IGM_Launcher_PlaceholderNote>{tRC("versionsHint")}</IGM_Launcher_PlaceholderNote>
+    </>
+  );
+
+  return (
+    <div className={styles.page}>
+      <IGM_Launcher_PageHeader title={tRC("title")} description={tRC("subtitle")} />
+
+      {/* 上半部：资源下载清单（资源下载 / 版本库两个子视图） */}
+      <IGM_Launcher_Card className={styles.sectionCard} as="section">
+        <div className={styles.sectionHeader} id="resourceCenter-downloads">
+          <div>
+            <h2 className={styles.sectionTitle}>{tRC("downloadsTitle")}</h2>
+            <p className={styles.sectionDesc}>{tRC("downloadsDesc")}</p>
+          </div>
+          <div className={styles.viewTabs}>
+            <button
+              type="button"
+              className={`${styles.tab} ${view === "resources" ? styles.tabActive : ""}`}
+              onClick={() => setView("resources")}
+            >
+              {tRC("tabResources")}
+            </button>
+            <button
+              type="button"
+              className={`${styles.tab} ${view === "versions" ? styles.tabActive : ""}`}
+              onClick={() => setView("versions")}
+            >
+              {tRC("tabVersions")}
+            </button>
+          </div>
+        </div>
+
+        <div className={styles.sectionBody}>
+          {view === "resources" ? renderResourcesView() : renderVersionsView()}
+        </div>
+      </IGM_Launcher_Card>
+
+      {/* 下半部：版本 / 资源关系图 */}
+      <IGM_Launcher_Card className={styles.sectionCard} as="section">
+        <div className={styles.sectionHeader} id="resourceCenter-graph">
+          <div>
+            <h2 className={styles.sectionTitle}>{tRC("graphTitle")}</h2>
+            <p className={styles.sectionDesc}>{tRC("graphDesc")}</p>
+          </div>
+        </div>
+        <div className={styles.sectionBody}>
+          <IGM_Launcher_RelationGraph
+            centerVersion={graphCenterVersion || undefined}
+            onOpenVersion={handleOpenVersion}
+            onOpenResource={handleOpenResource}
+          />
+        </div>
+      </IGM_Launcher_Card>
     </div>
   );
 }
 
 // 导出 //
-export default iGM_Launcher_DownloadsPage;
+export default iGM_Launcher_ResourceCenterPage;

@@ -1,0 +1,255 @@
+/*
+ * 文件路径：apps/launcher-ui/components/iGM_Launcher_Home/iGM_Launcher_AccountPanel.module.css
+ * 所属层：前端 / 组件层样式
+ * 路由：G_Home（SPA 页 id：home）
+ * 模块：iGM_Launcher_AccountPanel
+ * 作用：首页右侧账户面板的样式（三块卡片纵向排列，与全局玻璃面板机制一致）
+ * 内容：社区账号头像 / 名称行、正版账户信息、离线账户列表与操作按钮；
+ *       表面色沿用 --igm-surface（Card 组件已内置 --igm-launcher-panel-alpha 玻璃）
+ */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.section {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+/* 社区账号 */
+.communityBody {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatarBlock {
+  flex-shrink: 0;
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background-color: var(--igm-surface-subtle);
+  border: 1px solid var(--igm-border);
+  color: var(--igm-text-muted);
+}
+
+.avatarImage {
+  display: block;
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  object-fit: cover;
+  background-color: var(--igm-surface-subtle);
+  border: 1px solid var(--igm-border);
+}
+
+.communityInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.userName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--igm-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.uidRow {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.metaLabel {
+  font-size: 11px;
+  color: var(--igm-text-subtle);
+}
+
+.uidValue {
+  font-size: 12px;
+  color: var(--igm-text-muted);
+  font-family: "Consolas", "SFMono-Regular", monospace;
+  word-break: break-all;
+}
+
+/* 正版账户 */
+.bindingBody {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bindingNameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.bindingIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  background-color: var(--igm-accent-soft);
+  color: var(--igm-accent);
+}
+
+.bindingName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.uuidLine {
+  font-size: 11px;
+  color: var(--igm-text-subtle);
+  font-family: "Consolas", "SFMono-Regular", monospace;
+  word-break: break-all;
+}
+
+.emptyBody {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.emptyText {
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+/* 离线账户列表 */
+.offlineList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.offlineRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.offlineSelect {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--igm-radius);
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.offlineSelect:hover {
+  background-color: var(--igm-surface-subtle);
+}
+
+.offlineSelectActive {
+  border-color: var(--igm-accent);
+  background-color: var(--igm-accent-soft);
+}
+
+.offlineName {
+  font-size: 12px;
+  color: var(--igm-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.useIcon {
+  color: var(--igm-text-subtle);
+}
+
+.offlineActions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  color: var(--igm-text-muted);
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.iconButton:hover {
+  background-color: var(--igm-surface-subtle);
+  color: var(--igm-text);
+}
+
+.limitHint {
+  font-size: 11px;
+  color: var(--igm-text-subtle);
+}
+
+.smallButton {
+  height: 26px;
+  padding: 0 8px;
+  font-size: 12px;
+}
+
+/* 窄窗时账户面板纵向堆叠，避免与主内容争抢宽度 */
+@media (max-width: 1080px) {
+  .panel {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .section {
+    flex: 1 1 220px;
+  }
+}

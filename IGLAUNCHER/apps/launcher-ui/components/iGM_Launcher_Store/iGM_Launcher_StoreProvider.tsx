@@ -9,6 +9,7 @@
  *       Minecraft 正版绑定（mc:*：设备代码流 / 浏览器授权流 / 列出 / 绑定 / 解绑 /
  *       设为默认 / 档案 / 拥有权 / 刷新）；
  *       模块五：本机游戏目录扫描与导入、版本库缓存与定时同步（minecraft:*）；
+ *       模块二十六 C：本机离线账户列表（offline:*）的加载与增删改切换；
  *       操作结果以本地化提示（notice）回馈界面
  *
  * 说明：所有持久化都经 iGM_Launcher_BridgeCall 完成，
@@ -63,6 +64,7 @@ import {
   type iGM_Launcher_MinecraftProfile,
   type iGM_Launcher_MsaDeviceCode,
   type iGM_Launcher_MsaFlowResult,
+  type iGM_Launcher_OfflineAccount,
   type iGM_Launcher_VersionLibrary,
 } from "@igm-launcher/shared";
 import {
@@ -220,6 +222,21 @@ interface iGM_Launcher_StoreValue {
   mcLoadProfile: (bindingId: string) => Promise<iGM_Launcher_MinecraftProfile | null>;
   /** 重新校验拥有权，通过返回更新后的绑定记录 */
   mcCheckEntitlements: (bindingId: string) => Promise<iGM_Launcher_MCBinding | null>;
+
+  /* ---- 模块二十六 C：本机离线账户列表 ---- */
+
+  /** 本机离线账户列表（上限见共享层 IGM_LAUNCHER_OFFLINE_ACCOUNTS_MAX） */
+  offlineAccounts: iGM_Launcher_OfflineAccount[];
+  /** 当前激活的离线账户 id */
+  offlineActiveId: string | null;
+  /** 拉取离线账户列表（首帧调用一次） */
+  loadOfflineAccounts: () => Promise<void>;
+  /** 新增或编辑离线账户（id 缺省为新建），成功返回是否成功 */
+  saveOfflineAccount: (id: string | null, name: string) => Promise<boolean>;
+  /** 删除离线账户 */
+  removeOfflineAccount: (id: string) => Promise<boolean>;
+  /** 切换激活的离线账户，并把离线身份同步回会话 */
+  setActiveOfflineAccount: (id: string) => Promise<boolean>;
 }
 
 /** 新建实例表单的空值模板（默认值取自共享层常量） */
@@ -290,6 +307,8 @@ export function iGM_Launcher_StoreProvider({ children }: { children: ReactNode }
   const [scanningInstalled, setScanningInstalled] = useState(false);
   const [lastLaunch, setLastLaunch] = useState<iGM_Launcher_LaunchStatus | null>(null);
   const [launchError, setLaunchError] = useState("");
+  const [offlineAccounts, setOfflineAccounts] = useState<iGM_Launcher_OfflineAccount[]>([]);
+  const [offlineActiveId, setOfflineActiveId] = useState<string | null>(null);
 
   const notify = useCallback((tone: iGM_Launcher_Notice["tone"], message: string) => {
     setNotice({ tone, message });
@@ -1055,6 +1074,84 @@ export function iGM_Launcher_StoreProvider({ children }: { children: ReactNode }
     [notifyMcFailure, notify, t],
   );
 
+  /* ---------- 模块二十六 C：本机离线账户列表 ---------- */
+
+  const loadOfflineAccounts = useCallback(async () => {
+    const response = await iGM_Launcher_BridgeCall("offline:list");
+    if (!response.success || !response.data) return;
+    setOfflineAccounts(response.data.accounts);
+    setOfflineActiveId(response.data.activeId);
+  }, []);
+
+  /** 会话离线身份可能被桥接层改写（编辑/删除激活账户）时刷新账户状态 */
+  const refreshOfflineSession = useCallback(async () => {
+    const session = await iGM_Launcher_BridgeCall("account:get-current");
+    if (session.success && session.data) setAccount(session.data.account);
+  }, []);
+
+  const saveOfflineAccount = useCallback(
+    async (id: string | null, name: string) => {
+      const response = await iGM_Launcher_BridgeCall("offline:save", {
+        id: id ?? undefined,
+        name,
+      });
+      if (!response.success || !response.data) {
+        notify("error", response.message || t("offlineSaveFailed"));
+        return false;
+      }
+      setOfflineAccounts(response.data.accounts);
+      setOfflineActiveId(response.data.activeId);
+      notify(
+        "success",
+        id ? t("offlineUpdated", { name }) : t("offlineCreated", { name }),
+      );
+      // 编辑的可能是当前激活账户，刷新会话离线身份
+      if (!id || id === offlineActiveId) await refreshOfflineSession();
+      return true;
+    },
+    [notify, offlineActiveId, refreshOfflineSession, t],
+  );
+
+  const removeOfflineAccount = useCallback(
+    async (id: string) => {
+      const wasActive = id === offlineActiveId;
+      const response = await iGM_Launcher_BridgeCall("offline:remove", { id });
+      if (!response.success || !response.data) {
+        notify("error", response.message || t("offlineRemoveFailed"));
+        return false;
+      }
+      setOfflineAccounts(response.data.accounts);
+      setOfflineActiveId(response.data.activeId);
+      notify("success", t("offlineRemoved"));
+      if (wasActive) await refreshOfflineSession();
+      return true;
+    },
+    [notify, offlineActiveId, refreshOfflineSession, t],
+  );
+
+  const setActiveOfflineAccount = useCallback(
+    async (id: string) => {
+      const response = await iGM_Launcher_BridgeCall("offline:set-active", { id });
+      if (!response.success || !response.data) {
+        notify("error", response.message || t("offlineSetActiveFailed"));
+        return false;
+      }
+      setOfflineAccounts(response.data.accounts);
+      setOfflineActiveId(response.data.activeId);
+      // 会话离线身份已改变，同步更新账户状态
+      setAccount(response.data.account);
+      notify("success", t("offlineActivated"));
+      return true;
+    },
+    [notify, t],
+  );
+
+  // 首帧数据加载完成后拉取离线账户列表（首次会播种当前会话身份）
+  useEffect(() => {
+    if (loading) return;
+    void loadOfflineAccounts();
+  }, [loading, loadOfflineAccounts]);
+
   /* ---------- 模块七：正版验证由账户页与正版绑定页承载 ---------- */
 
   const value = useMemo<iGM_Launcher_StoreValue>(
@@ -1119,6 +1216,12 @@ export function iGM_Launcher_StoreProvider({ children }: { children: ReactNode }
       mcRefresh,
       mcLoadProfile,
       mcCheckEntitlements,
+      offlineAccounts,
+      offlineActiveId,
+      loadOfflineAccounts,
+      saveOfflineAccount,
+      removeOfflineAccount,
+      setActiveOfflineAccount,
     }),
     [
       loading,
@@ -1181,6 +1284,12 @@ export function iGM_Launcher_StoreProvider({ children }: { children: ReactNode }
       mcRefresh,
       mcLoadProfile,
       mcCheckEntitlements,
+      offlineAccounts,
+      offlineActiveId,
+      loadOfflineAccounts,
+      saveOfflineAccount,
+      removeOfflineAccount,
+      setActiveOfflineAccount,
     ],
   );
 

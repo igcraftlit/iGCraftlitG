@@ -16,9 +16,11 @@ import {
   iGM_GenerateUniqueUid,
 } from "../iGM_Repositories/iGM_UserRepository";
 import { iGM_HashPassword, iGM_RandomUuid } from "../iGM_Services/iGM_SecurityService";
+// 模块二十六：资源关系图关系重算
+import { iGM_RebuildResourceRelations } from "../iGM_Services/iGM_ResourceRelationService";
 
 // 类型定义 //
-type iGM_DbCommand = "init" | "migrate" | "seed";
+type iGM_DbCommand = "init" | "migrate" | "seed" | "relations";
 
 // 核心逻辑 //
 /**
@@ -104,8 +106,16 @@ async function iGM_Main(): Promise<void> {
       console.log("[iGM_Database] 种子数据写入完成");
       break;
     }
+    case "relations": {
+      // 模块二十六：按规则重算资源关系图的关系并落库
+      const result = await iGM_RebuildResourceRelations();
+      console.log(
+        `[iGM_Database] 资源关系重算完成：版本 ${result.versions} 个、资源 ${result.resources} 个，推导关系 ${result.relations} 条，落库 ${result.inserted} 条`,
+      );
+      break;
+    }
     default: {
-      console.error("用法：bun run db:init | db:migrate | db:seed");
+      console.error("用法：bun run db:init | db:migrate | db:seed | db:relations");
       process.exit(1);
     }
   }

@@ -129,7 +129,7 @@ export function iGM_Launcher_DownloadProgressPage({ params }: iGM_Launcher_PageP
         <IGM_Launcher_Card className={styles.card}>
           <p className={styles.note}>{t("noTask")}</p>
           <div className={styles.actions}>
-            <IGM_Launcher_Button variant="secondary" onClick={() => navigate("versions")}>
+            <IGM_Launcher_Button variant="secondary" onClick={() => navigate("resourceCenter")}>
               <ArrowLeft size={15} strokeWidth={1.8} />
               {tGame("back")}
             </IGM_Launcher_Button>
@@ -145,7 +145,7 @@ export function iGM_Launcher_DownloadProgressPage({ params }: iGM_Launcher_PageP
         title={t("title")}
         description={t("subtitle")}
         actions={
-          <IGM_Launcher_Button variant="ghost" onClick={() => navigate("versions")}>
+          <IGM_Launcher_Button variant="ghost" onClick={() => navigate("resourceCenter")}>
             <ArrowLeft size={15} strokeWidth={1.8} />
             {t("back")}
           </IGM_Launcher_Button>

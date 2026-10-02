@@ -1,0 +1,82 @@
+{
+  "releases": [
+    {
+      "id": "igm-placeholder-26-3-2",
+      "version": "26.3.2",
+      "releasedAt": "2026-10-03",
+      "updateType": "minor",
+      "isLatest": true,
+      "channel": "stable",
+      "platform": "Windows x64",
+      "fileName": "iGM-CraftCeon-Launcher-Setup-26.3.2.zip",
+      "fileSize": 70412815,
+      "fileSizeLabel": "67.15 MB",
+      "sha256": "7037315e4430b64d380b22f3b3e51c1820b37bfb5f304e6af9a15cf792d42be6",
+      "downloadUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/download/v26.3.2/iGM-CraftCeon-Launcher-Setup-26.3.2.zip",
+      "releasePageUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/tag/v26.3.2",
+      "notes": {
+        "zh-CN": {
+          "added": [
+            "新增外观与主题系统：五套预设主题，支持自定义主色实时预览",
+            "官网下载页新增历史版本管理，展示更新类型与新增 / 优化 / 修复内容"
+          ],
+          "improved": [
+            "窗口标题改为完整名称并采用品牌艺术字体，窗口图标与官网 LOGO 统一",
+            "进入首页时左侧导航自动折叠为图标模式"
+          ],
+          "fixed": ["修复正版认证过期后历史进度仍显示、造成用户困惑的问题"]
+        },
+        "en": {
+          "added": [
+            "Added the appearance and theme system with five presets and live custom accent color preview",
+            "Added release history on the download site with update type and added / improved / fixed notes"
+          ],
+          "improved": [
+            "Window title changed to the full name with the brand display font; window icon unified with the official logo",
+            "The sidebar auto-collapses to icon mode on the home page"
+          ],
+          "fixed": [
+            "Fixed stale authentication progress still being shown after expiry"
+          ]
+        }
+      }
+    },
+    {
+      "id": "igm-placeholder-26-3-1",
+      "version": "26.3.1",
+      "releasedAt": "2026-10-03",
+      "updateType": "minor",
+      "isLatest": false,
+      "channel": "stable",
+      "platform": "Windows x64",
+      "fileName": "iGM-CraftCeon-Launcher-Setup-26.3.1.zip",
+      "fileSize": 70412815,
+      "fileSizeLabel": "67.15 MB",
+      "sha256": "7037315e4430b64d380b22f3b3e51c1820b37bfb5f304e6af9a15cf792d42be6",
+      "downloadUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/download/v26.3.1/iGM-CraftCeon-Launcher-Setup-26.3.1.zip",
+      "releasePageUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/tag/v26.3.1",
+      "notes": {
+        "zh-CN": {
+          "added": [
+            "新增客户端埋点上报，开发者平台可查看各通道调用量",
+            "新增启动器下载站点，统一安装包分发入口"
+          ],
+          "improved": [
+            "优化 installer 与启动器载荷同步流程，避免安装包内嵌旧版本程序"
+          ],
+          "fixed": ["修复安装包内嵌旧版载荷导致的版本不一致问题"]
+        },
+        "en": {
+          "added": [
+            "Added client telemetry reporting for per-channel call statistics",
+            "Added the launcher download site as a unified distribution entry"
+          ],
+          "improved": [
+            "Improved installer payload syncing to avoid stale launcher payloads"
+          ],
+          "fixed": ["Fixed version mismatch caused by stale embedded payloads"]
+        }
+      }
+    }
+  ]
+}

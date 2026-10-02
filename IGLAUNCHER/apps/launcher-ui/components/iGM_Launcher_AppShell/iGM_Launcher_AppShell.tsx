@@ -5,6 +5,7 @@
  * 模块：iGM_Launcher_AppShell
  * 作用：启动器整体布局骨架（TopBar + Sidebar + 内容区 + StatusBar）
  * 内容：CSS Grid 固定四区；侧边栏折叠状态持久化，并随窗口宽度自动收敛；
+ *       进入首页自动折叠为图标模式（用户仍可手动展开，窗口缩放不会在首页又展开）；
  *       内容区顶部渲染操作反馈提示条；
  *       持有 SPA 当前页面状态并提供给侧边栏与内容区（打包态 views:// 不解析目录路由）
  */
@@ -86,15 +87,21 @@ export function iGM_Launcher_AppShell({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // 窗口缩放越过阈值时自动折叠 / 展开
+  // 窗口缩放越过阈值时自动折叠 / 展开；首页始终折叠为图标轨
   useEffect(() => {
     const onResize = () => {
-      const shouldCollapse = window.innerWidth < IGM_LAUNCHER_MIN_SIZE.width;
+      const shouldCollapse =
+        pageId === "home" || window.innerWidth < IGM_LAUNCHER_MIN_SIZE.width;
       setCollapsed((current) => (current !== shouldCollapse ? shouldCollapse : current));
     };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, []);
+  }, [pageId]);
+
+  // 进入首页自动折叠为图标模式（用户仍可手动展开）
+  useEffect(() => {
+    if (pageId === "home") setCollapsed(true);
+  }, [pageId]);
 
   const toggleCollapsed = useCallback(() => {
     setCollapsed((current) => {

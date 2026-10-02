@@ -11,7 +11,9 @@
  *       模块六追加共享根目录、已安装版本与加载器、实例名校验与 gameDir 规则的类型与常量；
  *       模块八追加离线启动（Java 进程）状态类型、启动相关常量与桥接方法；
  *       模块二十追加第三方资源（Modrinth / Fabric）资源、版本与下载任务类型，
- *       以及 thirdParty:* 桥接方法、接口前缀与分页 / 轮询常量
+ *       以及 thirdParty:* 桥接方法、接口前缀与分页 / 轮询常量；
+ *       模块二十六 E 追加资源中心关系图镜像类型（iGM_Launcher_ResourceGraph*）
+ *       与 resource:graph 桥接方法
  */
 
 // 导入依赖 //
@@ -30,9 +32,10 @@ export type iGM_Launcher_NavId =
   | "home"
   | "instances"
   | "java"
-  | "downloads"
-  | "library"
+  /** 模块二十六 E：下载中心与资源库合并为「资源中心」单一入口 */
+  | "resourceCenter"
   | "account"
+  | "appearance"
   | "settings"
   | "about";
 
@@ -978,6 +981,49 @@ export interface iGM_Launcher_InstanceResources {
   total: number;
 }
 
+/* ---- 模块二十六 E：资源中心关系图（主站 /G_Resource/graph 返回体的镜像类型） ---- */
+
+/** 关系类型：compatible 兼容 / dependency 依赖 / derived 衍生 */
+export type iGM_Launcher_ResourceRelationType = "compatible" | "dependency" | "derived";
+
+/** 图节点类型：version Minecraft 版本 / resource 资源库资源 */
+export type iGM_Launcher_ResourceGraphNodeKind = "version" | "resource";
+
+/** 关系图节点（ring 为距中心的跳数，0 即中心节点） */
+export interface iGM_Launcher_ResourceGraphNode {
+  id: string;
+  kind: iGM_Launcher_ResourceGraphNodeKind;
+  /** 展示名称：版本节点为版本字符串，资源节点为资源标题 */
+  label: string;
+  /** 版本节点：版本类型（release / snapshot / old_beta / old_alpha） */
+  versionType?: string;
+  /** 资源节点：资源类型（mod / texture_pack / modpack 等） */
+  resourceType?: string;
+  /** 资源节点：累计下载数 */
+  downloadCount?: number;
+  /** 距中心节点的跳数（0 为中心） */
+  ring: number;
+  /** 是否为中心节点 */
+  center: boolean;
+}
+
+/** 关系图边 */
+export interface iGM_Launcher_ResourceGraphEdge {
+  from: string;
+  to: string;
+  relation: iGM_Launcher_ResourceRelationType;
+}
+
+/** 资源中心关系图数据 */
+export interface iGM_Launcher_ResourceGraphData {
+  /** 中心节点 id */
+  centerId: string;
+  /** 中心节点类型 */
+  centerKind: iGM_Launcher_ResourceGraphNodeKind;
+  nodes: iGM_Launcher_ResourceGraphNode[];
+  edges: iGM_Launcher_ResourceGraphEdge[];
+}
+
 // 类型定义（Bun 桥接层协议） //
 
 /**
@@ -1091,7 +1137,27 @@ export type iGM_Launcher_BridgeMethod =
   | "thirdParty:download-clear-completed"
   /* 模块二十补充：在系统文件管理器中打开下载文件所在目录
      （主进程原生能力，浏览器回退层如实拒绝） */
-  | "shell:open-path";
+  | "shell:open-path"
+  /* 模块二十六 E：资源中心关系图（主站 /G_Resource/graph，返回 nodes + edges；
+     入参用 version（版本号）或 resourceId（资源 id）指定中心节点） */
+  | "resource:graph"
+  /* 模块二十六 B：外观与主题系统
+     （偏好持久化到 IGM_LAUNCHER_DATA_ROOT/appearance/appearance.json；
+      背景图选择走系统文件对话框、拷贝到数据目录并回传 data URL，
+      浏览器回退层无文件系统能力，仅 get / save / clear 可用） */
+  | "appearance:get"
+  | "appearance:save"
+  | "appearance:pick-background"
+  | "appearance:clear-background"
+  /* 模块二十六 C：首页重构与账户面板
+     （usage:get 读取主进程累计使用时长；offline:* 管理本机离线账户列表，
+      离线账户文件落盘 IGM_LAUNCHER_DATA_ROOT/offline-accounts.json，
+      切换离线账户时同步回写会话文件的 offlineName / offlineUuid） */
+  | "usage:get"
+  | "offline:list"
+  | "offline:save"
+  | "offline:remove"
+  | "offline:set-active";
 
 /** 桥接层调用入参（按方法取用，未使用的键忽略） */
 export interface iGM_Launcher_BridgeParams {
@@ -1171,6 +1237,9 @@ export interface iGM_Launcher_BridgeParams {
   purge?: boolean;
   /** 需要在系统文件管理器中打开的文件或目录绝对路径（shell:open-path） */
   openPath?: string;
+  /* ---- 模块二十六 B：外观与主题 ---- */
+  /** 外观偏好部分字段（appearance:save 仅合并传入字段） */
+  appearance?: Partial<iGM_Launcher_AppearancePrefs>;
 }
 
 /** 统一响应结构（第五节、第六节约定的 { success, code, message, data }） */
@@ -1330,18 +1399,61 @@ export interface iGM_Launcher_BridgeDataMap {
   "thirdParty:download-clear-completed": { removed: number };
   /* 打开文件 / 目录：opened 为 false 表示系统未接管（界面回退展示路径文本） */
   "shell:open-path": { opened: boolean };
+  /* ---- 模块二十六 E：资源中心关系图 ---- */
+  "resource:graph": { graph: iGM_Launcher_ResourceGraphData };
+  /* ---- 模块二十六 B：外观与主题 ---- */
+  "appearance:get": {
+    appearance: iGM_Launcher_AppearancePrefs;
+    /** 背景图 data URL（无背景图时为 null） */
+    backgroundDataUrl: string | null;
+  };
+  "appearance:save": {
+    appearance: iGM_Launcher_AppearancePrefs;
+    backgroundDataUrl: string | null;
+  };
+  /* 选择背景图：backgroundPath 为空串表示用户取消；否则为相对数据根目录的路径 */
+  "appearance:pick-background": {
+    backgroundPath: string;
+    backgroundDataUrl: string;
+    size: number;
+    mime: string;
+  };
+  "appearance:clear-background": {
+    appearance: iGM_Launcher_AppearancePrefs;
+    backgroundDataUrl: null;
+  };
+  /* ---- 模块二十六 C：首页累计使用时长与离线账户 ---- */
+  "usage:get": { usage: iGM_Launcher_UsageSnapshot };
+  "offline:list": {
+    accounts: iGM_Launcher_OfflineAccount[];
+    activeId: string | null;
+  };
+  "offline:save": {
+    accounts: iGM_Launcher_OfflineAccount[];
+    activeId: string | null;
+  };
+  "offline:remove": {
+    accounts: iGM_Launcher_OfflineAccount[];
+    activeId: string | null;
+  };
+  "offline:set-active": {
+    accounts: iGM_Launcher_OfflineAccount[];
+    activeId: string | null;
+    /** 已同步回写离线身份后的会话 */
+    account: iGM_Launcher_AccountSession;
+  };
 }
 
 // 核心逻辑（常量） //
 
-/** 应用显示名称 */
-export const IGM_LAUNCHER_APP_NAME = "iGM Launcher";
+/** 应用显示名称（模块二十六 F 起为完整品牌名称，窗口标题与顶栏品牌共用） */
+export const IGM_LAUNCHER_APP_NAME = "iGM CraftCeon Launcher";
 
 /** 应用反向域名标识 */
 export const IGM_LAUNCHER_IDENTIFIER = "com.igcraftlit.launcher";
 
 /** 应用版本（界面关于页、窗口标题与启动参数统一显示该值） */
-export const IGM_LAUNCHER_VERSION = "26.3.1 official version";
+export const IGM_LAUNCHER_VERSION = "26.3.2 official version";
 
 /** 窗口标题：应用名称 + 版本号，供原生窗口标题栏与界面标题统一引用 */
 export const IGM_LAUNCHER_APP_TITLE = `${IGM_LAUNCHER_APP_NAME} ${IGM_LAUNCHER_VERSION}`;
@@ -1452,6 +1564,134 @@ export const IGM_LAUNCHER_GLASS_PRESETS = [
 /** 玻璃背景预设类型 */
 export type iGM_Launcher_GlassPreset = (typeof IGM_LAUNCHER_GLASS_PRESETS)[number];
 
+/* ---- 模块二十六 B：外观与主题系统 ---- */
+
+/**
+ * 可选主题预设（default 表示跟随 next-themes 的明暗模式）。
+ * 取值写入 html[data-igm-theme-preset]，与 next-themes 的 data-theme 并存且互不冲突：
+ * 预设选择器带独立属性名，未选择预设时移除该属性，回落为明暗主题。
+ */
+export const IGM_LAUNCHER_THEME_PRESETS = [
+  "default",
+  "minimal-white",
+  "night-black",
+  "star-blue",
+  "aurora-green",
+  "sunset-orange",
+] as const;
+
+/** 主题预设类型 */
+export type iGM_Launcher_ThemePreset = (typeof IGM_LAUNCHER_THEME_PRESETS)[number];
+
+/** 外观偏好（持久化到 IGM_LAUNCHER_DATA_ROOT/appearance/appearance.json） */
+export interface iGM_Launcher_AppearancePrefs {
+  /** 主题预设，default 表示跟随明暗模式 */
+  themePreset: iGM_Launcher_ThemePreset;
+  /** 自定义主色（#rrggbb），null 表示使用预设主题自带强调色 */
+  accentColor: string | null;
+  /** 背景图相对路径（相对数据根目录，如 appearance/background.jpg），null 表示无背景图 */
+  backgroundPath: string | null;
+  /** 背景模糊强度（px，范围 0 - IGM_LAUNCHER_BG_BLUR_MAX） */
+  backgroundBlur: number;
+}
+
+/** 外观偏好 localStorage 键（浏览器回退层使用，图片本体绝不写入） */
+export const IGM_LAUNCHER_APPEARANCE_STORAGE_KEY = "iGM_Launcher_Appearance";
+
+/** 外观偏好文件（相对 IGM_LAUNCHER_DATA_ROOT） */
+export const IGM_LAUNCHER_APPEARANCE_FILE = "appearance/appearance.json";
+
+/** 背景图存放目录（相对 IGM_LAUNCHER_DATA_ROOT） */
+export const IGM_LAUNCHER_APPEARANCE_BG_DIR = "appearance";
+
+/** 背景图允许的扩展名（小写，不含点） */
+export const IGM_LAUNCHER_BG_IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp"] as const;
+
+/** 背景图大小上限（字节，5MB） */
+export const IGM_LAUNCHER_BG_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+
+/** 背景模糊强度上限（px） */
+export const IGM_LAUNCHER_BG_BLUR_MAX = 40;
+
+/** 外观偏好默认值 */
+export function iGM_Launcher_EmptyAppearance(): iGM_Launcher_AppearancePrefs {
+  return { themePreset: "default", accentColor: null, backgroundPath: null, backgroundBlur: 0 };
+}
+
+/* ---- 模块二十六 C：累计使用时长与离线账户 ---- */
+
+/**
+ * 累计使用时长数据文件（相对 IGM_LAUNCHER_DATA_ROOT）。
+ * firstStartedAt 为首次启动时间，totalMs 为累计使用毫秒数，lastTickAt 为主进程上次心跳时间。
+ */
+export interface iGM_Launcher_UsageFile {
+  firstStartedAt: string;
+  totalMs: number;
+  lastTickAt: string;
+}
+
+/** 界面可见的累计使用时长快照（不含心跳时间） */
+export interface iGM_Launcher_UsageSnapshot {
+  firstStartedAt: string;
+  totalMs: number;
+}
+
+/** 离线账户记录（仅本机使用，与正版绑定无关） */
+export interface iGM_Launcher_OfflineAccount {
+  id: string;
+  /** Minecraft 规则过滤后的离线角色名 */
+  name: string;
+  /** 离线角色 UUID（标准 8-4-4-4-12 小写十六进制） */
+  uuid: string;
+  /** 创建时间（ISO 字符串） */
+  createdAt: string;
+}
+
+/** 离线账户数据文件（相对 IGM_LAUNCHER_DATA_ROOT） */
+export interface iGM_Launcher_OfflineAccountsFile {
+  accounts: iGM_Launcher_OfflineAccount[];
+  activeId: string | null;
+}
+
+/** 累计使用时长数据文件（相对 IGM_LAUNCHER_DATA_ROOT） */
+export const IGM_LAUNCHER_USAGE_FILE = "usage.json";
+
+/** 离线账户数据文件（相对 IGM_LAUNCHER_DATA_ROOT） */
+export const IGM_LAUNCHER_OFFLINE_ACCOUNTS_FILE = "offline-accounts.json";
+
+/** 离线账户数量上限 */
+export const IGM_LAUNCHER_OFFLINE_ACCOUNTS_MAX = 6;
+
+/** 累计使用时长心跳间隔（毫秒） */
+export const IGM_LAUNCHER_USAGE_TICK_MS = 60_000;
+
+/** 单次心跳最大计入时长（毫秒，夹紧到 10 分钟，避免长时间关机后跳变） */
+export const IGM_LAUNCHER_USAGE_MAX_DELTA_MS = 10 * 60_000;
+
+/** 归一化任意输入为合法外观偏好（非法字段一律回落默认值） */
+export function iGM_Launcher_NormalizeAppearance(input: unknown): iGM_Launcher_AppearancePrefs {
+  const source = (input ?? {}) as Partial<iGM_Launcher_AppearancePrefs>;
+  const presetList: readonly string[] = IGM_LAUNCHER_THEME_PRESETS;
+  const themePreset: iGM_Launcher_ThemePreset =
+    typeof source.themePreset === "string" && presetList.includes(source.themePreset)
+      ? (source.themePreset as iGM_Launcher_ThemePreset)
+      : "default";
+  const accentColor =
+    typeof source.accentColor === "string" && /^#[0-9a-fA-F]{6}$/.test(source.accentColor)
+      ? source.accentColor.toLowerCase()
+      : null;
+  const backgroundPath =
+    typeof source.backgroundPath === "string" && source.backgroundPath.trim()
+      ? source.backgroundPath.trim()
+      : null;
+  const blurRaw = typeof source.backgroundBlur === "number" ? source.backgroundBlur : 0;
+  const backgroundBlur = Math.min(
+    IGM_LAUNCHER_BG_BLUR_MAX,
+    Math.max(0, Math.round(blurRaw)),
+  );
+  return { themePreset, accentColor, backgroundPath, backgroundBlur };
+}
+
 /** 模块一支持的语言清单（仅 zh-CN / en） */
 export const IGM_LAUNCHER_LOCALES: readonly {
   value: iGM_Launcher_Locale;
@@ -1503,6 +1743,12 @@ export const IGM_LAUNCHER_API_ME_PATH = "/G_Auth/me";
 
 /** 主站 API 请求超时（毫秒） */
 export const IGM_LAUNCHER_API_TIMEOUT_MS = 8000;
+
+/**
+ * 启动器主站 API 请求头 User-Agent。
+ * 与 Zig 下载引擎保持一致，便于主站识别来源并可联系维护者，属项目硬性要求。
+ */
+export const IGM_LAUNCHER_API_USER_AGENT = "iGM-CraftCeon/1.0 (contact: igcraftlit@outlook.com)";
 
 /**
  * 主站第三方资源接口超时（毫秒）。
@@ -1737,6 +1983,13 @@ export const IGM_LAUNCHER_MC_FLOW_EXPIRED = 4002;
 
 /** 桥接层：未配置 IGM_MSA_CLIENT_ID，真实微软链路不可用，绑定一律拒绝 */
 export const IGM_LAUNCHER_MC_CLIENT_ID_MISSING = 4003;
+
+/**
+ * 单次正版认证流程有效期（毫秒）：15 分钟。
+ * 设备代码流程另有微软下发的 expires_in，浏览器授权流程无独立 TTL 字段，
+ * 界面据此计算进度截止时间，到点即剔除该次认证的全部进度。
+ */
+export const IGM_LAUNCHER_MC_FLOW_TTL_MS = 15 * 60 * 1000;
 
 /* ---- 模块五常量：离线游戏 / 游戏目录扫描 / 版本库同步 ---- */
 

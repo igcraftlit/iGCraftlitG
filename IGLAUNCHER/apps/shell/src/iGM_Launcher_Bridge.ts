@@ -19,7 +19,11 @@
  *       文件系统并运行 -version 探测，可用性一律以真实结果为准）；
  *       模块二十 thirdParty:* 第三方资源分支（Modrinth / Fabric 资源搜索、详情与
  *       下载任务转发，全部走主站 /G_ThirdParty 接口，任务由主站后端统一管理），
- *       以及 shell:open-path 在系统文件管理器中打开下载文件所在目录
+ *       以及 shell:open-path 在系统文件管理器中打开下载文件所在目录；
+ *       模块二十六 B appearance:* 外观偏好读写与背景图选择
+ *       （偏好落盘 appearance/appearance.json，背景图拷入 appearance/ 并回传 data URL）；
+ *       模块二十六 E resource:graph 资源中心关系图（GET 主站 /G_Resource/graph，
+ *       按版本号或资源 id 取中心节点的节点与边，请求头携带项目约定的 User-Agent）
  *
  * 说明：模块二只实现“界面可用”的本地持久化与占位业务逻辑，
  *       真实版本清单、下载与游戏启动留待后续模块；
@@ -39,9 +43,9 @@
 
 // 导入依赖 //
 import { existsSync } from "node:fs";
-import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
-import { basename, dirname, join, normalize } from "node:path";
+import { basename, dirname, extname, join, normalize } from "node:path";
 import { Utils } from "electrobun/main";
 import {
   IGM_LAUNCHER_API_BASE,
@@ -54,6 +58,7 @@ import {
   IGM_LAUNCHER_API_THIRD_PARTY_PATH,
   IGM_LAUNCHER_API_THIRD_PARTY_TIMEOUT_MS,
   IGM_LAUNCHER_API_TIMEOUT_MS,
+  IGM_LAUNCHER_API_USER_AGENT,
   IGM_LAUNCHER_BRIDGE_FAILED,
   IGM_LAUNCHER_BRIDGE_INVALID,
   IGM_LAUNCHER_BRIDGE_NOT_FOUND,
@@ -61,6 +66,10 @@ import {
   IGM_LAUNCHER_BRIDGE_OK,
   IGM_LAUNCHER_BRIDGE_UNAUTHORIZED,
   IGM_LAUNCHER_BRIDGE_UNREACHABLE,
+  IGM_LAUNCHER_APPEARANCE_BG_DIR,
+  IGM_LAUNCHER_APPEARANCE_FILE,
+  IGM_LAUNCHER_BG_IMAGE_MAX_BYTES,
+  IGM_LAUNCHER_BG_IMAGE_EXTENSIONS,
   IGM_LAUNCHER_DATA_ROOT,
   IGM_LAUNCHER_INSTANCE_JVM_ARGS_DEFAULT,
   IGM_LAUNCHER_INSTANCE_MEMORY_DEFAULT,
@@ -70,7 +79,10 @@ import {
   IGM_LAUNCHER_JAVA_FILE,
   IGM_LAUNCHER_MC_FLOW_EXPIRED,
   IGM_LAUNCHER_OFFLINE_DEFAULT_NAME,
+  IGM_LAUNCHER_OFFLINE_ACCOUNTS_FILE,
+  IGM_LAUNCHER_OFFLINE_ACCOUNTS_MAX,
   IGM_LAUNCHER_SESSION_FILE,
+  IGM_LAUNCHER_USAGE_FILE,
   IGM_LAUNCHER_THIRD_PARTY_INSTANCE_SUBDIRS,
   IGM_LAUNCHER_THIRD_PARTY_PAGE_SIZE,
   IGM_LAUNCHER_VERSION_LIBRARY_PAGE_SIZE,
@@ -83,8 +95,11 @@ import {
   iGM_Launcher_MapSiteUser,
   iGM_Launcher_McRootOfParent,
   iGM_Launcher_NewId,
+  iGM_Launcher_NormalizeAppearance,
   iGM_Launcher_NormalizeVersionType,
+  iGM_Launcher_SafePlayerName,
   type iGM_Launcher_AccountSession,
+  type iGM_Launcher_AppearancePrefs,
   type iGM_Launcher_DownloadProgress,
   type iGM_Launcher_GameDir,
   type iGM_Launcher_GameDirScanResult,
@@ -92,6 +107,7 @@ import {
   type iGM_Launcher_InstallerConfig,
   type iGM_Launcher_InstanceNameCheck,
   type iGM_Launcher_RootDirInfo,
+  type iGM_Launcher_ResourceGraphData,
   type iGM_Launcher_ScannedVersion,
   type iGM_Launcher_VersionLibrary,
   type iGM_Launcher_VersionLibraryEntry,
@@ -105,10 +121,14 @@ import {
   type iGM_Launcher_LocalData,
   type iGM_Launcher_MCBinding,
   type iGM_Launcher_MCBindingSecret,
+  type iGM_Launcher_OfflineAccount,
+  type iGM_Launcher_OfflineAccountsFile,
   type iGM_Launcher_LaunchMode,
   type iGM_Launcher_SiteEnvelope,
   type iGM_Launcher_SiteUser,
   type iGM_Launcher_ThirdPartyTask,
+  type iGM_Launcher_UsageFile,
+  type iGM_Launcher_UsageSnapshot,
   type iGM_Launcher_VersionFilesManifest,
   type iGM_Launcher_VersionType,
 } from "@igm-launcher/shared";
@@ -230,6 +250,58 @@ async function iGM_Launcher_WriteJson(relativePath: string, value: unknown): Pro
   await writeFile(absolutePath, `${JSON.stringify(value, null, 2)}\n`, "utf8");
 }
 
+/* ---- 模块二十六 B：外观偏好读写 ---- */
+
+/** 背景图扩展名 -> MIME 映射 */
+const IGM_LAUNCHER_BG_MIME: Record<string, string> = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+};
+
+/** 规范化扩展名（jpeg 统一存为 jpg，便于覆盖旧图） */
+function iGM_Launcher_NormalizeBgExt(ext: string): string {
+  return ext === "jpeg" ? "jpg" : ext;
+}
+
+/** 读取外观偏好（缺失或损坏时回落默认值） */
+async function iGM_Launcher_LoadAppearance(): Promise<iGM_Launcher_AppearancePrefs> {
+  const raw = await iGM_Launcher_ReadJson<iGM_Launcher_AppearancePrefs | null>(
+    IGM_LAUNCHER_APPEARANCE_FILE,
+    null,
+  );
+  return iGM_Launcher_NormalizeAppearance(raw);
+}
+
+/** 把背景图文件读成 data URL（无路径或文件不存在时返回 null） */
+async function iGM_Launcher_ReadBackgroundDataUrl(relativePath: string | null): Promise<string | null> {
+  if (!relativePath) return null;
+  const absolutePath = join(IGM_LAUNCHER_DATA_ROOT, relativePath);
+  if (!existsSync(absolutePath)) return null;
+  try {
+    const buffer = await readFile(absolutePath);
+    const ext = iGM_Launcher_NormalizeBgExt(extname(absolutePath).replace(".", "").toLowerCase());
+    const mime = IGM_LAUNCHER_BG_MIME[ext] ?? "application/octet-stream";
+    return `data:${mime};base64,${buffer.toString("base64")}`;
+  } catch (error) {
+    console.warn(`[iGM_Launcher_Bridge] 读取背景图失败：${absolutePath}`, error);
+    return null;
+  }
+}
+
+/** 清理数据目录下全部 background.* 残留文件 */
+async function iGM_Launcher_CleanBackgroundFiles(keepFileName: string | null): Promise<void> {
+  const dir = join(IGM_LAUNCHER_DATA_ROOT, IGM_LAUNCHER_APPEARANCE_BG_DIR);
+  if (!existsSync(dir)) return;
+  const entries = await readdir(dir);
+  for (const entry of entries) {
+    if (!entry.startsWith("background.")) continue;
+    if (keepFileName && entry === keepFileName) continue;
+    await rm(join(dir, entry), { force: true });
+  }
+}
+
 /* ---- 初始数据 ---- */
 
 /** 读取实例列表 */
@@ -271,6 +343,67 @@ async function iGM_Launcher_LoadAccount(): Promise<iGM_Launcher_AccountSession> 
 /** 保存账户会话 */
 async function iGM_Launcher_SaveAccount(account: iGM_Launcher_AccountSession): Promise<void> {
   await iGM_Launcher_WriteJson(IGM_LAUNCHER_SESSION_FILE, account);
+}
+
+/* ---- 模块二十六 C：累计使用时长与离线账户 ---- */
+
+/** 读取累计使用时长快照（文件不存在或损坏时返回 totalMs=0 的零值） */
+async function iGM_Launcher_Usage_Load(): Promise<iGM_Launcher_UsageSnapshot> {
+  const file = await iGM_Launcher_ReadJson<iGM_Launcher_UsageFile | null>(
+    IGM_LAUNCHER_USAGE_FILE,
+    null,
+  );
+  if (!file || typeof file.firstStartedAt !== "string" || typeof file.totalMs !== "number") {
+    return { firstStartedAt: "", totalMs: 0 };
+  }
+  return { firstStartedAt: file.firstStartedAt, totalMs: file.totalMs };
+}
+
+/**
+ * 读取离线账户文件；不存在时用当前会话的离线身份播种一条并置为 active（只播种一次）。
+ * 播种后立即落盘，保证离线角色列表在首次进入首页时即有内容。
+ */
+async function iGM_Launcher_Offline_Load(
+  account: iGM_Launcher_AccountSession,
+): Promise<iGM_Launcher_OfflineAccountsFile> {
+  const file = await iGM_Launcher_ReadJson<iGM_Launcher_OfflineAccountsFile | null>(
+    IGM_LAUNCHER_OFFLINE_ACCOUNTS_FILE,
+    null,
+  );
+  if (file && Array.isArray(file.accounts)) {
+    return { accounts: file.accounts, activeId: file.activeId ?? null };
+  }
+  const seeded: iGM_Launcher_OfflineAccount = {
+    id: iGM_Launcher_NewId("off"),
+    name: iGM_Launcher_SafePlayerName(account.offlineName || IGM_LAUNCHER_OFFLINE_DEFAULT_NAME),
+    uuid: account.offlineUuid || iGM_Launcher_MakeOfflineUuid(),
+    createdAt: new Date().toISOString(),
+  };
+  const next: iGM_Launcher_OfflineAccountsFile = { accounts: [seeded], activeId: seeded.id };
+  await iGM_Launcher_WriteJson(IGM_LAUNCHER_OFFLINE_ACCOUNTS_FILE, next);
+  return next;
+}
+
+/** 持久化离线账户文件 */
+async function iGM_Launcher_Offline_Save(file: iGM_Launcher_OfflineAccountsFile): Promise<void> {
+  await iGM_Launcher_WriteJson(IGM_LAUNCHER_OFFLINE_ACCOUNTS_FILE, file);
+}
+
+/**
+ * 把指定离线账户的身份写回会话文件。
+ * 现有启动链路（iGM_Launcher_Launch 读 request.account.offlineName / offlineUuid）据此自动生效。
+ */
+async function iGM_Launcher_Offline_ApplyToSession(
+  account: iGM_Launcher_OfflineAccount,
+): Promise<iGM_Launcher_AccountSession> {
+  const session = await iGM_Launcher_LoadAccount();
+  const next: iGM_Launcher_AccountSession = {
+    ...session,
+    offlineName: account.name,
+    offlineUuid: account.uuid,
+  };
+  await iGM_Launcher_SaveAccount(next);
+  return next;
 }
 
 /* ---- 主站 API 请求（登录 / 账户同步） ---- */
@@ -345,16 +478,21 @@ async function iGM_Launcher_ApiRequest<T>(
     sessionCookie?: string;
     /** 单次请求超时覆盖（毫秒），缺省用 IGM_LAUNCHER_API_TIMEOUT_MS */
     timeoutMs?: number;
+    /** 额外请求头（如资源关系图接口要求的 User-Agent），与默认头合并 */
+    headers?: Record<string, string>;
   } = {},
 ): Promise<iGM_Launcher_ApiResult<T>> {
-  const { method = "POST", body, sessionCookie = "", timeoutMs } = options;
+  const { method = "POST", body, sessionCookie = "", timeoutMs, headers: extraHeaders } = options;
   const controller = new AbortController();
   const timer = setTimeout(
     () => controller.abort(),
     timeoutMs && timeoutMs > 0 ? timeoutMs : IGM_LAUNCHER_API_TIMEOUT_MS,
   );
   try {
-    const headers: Record<string, string> = { "content-type": "application/json" };
+    const headers: Record<string, string> = {
+      "content-type": "application/json",
+      ...(extraHeaders ?? {}),
+    };
     if (sessionCookie) {
       headers.Cookie = `${IGM_LAUNCHER_API_SESSION_COOKIE}=${sessionCookie}`;
     }
@@ -1486,6 +1624,64 @@ async function iGM_Launcher_HandleThirdParty(
   }
 }
 
+/* ---- 模块二十六 E：资源中心关系图 ---- */
+
+/**
+ * 资源中心关系图分支：GET 主站 /G_Resource/graph。
+ * 入参与后端 query 对齐——version（版本号）或 resourceId（资源 id）二选一指定中心节点；
+ * 主站被网关/隧道拦截时可能返回 HTML，此处给出带状态码的友好提示，绝不暴露原始错误串。
+ */
+async function iGM_Launcher_HandleResource(
+  method: iGM_Launcher_BridgeMethod,
+  params: iGM_Launcher_BridgeParams,
+): Promise<iGM_Launcher_BridgeResponse> {
+  switch (method) {
+    case "resource:graph": {
+      const version = params.version?.trim() ?? "";
+      const resourceId = params.resourceId?.trim() ?? "";
+      if (!version && !resourceId) {
+        return iGM_Launcher_Fail(
+          IGM_LAUNCHER_BRIDGE_INVALID,
+          "缺少中心版本号或资源 id",
+        );
+      }
+      const query = new URLSearchParams();
+      if (resourceId) query.set("resourceId", resourceId);
+      else query.set("version", version);
+      const result = await iGM_Launcher_ApiRequest<iGM_Launcher_ResourceGraphData>(
+        `/G_Resource/graph?${query.toString()}`,
+        { method: "GET", headers: { "User-Agent": IGM_LAUNCHER_API_USER_AGENT } },
+      );
+      if (!result.reached) {
+        return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_UNREACHABLE, "资源关系图接口不可达");
+      }
+      if (!result.envelope) {
+        console.error(
+          `[iGM_Launcher_Bridge] 资源关系图接口返回非 JSON 响应：/G_Resource/graph HTTP ${result.status}`,
+        );
+        return iGM_Launcher_Fail(
+          IGM_LAUNCHER_BRIDGE_FAILED,
+          `资源关系图服务返回了非 JSON 响应（HTTP ${result.status}），请检查 api.igcraftlit.com 隧道或本地后端状态`,
+        );
+      }
+      if (!result.envelope.success || !result.envelope.data) {
+        const code = result.envelope.code ?? result.status;
+        return iGM_Launcher_Fail(
+          typeof code === "number" && code > 0 ? code : IGM_LAUNCHER_BRIDGE_FAILED,
+          "资源关系图加载失败，请稍后重试",
+        );
+      }
+      return iGM_Launcher_Ok({ graph: result.envelope.data });
+    }
+
+    default:
+      return iGM_Launcher_Fail(
+        IGM_LAUNCHER_BRIDGE_NOT_IMPLEMENTED,
+        `未实现的资源中心方法：${String(method)}`,
+      );
+  }
+}
+
 /* ---- 桥接层入口 ---- */
 
 /**
@@ -1510,6 +1706,11 @@ export async function iGM_Launcher_Bridge_Call(
     // 模块二十：第三方资源（Modrinth / Fabric）分支
     if (method.startsWith("thirdParty:")) {
       return await iGM_Launcher_HandleThirdParty(method, params);
+    }
+
+    // 模块二十六 E：资源中心关系图分支
+    if (method.startsWith("resource:")) {
+      return await iGM_Launcher_HandleResource(method, params);
     }
 
     switch (method) {
@@ -1985,6 +2186,199 @@ export async function iGM_Launcher_Bridge_Call(
             error instanceof Error ? error.message : "无法打开该路径",
           );
         }
+      }
+
+      /* ---------- 模块二十六 B：外观与主题 ---------- */
+      case "appearance:get": {
+        const appearance = await iGM_Launcher_LoadAppearance();
+        return iGM_Launcher_Ok({
+          appearance,
+          backgroundDataUrl: await iGM_Launcher_ReadBackgroundDataUrl(appearance.backgroundPath),
+        });
+      }
+
+      case "appearance:save": {
+        // 仅合并传入字段，未传字段沿用已落盘值
+        const merged = iGM_Launcher_NormalizeAppearance({
+          ...(await iGM_Launcher_LoadAppearance()),
+          ...(params.appearance ?? {}),
+        });
+        await iGM_Launcher_WriteJson(IGM_LAUNCHER_APPEARANCE_FILE, merged);
+        return iGM_Launcher_Ok({
+          appearance: merged,
+          backgroundDataUrl: await iGM_Launcher_ReadBackgroundDataUrl(merged.backgroundPath),
+        });
+      }
+
+      /*
+        选择背景图：打开系统文件选择器（仅文件、禁目录），
+        前端已校验一次，主进程在此复核扩展名（jpg/jpeg/png/webp）与大小（≤5MB），
+        通过后拷贝到 data/appearance/background.<ext> 并清理其他扩展名残留，
+        最后回传相对路径、data URL、大小与 MIME。用户取消时返回空路径。
+      */
+      case "appearance:pick-background": {
+        try {
+          // 起始目录必须是确定字符串，否则 Electrobun FFI 转 C 字符串时崩溃
+          const startingFolder = homedir();
+          const picked = await Utils.openFileDialog({
+            startingFolder,
+            canChooseFiles: true,
+            canChooseDirectory: false,
+            allowsMultipleSelection: false,
+          });
+          const pickedPath = iGM_Launcher_NormalizeDialogPaths(picked);
+          if (!pickedPath) {
+            return iGM_Launcher_Ok({ backgroundPath: "", backgroundDataUrl: "", size: 0, mime: "" });
+          }
+
+          const ext = iGM_Launcher_NormalizeBgExt(extname(pickedPath).replace(".", "").toLowerCase());
+          if (!(IGM_LAUNCHER_BG_IMAGE_EXTENSIONS as readonly string[]).includes(ext)) {
+            return iGM_Launcher_Fail(
+              IGM_LAUNCHER_BRIDGE_INVALID,
+              "背景图仅支持 JPG / PNG / WebP 格式",
+            );
+          }
+          const info = await stat(pickedPath);
+          if (!info.isFile()) {
+            return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_INVALID, "所选路径不是文件");
+          }
+          if (info.size > IGM_LAUNCHER_BG_IMAGE_MAX_BYTES) {
+            return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_INVALID, "背景图不能超过 5MB");
+          }
+
+          const mime = IGM_LAUNCHER_BG_MIME[ext] ?? "application/octet-stream";
+          const fileName = `background.${ext}`;
+          const relativePath = `${IGM_LAUNCHER_APPEARANCE_BG_DIR}/${fileName}`;
+          const absoluteDir = join(IGM_LAUNCHER_DATA_ROOT, IGM_LAUNCHER_APPEARANCE_BG_DIR);
+          await mkdir(absoluteDir, { recursive: true });
+          await iGM_Launcher_CleanBackgroundFiles(fileName);
+          await copyFile(pickedPath, join(IGM_LAUNCHER_DATA_ROOT, relativePath));
+          const buffer = await readFile(join(IGM_LAUNCHER_DATA_ROOT, relativePath));
+          return iGM_Launcher_Ok({
+            backgroundPath: relativePath,
+            backgroundDataUrl: `data:${mime};base64,${buffer.toString("base64")}`,
+            size: info.size,
+            mime,
+          });
+        } catch (error) {
+          return iGM_Launcher_Fail(
+            IGM_LAUNCHER_BRIDGE_FAILED,
+            error instanceof Error ? error.message : "无法打开系统文件选择器",
+          );
+        }
+      }
+
+      /* 清除背景图：删除数据目录下的背景图文件并清空偏好中的背景路径 */
+      case "appearance:clear-background": {
+        try {
+          await iGM_Launcher_CleanBackgroundFiles(null);
+          const appearance = iGM_Launcher_NormalizeAppearance({
+            ...(await iGM_Launcher_LoadAppearance()),
+            backgroundPath: null,
+          });
+          await iGM_Launcher_WriteJson(IGM_LAUNCHER_APPEARANCE_FILE, appearance);
+          return iGM_Launcher_Ok({ appearance, backgroundDataUrl: null });
+        } catch (error) {
+          return iGM_Launcher_Fail(
+            IGM_LAUNCHER_BRIDGE_FAILED,
+            error instanceof Error ? error.message : "无法清除背景图",
+          );
+        }
+      }
+
+      /* ---------- 模块二十六 C：累计使用时长与离线账户 ---------- */
+      case "usage:get":
+        return iGM_Launcher_Ok({ usage: await iGM_Launcher_Usage_Load() });
+
+      case "offline:list": {
+        const account = await iGM_Launcher_LoadAccount();
+        const file = await iGM_Launcher_Offline_Load(account);
+        return iGM_Launcher_Ok({ accounts: file.accounts, activeId: file.activeId });
+      }
+
+      case "offline:save": {
+        const name = params.name?.trim() ?? "";
+        const safeName = iGM_Launcher_SafePlayerName(name);
+        if (!name) return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_INVALID, "请输入离线角色名称");
+        // 名称按 Minecraft 规则过滤后若与过滤前差异过大（全为非法字符），如实拒绝
+        if (safeName !== name) {
+          return iGM_Launcher_Fail(
+            IGM_LAUNCHER_BRIDGE_INVALID,
+            "离线角色名仅支持 3-16 位字母、数字与下划线",
+          );
+        }
+        const account = await iGM_Launcher_LoadAccount();
+        const file = await iGM_Launcher_Offline_Load(account);
+        let nextAccounts: iGM_Launcher_OfflineAccount[];
+        if (params.id) {
+          const index = file.accounts.findIndex((item) => item.id === params.id);
+          if (index < 0) return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_NOT_FOUND, "离线账户不存在");
+          nextAccounts = file.accounts.map((item, i) =>
+            i === index ? { ...item, name: safeName } : item,
+          );
+        } else {
+          if (file.accounts.length >= IGM_LAUNCHER_OFFLINE_ACCOUNTS_MAX) {
+            return iGM_Launcher_Fail(
+              IGM_LAUNCHER_BRIDGE_INVALID,
+              `离线账户最多 ${IGM_LAUNCHER_OFFLINE_ACCOUNTS_MAX} 个`,
+            );
+          }
+          const record: iGM_Launcher_OfflineAccount = {
+            id: iGM_Launcher_NewId("off"),
+            name: safeName,
+            uuid: iGM_Launcher_MakeOfflineUuid(),
+            createdAt: new Date().toISOString(),
+          };
+          nextAccounts = [...file.accounts, record];
+        }
+        const next: iGM_Launcher_OfflineAccountsFile = {
+          accounts: nextAccounts,
+          activeId: file.activeId,
+        };
+        await iGM_Launcher_Offline_Save(next);
+        // 编辑的若为当前激活账户，同步回写会话离线身份（避免启动仍用旧名）
+        if (params.id && file.activeId === params.id) {
+          const edited = nextAccounts.find((item) => item.id === params.id);
+          if (edited) await iGM_Launcher_Offline_ApplyToSession(edited);
+        }
+        return iGM_Launcher_Ok({ accounts: next.accounts, activeId: next.activeId });
+      }
+
+      case "offline:remove": {
+        if (!params.id) return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_INVALID, "缺少离线账户 id");
+        const account = await iGM_Launcher_LoadAccount();
+        const file = await iGM_Launcher_Offline_Load(account);
+        if (!file.accounts.some((item) => item.id === params.id)) {
+          return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_NOT_FOUND, "离线账户不存在");
+        }
+        const accounts = file.accounts.filter((item) => item.id !== params.id);
+        // 删除的是当前激活账户时，把激活项落到剩余第一条；无剩余则清空
+        const activeId =
+          file.activeId === params.id ? (accounts[0]?.id ?? null) : file.activeId;
+        const next: iGM_Launcher_OfflineAccountsFile = { accounts, activeId };
+        await iGM_Launcher_Offline_Save(next);
+        // 删除的是激活账户时，把新激活身份写回会话（无剩余则不改动会话）
+        if (file.activeId === params.id) {
+          const fallback = accounts.find((item) => item.id === activeId);
+          if (fallback) await iGM_Launcher_Offline_ApplyToSession(fallback);
+        }
+        return iGM_Launcher_Ok({ accounts: next.accounts, activeId: next.activeId });
+      }
+
+      case "offline:set-active": {
+        if (!params.id) return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_INVALID, "缺少离线账户 id");
+        const account = await iGM_Launcher_LoadAccount();
+        const file = await iGM_Launcher_Offline_Load(account);
+        const target = file.accounts.find((item) => item.id === params.id);
+        if (!target) return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_NOT_FOUND, "离线账户不存在");
+        const next: iGM_Launcher_OfflineAccountsFile = {
+          accounts: file.accounts,
+          activeId: target.id,
+        };
+        await iGM_Launcher_Offline_Save(next);
+        // 同步回写会话文件的离线身份，使启动链路自动使用当前激活账户
+        const session = await iGM_Launcher_Offline_ApplyToSession(target);
+        return iGM_Launcher_Ok({ accounts: next.accounts, activeId: next.activeId, account: session });
       }
 
       default:

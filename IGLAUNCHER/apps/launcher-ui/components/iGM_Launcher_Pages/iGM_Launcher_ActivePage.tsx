@@ -1,7 +1,7 @@
 /**
  * 文件路径：apps/launcher-ui/components/iGM_Launcher_Pages/iGM_Launcher_ActivePage.tsx
  * 所属层：前端 / 页面层
- * 路由：G_Home / G_Instances / G_Downloads / G_Settings / G_Account（SPA 单页，URL 不变）
+ * 路由：G_Home / G_Instances / G_ResourceCenter / G_Settings / G_Account（SPA 单页，URL 不变）
  * 模块：iGM_Launcher_ActivePage
  * 作用：按当前激活页面 id 渲染对应页面组件
  * 内容：页面 id 来自 AppShell 的 shell 布局上下文，切换为纯客户端重渲染，

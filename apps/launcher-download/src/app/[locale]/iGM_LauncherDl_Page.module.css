@@ -270,6 +270,72 @@
   color: var(--igm-text);
 }
 
+/* ===== 历史版本列表 ===== */
+.releaseList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  list-style: none;
+}
+
+.releaseCard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  background: var(--igm-surface);
+  box-shadow: var(--igm-shadow);
+}
+
+.releaseHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.updateTypeTag {
+  padding: 3px 10px;
+  border: 1px solid var(--igm-border);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--igm-text-subtle);
+  background: var(--igm-bg);
+}
+
+.badgeLatest {
+  padding: 3px 10px;
+  border: 1px solid var(--igm-accent);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--igm-accent-contrast);
+  background: var(--igm-accent);
+}
+
+.noteGroups {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.noteGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.noteGroupTitle {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--igm-text-subtle);
+}
+
 @media (max-width: 640px) {
   .title {
     font-size: 25px;

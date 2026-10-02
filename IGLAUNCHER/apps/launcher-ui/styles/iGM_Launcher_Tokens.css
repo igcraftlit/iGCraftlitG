@@ -5,7 +5,9 @@
  * 模块：iGM_Launcher_Tokens
  * 作用：与 igcraftlit.com 主站一致的 --igm- 前缀 CSS 变量，
  *       由 html[data-theme] 驱动明暗主题，追加启动器布局尺寸令牌
- * 内容：中性灰阶色板、单一强调色、圆角/阴影、AppShell 布局尺寸
+ * 内容：中性灰阶色板、单一强调色、圆角/阴影、AppShell 布局尺寸；
+ *       模块二十六 B 追加五套预设主题（html[data-igm-theme-preset]）与背景层令牌；
+ *       模块二十六 F 追加品牌艺术字体令牌 --igm-font-brand（Orbitron，开源可商用）
  */
 
 /* 类型定义 */
@@ -37,6 +39,13 @@ html[data-theme="light"] {
   --igm-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB",
     "Microsoft YaHei", sans-serif;
+  /*
+   * 品牌艺术字体：Orbitron（SIL Open Font License 1.1，开源可商用），
+   * 字体文件由 @font-face 在 app/iGM_Globals.css 中声明并随静态产物分发；
+   * 取不到字体时自动回退到界面无衬线字体栈，不阻塞其余功能。
+   */
+  --igm-font-brand: "iGM Orbitron", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
   --igm-radius: 8px;
   --igm-radius-lg: 12px;
 
@@ -48,6 +57,14 @@ html[data-theme="light"] {
   /* 窗口最小可用尺寸（Electrobun 无 min-size API，由界面层兜底） */
   --igm-launcher-min-width: 1024px;
   --igm-launcher-min-height: 640px;
+
+  /* 模块二十六 B：背景层令牌（由 iGM_Launcher_AppearanceStore 运行时覆写） */
+  /* 背景图（none 表示无背景图，运行时写入 url("data:...")） */
+  --igm-launcher-bg-image: none;
+  /* 背景模糊强度（px，由外观页滑块映射） */
+  --igm-launcher-bg-blur: 0px;
+  /* 有背景图时各面板的不透明度（0-1，面板底色按此比例保留） */
+  --igm-launcher-panel-alpha: 0.78;
 }
 
 /* 深色主题 */
@@ -70,4 +87,117 @@ html[data-theme="dark"] {
   --igm-success-soft: rgba(74, 222, 128, 0.12);
   --igm-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
   --igm-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+/* 模块二十六 B：预设主题（html[data-igm-theme-preset]，独立于 next-themes 的 data-theme） */
+/* 置于明暗主题之后，二者同属性选择器权重相同时由预设胜出，实现“预设优先、未选则跟随明暗” */
+
+/* 极简白 */
+html[data-igm-theme-preset="minimal-white"] {
+  --igm-bg: #fafafa;
+  --igm-surface: #ffffff;
+  --igm-surface-subtle: #f2f2f4;
+  --igm-border: #e6e6e9;
+  --igm-border-strong: #d6d6da;
+  --igm-text: #17181a;
+  --igm-text-muted: #6f7177;
+  --igm-text-subtle: #a3a5ab;
+  --igm-accent: #18181b;
+  --igm-accent-hover: #303034;
+  --igm-accent-contrast: #ffffff;
+  --igm-accent-soft: rgba(24, 24, 27, 0.06);
+  --igm-danger: #d92d20;
+  --igm-danger-soft: rgba(217, 45, 32, 0.08);
+  --igm-success: #12805c;
+  --igm-success-soft: rgba(18, 128, 92, 0.1);
+  --igm-shadow: 0 1px 2px rgba(16, 16, 18, 0.05);
+  --igm-shadow-hover: 0 4px 16px rgba(16, 16, 18, 0.1);
+}
+
+/* 暗夜黑 */
+html[data-igm-theme-preset="night-black"] {
+  --igm-bg: #050506;
+  --igm-surface: #101012;
+  --igm-surface-subtle: #17171a;
+  --igm-border: #26262b;
+  --igm-border-strong: #38383f;
+  --igm-text: #f2f2f4;
+  --igm-text-muted: #a0a0a8;
+  --igm-text-subtle: #6c6c76;
+  --igm-accent: #f2f2f4;
+  --igm-accent-hover: #ffffff;
+  --igm-accent-contrast: #0a0a0b;
+  --igm-accent-soft: rgba(242, 242, 244, 0.1);
+  --igm-danger: #f87171;
+  --igm-danger-soft: rgba(248, 113, 113, 0.12);
+  --igm-success: #4ade80;
+  --igm-success-soft: rgba(74, 222, 128, 0.12);
+  --igm-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --igm-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.6);
+}
+
+/* 星图蓝 */
+html[data-igm-theme-preset="star-blue"] {
+  --igm-bg: #070b18;
+  --igm-surface: #0e1426;
+  --igm-surface-subtle: #141c33;
+  --igm-border: #1e2a4a;
+  --igm-border-strong: #2c3c66;
+  --igm-text: #e8eefc;
+  --igm-text-muted: #9fb0d4;
+  --igm-text-subtle: #6a7ba3;
+  --igm-accent: #4c8dff;
+  --igm-accent-hover: #77a9ff;
+  --igm-accent-contrast: #04101f;
+  --igm-accent-soft: rgba(76, 141, 255, 0.14);
+  --igm-danger: #ff6b6b;
+  --igm-danger-soft: rgba(255, 107, 107, 0.14);
+  --igm-success: #45d39a;
+  --igm-success-soft: rgba(69, 211, 154, 0.14);
+  --igm-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --igm-shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.55);
+}
+
+/* 极光绿 */
+html[data-igm-theme-preset="aurora-green"] {
+  --igm-bg: #06120d;
+  --igm-surface: #0c1a14;
+  --igm-surface-subtle: #10241b;
+  --igm-border: #1b3428;
+  --igm-border-strong: #27503d;
+  --igm-text: #e6f6ee;
+  --igm-text-muted: #93b8a5;
+  --igm-text-subtle: #628374;
+  --igm-accent: #34d399;
+  --igm-accent-hover: #5fe0b3;
+  --igm-accent-contrast: #04140d;
+  --igm-accent-soft: rgba(52, 211, 153, 0.14);
+  --igm-danger: #ff7a7a;
+  --igm-danger-soft: rgba(255, 122, 122, 0.14);
+  --igm-success: #34d399;
+  --igm-success-soft: rgba(52, 211, 153, 0.14);
+  --igm-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --igm-shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.55);
+}
+
+/* 落日橙 */
+html[data-igm-theme-preset="sunset-orange"] {
+  --igm-bg: #170d06;
+  --igm-surface: #22150c;
+  --igm-surface-subtle: #2c1c10;
+  --igm-border: #3d2818;
+  --igm-border-strong: #5a3c24;
+  --igm-text: #fbeade;
+  --igm-text-muted: #c9a68f;
+  --igm-text-subtle: #997663;
+  --igm-accent: #fb923c;
+  --igm-accent-hover: #fdae66;
+  --igm-accent-contrast: #1a0d04;
+  --igm-accent-soft: rgba(251, 146, 60, 0.16);
+  --igm-danger: #f87171;
+  --igm-danger-soft: rgba(248, 113, 113, 0.14);
+  --igm-success: #4ade80;
+  --igm-success-soft: rgba(74, 222, 128, 0.14);
+  --igm-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --igm-shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.55);
 }

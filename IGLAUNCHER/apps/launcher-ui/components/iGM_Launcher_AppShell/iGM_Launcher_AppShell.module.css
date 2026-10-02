@@ -37,6 +37,11 @@
   grid-template-columns: var(--igm-launcher-sidebar-rail-width) 1fr;
 }
 
+/* 模块二十六 B：有背景图时壳层让出底色，由 body::before 的背景图透出 */
+:global(html[data-igm-bg="image"]) .shell {
+  background-color: transparent;
+}
+
 /* 内容区 */
 .content {
   grid-area: main;

@@ -8,7 +8,8 @@
     "start": "bun run src/iGM_ServerMain.ts",
     "db:init": "bun run src/iGM_Database/iGM_DbCli.ts init",
     "db:migrate": "bun run src/iGM_Database/iGM_DbCli.ts migrate",
-    "db:seed": "bun run src/iGM_Database/iGM_DbCli.ts seed"
+    "db:seed": "bun run src/iGM_Database/iGM_DbCli.ts seed",
+    "db:relations": "bun run src/iGM_Database/iGM_DbCli.ts relations"
   },
   "dependencies": {
     "@elysiajs/cors": "1.4.2",

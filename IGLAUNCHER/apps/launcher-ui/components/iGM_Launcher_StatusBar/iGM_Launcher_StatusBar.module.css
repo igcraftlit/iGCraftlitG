@@ -21,6 +21,16 @@
   user-select: none;
 }
 
+/* 模块二十六 B：有背景图时状态栏半透明并模糊底层背景 */
+:global(html[data-igm-bg="image"]) .statusbar {
+  background-color: color-mix(
+    in srgb,
+    var(--igm-surface) calc(var(--igm-launcher-panel-alpha) * 100%),
+    transparent
+  );
+  backdrop-filter: blur(var(--igm-launcher-bg-blur));
+}
+
 .group {
   display: inline-flex;
   align-items: center;
