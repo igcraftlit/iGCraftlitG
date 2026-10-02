@@ -124,7 +124,7 @@ export default async function iGM_CLI_HomePage({ params }: iGM_CLI_HomePageProps
             className={styles.ctaSecondary}
           >
             <BookOpen size={16} aria-hidden />
-            {messages.nav.docs}
+            {messages.docs.sidebar.index}
           </Link>
           <IGM_CLI_DeveloperPortalButton className={styles.ctaSecondary} />
         </div>

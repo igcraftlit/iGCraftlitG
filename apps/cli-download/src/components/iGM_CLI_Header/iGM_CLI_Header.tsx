@@ -32,7 +32,6 @@ interface iGM_CLI_NavItem {
     | "commands"
     | "sdk"
     | "api"
-    | "docs"
     | "oauth";
   /** 目标路径（不含语言前缀，可含锚点） */
   href: string;
@@ -46,7 +45,6 @@ const iGM_CLI_NavItems: iGM_CLI_NavItem[] = [
   { key: "commands", href: "/commands" },
   { key: "sdk", href: "/sdk" },
   { key: "api", href: "/api" },
-  { key: "docs", href: "/docs" },
   { key: "oauth", href: "/oauth/apply" },
 ];
 
