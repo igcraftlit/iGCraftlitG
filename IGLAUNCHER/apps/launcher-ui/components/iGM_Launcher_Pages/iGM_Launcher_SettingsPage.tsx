@@ -433,13 +433,25 @@ export function iGM_Launcher_SettingsPage() {
       {/* 关于 */}
       <IGM_Launcher_SettingsGroup id="about" title={t("groupAbout")} icon={BadgeInfo}>
         <IGM_Launcher_SettingsRow label={t("aboutVersion")}>
-          {/* 版本号以 IGM_LAUNCHER_VERSION 为准（当前 26.1.3 official version），不再叠加 v 前缀 */}
+          {/* 版本号以 IGM_LAUNCHER_VERSION 为准（当前 26.2.4 official version），不再叠加 v 前缀 */}
           <IGM_Launcher_Badge tone="accent">{IGM_LAUNCHER_VERSION}</IGM_Launcher_Badge>
         </IGM_Launcher_SettingsRow>
         <IGM_Launcher_SettingsRow label={t("aboutCore")}>
           <span className={styles.coreValue}>
             <Cpu size={13} strokeWidth={1.8} />
             <IGM_Launcher_Badge tone="muted">{t("aboutCoreValue")}</IGM_Launcher_Badge>
+          </span>
+        </IGM_Launcher_SettingsRow>
+        <IGM_Launcher_SettingsRow label={t("aboutDownloadEngine")}>
+          <span className={styles.coreValue}>
+            <DownloadCloud size={13} strokeWidth={1.8} />
+            <IGM_Launcher_Badge tone="muted">{t("aboutDownloadEngineValue")}</IGM_Launcher_Badge>
+          </span>
+        </IGM_Launcher_SettingsRow>
+        <IGM_Launcher_SettingsRow label={t("aboutArch")}>
+          <span className={styles.coreValue}>
+            <Monitor size={13} strokeWidth={1.8} />
+            <IGM_Launcher_Badge tone="muted">{t("aboutArchValue")}</IGM_Launcher_Badge>
           </span>
         </IGM_Launcher_SettingsRow>
         <IGM_Launcher_SettingsRow label={t("checkUpdates")}>

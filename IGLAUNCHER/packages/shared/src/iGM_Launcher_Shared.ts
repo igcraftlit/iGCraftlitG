@@ -3,7 +3,7 @@
  * 所属层：共享层 / 类型与常量
  * 路由：全局
  * 模块：iGM_Launcher_Shared
- * 作用：主进程（Electrobun/Bun）、Rust 核心桥接层与 Next.js 静态界面
+ * 作用：主进程（Electrobun/Bun）、Zig 核心桥接层与 Next.js 静态界面
  *       共同引用的常量与类型契约，纯类型与常量、零运行时副作用
  * 内容：应用元信息、窗口尺寸、语言定义、导航标识、宿主桥接消息类型；
  *       模块三追加 Minecraft 正版绑定（MSA 认证链、绑定记录、令牌镜像）类型与端点常量；
@@ -105,10 +105,10 @@ export interface iGM_Installer_Progress {
   message?: string;
 }
 
-/** Rust 核心下载任务状态（占位，模块二以后细化） */
+/** Zig 核心下载任务状态（占位，模块二以后细化） */
 export type iGM_Launcher_DownloadState = "idle" | "running" | "done" | "error";
 
-/** 下载任务信息结构体（Rust 侧同形占位的 TS 镜像，暂不跨 FFI 传递） */
+/** 下载任务信息结构体（Zig 侧同形占位的 TS 镜像，暂不跨 FFI 传递） */
 export interface iGM_Launcher_DownloadTaskInfo {
   /** 任务编号，-1 表示占位实现未启用 */
   id: number;
@@ -120,7 +120,7 @@ export interface iGM_Launcher_DownloadTaskInfo {
 
 /** 原生核心运行状态（模块一恒为占位值） */
 export interface iGM_Launcher_CoreLibrary {
-  /** Rust 动态库是否成功加载 */
+  /** Zig 动态库是否成功加载 */
   loaded: boolean;
   /** 核心版本号，未加载时取占位版本 */
   version: string;
@@ -443,7 +443,7 @@ export interface iGM_Launcher_MsaFlowResult {
   errorMessage: string;
 }
 
-/* ---- MSA 认证链令牌镜像（与 Rust 侧结构体一一对应，不跨 FFI 传递敏感值） ---- */
+/* ---- MSA 认证链令牌镜像（与 Zig 侧结构体一一对应，不跨 FFI 传递敏感值） ---- */
 
 /** 微软 OAuth 令牌 */
 export interface iGM_Launcher_MsaToken {
@@ -917,7 +917,7 @@ export interface iGM_Launcher_InstanceResources {
 
 /**
  * 桥接层方法名。
- * 命名与 Rust 核心预留函数一一对应：
+ * 命名与 Zig 核心预留函数一一对应：
  *   instance:* -> iGM_Launcher_Instance_*
  *   java:*     -> iGM_Launcher_Java_*
  *   account:*  -> iGM_Launcher_Account_*
@@ -964,7 +964,7 @@ export type iGM_Launcher_BridgeMethod =
   | "mc:list-bindings"
   | "mc:set-default-binding"
   /* 模块五：离线游戏 / 本机游戏目录扫描 / 版本库同步
-     （命名与 Rust 核心预留函数一一对应：
+     （命名与 Zig 核心预留函数一一对应：
        minecraft:scan-dirs     -> iGM_Launcher_ScanMinecraftDirs
        minecraft:parse-version -> iGM_Launcher_ParseVersionJson
        minecraft:import-instance -> iGM_Launcher_ImportInstance
@@ -978,7 +978,7 @@ export type iGM_Launcher_BridgeMethod =
   | "minecraft:remove-dir"
   | "minecraft:set-default-dir"
   /* 模块六：下载安装位置与实例创建联动
-     （命名与 Rust 核心预留函数一一对应：
+     （命名与 Zig 核心预留函数一一对应：
        minecraft:installed-versions  -> iGM_Launcher_ScanInstalledVersions
        minecraft:installed-loaders   -> iGM_Launcher_ScanInstalledLoaders
        minecraft:default-root-dir    -> iGM_Launcher_GetDefaultRootDir
@@ -990,7 +990,7 @@ export type iGM_Launcher_BridgeMethod =
   | "minecraft:create-instance-dir"
   | "minecraft:validate-instance-name"
   /* 模块七：真实下载安装（Mojang 官方清单 + Fabric 官方元数据）
-     （命名与 Rust 核心预留函数一一对应：
+     （命名与 Zig 核心预留函数一一对应：
        minecraft:download-loader-versions -> iGM_Launcher_ListLoaderVersions
        minecraft:download-start           -> iGM_Launcher_StartDownload
        minecraft:download-status          -> iGM_Launcher_DownloadStatus
@@ -1000,10 +1000,10 @@ export type iGM_Launcher_BridgeMethod =
   | "minecraft:download-status"
   | "minecraft:download-cancel"
   /* 模块七补充：打开系统目录选择器，让用户把前置目录放到任意磁盘（不限于系统盘）
-     （命名与 Rust 核心预留函数对应：minecraft:pick-dir -> iGM_Launcher_PickDirectory） */
+     （命名与 Zig 核心预留函数对应：minecraft:pick-dir -> iGM_Launcher_PickDirectory） */
   | "minecraft:pick-dir"
   /* 模块八：启动实例（离线或正版），用已下载版本真实拉起 Minecraft Java 进程
-     （命名与 Rust 核心预留函数一一对应：
+     （命名与 Zig 核心预留函数一一对应：
        instance:launch        -> iGM_Launcher_LaunchInstance
        instance:launch-status -> iGM_Launcher_LaunchStatus） */
   | "instance:launch"
@@ -1260,15 +1260,15 @@ export const IGM_LAUNCHER_APP_NAME = "iGM Launcher";
 export const IGM_LAUNCHER_IDENTIFIER = "com.igcraftlit.launcher";
 
 /** 应用版本（界面关于页、窗口标题与启动参数统一显示该值） */
-export const IGM_LAUNCHER_VERSION = "26.1.3 official version";
+export const IGM_LAUNCHER_VERSION = "26.2.4 official version";
 
 /** 窗口标题：应用名称 + 版本号，供原生窗口标题栏与界面标题统一引用 */
 export const IGM_LAUNCHER_APP_TITLE = `${IGM_LAUNCHER_APP_NAME} ${IGM_LAUNCHER_VERSION}`;
 
-/** Rust 核心动态库未编译时对外暴露的占位版本号 */
+/** Zig 核心动态库未编译时对外暴露的占位版本号 */
 export const IGM_LAUNCHER_CORE_PLACEHOLDER_VERSION = "0.1.0-placeholder";
 
-/** Rust 核心下载任务占位返回值：-1 表示未实现 */
+/** Zig 核心下载任务占位返回值：-1 表示未实现 */
 export const IGM_LAUNCHER_CORE_PLACEHOLDER_TASK_ID = -1;
 
 /** 默认窗口尺寸 */

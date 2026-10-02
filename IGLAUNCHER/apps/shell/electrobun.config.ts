@@ -17,8 +17,8 @@ const iGM_Launcher_ElectrobunConfig = {
   app: {
     name: "iGM Launcher",
     identifier: "com.igcraftlit.launcher",
-    // 模块二十一：应用版本统一为 26.1.3 official version（npm 语义化版本字段只取数字部分）
-    version: "26.1.3",
+    // 模块二十三后续更新：应用版本统一为 26.2.4 official version（版本号只取数字部分）
+    version: "26.2.4",
     description: "iGCraftLit official Minecraft launcher",
   },
   build: {
@@ -32,6 +32,8 @@ const iGM_Launcher_ElectrobunConfig = {
     // 静态界面由同步脚本生成，键为项目相对源路径，值为包内 views 目标路径
     copy: {
       "iGM_Launcher_Assets/launcher": "views/launcher",
+      // 下载器 SDK 动态库随包分发（由 iGM_Launcher_SyncUi 从 zig 产物同步；未编译时为空目录）
+      "iGM_Launcher_Assets/sdk": "sdk",
     },
     // Windows（WebView2）构建选项
     win: {
