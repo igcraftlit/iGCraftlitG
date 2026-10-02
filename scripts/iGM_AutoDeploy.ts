@@ -24,7 +24,7 @@ import { dirname, join, relative, sep } from "node:path";
 
 // 类型定义 //
 /** 远端相对本地的位置关系 */
-type iGM_AutoDeploy_RemoteState = "up-to-date" | "behind" | "diverged" | "unknown";
+type iGM_AutoDeploy_RemoteState = "up-to-date" | "behind" | "ahead" | "diverged" | "unknown";
 
 /** 运行配置 */
 interface iGM_AutoDeploy_Config {
@@ -166,9 +166,15 @@ function iGM_AutoDeploy_CheckRemote(config: iGM_AutoDeploy_Config): {
     return { state: "up-to-date", localHead, remoteHead };
   }
 
-  // 本地是否为远端的祖先：是则可以直接快进
+  // 本地为远端的祖先：可直接快进拉取
   const ancestor = iGM_AutoDeploy_Git(config, ["merge-base", "--is-ancestor", localHead, remoteHead]);
-  return { state: ancestor.code === 0 ? "behind" : "diverged", localHead, remoteHead };
+  if (ancestor.code === 0) {
+    return { state: "behind", localHead, remoteHead };
+  }
+
+  // 远端为本地祖先：本地存在未推送提交，无需拉取
+  const descendant = iGM_AutoDeploy_Git(config, ["merge-base", "--is-ancestor", remoteHead, localHead]);
+  return { state: descendant.code === 0 ? "ahead" : "diverged", localHead, remoteHead };
 }
 
 /** 脚本自身日志目录相对仓库根的路径，需从脏工作区判定中排除，避免自我阻塞 */
@@ -354,6 +360,10 @@ async function iGM_AutoDeploy_RunOnce(config: iGM_AutoDeploy_Config): Promise<vo
   const { state, localHead, remoteHead } = iGM_AutoDeploy_CheckRemote(config);
   if (state === "up-to-date") {
     iGM_AutoDeploy_Log(config, `无更新（${config.remote}/${config.branch} @ ${localHead.slice(0, 7)}）`);
+    return;
+  }
+  if (state === "ahead") {
+    iGM_AutoDeploy_Log(config, `本地领先远端（存在未推送提交），无需拉取：本地 ${localHead.slice(0, 7)} / 远端 ${remoteHead.slice(0, 7)}`);
     return;
   }
   if (state === "diverged") {
