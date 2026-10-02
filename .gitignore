@@ -1,6 +1,9 @@
 node_modules
 .next
 out
+# Electrobun / Hutch 构建缓存
+.hutch/
+.cottontail-tmp/
 .env*
 .dev.vars*
 *.sqlite
