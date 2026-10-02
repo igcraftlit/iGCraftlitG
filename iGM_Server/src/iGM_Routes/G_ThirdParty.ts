@@ -8,6 +8,8 @@
  *       暂停/继续、取消（可一并清除残余分片）、重试、删除任务、清空已完成、
  *       任务进度 WebSocket 实时推送
  * 约束：统一响应 { success, code, message, data }；
+ *       上游失败一律收敛为 { success:false, code:"THIRD_PARTY_ERROR",
+ *       message:"第三方平台连接失败，请稍后重试", data:null }，禁止把原始响应抛给前端；
  *       浏览类接口允许匿名（按 IP 限流），下载类接口必须登录并按用户限流；
  *       资源文件不落本站服务器存储，下载直链来自 Modrinth
  */
@@ -45,6 +47,7 @@ import {
   iGM_SearchThirdPartyResources,
   iGM_StartThirdPartyDownload,
   iGM_SubscribeThirdPartyTask,
+  iGM_ThirdPartyError,
 } from "../iGM_Services/iGM_ThirdPartyService";
 import type {
   iGM_DownloadEvent,
@@ -77,27 +80,76 @@ function iGM_Param(ctx: iGM_ThirdPartyContext, key: string): string {
   return ctx.params?.[key] ?? "";
 }
 
+/**
+ * 第三方平台失败统一错误响应。
+ * 说明：上游（Modrinth / CurseForge）返回限流、鉴权失败或网关 HTML 错误页时，
+ *       绝不把原始响应体或异常直接抛给前端，一律收敛为该标准结构，
+ *       交由界面展示「第三方平台连接失败，请稍后重试」，避免出现白屏。
+ */
+interface iGM_ThirdPartyErrorEnvelope {
+  success: false;
+  code: "THIRD_PARTY_ERROR";
+  message: string;
+  data: null;
+}
+
+function iGM_ThirdPartyErrorResponse(ctx: iGM_RouteContext): iGM_ThirdPartyErrorEnvelope {
+  ctx.set.status = 502;
+  return {
+    success: false,
+    code: "THIRD_PARTY_ERROR",
+    message: "第三方平台连接失败，请稍后重试",
+    data: null,
+  };
+}
+
+/**
+ * 判断第三方错误是否属于「调用方自身」的业务错误（参数非法 / 资源不存在等）。
+ * 这类错误需按原状态码原样透传，只有上游连接类失败才收敛为 THIRD_PARTY_ERROR。
+ */
+function iGM_IsThirdPartyClientError(error: unknown): boolean {
+  return (
+    error instanceof iGM_ThirdPartyError &&
+    error.status >= 400 &&
+    error.status < 500 &&
+    error.status !== 429
+  );
+}
+
 /* ---------- 资源搜索与详情（允许匿名，按 IP 限流） ---------- */
 
 async function iGM_HandleSearch(ctx: iGM_RouteContext) {
   iGM_EnforceRateLimit(ctx, "thirdPartySearch", `ip:${iGM_ClientIp(ctx)}`);
-  return iGM_Ok(
-    await iGM_SearchThirdPartyResources({
-      q: iGM_Query(ctx.query, "q"),
-      type: iGM_Query(ctx.query, "type"),
-      page: Number(iGM_Query(ctx.query, "page", "1")),
-      pageSize: Number(iGM_Query(ctx.query, "pageSize", "20")),
-    }),
-  );
+  try {
+    return iGM_Ok(
+      await iGM_SearchThirdPartyResources({
+        q: iGM_Query(ctx.query, "q"),
+        type: iGM_Query(ctx.query, "type"),
+        page: Number(iGM_Query(ctx.query, "page", "1")),
+        pageSize: Number(iGM_Query(ctx.query, "pageSize", "20")),
+      }),
+    );
+  } catch (error) {
+    // 参数非法等调用方错误原样透传；上游连接失败统一收敛为标准错误结构
+    if (iGM_IsThirdPartyClientError(error)) throw error;
+    console.error("[G_ThirdParty] 资源搜索失败：", error);
+    return iGM_ThirdPartyErrorResponse(ctx);
+  }
 }
 
 async function iGM_HandleResourceDetail(ctx: iGM_RouteContext) {
   iGM_EnforceRateLimit(ctx, "thirdPartySearch", `ip:${iGM_ClientIp(ctx)}`);
   const resourceId = iGM_Param(ctx as iGM_ThirdPartyContext, "id");
   const refresh = iGM_Query(ctx.query, "refresh") === "true";
-  return iGM_Ok(
-    await iGM_GetThirdPartyResource(decodeURIComponent(resourceId), { refresh }),
-  );
+  try {
+    return iGM_Ok(
+      await iGM_GetThirdPartyResource(decodeURIComponent(resourceId), { refresh }),
+    );
+  } catch (error) {
+    if (iGM_IsThirdPartyClientError(error)) throw error;
+    console.error("[G_ThirdParty] 资源详情加载失败：", error);
+    return iGM_ThirdPartyErrorResponse(ctx);
+  }
 }
 
 /* ---------- 下载任务 ---------- */
@@ -105,23 +157,29 @@ async function iGM_HandleResourceDetail(ctx: iGM_RouteContext) {
 async function iGM_HandleStartDownload(ctx: iGM_RouteContext) {
   const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "thirdPartyDownload", `user:${user.iGM_Id}`);
-  const task = await iGM_StartThirdPartyDownload(user, {
-    resourceId: iGM_Field(ctx.body, "resourceId"),
-    versionId: iGM_Field(ctx.body, "versionId"),
-    target: iGM_Field(ctx.body, "target") || undefined,
-  });
-  ctx.set.status = 201;
-  return iGM_Ok(
-    {
-      task,
-      taskId: task.id,
-      downloadUrl: task.downloadUrl,
-      filename: task.filename,
-      size: task.size,
-      sha1: task.sha1,
-    },
-    "thirdParty.messages.started",
-  );
+  try {
+    const task = await iGM_StartThirdPartyDownload(user, {
+      resourceId: iGM_Field(ctx.body, "resourceId"),
+      versionId: iGM_Field(ctx.body, "versionId"),
+      target: iGM_Field(ctx.body, "target") || undefined,
+    });
+    ctx.set.status = 201;
+    return iGM_Ok(
+      {
+        task,
+        taskId: task.id,
+        downloadUrl: task.downloadUrl,
+        filename: task.filename,
+        size: task.size,
+        sha1: task.sha1,
+      },
+      "thirdParty.messages.started",
+    );
+  } catch (error) {
+    if (iGM_IsThirdPartyClientError(error)) throw error;
+    console.error("[G_ThirdParty] 创建下载任务失败：", error);
+    return iGM_ThirdPartyErrorResponse(ctx);
+  }
 }
 
 async function iGM_HandleDownloadStatus(ctx: iGM_RouteContext) {

@@ -6,6 +6,7 @@
  * 作用：Modrinth 公开 API 的适配层——资源搜索、项目详情、版本列表，
  *       并把结果归一化后缓存进本地数据库，避免重复请求上游
  * 内容：统一请求（User-Agent / 请求间隔 100~300ms / 429 指数退避 / 超时）、
+ *       上游失败诊断日志（状态码 + 原始响应前 500 字符，输出控制台与日志文件）、
  *       按资源类型组装 facets、命中结果幂等落库、Fabric 兼容性判定、
  *       项目详情与版本列表归一化
  * 说明：
@@ -23,6 +24,8 @@
  */
 
 // 导入依赖 //
+import { appendFileSync, mkdirSync } from "node:fs";
+import { resolve } from "node:path";
 import { iGM_Config } from "../iGM_Config/iGM_Config";
 import {
   iGM_FindThirdPartyResourceById,
@@ -122,6 +125,31 @@ function iGM_Sleep(ms: number): Promise<void> {
   return new Promise((done) => setTimeout(done, ms));
 }
 
+/** 第三方上游诊断日志文件（iGM_Server/logs/iGM_ThirdParty.log） */
+const iGM_ModrinthLogDir = resolve(import.meta.dir, "../../logs");
+const iGM_ModrinthLogFile = resolve(iGM_ModrinthLogDir, "iGM_ThirdParty.log");
+
+/**
+ * 输出第三方上游诊断日志：同时写控制台与日志文件。
+ * 日志落盘失败不得影响主流程，故整体 try/catch 兜底。
+ */
+function iGM_ModrinthLog(message: string): void {
+  const line = `[${new Date().toISOString()}] [iGM_ModrinthService] ${message}`;
+  console.error(line);
+  try {
+    mkdirSync(iGM_ModrinthLogDir, { recursive: true });
+    appendFileSync(iGM_ModrinthLogFile, `${line}\n`, "utf8");
+  } catch {
+    // 忽略日志落盘异常
+  }
+}
+
+/** 截断原始响应体，避免日志被大段 HTML 淹没 */
+function iGM_ModrinthTruncate(raw: string, limit = 500): string {
+  const text = raw.replace(/\s+/g, " ").trim();
+  return text.length > limit ? `${text.slice(0, limit)}…（共 ${text.length} 字符）` : text;
+}
+
 /**
  * 请求间隔闸门：串行化上游请求，且相邻两次请求间隔 100~300 毫秒随机
  * 说明：既满足 Modrinth 的频率要求，也避免并发请求被识别为网络攻击
@@ -176,6 +204,7 @@ async function iGM_ModrinthRequest<T>(
     try {
       const response = await fetch(url, {
         headers: {
+          // Modrinth 要求携带可识别调用方与联系方式的 User-Agent，否则可能被拒绝
           "User-Agent": iGM_Config.thirdParty.userAgent,
           Accept: "application/json",
         },
@@ -183,16 +212,48 @@ async function iGM_ModrinthRequest<T>(
       });
 
       if (response.status === 429 || response.status === 503) {
+        const raw = await response.text().catch(() => "");
+        iGM_ModrinthLog(
+          `上游限流 ${response.status}（第 ${attempt}/${maxRetries} 次）← ${url}\n` +
+            `响应前 500 字符：${iGM_ModrinthTruncate(raw)}`,
+        );
         lastError = new iGM_ThirdPartyError("thirdParty.errors.rateLimited", 429);
       } else if (response.status === 404) {
+        iGM_ModrinthLog(`上游资源不存在 404 ← ${url}`);
         throw new iGM_ThirdPartyError("thirdParty.errors.resourceNotFound", 404);
       } else if (!response.ok) {
+        // 捕获 401/403/500 等原始状态码与响应体，便于判断是鉴权、封禁还是上游故障
+        const raw = await response.text().catch(() => "");
+        iGM_ModrinthLog(
+          `上游请求失败 ${response.status} ${response.statusText}（第 ${attempt}/${maxRetries} 次）← ${url}\n` +
+            `User-Agent：${iGM_Config.thirdParty.userAgent}\n` +
+            `响应前 500 字符：${iGM_ModrinthTruncate(raw)}`,
+        );
         lastError = new iGM_ThirdPartyError("thirdParty.errors.upstreamFailed", 502);
       } else {
-        return (await response.json()) as T;
+        // 上游可能返回 HTML 错误页（网关/代理），故先取文本再解析，解析失败同样记录原文
+        const raw = await response.text();
+        try {
+          return JSON.parse(raw) as T;
+        } catch {
+          iGM_ModrinthLog(
+            `上游响应无法解析为 JSON（第 ${attempt}/${maxRetries} 次）← ${url}\n` +
+              `Content-Type：${response.headers.get("content-type") ?? "(空)"}\n` +
+              `响应前 500 字符：${iGM_ModrinthTruncate(raw)}`,
+          );
+          lastError = new iGM_ThirdPartyError("thirdParty.errors.upstreamFailed", 502);
+        }
       }
     } catch (error) {
       if (error instanceof iGM_ThirdPartyError && error.status === 404) throw error;
+      if (!(error instanceof iGM_ThirdPartyError)) {
+        // 网络异常 / 超时：记录原始错误，便于区分出口网络问题与上游故障
+        iGM_ModrinthLog(
+          `上游请求异常（第 ${attempt}/${maxRetries} 次）← ${url}：${
+            error instanceof Error ? `${error.name}: ${error.message}` : String(error)
+          }`,
+        );
+      }
       lastError =
         error instanceof iGM_ThirdPartyError
           ? error
@@ -207,7 +268,11 @@ async function iGM_ModrinthRequest<T>(
     await iGM_Sleep(1000 * 2 ** (attempt - 1));
   }
 
-  throw lastError ?? new iGM_ThirdPartyError("thirdParty.errors.upstreamFailed", 502);
+  const failure = lastError ?? new iGM_ThirdPartyError("thirdParty.errors.upstreamFailed", 502);
+  iGM_ModrinthLog(
+    `上游请求最终失败（已重试 ${maxRetries} 次）← ${url}：${failure.message}`,
+  );
+  throw failure;
 }
 
 /**

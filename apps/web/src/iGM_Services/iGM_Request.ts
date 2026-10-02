@@ -101,7 +101,17 @@ export async function iGM_Request<T>(
       iGM_HandleUnauthorized("session");
     }
 
-    const payload = (await response.json()) as iGM_ApiResponse<T>;
+    // 网关/隧道异常时会返回 HTML 错误页，此处显式识别，避免误报为「无法连接后端」
+    let payload: iGM_ApiResponse<T>;
+    try {
+      payload = (await response.json()) as iGM_ApiResponse<T>;
+    } catch {
+      throw new iGM_RequestError(
+        `后端返回了非 JSON 响应（HTTP ${response.status}）`,
+        "business",
+        response.status,
+      );
+    }
 
     if (!response.ok || !payload.success) {
       throw new iGM_RequestError(
