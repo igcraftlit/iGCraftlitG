@@ -17,8 +17,8 @@ const iGM_Launcher_ElectrobunConfig = {
   app: {
     name: "iGM Launcher",
     identifier: "com.igcraftlit.launcher",
-    // 版本统一为 26.3.0 official version（版本号只取数字部分）
-    version: "26.3.0",
+    // 版本统一为 26.3.1 official version（版本号只取数字部分）
+    version: "26.3.1",
     description: "iGCraftLit official Minecraft launcher",
   },
   build: {

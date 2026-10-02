@@ -95,7 +95,7 @@
     "currentTag": "現在のバージョン",
     "entries": [
       {
-        "version": "26.3.0 official version",
+        "version": "26.3.1 official version",
         "date": "2026-10-02",
         "items": [
           "ゲーム本体のダウンロード開始時に「ブリッジ層の応答タイムアウト」が誤って表示される問題を修正：「ダウンロード開始」をクリックすると即座に進捗ページへ移動し、ダウンロードは始まっているのに失敗と表示される不整合を解消しました。",
@@ -176,7 +176,7 @@
         "title": "検証と起動",
         "lead": "ダウンロード後、PowerShell でインストーラーの完全性を検証できます：",
         "codeLabel": "powershell",
-        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.3.0.zip -Algorithm SHA256",
+        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.3.1.zip -Algorithm SHA256",
         "after": "計算結果をダウンロードページの SHA256 と比較し、一致すればファイルは完全です。"
       },
       "notes": {

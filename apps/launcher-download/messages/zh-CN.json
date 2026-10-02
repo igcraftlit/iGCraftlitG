@@ -95,7 +95,7 @@
     "currentTag": "当前版本",
     "entries": [
       {
-        "version": "26.3.0 official version",
+        "version": "26.3.1 official version",
         "date": "2026-10-02",
         "items": [
           "修复开始下载游戏本体时误报「桥接层响应超时」：点击「开始下载」后立即进入下载进度页，不再出现下载已开始却提示失败的错位。",
@@ -176,7 +176,7 @@
         "title": "校验与启动",
         "lead": "下载完成后，可在 PowerShell 中校验安装包完整性：",
         "codeLabel": "powershell",
-        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.3.0.zip -Algorithm SHA256",
+        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.3.1.zip -Algorithm SHA256",
         "after": "将计算结果与下载页给出的 SHA256 比对，一致则表示文件完整。"
       },
       "notes": {

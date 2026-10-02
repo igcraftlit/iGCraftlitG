@@ -20,7 +20,7 @@ const iGM_LauncherDl_NextConfig: NextConfig = {
   },
   // 构建期注入：启动器版本号与构建时间
   env: {
-    NEXT_PUBLIC_IGM_VERSION: "26.3.0",
+    NEXT_PUBLIC_IGM_VERSION: "26.3.1",
     NEXT_PUBLIC_IGM_BUILD_TIME: new Date().toISOString(),
   },
 };
