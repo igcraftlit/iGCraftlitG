@@ -52,6 +52,19 @@ jobs:
         # 完整打包链：build:zig → build:ui → sync:ui → shell build → portable → sync:installer → installer build
         run: bun run build:installer
 
+      - name: 规整安装包文件名为下载站约定名称
+        working-directory: IGLAUNCHER
+        shell: pwsh
+        # Electrobun 默认产物名为 win-x64-iGMInstaller-Setup.zip，
+        # 下载站 release.json 与 CLI 契约要求 iGM-CraftCeon-Launcher-Setup-<版本>.zip，
+        # 此处直接改名，保证 Release 附件名与下载链接一致。
+        run: |
+          $version = (Get-Content apps/installer/package.json -Raw | ConvertFrom-Json).version
+          $src = "apps/installer/artifacts/win-x64-iGMInstaller-Setup.zip"
+          if (-not (Test-Path $src)) { throw "未找到安装包产物：$src" }
+          Move-Item -Path $src -Destination "apps/installer/artifacts/iGM-CraftCeon-Launcher-Setup-$version.zip" -Force
+          Write-Output "安装包已更名为 iGM-CraftCeon-Launcher-Setup-$version.zip"
+
       - name: 上传安装包到 GitHub Releases
         uses: softprops/action-gh-release@v2
         with:

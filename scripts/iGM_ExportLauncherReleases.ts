@@ -166,6 +166,14 @@ const IGM_NOTES_26_3_2: iGM_LauncherReleaseNotes = {
   },
 };
 
+/** 取本地时区的今日日期（YYYY-MM-DD），避免 UTC 跨日导致发布日期不一致 */
+function iGM_TodayLocal(): string {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+
 /** 读取下载站现有 release.json（供 v26.3.1 基线回填） */
 function iGM_ReadCurrentManifest(): iGM_ReleaseManifest | null {
   if (!existsSync(iGM_CurrentReleasePath)) return null;
@@ -251,7 +259,7 @@ async function iGM_Seed(): Promise<void> {
     true,
     "minor",
     IGM_NOTES_26_3_2,
-    new Date().toISOString().slice(0, 10),
+    iGM_TodayLocal(),
     null,
     iGM_FindArtifactZip(artifactCurrent),
   );

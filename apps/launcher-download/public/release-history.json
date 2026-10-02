@@ -1,7 +1,7 @@
 {
   "releases": [
     {
-      "id": "igm-placeholder-26-3-2",
+      "id": "95c861d9-9c54-4b74-952d-773c142e8749",
       "version": "26.3.2",
       "releasedAt": "2026-10-03",
       "updateType": "minor",
@@ -9,40 +9,54 @@
       "channel": "stable",
       "platform": "Windows x64",
       "fileName": "iGM-CraftCeon-Launcher-Setup-26.3.2.zip",
-      "fileSize": 70412815,
-      "fileSizeLabel": "67.15 MB",
-      "sha256": "7037315e4430b64d380b22f3b3e51c1820b37bfb5f304e6af9a15cf792d42be6",
+      "fileSize": 70536044,
+      "fileSizeLabel": "67.27 MB",
+      "sha256": "1b8f57eca7c8457c9980dcc0e94185663db0a852f1e0d080d4b1eeeb8aae7574",
       "downloadUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/download/v26.3.2/iGM-CraftCeon-Launcher-Setup-26.3.2.zip",
       "releasePageUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/tag/v26.3.2",
       "notes": {
         "zh-CN": {
           "added": [
-            "新增外观与主题系统：五套预设主题，支持自定义主色实时预览",
-            "官网下载页新增历史版本管理，展示更新类型与新增 / 优化 / 修复内容"
+            "新增外观与主题系统：极简白、暗夜黑、星图蓝、极光绿、落日橙五套预设主题，支持自定义主色实时预览",
+            "新增自定义背景图（JPG / PNG / WebP，5MB 以内）与背景模糊强度调节",
+            "首页新增「开始游戏」按钮、累计使用时长与右侧账户面板（社区账号 / 正版账号 / 离线账户最多 6 个）",
+            "新增资源中心：下载中心与资源库合并为统一入口，新增树状关系图（兼容 / 依赖 / 衍生关系，支持缩放与拖拽）",
+            "官网下载页新增历史版本管理，展示版本号、发布日期、更新类型与新增 / 优化 / 修复内容"
           ],
           "improved": [
-            "窗口标题改为完整名称并采用品牌艺术字体，窗口图标与官网 LOGO 统一",
-            "进入首页时左侧导航自动折叠为图标模式"
+            "窗口标题改为完整名称 iGM CraftCeon Launcher 并采用品牌艺术字体，窗口图标与官网 LOGO 统一",
+            "进入首页时左侧导航自动折叠为图标模式，留出更多展示空间",
+            "正版账号登录获取设备码后自动打开默认浏览器完成授权",
+            "Java 管理、语言设置、明暗模式统一移入设置页；外观独立为一级菜单"
           ],
-          "fixed": ["修复正版认证过期后历史进度仍显示、造成用户困惑的问题"]
+          "fixed": [
+            "修复正版认证过期的历史进度仍显示、造成用户困惑的问题",
+            "修复认证失败时错误原因不明确的问题，错误码与原因支持中英双语"
+          ]
         },
         "en": {
           "added": [
-            "Added the appearance and theme system with five presets and live custom accent color preview",
-            "Added release history on the download site with update type and added / improved / fixed notes"
+            "Added the appearance and theme system: five presets (Minimal White, Night Black, Star Blue, Aurora Green, Sunset Orange) with live custom accent color preview",
+            "Added custom background image (JPG / PNG / WebP up to 5MB) with adjustable background blur",
+            "Added a Start Game button, cumulative usage hours, and a right-side account panel on the home page (community account / Mojang account / up to 6 offline accounts)",
+            "Added the Resource Center: downloads and library merged into one entry, with a tree relationship graph (compatible / dependency / derived, zoom and drag supported)",
+            "Added release history on the download site: version, release date, update type, and added / improved / fixed notes"
           ],
           "improved": [
-            "Window title changed to the full name with the brand display font; window icon unified with the official logo",
-            "The sidebar auto-collapses to icon mode on the home page"
+            "Window title changed to the full name iGM CraftCeon Launcher with the brand display font; window icon unified with the official logo",
+            "The sidebar auto-collapses to icon mode on the home page to free up space",
+            "Mojang sign-in now opens the default browser automatically after the device code is issued",
+            "Java management, language, and light/dark mode moved into Settings; Appearance is now a top-level menu"
           ],
           "fixed": [
-            "Fixed stale authentication progress still being shown after expiry"
+            "Fixed stale authentication progress still being shown after expiry",
+            "Fixed unclear authentication failures; error codes and reasons are now bilingual"
           ]
         }
       }
     },
     {
-      "id": "igm-placeholder-26-3-1",
+      "id": "8f816a36-15a3-4f89-8185-02c76c865111",
       "version": "26.3.1",
       "releasedAt": "2026-10-03",
       "updateType": "minor",
@@ -62,9 +76,12 @@
             "新增启动器下载站点，统一安装包分发入口"
           ],
           "improved": [
-            "优化 installer 与启动器载荷同步流程，避免安装包内嵌旧版本程序"
+            "优化 installer 与启动器载荷同步流程，避免安装包内嵌旧版本程序",
+            "优化绿色版（portable）产物，安装包与绿色版同源构建"
           ],
-          "fixed": ["修复安装包内嵌旧版载荷导致的版本不一致问题"]
+          "fixed": [
+            "修复安装包内嵌旧版载荷导致的版本不一致问题"
+          ]
         },
         "en": {
           "added": [
@@ -72,9 +89,12 @@
             "Added the launcher download site as a unified distribution entry"
           ],
           "improved": [
-            "Improved installer payload syncing to avoid stale launcher payloads"
+            "Improved installer payload syncing to avoid stale launcher payloads",
+            "Improved the portable build so installer and portable share one source"
           ],
-          "fixed": ["Fixed version mismatch caused by stale embedded payloads"]
+          "fixed": [
+            "Fixed version mismatch caused by stale embedded payloads"
+          ]
         }
       }
     }
