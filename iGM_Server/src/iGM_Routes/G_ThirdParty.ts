@@ -49,6 +49,7 @@ import {
   iGM_SubscribeThirdPartyTask,
   iGM_ThirdPartyError,
 } from "../iGM_Services/iGM_ThirdPartyService";
+import { iGM_InsertDeveloperCallStat } from "../iGM_Repositories/iGM_DeveloperStatsRepository";
 import type {
   iGM_DownloadEvent,
   iGM_DownloadTaskDto,
@@ -163,6 +164,15 @@ async function iGM_HandleStartDownload(ctx: iGM_RouteContext) {
       versionId: iGM_Field(ctx.body, "versionId"),
       target: iGM_Field(ctx.body, "target") || undefined,
     });
+    // 调用量监测：HTTP 降级下载由服务端建单，计一次 SDK 通道调用
+    await iGM_InsertDeveloperCallStat({
+      channel: "sdk",
+      action: "resource-download",
+      clientId: null,
+      developerUid: null,
+      ip: iGM_ClientIp(ctx),
+      now: new Date().toISOString(),
+    });
     ctx.set.status = 201;
     return iGM_Ok(
       {
@@ -180,6 +190,26 @@ async function iGM_HandleStartDownload(ctx: iGM_RouteContext) {
     console.error("[G_ThirdParty] 创建下载任务失败：", error);
     return iGM_ThirdPartyErrorResponse(ctx);
   }
+}
+
+/**
+ * SDK 调用上报。
+ * 启动器主路径由本地 Zig 引擎直连下载源，主站后端收不到任何请求，
+ * 因此由客户端在建单成功后主动上报一次，仅用于调用量监测（sdk 通道），
+ * 不在服务端创建任务、不参与进度同步。
+ */
+async function iGM_HandleReportSdkCall(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
+  iGM_EnforceRateLimit(ctx, "thirdPartySdkCall", `user:${user.iGM_Id}`);
+  await iGM_InsertDeveloperCallStat({
+    channel: "sdk",
+    action: "resource-download",
+    clientId: null,
+    developerUid: null,
+    ip: iGM_ClientIp(ctx),
+    now: new Date().toISOString(),
+  });
+  return iGM_Ok({ recorded: true });
 }
 
 async function iGM_HandleDownloadStatus(ctx: iGM_RouteContext) {
@@ -281,6 +311,8 @@ export const G_ThirdParty = new Elysia({ name: "G_ThirdParty" })
   .get("/G_ThirdParty/search", iGM_HandleSearch as never)
   .get("/G_ThirdParty/resource/:id", iGM_HandleResourceDetail as never)
   .post("/G_ThirdParty/download", iGM_HandleStartDownload as never)
+  // 客户端 SDK 下载上报（仅统计调用量，不建任务）
+  .post("/G_ThirdParty/sdk-call", iGM_HandleReportSdkCall as never)
   .get("/G_ThirdParty/downloads", iGM_HandleDownloadList as never)
   .delete("/G_ThirdParty/downloads/completed", iGM_HandleClearCompleted as never)
   .get("/G_ThirdParty/download/:taskId", iGM_HandleDownloadStatus as never)

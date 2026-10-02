@@ -60,6 +60,7 @@ import {
 } from "../iGM_Repositories/iGM_OAuthRepository";
 import { iGM_FindUserById } from "../iGM_Repositories/iGM_UserRepository";
 import { iGM_ResolveUserOrgBadge } from "../iGM_Repositories/iGM_OrgVerifyRepository";
+import { iGM_InsertDeveloperCallStat } from "../iGM_Repositories/iGM_DeveloperStatsRepository";
 import {
   iGM_OAuthClientId,
   iGM_OAuthRandomToken,
@@ -176,6 +177,26 @@ async function iGM_Log(params: {
     userId: params.userId,
     action: params.action,
     detail: params.detail,
+    ip: params.ip,
+    now: new Date().toISOString(),
+  });
+}
+
+/**
+ * 调用量监测：一次第三方应用事件计入 app 通道。
+ * 与操作日志并排调用，按 clientId 归集到开发者应用的调用量统计。
+ */
+async function iGM_LogAppCall(params: {
+  clientId: string | null;
+  developerUid: string | null;
+  action: string;
+  ip: string | null;
+}): Promise<void> {
+  await iGM_InsertDeveloperCallStat({
+    channel: "app",
+    action: params.action,
+    clientId: params.clientId,
+    developerUid: params.developerUid,
     ip: params.ip,
     now: new Date().toISOString(),
   });
@@ -1001,6 +1022,12 @@ export async function iGM_ExchangeAuthorizationCodeService(params: {
     detail: codeRow.iGM_Scope,
     ip: params.ip,
   });
+  await iGM_LogAppCall({
+    clientId: client.iGM_ClientId,
+    developerUid: client.iGM_OwnerUid,
+    action: "token",
+    ip: params.ip,
+  });
   const { accessExpiresAt: _expiresAt, ...response } = token;
   void _expiresAt;
   return response;
@@ -1058,6 +1085,12 @@ export async function iGM_RefreshTokenService(params: {
     detail: requested,
     ip: params.ip,
   });
+  await iGM_LogAppCall({
+    clientId: client.iGM_ClientId,
+    developerUid: client.iGM_OwnerUid,
+    action: "token",
+    ip: params.ip,
+  });
   const { accessExpiresAt: _expiresAt, ...response } = token;
   void _expiresAt;
   return response;
@@ -1087,6 +1120,7 @@ async function iGM_ResolveAccessToken(bearer: string): Promise<{
 /** userinfo：按 scope 返回用户公开信息（sub 恒为 11 位 iGMUid） */
 export async function iGM_GetUserInfoService(
   bearer: string,
+  ip: string | null = null,
 ): Promise<Record<string, unknown>> {
   const { row, user } = await iGM_ResolveAccessToken(bearer);
   const scopes = new Set(row.iGM_Scope.split(" ").filter(Boolean));
@@ -1106,6 +1140,12 @@ export async function iGM_GetUserInfoService(
       user.iGM_Email,
     );
   }
+  await iGM_LogAppCall({
+    clientId: row.iGM_ClientId,
+    developerUid: null,
+    action: "userinfo",
+    ip,
+  });
   return claims;
 }
 
@@ -1130,6 +1170,12 @@ export async function iGM_RevokeTokenService(params: {
     userId: row.iGM_UserId,
     action: "revoke",
     detail: null,
+    ip: params.ip,
+  });
+  await iGM_LogAppCall({
+    clientId: client.iGM_ClientId,
+    developerUid: client.iGM_OwnerUid,
+    action: "revoke",
     ip: params.ip,
   });
 }

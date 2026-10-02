@@ -467,6 +467,7 @@ async function iGM_HandleUserInfo(ctx: iGM_RouteContext): Promise<Response> {
   try {
     const claims = await iGM_GetUserInfoService(
       ctx.request.headers.get("Authorization") ?? "",
+      iGM_ClientIp(ctx),
     );
     return iGM_JsonResponse(claims, 200, { "Cache-Control": "no-store" });
   } catch (error) {

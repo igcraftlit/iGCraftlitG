@@ -279,6 +279,8 @@ export const iGM_Config: iGM_AppConfig = {
     thirdPartyDownload: { windowMs: 10 * 60 * 1000, max: 20 },
     // 模块二十：下载任务控制（暂停/取消/重试/删除）——1 分钟内最多 60 次
     thirdPartyTask: { windowMs: 60 * 1000, max: 60 },
+    // 模块二十五：客户端 SDK 下载上报（仅统计调用量，不建任务）——1 分钟内最多 60 次
+    thirdPartySdkCall: { windowMs: 60 * 1000, max: 60 },
     // 模块二十一：OAuth 令牌端点（授权码换令牌 / 刷新）——1 分钟内最多 60 次
     oauthToken: { windowMs: 60 * 1000, max: 60 },
     // 模块二十一：授权端点与授权决策——1 分钟内最多 30 次

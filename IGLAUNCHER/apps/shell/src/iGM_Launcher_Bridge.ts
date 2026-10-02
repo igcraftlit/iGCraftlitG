@@ -1177,6 +1177,22 @@ async function iGM_Launcher_ThirdPartyRequest<T>(
 const IGM_LAUNCHER_SDK_TASK_PREFIX = "sdk-";
 
 /**
+ * 调用量监测：SDK 下载建单成功后向主站上报一次（sdk 通道）。
+ * SDK 由本地 Zig 引擎直连下载源，主站后端收不到请求，故需客户端主动上报；
+ * 属旁路统计，失败只写日志，绝不阻断或影响下载本身。
+ */
+function iGM_Launcher_ReportSdkCall(resourceId: string, versionId: string): void {
+  void iGM_Launcher_ThirdPartyRequest(
+    `${IGM_LAUNCHER_API_THIRD_PARTY_PATH}/sdk-call`,
+    { method: "POST", body: { resourceId, versionId } },
+  ).catch((error) => {
+    console.warn(
+      `[iGM_Launcher_Bridge] SDK 调用上报失败：${error instanceof Error ? error.message : String(error)}`,
+    );
+  });
+}
+
+/**
  * 把 SDK 任务快照映射为界面使用的第三方任务结构。
  * SDK 直连下载源，创建阶段拿不到文件名 / 直链 / 校验值等元数据，
  * 这里按可用字段尽力回填；界面进度条只依赖 downloaded / total / percent / speed / eta。
@@ -1295,6 +1311,7 @@ async function iGM_Launcher_HandleThirdParty(
             loader: params.loader ?? "fabric",
             targetDir: target,
           });
+          iGM_Launcher_ReportSdkCall(resourceId, versionId);
           return iGM_Launcher_Ok({
             task: iGM_Launcher_SDK_ToThirdPartyTask(snapshot),
             engine: "sdk" as const,
@@ -1324,6 +1341,7 @@ async function iGM_Launcher_HandleThirdParty(
             loader: params.loader ?? "fabric",
             targetDir: target,
           });
+          iGM_Launcher_ReportSdkCall(resourceId, versionId);
           return iGM_Launcher_Ok({
             task: iGM_Launcher_SDK_ToThirdPartyTask(snapshot),
             engine: "sdk" as const,
