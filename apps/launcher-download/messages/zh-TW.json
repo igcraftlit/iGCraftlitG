@@ -95,6 +95,14 @@
     "currentTag": "當前版本",
     "entries": [
       {
+        "version": "26.3.0 official version",
+        "date": "2026-10-02",
+        "items": [
+          "修復開始下載遊戲本體時誤報「橋接層回應逾時」：點擊「開始下載」後立即進入下載進度頁，不再出現下載已開始卻提示失敗的錯位。",
+          "修復獨立下載進度視窗進度條不更新：全部下載階段（含主站清單不可達時的備用下載鏈路）均按 100ms 即時推送進度。"
+        ]
+      },
+      {
         "version": "26.2.5 official version",
         "date": "2026-10-02",
         "items": [
@@ -168,7 +176,7 @@
         "title": "校驗與啟動",
         "lead": "下載完成後，可在 PowerShell 中校驗安裝包完整性：",
         "codeLabel": "powershell",
-        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.2.5.zip -Algorithm SHA256",
+        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.3.0.zip -Algorithm SHA256",
         "after": "將計算結果與下載頁給出的 SHA256 比對，一致則表示檔案完整。"
       },
       "notes": {

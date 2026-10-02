@@ -95,6 +95,14 @@
     "currentTag": "Current version",
     "entries": [
       {
+        "version": "26.3.0 official version",
+        "date": "2026-10-02",
+        "items": [
+          "Fixed a false bridge response timeout when starting a game download: the progress page now opens immediately, instead of showing an error after the download had already started.",
+          "Fixed the standalone download progress window not updating: progress is pushed in real time every 100 ms across every download stage, including the fallback download path used when the site manifest is unavailable."
+        ]
+      },
+      {
         "version": "26.2.5 official version",
         "date": "2026-10-02",
         "items": [
@@ -168,7 +176,7 @@
         "title": "Verification and launch",
         "lead": "After downloading, verify the installer integrity in PowerShell:",
         "codeLabel": "powershell",
-        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.2.5.zip -Algorithm SHA256",
+        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.3.0.zip -Algorithm SHA256",
         "after": "Compare the result with the SHA256 shown on the download page; a match means the file is intact."
       },
       "notes": {

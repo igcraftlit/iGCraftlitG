@@ -354,6 +354,21 @@ async function iGM_Launcher_Download_RunPhase(
   progress.filesTotal += items.length;
   progress.bytesTotal += items.reduce((sum, item) => sum + (item.size || 0), 0);
 
+  /*
+   * 兜底 HTTP 流程也要实时广播：独立进度窗口对 dl- 任务只收推送、不轮询，
+   * 缺广播会让弹窗永远停在初始 0% 帧（主窗口页因轮询内存快照而显示正常）。
+   * 资源对象数以千计，按 100ms 节流，阶段开始与结束各强制补一帧。
+   */
+  let lastNotifyAt = 0;
+  const notifyThrottled = (force = false): void => {
+    const now = Date.now();
+    if (force || now - lastNotifyAt >= 100) {
+      lastNotifyAt = now;
+      iGM_Launcher_Download_Notify(progress);
+    }
+  };
+  notifyThrottled(true);
+
   let cursor = 0;
   let cancelled = false;
 
@@ -364,6 +379,7 @@ async function iGM_Launcher_Download_RunPhase(
       if (index >= items.length) return;
       const item = items[index];
       progress.currentFile = item.path;
+      notifyThrottled();
       try {
         const written = await iGM_Launcher_Download_File(progress.rootDir, item);
         progress.bytesDone += written;
@@ -374,11 +390,13 @@ async function iGM_Launcher_Download_RunPhase(
         return;
       }
       progress.filesDone += 1;
+      notifyThrottled();
     }
   };
 
   const workers = Array.from({ length: Math.max(1, Math.min(concurrency, items.length)) }, worker);
   await Promise.all(workers);
+  notifyThrottled(true);
   return !cancelled && !task.cancelled;
 }
 
@@ -738,6 +756,8 @@ async function iGM_Launcher_Download_Execute(
 
   const { progress } = task;
   const osName = iGM_Launcher_Download_OsName();
+  // 进入兜底流程立即广播一帧，让独立进度窗口知道任务存活（此前可能经历了清单拉取等待）
+  iGM_Launcher_Download_Notify(progress);
   try {
     await mkdir(progress.rootDir, { recursive: true });
 
@@ -763,6 +783,7 @@ async function iGM_Launcher_Download_Execute(
     await mkdir(dirname(vanillaJsonPath), { recursive: true });
     await writeFile(vanillaJsonPath, `${JSON.stringify(versionJson, null, 2)}\n`, "utf8");
     progress.filesDone += 1;
+    iGM_Launcher_Download_Notify(progress);
 
     // 3) 客户端 jar
     const client = versionJson.downloads?.client;
@@ -813,6 +834,7 @@ async function iGM_Launcher_Download_Execute(
       await mkdir(dirname(indexPath), { recursive: true });
       await writeFile(indexPath, `${JSON.stringify(assetIndex, null, 2)}\n`, "utf8");
       progress.filesDone += 1;
+      iGM_Launcher_Download_Notify(progress);
 
       const assetItems = iGM_Launcher_Download_AssetItems(assetIndex);
       if (
@@ -859,6 +881,7 @@ async function iGM_Launcher_Download_Execute(
       await mkdir(dirname(profilePath), { recursive: true });
       await writeFile(profilePath, `${JSON.stringify(profileJson, null, 2)}\n`, "utf8");
       progress.filesDone += 1;
+      iGM_Launcher_Download_Notify(progress);
 
       const loaderItems = iGM_Launcher_Download_LibraryItems(profile.libraries, osName);
       if (

@@ -1,6 +1,6 @@
 .{
     .name = .igm_downloader,
-    .version = "26.2.5",
+    .version = "26.3.0",
     .fingerprint = 0xf550873785799924,
     .minimum_zig_version = "0.16.0",
     .paths = .{
