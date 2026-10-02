@@ -210,12 +210,35 @@ async function iGM_ReadFlow(
 }
 
 /**
+ * 按请求来源解析前端站点基础地址。
+ * 本后端同时服务本地（localhost:3001）与 cloudflared 隧道（api.igcraftlit.com），
+ * 静态 webBaseUrl 无法同时正确：线上请求须回跳 https://igcraftlit.com，
+ * 本地请求回跳 http://localhost:3000。命中线上签发方主机时把 api. 前缀去掉。
+ */
+function iGM_ResolveWebBase(httpRequest: Request): string {
+  const host = (httpRequest.headers.get("host") ?? "").toLowerCase().split(",")[0].trim();
+  let issuerHost = "";
+  try {
+    issuerHost = new URL(iGM_Config.oauth.issuer).host.toLowerCase();
+  } catch {
+    issuerHost = "";
+  }
+  if (host && issuerHost && host === issuerHost) {
+    return `https://${host.replace(/^api\./, "")}`;
+  }
+  return iGM_Config.auth.webBaseUrl.replace(/\/$/, "");
+}
+
+/**
  * 构造前端授权同意页地址（携带完整授权请求参数）。
  * 前端为 URL 前缀式多语言路由，路径必须是 /{locale}/G_OAuthAuthorize，
  * 缺少语言前缀会命中 404（此前的线上问题根因）。
  */
-function iGM_BuildConsentUrl(request: iGM_AuthorizeRequest): string {
-  const base = iGM_Config.auth.webBaseUrl.replace(/\/$/, "");
+function iGM_BuildConsentUrl(
+  request: iGM_AuthorizeRequest,
+  webBase: string,
+): string {
+  const base = webBase.replace(/\/$/, "");
   const locale = iGM_Config.oauth.consentLocale.replace(/^\/|\/$/g, "");
   const path = iGM_Config.oauth.consentPath.startsWith("/")
     ? iGM_Config.oauth.consentPath
@@ -236,8 +259,11 @@ function iGM_BuildConsentUrl(request: iGM_AuthorizeRequest): string {
 }
 
 /** 构造前端授权同意页的错误展示地址（授权请求校验失败、无法安全回跳第三方时使用） */
-function iGM_BuildConsentErrorUrl(error: iGM_OAuthError): string {
-  const base = iGM_Config.auth.webBaseUrl.replace(/\/$/, "");
+function iGM_BuildConsentErrorUrl(
+  error: iGM_OAuthError,
+  webBase: string,
+): string {
+  const base = webBase.replace(/\/$/, "");
   const locale = iGM_Config.oauth.consentLocale.replace(/^\/|\/$/g, "");
   const path = iGM_Config.oauth.consentPath.startsWith("/")
     ? iGM_Config.oauth.consentPath
@@ -293,6 +319,7 @@ function iGM_LogRedirect(
 async function iGM_HandleAuthorize(ctx: iGM_RouteContext): Promise<Response> {
   iGM_EnforceRateLimit(ctx, "oauthAuthorize", `ip:${iGM_ClientIp(ctx)}`);
   const query = ctx.query;
+  const webBase = iGM_ResolveWebBase(ctx.request);
 
   let request: iGM_AuthorizeRequest;
   try {
@@ -308,7 +335,7 @@ async function iGM_HandleAuthorize(ctx: iGM_RouteContext): Promise<Response> {
       };
       const location = target
         ? iGM_BuildRedirect(target, errorParams)
-        : iGM_BuildConsentErrorUrl(error);
+        : iGM_BuildConsentErrorUrl(error, webBase);
       iGM_LogRedirect(location, errorParams);
       return iGM_RedirectResponse(location);
     }
@@ -334,7 +361,7 @@ async function iGM_HandleAuthorize(ctx: iGM_RouteContext): Promise<Response> {
     ...request,
     exp: Date.now() + iGM_Config.oauth.flowTtlSeconds * 1000,
   });
-  const consentUrl = iGM_BuildConsentUrl(request);
+  const consentUrl = iGM_BuildConsentUrl(request, webBase);
   iGM_LogRedirect(consentUrl, {
     client_id: request.clientId,
     redirect_uri: request.redirectUri,
