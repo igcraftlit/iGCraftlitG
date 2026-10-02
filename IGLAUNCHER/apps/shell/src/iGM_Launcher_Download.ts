@@ -13,7 +13,7 @@
  *       但共用同一份 libraries 与 assets。
  *       本模块只负责下载与落盘，natives 解压、游戏启动与参数拼装留待后续模块；
  *       下载进度只在主进程内存中维护，不做任何伪造（失败即如实标记 failed）。
- *       Rust 侧对应契约：iGM_Launcher_ListLoaderVersions / iGM_Launcher_StartDownload /
+ *       Zig 侧对应契约：iGM_Launcher_ListLoaderVersions / iGM_Launcher_StartDownload /
  *       iGM_Launcher_DownloadStatus / iGM_Launcher_CancelDownload。
  */
 

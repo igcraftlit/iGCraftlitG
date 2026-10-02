@@ -3,7 +3,7 @@
  * 所属层：桌面外壳 / 桥接层
  * 路由：全局（不对外暴露 URL，仅经 IPC 被界面调用）
  * 模块：iGM_Launcher_Bridge
- * 作用：统一封装三类能力——Rust 核心调用（bun:ffi）、HTTP 请求、本地文件读写；
+ * 作用：统一封装三类能力——Zig 核心调用（bun:ffi）、HTTP 请求、本地文件读写；
  *       对外只暴露 iGM_Launcher_Bridge_Call，统一返回 { success, code, message, data }
  * 内容：实例管理（增删改查）、Java 运行时管理（列表 / 检测 / 添加 / 移除 / 测试 / 下载占位）、
  *       账户会话（当前 / 登录 / 退出 / 同步）；数据以 JSON 落盘于 D:/IGLAUNCHER/data；
@@ -31,7 +31,7 @@
  *       界面拿到的仅是绑定摘要与档案信息。
  *       模块五的 minecraft:* 分支：扫描与导入只读原游戏目录，实例目录直接指向原
  *       .minecraft 根目录、不复制任何文件；版本库同步失败时保留本地缓存。
- *       Rust 侧对应契约：iGM_Launcher_ScanMinecraftDirs / iGM_Launcher_ParseVersionJson /
+ *       Zig 侧对应契约：iGM_Launcher_ScanMinecraftDirs / iGM_Launcher_ParseVersionJson /
  *       iGM_Launcher_ImportInstance / iGM_Launcher_SyncVersionLibrary。
  *       模块八的 instance:* 分支只做编排：读取实例 / Java / 账户与生效根目录后交给
  *       iGM_Launcher_Launch 启动引擎，启动失败如实透传错误码与原因，绝不伪造成功。
@@ -132,6 +132,17 @@ import {
   iGM_Launcher_Download_Start,
   iGM_Launcher_Download_Status,
 } from "./iGM_Launcher_Download";
+import {
+  iGM_Launcher_SDK_Cancel,
+  iGM_Launcher_SDK_IsAvailable,
+  iGM_Launcher_SDK_Pause,
+  iGM_Launcher_SDK_Release,
+  iGM_Launcher_SDK_Resume,
+  iGM_Launcher_SDK_Retry,
+  iGM_Launcher_SDK_Start,
+  iGM_Launcher_SDK_Status,
+  type iGM_Launcher_SDK_TaskSnapshot,
+} from "./iGM_Launcher_SDK";
 import {
   IGM_LAUNCHER_JAVA_VENDOR_LABELS,
   iGM_Launcher_Java_Probe,
@@ -676,7 +687,7 @@ async function iGM_Launcher_InstalledVersions(): Promise<Set<string>> {
 /**
  * 导入实例：版本 json 所在的 .minecraft 根目录直接作为实例目录，不复制任何文件。
  * 同一目录下相同版本与加载器重复导入时拒绝，避免实例列表出现重复项。
- * Rust 侧对应契约：iGM_Launcher_ImportInstance。
+ * Zig 侧对应契约：iGM_Launcher_ImportInstance。
  */
 async function iGM_Launcher_HandleImportInstance(
   jsonPath: string | undefined,
@@ -736,7 +747,7 @@ async function iGM_Launcher_HandleImportInstance(
  * 从主站版本资料库同步版本列表。
  * 成功时写入缓存并返回 remote 快照；失败时保留既有缓存，
  * 以 data.library 回填缓存内容，界面据此提示「已保留本地缓存」。
- * Rust 侧对应契约：iGM_Launcher_SyncVersionLibrary。
+ * Zig 侧对应契约：iGM_Launcher_SyncVersionLibrary。
  */
 async function iGM_Launcher_SyncVersionLibrary(): Promise<iGM_Launcher_BridgeResponse> {
   const cached = await iGM_Launcher_VersionLibrary_Load();
@@ -1064,20 +1075,84 @@ async function iGM_Launcher_ThirdPartyRequest<T>(
   if (!result.reached) {
     return iGM_Launcher_Fail<T>(IGM_LAUNCHER_BRIDGE_UNREACHABLE, "第三方资源接口不可达");
   }
-  if (!result.envelope?.success) {
-    const code = result.envelope?.code ?? result.status;
+  /*
+   * 非 JSON 响应：主站被网关/隧道拦截时（如 Cloudflare 502/530）返回的是 HTML 错误页，
+   * 此处不再笼统提示「无法解析的响应」，而是带上 HTTP 状态码，便于定位隧道或后端问题。
+   */
+  if (!result.envelope) {
+    console.error(
+      `[iGM_Launcher_Bridge] 第三方资源接口返回非 JSON 响应：${path} HTTP ${result.status}`,
+    );
     return iGM_Launcher_Fail<T>(
-      code > 0 ? code : IGM_LAUNCHER_BRIDGE_FAILED,
-      result.envelope?.message ?? "第三方资源接口返回了无法解析的响应",
+      IGM_LAUNCHER_BRIDGE_FAILED,
+      `第三方资源服务返回了非 JSON 响应（HTTP ${result.status}），请检查 api.igcraftlit.com 隧道或本地后端状态`,
+    );
+  }
+  if (!result.envelope.success) {
+    const code = result.envelope.code ?? result.status;
+    // 后端已把上游失败收敛为友好文案；此处仅透传，不再暴露原始错误
+    return iGM_Launcher_Fail<T>(
+      typeof code === "number" && code > 0 ? code : IGM_LAUNCHER_BRIDGE_FAILED,
+      result.envelope.message ?? "第三方平台连接失败，请稍后重试",
     );
   }
   return iGM_Launcher_Ok((result.envelope.data ?? null) as T);
 }
 
+/* ---- 模块二十三：原生 SDK 优先的第三方下载 ---- */
+
+/** SDK 任务编号前缀（与 iGM_Launcher_SDK 内生成规则一致） */
+const IGM_LAUNCHER_SDK_TASK_PREFIX = "sdk-";
+
+/**
+ * 把 SDK 任务快照映射为界面使用的第三方任务结构。
+ * SDK 直连下载源，创建阶段拿不到文件名 / 直链 / 校验值等元数据，
+ * 这里按可用字段尽力回填；界面进度条只依赖 downloaded / total / percent / speed / eta。
+ */
+function iGM_Launcher_SDK_ToThirdPartyTask(
+  snapshot: iGM_Launcher_SDK_TaskSnapshot,
+): iGM_Launcher_ThirdPartyTask {
+  const now = new Date().toISOString();
+  return {
+    id: snapshot.taskId,
+    resourceId: snapshot.resourceId,
+    versionId: snapshot.version,
+    source: "modrinth",
+    name: snapshot.resourceId,
+    type: "mod",
+    version: snapshot.version,
+    downloadUrl: "",
+    filename: snapshot.sdkTaskId,
+    size: snapshot.total,
+    sha1: "",
+    status: snapshot.status,
+    downloaded: snapshot.downloaded,
+    progress: snapshot.percent,
+    speed: snapshot.speed,
+    eta: snapshot.eta,
+    error: snapshot.error,
+    targetDir: snapshot.targetDir,
+    filePath: "",
+    createdAt: snapshot.createdAt,
+    updatedAt: now,
+  };
+}
+
+/** 若任务编号属于 SDK 任务则返回映射后的任务，否则返回 null（交由后端路径处理） */
+function iGM_Launcher_SDK_LookupTask(taskId: string): iGM_Launcher_ThirdPartyTask | null {
+  if (!taskId.startsWith(IGM_LAUNCHER_SDK_TASK_PREFIX)) return null;
+  const snapshot = iGM_Launcher_SDK_Status(taskId);
+  return snapshot ? iGM_Launcher_SDK_ToThirdPartyTask(snapshot) : null;
+}
+
 /**
  * 模块二十的全部桥接分支（第三方资源浏览与下载任务）。
- * 任务由主站后端统一管理（与网站下载中心共用同一套任务），
- * 启动器只做请求转发与展示，不落盘、不伪造进度。
+ *
+ * 下载路径（模块二十三调整）：
+ *   1) 优先走原生 SDK——bun:ffi 直连 Modrinth，省去 HTTP/WebSocket 往返，进度回调直达主进程；
+ *   2) SDK 动态库不存在或加载失败时，回退到主站后端统一下发的任务（网站下载中心同一套任务）；
+ *   3) 后端代理路径保留为兜底（服务网页端与第三方工具），启动器内该分支已标记 @deprecated，
+ *      待 SDK 在多种资源上验证稳定后再物理删除。
  */
 async function iGM_Launcher_HandleThirdParty(
   method: iGM_Launcher_BridgeMethod,
@@ -1115,7 +1190,7 @@ async function iGM_Launcher_HandleThirdParty(
       );
     }
 
-    /* 发起下载：body 携带 resourceId / versionId / target，返回新建任务 */
+    /* 发起下载：优先走原生 SDK 直连 Modrinth，不可用时回退主站后端统一下发（@deprecated 兜底） */
     case "thirdParty:download-start": {
       const resourceId = params.resourceId?.trim() ?? "";
       const versionId = params.versionId?.trim() ?? "";
@@ -1125,6 +1200,20 @@ async function iGM_Launcher_HandleThirdParty(
       }
       if (!target) {
         return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_INVALID, "缺少下载目标目录");
+      }
+      if (iGM_Launcher_SDK_IsAvailable()) {
+        try {
+          const snapshot = iGM_Launcher_SDK_Start({
+            resourceId,
+            version: versionId,
+            loader: params.loader ?? "fabric",
+            targetDir: target,
+          });
+          return iGM_Launcher_Ok({ task: iGM_Launcher_SDK_ToThirdPartyTask(snapshot) });
+        } catch (error) {
+          // SDK 建单失败不抛给界面，继续走兜底路径
+          console.warn("[iGM Launcher] SDK 创建下载任务失败，回退后端 API：", error);
+        }
       }
       return iGM_Launcher_ThirdPartyRequest<{ task: iGM_Launcher_ThirdPartyTask }>(
         `${IGM_LAUNCHER_API_THIRD_PARTY_PATH}/download`,
@@ -1136,6 +1225,8 @@ async function iGM_Launcher_HandleThirdParty(
     case "thirdParty:download-status": {
       const taskId = params.taskId?.trim() ?? "";
       if (!taskId) return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_INVALID, "缺少下载任务编号");
+      const sdkTask = iGM_Launcher_SDK_LookupTask(taskId);
+      if (sdkTask) return iGM_Launcher_Ok({ task: sdkTask });
       return iGM_Launcher_ThirdPartyRequest<{ task: iGM_Launcher_ThirdPartyTask | null }>(
         `${IGM_LAUNCHER_API_THIRD_PARTY_PATH}/download/${encodeURIComponent(taskId)}`,
         { method: "GET" },
@@ -1155,6 +1246,14 @@ async function iGM_Launcher_HandleThirdParty(
     case "thirdParty:download-cancel": {
       const taskId = params.taskId?.trim() ?? "";
       if (!taskId) return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_INVALID, "缺少下载任务编号");
+      const sdkTask = iGM_Launcher_SDK_LookupTask(taskId);
+      if (sdkTask) {
+        const snapshot = iGM_Launcher_SDK_Cancel(taskId);
+        if (params.purge === true) iGM_Launcher_SDK_Release(taskId);
+        return iGM_Launcher_Ok({
+          task: snapshot ? iGM_Launcher_SDK_ToThirdPartyTask(snapshot) : sdkTask,
+        });
+      }
       return iGM_Launcher_ThirdPartyRequest(
         `${IGM_LAUNCHER_API_THIRD_PARTY_PATH}/download/${encodeURIComponent(taskId)}/cancel`,
         { body: { purge: params.purge === true } },
@@ -1165,16 +1264,33 @@ async function iGM_Launcher_HandleThirdParty(
     case "thirdParty:download-pause": {
       const taskId = params.taskId?.trim() ?? "";
       if (!taskId) return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_INVALID, "缺少下载任务编号");
+      const sdkTask = iGM_Launcher_SDK_LookupTask(taskId);
+      if (sdkTask) {
+        const snapshot =
+          params.paused !== false
+            ? iGM_Launcher_SDK_Pause(taskId)
+            : iGM_Launcher_SDK_Resume(taskId);
+        return iGM_Launcher_Ok({
+          task: snapshot ? iGM_Launcher_SDK_ToThirdPartyTask(snapshot) : sdkTask,
+        });
+      }
       return iGM_Launcher_ThirdPartyRequest(
         `${IGM_LAUNCHER_API_THIRD_PARTY_PATH}/download/${encodeURIComponent(taskId)}/pause`,
         { body: { paused: params.paused !== false } },
       );
     }
 
-    /* 重试失败 / 已取消的任务：复用后端 retry 端点，保留 .part 断点续传 */
+    /* 重试失败 / 已取消的任务：SDK 任务从头重启，后端任务保留 .part 断点续传 */
     case "thirdParty:download-retry": {
       const taskId = params.taskId?.trim() ?? "";
       if (!taskId) return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_INVALID, "缺少下载任务编号");
+      const sdkTask = iGM_Launcher_SDK_LookupTask(taskId);
+      if (sdkTask) {
+        const snapshot = iGM_Launcher_SDK_Retry(taskId);
+        return iGM_Launcher_Ok({
+          task: snapshot ? iGM_Launcher_SDK_ToThirdPartyTask(snapshot) : sdkTask,
+        });
+      }
       return iGM_Launcher_ThirdPartyRequest(
         `${IGM_LAUNCHER_API_THIRD_PARTY_PATH}/download/${encodeURIComponent(taskId)}/retry`,
         { body: {} },
@@ -1185,6 +1301,11 @@ async function iGM_Launcher_HandleThirdParty(
     case "thirdParty:download-remove": {
       const taskId = params.taskId?.trim() ?? "";
       if (!taskId) return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_INVALID, "缺少下载任务编号");
+      const sdkTask = iGM_Launcher_SDK_LookupTask(taskId);
+      if (sdkTask) {
+        iGM_Launcher_SDK_Release(taskId);
+        return iGM_Launcher_Ok({ removed: true });
+      }
       return iGM_Launcher_ThirdPartyRequest(
         `${IGM_LAUNCHER_API_THIRD_PARTY_PATH}/download/${encodeURIComponent(taskId)}`,
         { method: "DELETE" },

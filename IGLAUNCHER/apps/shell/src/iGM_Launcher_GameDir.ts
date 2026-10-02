@@ -13,7 +13,7 @@
  * 说明：本模块只识别与记录，绝不修改、删除或移动原游戏目录内的任何文件；
  *       版本库的远端同步（HTTP）由 iGM_Launcher_Bridge.ts 负责，本模块只做缓存读写，
  *       以避免与桥接层互相引用。
- *       Rust 侧对应契约：iGM_Launcher_ScanMinecraftDirs / iGM_Launcher_ParseVersionJson。
+ *       Zig 侧对应契约：iGM_Launcher_ScanMinecraftDirs / iGM_Launcher_ParseVersionJson。
  */
 
 // 导入依赖 //

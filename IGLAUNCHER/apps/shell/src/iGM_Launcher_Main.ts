@@ -20,7 +20,7 @@ import {
   IGM_LAUNCHER_DEV_URL,
   type iGM_Launcher_HostMessage,
 } from "@igm-launcher/shared";
-import { iGM_Launcher_Core_Status, iGM_Launcher_Core_HasMcSymbols } from "./iGM_Launcher_CoreBindings";
+import { iGM_Launcher_Core_Status } from "./iGM_Launcher_CoreBindings";
 import { IGM_LAUNCHER_BRIDGE_DATA_ROOT } from "./iGM_Launcher_Bridge";
 import { iGM_Launcher_Msa_IsConfigured } from "./iGM_Launcher_MsaAuth";
 import { iGM_Launcher_Ipc_HandleMessage } from "./iGM_Launcher_Ipc";
@@ -113,7 +113,7 @@ function iGM_Launcher_HandleHostMessage(
 function iGM_Launcher_Bootstrap(): void {
   const mode = iGM_Launcher_ResolveRunMode();
 
-  // 原生核心占位：动态库未编译时返回占位状态，不影响外壳启动
+  // 原生核心状态：Zig 动态库未加载时返回占位状态，不影响外壳启动
   const coreState = iGM_Launcher_Core_Status();
   console.log(
     `[iGM Launcher] 启动模式：${mode}；原生核心：${
@@ -127,7 +127,7 @@ function iGM_Launcher_Bootstrap(): void {
       iGM_Launcher_Msa_IsConfigured()
         ? "微软链路可用（内置公开 Client ID，可用 IGM_MSA_CLIENT_ID 覆盖）"
         : "未解析到 Client ID，正版绑定不可用"
-    }；原生认证链符号：${iGM_Launcher_Core_HasMcSymbols() ? "已登记（占位实现）" : "未编译"}`,
+    }；原生认证链：由 Bun 侧承载（iGM_Launcher_MsaAuth）`,
   );
 
   // 不传 frame.x / frame.y，构造函数据此判定窗口居中

@@ -12,8 +12,9 @@ build/
 apps/shell/iGM_Launcher_Assets/
 apps/installer/iGM_Installer_Assets/
 
-# Rust
-crates/**/target/
+# Zig 构建产物
+zig-core/.zig-cache/
+zig-core/zig-out/
 
 # 环境与密钥
 .env

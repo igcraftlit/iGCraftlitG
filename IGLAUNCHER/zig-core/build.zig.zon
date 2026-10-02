@@ -1,0 +1,11 @@
+.{
+    .name = .igm_downloader,
+    .version = "26.2.4",
+    .fingerprint = 0xf550873785799924,
+    .minimum_zig_version = "0.16.0",
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}

@@ -17,7 +17,7 @@
  *       游戏标准输出与错误输出全部落盘到实例目录下的 logs/，便于排查启动失败原因。
  *       模块九：Java 选取在已登记运行时全部不可用时回退到真实扫描结果（含系统 PATH），
  *       本机确实没有可用 Java 时给出可照做的中文提示，不再回退到字面量 "java"。
- *       Rust 侧对应契约：iGM_Launcher_LaunchInstance / iGM_Launcher_LaunchStatus。
+ *       Zig 侧对应契约：iGM_Launcher_LaunchInstance / iGM_Launcher_LaunchStatus。
  */
 
 // 导入依赖 //

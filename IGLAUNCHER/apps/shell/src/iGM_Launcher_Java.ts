@@ -13,7 +13,7 @@
  *       Bun.spawn 抛出的原生错误（Executable not found in $PATH）直接显示给用户；
  *       本模块把检测与探测改为真实行为，供桥接层（检测 / 测试 / 添加）
  *       与启动引擎（选取启动用 Java）共用同一份结果。
- *       Rust 侧对应契约：iGM_Launcher_DetectJava / iGM_Launcher_ProbeJava（尚未实现，
+ *       Zig 侧对应契约：iGM_Launcher_DetectJava / iGM_Launcher_ProbeJava（尚未实现，
  *       当前由 Bun 侧承担，原生符号就绪后可平滑迁移）。
  */
 
