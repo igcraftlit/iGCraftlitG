@@ -16,6 +16,9 @@ apps/installer/iGM_Installer_Assets/
 zig-core/.zig-cache/
 zig-core/zig-out/
 
+# 运行时日志
+apps/shell/app.log
+
 # 环境与密钥
 .env
 .env.*

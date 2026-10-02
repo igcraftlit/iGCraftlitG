@@ -17,3 +17,5 @@ scripts/logs/
 iGM_Server/logs/
 screenshots/
 RUN.txt
+# 文档资料：第三方二进制包不入库
+docs/*.jar
