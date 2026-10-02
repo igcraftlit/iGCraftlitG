@@ -41,8 +41,8 @@
   },
   "placeholder": "コンテンツは近日公開予定です。お楽しみに。",
   "footer": {
-    "builtBy": "iGCraftLit × MuoCeon 共同構築",
-    "copyright": "© {year} iGM CLI Download API. All rights reserved."
+    "builtBy": "iGCraftLit × MuoCeon Jointly Built",
+    "copyright": "© {year} iGM CLI Download API. All Rights Reserved."
   },
   "pages": {
     "docs": {
@@ -558,7 +558,12 @@
       "appNotFound": "アプリが見つかりません",
       "withdrawNotAllowed": "現在の状態では取り消せません",
       "appNotApproved": "アプリはまだ承認されていません",
-      "appReviewed": "この申請は既に審査済みです"
+      "appReviewed": "この申請は既に審査済みです",
+      "homepageInvalid": "ホームページ URL の形式が正しくありません（HTTPS 必須）",
+      "privacyPolicyInvalid": "プライバシーポリシー URL の形式が正しくありません（HTTPS 必須）",
+      "termsInvalid": "利用規約 URL の形式が正しくありません（HTTPS 必須）",
+      "dataUsageInvalid": "データ利用内容を入力してください",
+      "secretAlreadyRevealed": "シークレットは一度だけ表示され、すでに取得済みです。必要な場合は「シークレットを再発行」してください。"
     },
     "clientTypes": {
       "web": "ウェブアプリ",
@@ -590,6 +595,7 @@
       "apply": "申請を送信",
       "withdraw": "申請を取消",
       "secretReset": "シークレットを再発行",
+      "secretReveal": "シークレット取得",
       "approve": "承認",
       "reject": "拒否",
       "delete": "アプリを削除",
@@ -601,7 +607,8 @@
       "consentRevoke": "認可を取消"
     },
     "messages": {
-      "deleted": "アプリを削除しました"
+      "deleted": "アプリを削除しました",
+      "secretRevealed": "client_secret を取得しました。今すぐ安全な場所に保存してください。"
     },
     "apply": {
       "intro": "サードパーティサイトが iGCraftLit アカウントでログインできるようにします：アプリ情報を送信し、審査通過後に client_id と client_secret が発行されます。",
@@ -621,7 +628,21 @@
       "purposePlaceholder": "ユーザーが認可した情報をどのように利用するか説明してください",
       "contact": "連絡先",
       "contactPlaceholder": "メールアドレスなど連絡可能な方法",
-      "agreeRules": "OAuth 連携規約およびユーザー情報保護要件を読み、同意します",
+      "homepageUrl": "ホームページ URL",
+      "homepageUrlPlaceholder": "https://example.com",
+      "homepageUrlHint": "アプリの公開ホームページです。HTTPS が必須です",
+      "privacyPolicyUrl": "プライバシーポリシー URL",
+      "privacyPolicyUrlPlaceholder": "https://example.com/privacy",
+      "privacyPolicyUrlHint": "利用者データの収集と利用方法を説明するページです。HTTPS が必須です",
+      "termsOfServiceUrl": "利用規約 URL",
+      "termsOfServiceUrlPlaceholder": "https://example.com/terms",
+      "termsOptional": "（任意）",
+      "dataUsage": "データ利用内容",
+      "dataUsagePlaceholder": "収集する利用者データの項目、利用目的、保存期間、保護措置を記載してください",
+      "dataUsageHint": "審査では「OAuth 連携仕様」と「利用者情報保護要件」に基づき評価されます",
+      "complianceRequired": "ホームページ URL、プライバシーポリシー URL、データ利用内容は必須です",
+      "complianceUrlInsecure": "ホームページ、プライバシーポリシー、利用規約の URL は HTTPS を使用してください",
+      "agreeRules": "OAuth 連携仕様および利用者情報保護要件を読み、同意します",
       "required": "必須項目をすべて入力してください",
       "redirectRequired": "リダイレクト URI を最低 1 つ入力してください",
       "redirectInsecure": "リダイレクト URI は HTTPS を使用する必要があります",
@@ -630,7 +651,7 @@
       "submitting": "送信中…",
       "cancel": "キャンセル",
       "failed": "送信に失敗しました。しばらくしてから再試行してください",
-      "submittedNotice": "申請を送信しました。管理者の審査をお待ちください。承認後は「マイ OAuth アプリ」で client_id を確認し client_secret を取得できます。",
+      "submittedNotice": "申請を送信しました。管理者の審査をお待ちください。承認後に「マイ OAuth アプリ」を開くと client_id と client_secret を確認・コピーできます。client_secret は一度だけ表示されます。",
       "viewApps": "マイ OAuth アプリへ",
       "reviewHint": "審査はサイト管理者が行います；承認後に client_secret が一度だけ発行されるため、大切に保管してください"
     },
@@ -820,6 +841,36 @@
             "ユーザーには人間が読める多言語のメッセージ（例：「ログインの有効期限が切れました。再度ログインしてください」）を表示し、生のエラーキーを表示しないでください。",
             "通知後、ログインページまたは認可フローの再開へユーザーを導きます。",
             "refresh_token が期限切れ（最長 2 四半期）の場合は自動更新せず、再認可が必要です。"
+          ]
+        },
+        {
+          "id": "spec",
+          "title": "OAuth 連携仕様",
+          "paragraphs": [
+            "本仕様は、iGCraftLit アカウントのオープン機能への接続を申請するすべてのサードパーティアプリに適用されます。申請の送信をもって本仕様への同意とみなします。"
+          ],
+          "bullets": [
+            "リダイレクト URI：登録値と完全に一致する必要があり、本番環境は HTTPS のみ許可されます。デスクトップ、モバイル、シングルページアプリなどの公開クライアントは PKCE（S256 のみ）を必須とします。http://localhost などのローカルループバックは「ローカルテスト」指定のアプリに限り許可されます。",
+            "スコープ定義：openid（必須。一意の利用者識別子 sub、すなわち iGMUid を返す）、profile（表示名とアバター）、email（メールアドレス）、org（承認済み組織認証情報）。業務に必要な最小限のスコープのみ申請してください。",
+            "トークンの有効期間：認可コードは使い捨てで 5 分間有効、access_token は既定で 1 時間、refresh_token は最長 180 日です。期限後は利用者に再認可を案内し、更新はできません。",
+            "エラーコード：invalid_request、invalid_client、invalid_grant、invalid_scope、unsupported_grant_type、invalid_token、access_denied。RFC 6749 に従い error と error_description を返します。",
+            "client_secret は承認後の「マイ OAuth アプリ」ページに一度だけ表示されます。サーバー側の環境変数など安全な場所に保管し、漏えいの恐れがある場合は直ちに再発行してください。",
+            "利用者の同意なく認可を求めること、アクセストークンを共有すること、申請した目的を超えて userinfo を呼び出すことを禁止します。"
+          ]
+        },
+        {
+          "id": "privacy",
+          "title": "利用者情報保護要件",
+          "paragraphs": [
+            "iGCraftLit の利用者情報を取り扱う接続事業者は、以下の要件を満たし、アプリのプライバシーポリシーで利用者に明示しなければなりません。"
+          ],
+          "bullets": [
+            "データ最小化：記載機能に必要な利用者データのみを収集し、sub、メールアドレス、組織情報などを申請目的以外に利用してはなりません。",
+            "通信の暗号化：接続事業者と iGCraftLit 間、および接続事業者と利用者端末間のすべての通信に HTTPS/TLS を使用し、トークンや個人情報を平文で送信してはなりません。",
+            "データ保管：個人情報は暗号化または仮名化して保管してください。client_secret、access_token、refresh_token をフロントエンドコード、ブラウザストレージ、ログ、公開リポジトリに書き込んではなりません。",
+            "利用者データの削除：利用者が認可を取り消し、またはアカウントを削除した場合、30 日以内に個人データを削除または匿名化し、当該アプリによる userinfo の呼び出しを直ちに停止してください。",
+            "コンプライアンス表明：アプリのホームページにプライバシーポリシーと利用規約へのリンクを公開し、適用されるデータ保護法令を遵守し、自社のデータセキュリティ事故に責任を負うものとします。",
+            "iGCraftLit は接続アプリを随時監査できるものとします。過剰収集、利用者データの漏えいその他の違反が確認された場合、アプリを直ちに無効化し、発行済みのすべてのトークンを取り消すことができます。"
           ]
         }
       ]

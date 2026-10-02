@@ -19,6 +19,9 @@ import type {
 } from "../iGM_Types/iGM_Admin";
 
 // 类型定义 //
+/** 模块二十五：同一 IP 关联账户异常阈值（超过该数标记异常） */
+export const iGM_AbnormalIpThreshold = 5;
+
 /** 用户管理列表行（原始行 + 计数） */
 export interface iGM_AdminUserListRow {
   iGM_Id: string;
@@ -33,6 +36,12 @@ export interface iGM_AdminUserListRow {
   iGM_Avatar: string | null;
   // 模块七：认证组织 id（徽标由服务层解析）
   iGM_VerifiedOrgId: string | null;
+  /** 模块二十五：注册 IP / 最后登录 IP */
+  iGM_RegisterIp: string | null;
+  iGM_LastLoginIp: string | null;
+  /** 模块二十五：注册 IP / 登录 IP 的关联账户数（CTE 聚合） */
+  iGM_RegisterIpCount: number;
+  iGM_LastLoginIpCount: number;
   iGM_CreatedAt: string;
   iGM_TotalPoints: number;
   iGM_PostCount: number;
@@ -42,14 +51,18 @@ export interface iGM_AdminUserListRow {
 // 核心逻辑 //
 /* ---------- 用户管理 ---------- */
 
-/** 检索用户列表：用户名/邮箱模糊搜索 + 分页，附积分与内容计数 */
+/**
+ * 检索用户列表：用户名/邮箱/iGMUid 模糊搜索 + 分页，附积分、内容计数与 IP 关联计数。
+ * 模块二十五：CTE 汇总每个非回环 IP 的关联账户数（管理员 UID 首位 0、
+ * 测试账号首位 9 不参与统计），超过 iGM_AbnormalIpThreshold 即异常，
+ * 由服务层结合 UID 区分位决定是否给该用户打异常标记。
+ */
 export async function iGM_ListUsersForAdmin(
   search: string | null,
   page: number,
   pageSize: number,
 ): Promise<{ items: iGM_AdminUserListRow[]; total: number }> {
-  // 说明：bun:sqlite 命名参数绑定到 LIMIT 位置会触发 SQLITE_MISMATCH，
-  // 因此本查询统一使用位置参数（与仓库层其他分页查询一致）
+  // 说明：位置参数与 LIMIT 绑定，与仓库层其他分页查询一致
   // 模块七增强：搜索同时匹配 iGMUid（精确优先，模糊兜底）
   const where = search
     ? `WHERE u.iGM_Username LIKE ? OR u.iGM_Email LIKE ? OR u.iGM_Uid = ?`
@@ -63,13 +76,37 @@ export async function iGM_ListUsersForAdmin(
     ).get(...searchArgs)) as { total: number }
   ).total;
   const items = (await iGM_Db.query(
-    `SELECT u.iGM_Id, u.iGM_Uid, u.iGM_Username, u.iGM_Email, u.iGM_Role, u.iGM_Status,
-            u.iGM_EmailVerified, u.iGM_DisplayName, u.iGM_Avatar, u.iGM_VerifiedOrgId, u.iGM_CreatedAt,
+    `WITH iGM_IpEvents AS (
+       SELECT iGM_RegisterIp AS iGM_Ip, iGM_Id AS iGM_UserId
+         FROM iGM_Users
+        WHERE iGM_RegisterIp IS NOT NULL
+          AND iGM_RegisterIp <> '127.0.0.1'
+          AND LEFT(iGM_Uid, 1) NOT IN ('0', '9')
+       UNION ALL
+       SELECT iGM_LastLoginIp AS iGM_Ip, iGM_Id AS iGM_UserId
+         FROM iGM_Users
+        WHERE iGM_LastLoginIp IS NOT NULL
+          AND iGM_LastLoginIp <> '127.0.0.1'
+          AND LEFT(iGM_Uid, 1) NOT IN ('0', '9')
+     ),
+     iGM_IpUsage AS (
+       SELECT iGM_Ip, COUNT(DISTINCT iGM_UserId) AS iGM_AccountCount
+         FROM iGM_IpEvents
+        GROUP BY iGM_Ip
+     )
+     SELECT u.iGM_Id, u.iGM_Uid, u.iGM_Username, u.iGM_Email, u.iGM_Role, u.iGM_Status,
+            u.iGM_EmailVerified, u.iGM_DisplayName, u.iGM_Avatar, u.iGM_VerifiedOrgId,
+            u.iGM_RegisterIp, u.iGM_LastLoginIp,
+            COALESCE(r.iGM_AccountCount, 0) AS iGM_RegisterIpCount,
+            COALESCE(l.iGM_AccountCount, 0) AS iGM_LastLoginIpCount,
+            u.iGM_CreatedAt,
             COALESCE(up.iGM_TotalPoints, 0) AS iGM_TotalPoints,
             (SELECT COUNT(*) FROM iGM_Posts p WHERE p.iGM_AuthorId = u.iGM_Id) AS iGM_PostCount,
             (SELECT COUNT(*) FROM iGM_Comments c WHERE c.iGM_AuthorId = u.iGM_Id) AS iGM_CommentCount
      FROM iGM_Users u
      LEFT JOIN iGM_UserPoints up ON up.iGM_UserId = u.iGM_Id
+     LEFT JOIN iGM_IpUsage r ON r.iGM_Ip = u.iGM_RegisterIp
+     LEFT JOIN iGM_IpUsage l ON l.iGM_Ip = u.iGM_LastLoginIp
      ${where}
      ORDER BY u.iGM_CreatedAt DESC
      LIMIT ? OFFSET ?`,

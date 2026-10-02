@@ -3,13 +3,13 @@
  * 所属层：前端 / 页面层
  * 路由：/{locale}/about
  * 模块：iGM_LauncherDl_Downloader
- * 作用：关于页——iGM CraftCeon Launcher 介绍、iGCraftLit Community × MuoCeon 署名、目标与联系方式
+ * 作用：关于页——iGM CraftCeon Launcher 介绍、iGCraftLit 团队署名、目标与联系方式
  * 内容：纯静态 SSG 服务端页面，文案全部来自语言包；图标使用 lucide-react，无 emoji
  */
 
 // 导入依赖 //
 import { notFound } from "next/navigation";
-import { Blocks, Globe, Mail, Users } from "lucide-react";
+import { Globe, Mail, Users } from "lucide-react";
 import { iGM_LauncherDl_GetMessages } from "../../../i18n/iGM_LauncherDl_Messages";
 import { iGM_LauncherDl_IsLocale } from "../../../i18n/iGM_LauncherDl_Locales";
 import styles from "../iGM_LauncherDl_Page.module.css";
@@ -36,9 +36,9 @@ export default async function iGM_LauncherDl_AboutPage({
   const messages = iGM_LauncherDl_GetMessages(locale);
   const page = messages.about;
 
+  // 启动器仅一个团队参与，署名统一为 iGCraftLit
   const orgs: { title: string; desc: string; icon: typeof Users }[] = [
     { ...page.igcraftlit, icon: Users },
-    { ...page.muoceon, icon: Blocks },
   ];
 
   return (

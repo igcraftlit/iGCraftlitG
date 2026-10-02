@@ -52,6 +52,20 @@ export interface iGM_AdminUserDto {
   verifiedOrg: iGM_OrgBadgeDto | null;
   /** 模块七增强：11 位全局唯一 UID */
   uid: string;
+  /** 模块二十五：注册 IP 与最后登录 IP（历史用户可能为 null） */
+  registerIp: string | null;
+  lastLoginIp: string | null;
+  /** 模块二十五：IP 归属地（自研解析，未知层级为 null） */
+  ipLocation: {
+    country: string | null;
+    region: string | null;
+    city: string | null;
+    kind: "loopback" | "private" | "public";
+  };
+  /** 模块二十五：关联 IP 是否异常（同 IP 关联账户超过阈值且非管理员 / 测试账号） */
+  ipAbnormal: boolean;
+  /** 模块二十五：该用户各关联 IP 命中的最大关联账户数（供界面提示） */
+  ipRelatedCount: number;
   createdAt: string;
   totalPoints: number;
   postCount: number;

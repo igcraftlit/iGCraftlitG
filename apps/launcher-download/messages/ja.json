@@ -1,7 +1,7 @@
 {
   "site": {
     "name": "iGM CraftCeon Launcher",
-    "tagline": "iGCraftLit × MuoCeon 共同構築"
+    "tagline": "iGCraftLit"
   },
   "nav": {
     "download": "ダウンロード",
@@ -18,7 +18,7 @@
   },
   "hero": {
     "title": "iGM CraftCeon Launcher",
-    "subtitle": "iGCraftLit × MuoCeon 共同構築",
+    "subtitle": "iGCraftLit",
     "description": "Minecraft プレイヤー向けのオールインワンランチャー。インスタンス管理、Java 管理、リソースのダウンロード、正規アカウント認証、オフラインモードをすぐに利用できます。",
     "downloadCta": "Windows x64 版をダウンロード",
     "docsCta": "ドキュメントを見る"
@@ -61,8 +61,8 @@
   },
   "org": {
     "title": "クレジット",
-    "description": "iGM CraftCeon Launcher は iGCraftLit Community と MuoCeon チームが共同で設計・構築し、長期にわたり保守・改善しています。",
-    "badge": "iGCraftLit × MuoCeon 共同構築"
+    "description": "iGM CraftCeon Launcher は iGCraftLit Community チームにより設計・構築され、長期にわたり保守・改善しています。",
+    "badge": "iGCraftLit"
   },
   "download": {
     "title": "iGM CraftCeon Launcher をダウンロード",
@@ -205,26 +205,22 @@
   },
   "about": {
     "title": "iGM CraftCeon Launcher について",
-    "lead": "iGM CraftCeon Launcher は、iGCraftLit Community と MuoCeon が共同で設計・構築した Minecraft オールインワンランチャーです。",
+    "lead": "iGM CraftCeon Launcher は、iGCraftLit Community チームが設計・構築した Minecraft オールインワンランチャーです。",
     "missionTitle": "私たちの目標",
     "mission": "シンプルで信頼できるランチャーで、インスタンス・実行環境・リソース・アカウントをつなぎ、Minecraft の導入と起動を再び簡単にします。",
     "igcraftlit": {
       "title": "iGCraftLit Community",
       "desc": "コミュニティリソース、アカウント体系、ダウンロードサービスを長期的に運営し、規範を定めます。"
     },
-    "muoceon": {
-      "title": "MuoCeon",
-      "desc": "ランチャークライアント、実行環境管理、ダウンロードエンジンの実装を担当します。"
-    },
     "contactTitle": "お問い合わせ",
     "websiteLabel": "公式サイト",
     "emailLabel": "メール"
   },
   "footer": {
-    "builtBy": "iGCraftLit × MuoCeon 共同構築",
+    "builtBy": "iGCraftLit",
     "website": "公式サイト",
     "email": "メール",
-    "copyright": "© {year} iGM CraftCeon Launcher. All rights reserved."
+    "copyright": "© {year} iGM CraftCeon Launcher. All Rights Reserved."
   },
   "common": {
     "backToHome": "ホームへ戻る",

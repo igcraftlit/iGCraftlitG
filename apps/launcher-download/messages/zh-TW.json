@@ -1,7 +1,7 @@
 {
   "site": {
     "name": "iGM CraftCeon Launcher",
-    "tagline": "iGCraftLit × MuoCeon 聯合構建"
+    "tagline": "iGCraftLit"
   },
   "nav": {
     "download": "下載",
@@ -18,7 +18,7 @@
   },
   "hero": {
     "title": "iGM CraftCeon Launcher",
-    "subtitle": "iGCraftLit × MuoCeon 聯合構建",
+    "subtitle": "iGCraftLit",
     "description": "為 Minecraft 玩家打造的一體化啟動器：實例管理、Java 管理、資源下載、正版驗證與離線模式，開箱即用。",
     "downloadCta": "下載 Windows x64",
     "docsCta": "查看文件"
@@ -60,9 +60,9 @@
     }
   },
   "org": {
-    "title": "組織署名",
-    "description": "iGM CraftCeon Launcher 由 iGCraftLit Community 與 MuoCeon 團隊聯合設計與構建，長期維護並持續迭代。",
-    "badge": "iGCraftLit × MuoCeon 聯合構建"
+    "title": "團隊署名",
+    "description": "iGM CraftCeon Launcher 由 iGCraftLit Community 團隊設計與構建，長期維護並持續迭代。",
+    "badge": "iGCraftLit"
   },
   "download": {
     "title": "下載 iGM CraftCeon Launcher",
@@ -205,26 +205,22 @@
   },
   "about": {
     "title": "關於 iGM CraftCeon Launcher",
-    "lead": "iGM CraftCeon Launcher 是 iGCraftLit Community 與 MuoCeon 聯合設計與構建的 Minecraft 一體化啟動器。",
+    "lead": "iGM CraftCeon Launcher 是 iGCraftLit Community 團隊設計與構建的 Minecraft 一體化啟動器。",
     "missionTitle": "我們的目標",
     "mission": "以簡潔可靠的啟動器，串聯實例、執行環境、資源與帳號，讓 Minecraft 的安裝與啟動回歸簡單。",
     "igcraftlit": {
       "title": "iGCraftLit Community",
       "desc": "負責社群資源、帳號體系與下載服務的長期營運與規範制定。"
     },
-    "muoceon": {
-      "title": "MuoCeon",
-      "desc": "負責啟動器客戶端、執行環境管理與下載引擎的工程實現。"
-    },
     "contactTitle": "聯繫我們",
     "websiteLabel": "團隊官網",
     "emailLabel": "聯繫郵箱"
   },
   "footer": {
-    "builtBy": "iGCraftLit × MuoCeon 聯合構建",
+    "builtBy": "iGCraftLit",
     "website": "官網",
     "email": "聯繫郵箱",
-    "copyright": "© {year} iGM CraftCeon Launcher. 保留所有權利。"
+    "copyright": "© {year} iGM CraftCeon Launcher. All Rights Reserved."
   },
   "common": {
     "backToHome": "返回首頁",

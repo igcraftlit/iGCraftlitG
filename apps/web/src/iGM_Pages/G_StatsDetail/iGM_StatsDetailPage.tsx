@@ -82,8 +82,8 @@ const iGM_TrendSections: iGM_TrendSection[] = [
 /** 可选时间范围 */
 const iGM_Ranges: iGM_Range[] = ["7d", "30d", "90d"];
 
-/** 详情页主体 */
-function iGM_StatsDetailInner() {
+/** 详情页主体（embedded 时作为综合面板的「数据详情」Tab） */
+function iGM_StatsDetailInner({ embedded = false }: { embedded?: boolean }) {
   const t = useTranslations();
 
   const [range, setRange] = useState<iGM_Range>("7d");
@@ -126,18 +126,20 @@ function iGM_StatsDetailInner() {
 
   return (
     <div className={pageStyles.page}>
-      {/* 页头 */}
-      <header className={pageStyles.pageHeader}>
-        <h1 className={pageStyles.pageTitle}>
-          <span className={pageStyles.pageTitleIcon}>
-            <ChartLine size={22} strokeWidth={1.8} />
-          </span>
-          {t("pages.statsDetail.title")}
-        </h1>
-        <p className={pageStyles.pageDescription}>
-          {t("pages.statsDetail.description")}
-        </p>
-      </header>
+      {/* 页头：嵌入综合面板时由面板统一提供，独立页面保留 */}
+      {!embedded && (
+        <header className={pageStyles.pageHeader}>
+          <h1 className={pageStyles.pageTitle}>
+            <span className={pageStyles.pageTitleIcon}>
+              <ChartLine size={22} strokeWidth={1.8} />
+            </span>
+            {t("pages.statsDetail.title")}
+          </h1>
+          <p className={pageStyles.pageDescription}>
+            {t("pages.statsDetail.description")}
+          </p>
+        </header>
+      )}
 
       {/* 时间范围切换 */}
       <div className={uiStyles.chips}>
@@ -375,6 +377,12 @@ export function iGM_StatsDetailPage() {
       <IGM_StatsDetailInner />
     </IGM_RequireAuth>
   );
+}
+
+/** 模块二十五：综合面板「数据详情」Tab 内容（无独立页头） */
+export function iGM_StatsPanel() {
+  const IGM_StatsDetailInner = iGM_StatsDetailInner;
+  return <IGM_StatsDetailInner embedded />;
 }
 
 // 导出 //

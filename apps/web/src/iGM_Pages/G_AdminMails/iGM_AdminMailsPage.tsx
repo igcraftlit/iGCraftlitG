@@ -26,8 +26,8 @@ import styles from "../iGM_Admin.module.css";
 // （表单状态为本地字符串）
 
 // 核心逻辑 //
-/** 邮件测试页主体（仅 admin） */
-function iGM_MailsInner() {
+/** 邮件测试页主体（仅 admin；embedded 时作为系统面板 Tab） */
+function iGM_MailsInner({ embedded = false }: { embedded?: boolean }) {
   const t = useTranslations();
 
   const [to, setTo] = useState("");
@@ -54,18 +54,20 @@ function iGM_MailsInner() {
 
   return (
     <div className={pageStyles.page}>
-      {/* 页头 */}
-      <header className={pageStyles.pageHeader}>
-        <h1 className={pageStyles.pageTitle}>
-          <span className={pageStyles.pageTitleIcon}>
-            <Mail size={22} strokeWidth={1.8} />
-          </span>
-          {t("pages.adminMails.title")}
-        </h1>
-        <p className={pageStyles.pageDescription}>
-          {t("pages.adminMails.description")}
-        </p>
-      </header>
+      {/* 页头：嵌入系统面板时由面板统一提供，独立页面保留 */}
+      {!embedded && (
+        <header className={pageStyles.pageHeader}>
+          <h1 className={pageStyles.pageTitle}>
+            <span className={pageStyles.pageTitleIcon}>
+              <Mail size={22} strokeWidth={1.8} />
+            </span>
+            {t("pages.adminMails.title")}
+          </h1>
+          <p className={pageStyles.pageDescription}>
+            {t("pages.adminMails.description")}
+          </p>
+        </header>
+      )}
 
       {errorText && (
         <div className={`${uiStyles.alert} ${uiStyles.alertError}`}>{errorText}</div>
@@ -119,6 +121,12 @@ export function iGM_AdminMailsPage() {
       <IGM_MailsInner />
     </IGM_RequireAuth>
   );
+}
+
+/** 模块二十五：系统面板「邮件测试」Tab 内容（无独立页头，仅 admin 可见此 Tab） */
+export function iGM_MailTestPanel() {
+  const IGM_MailsInner = iGM_MailsInner;
+  return <IGM_MailsInner embedded />;
 }
 
 // 导出 //

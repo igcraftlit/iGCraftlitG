@@ -12,7 +12,7 @@
 // 导入依赖 //
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import {
@@ -33,6 +33,7 @@ import {
   iGM_CLI_ApiListMyOAuthApps,
   iGM_CLI_ApiListMyOAuthLogs,
   iGM_CLI_ApiResetOAuthSecret,
+  iGM_CLI_ApiRevealOAuthSecret,
   iGM_CLI_ApiWithdrawOAuthApp,
   iGM_CLI_ResolveErrorText,
   type iGM_CLI_OAuthApplication,
@@ -54,6 +55,7 @@ const iGM_CLI_LogActionKeys: Record<string, string> = {
   apply: "apply",
   withdraw: "withdraw",
   "secret.reset": "secretReset",
+  "secret.reveal": "secretReveal",
   approve: "approve",
   reject: "reject",
   delete: "delete",
@@ -112,6 +114,8 @@ function iGM_CLI_OAuthAppsList() {
   const [logPage, setLogPage] = useState(1);
   const [logTotalPages, setLogTotalPages] = useState(1);
   const [logLoading, setLogLoading] = useState(false);
+  /** 模块二十五：已尝试一次性领取密钥的应用（避免重复请求） */
+  const revealAttempted = useRef<Set<string>>(new Set());
 
   /** 读取我的应用列表 */
   const iGM_CLI_Load = useCallback(() => {
@@ -120,7 +124,32 @@ function iGM_CLI_OAuthAppsList() {
     setLoadFailed(false);
     iGM_CLI_ApiListMyOAuthApps()
       .then((response) => {
-        if (!cancelled && response.data) setItems(response.data.items);
+        if (!cancelled && response.data) {
+          const list = response.data.items;
+          setItems(list);
+          // 模块二十五：申请通过后页面立即一次性领取并展示 client_secret
+          for (const app of list) {
+            if (
+              app.status === "approved" &&
+              app.secretRevealable &&
+              !revealAttempted.current.has(app.clientId)
+            ) {
+              revealAttempted.current.add(app.clientId);
+              iGM_CLI_ApiRevealOAuthSecret(app.clientId)
+                .then((revealResponse) => {
+                  if (!cancelled && revealResponse.data) {
+                    setSecretMap((previous) => ({
+                      ...previous,
+                      [app.clientId]: revealResponse.data!.clientSecret,
+                    }));
+                  }
+                })
+                .catch(() => {
+                  /* 已在他处领取（409）时静默忽略，用户可使用「重置密钥」 */
+                });
+            }
+          }
+        }
       })
       .catch(() => {
         if (!cancelled) setLoadFailed(true);

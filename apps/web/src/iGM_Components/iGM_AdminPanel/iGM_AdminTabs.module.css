@@ -1,0 +1,51 @@
+/*
+ * 文件路径：apps/web/src/iGM_Components/iGM_AdminPanel/iGM_AdminTabs.module.css
+ * 所属层：前端 / 通用组件层
+ * 路由：G_AdminDashboard / G_AdminModeration / G_AdminSystem / G_AdminDeveloper
+ * 模块：iGM_AdminTabs
+ * 作用：管理后台整合面板的分区切换样式（Tab 栏 + 面板体）
+ * 内容：横向滚动 Tab 栏、激活态下划线与高亮、面板留白
+ */
+
+.tabBar {
+  display: flex;
+  gap: 4px;
+  padding: 0 4px;
+  border-bottom: 1px solid var(--igm-border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tabBar::-webkit-scrollbar {
+  display: none;
+}
+
+.tabButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  color: var(--igm-text-muted);
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.tabButton:hover {
+  color: var(--igm-text);
+}
+
+.tabButtonActive {
+  color: var(--igm-accent);
+  border-bottom-color: var(--igm-accent);
+}
+
+.tabPanel {
+  padding-top: 20px;
+}

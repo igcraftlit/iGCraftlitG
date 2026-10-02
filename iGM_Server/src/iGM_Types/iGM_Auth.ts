@@ -47,6 +47,9 @@ export interface iGM_UserRow {
   /** 模块八：同意《用户管理规定》时的客户端 IP 与时间（历史用户为 NULL） */
   iGM_RulesAcceptedIp: string | null;
   iGM_RulesAcceptedAt: string | null;
+  /** 模块二十五：注册 IP 与最后登录 IP（管理端异常 IP 排查，历史用户为 NULL） */
+  iGM_RegisterIp: string | null;
+  iGM_LastLoginIp: string | null;
   iGM_CreatedAt: string;
   iGM_UpdatedAt: string;
 }

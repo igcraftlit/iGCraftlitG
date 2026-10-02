@@ -15,6 +15,7 @@ import {
   iGM_ResolveSession,
 } from "../iGM_Services/iGM_AuthService";
 import { iGM_ReadCookie } from "../iGM_Services/iGM_SecurityService";
+import { iGM_FindOwnerOrgByEmail } from "../iGM_Types/iGM_OrgVerify";
 import type {
   iGM_UserRole,
   iGM_UserRow,
@@ -57,6 +58,40 @@ export function iGM_RequireRole(
 }
 
 /**
+ * 模块二十五：管理后台整合后的「管理人员」判定。
+ * 管理员，或两个受信任组织的负责人邮箱（iGCraftLit / MuoCeon，大小写不敏感）。
+ * 负责人账号为普通角色，仅获得综合 / 审核 / 系统面板的只读访问，
+ * 系统核心配置写操作、测试邮件仍由 iGM_RequireRole("admin") 单独强制。
+ */
+export function iGM_IsStaff(user: iGM_UserRow | null): boolean {
+  if (!user) return false;
+  if (user.iGM_Role === "admin") return true;
+  return iGM_FindOwnerOrgByEmail(user.iGM_Email) !== null;
+}
+
+/** 要求当前用户为管理人员（管理员或受信任组织负责人）；否则抛 403 */
+export function iGM_RequireStaff(user: iGM_UserRow | null): iGM_UserRow {
+  const current = iGM_RequireUser(user);
+  if (!iGM_IsStaff(current)) {
+    throw new iGM_AuthError("auth.errors.forbidden", 403);
+  }
+  return current;
+}
+
+/**
+ * 模块二十五：面板整合后的只读入口鉴权——
+ * 管理人员（管理员 / 组织负责人）或达到指定角色的协管员均可访问。
+ * 写操作仍须在各 handler 内使用 iGM_RequireRole / iGM_RequireStaff 单独强制。
+ */
+export function iGM_RequireStaffOrRole(
+  user: iGM_UserRow | null,
+  required: iGM_UserRole,
+): iGM_UserRow {
+  if (iGM_IsStaff(user)) return iGM_RequireUser(user);
+  return iGM_RequireRole(user, required);
+}
+
+/**
  * 从请求 Cookie 会话解析当前登录用户：未登录或会话失效返回 null。
  * 模块三 G_Community / G_Post 路由统一使用该助手获取登录态
  */
@@ -93,4 +128,4 @@ export function iGM_GetClientIp(
 }
 
 // 导出 //
-export default { iGM_RequireUser, iGM_RequireRole, iGM_GetClientIp };
+export default { iGM_RequireUser, iGM_RequireRole, iGM_RequireStaff, iGM_RequireStaffOrRole, iGM_IsStaff, iGM_GetClientIp };

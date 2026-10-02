@@ -18,23 +18,31 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ShieldOff, LoaderCircle } from "lucide-react";
 import { iGM_UseAuth } from "../../iGM_Providers/iGM_AuthProvider";
-import type { iGM_UserRole } from "../../iGM_Services/iGM_AuthClient";
+import {
+  iGM_IsStaffUser,
+  type iGM_UserRole,
+} from "../../iGM_Services/iGM_AuthClient";
 import styles from "../../iGM_Pages/iGM_Page.module.css";
 
 // 类型定义 //
 interface iGM_RequireAuthProps {
   /** 需要的最低角色；不传仅要求登录 */
   role?: iGM_UserRole;
+  /**
+   * 模块二十五：要求管理人员身份（管理员或受信任组织负责人）。
+   * 与 role 同时传入时满足其一即可；真正边界由后端强制。
+   */
+  staff?: boolean;
   children: ReactNode;
 }
 
 // 核心逻辑 //
 /** 登录/角色守卫组件 */
-export function iGM_RequireAuth({ role, children }: iGM_RequireAuthProps) {
+export function iGM_RequireAuth({ role, staff, children }: iGM_RequireAuthProps) {
   const t = useTranslations();
   const router = iGM_UseLocaleRouter();
   const pathname = usePathname();
-  const { status, hasRole } = iGM_UseAuth();
+  const { status, user, hasRole } = iGM_UseAuth();
 
   // 会话恢复期间展示极简加载占位
   useEffect(() => {
@@ -80,8 +88,10 @@ export function iGM_RequireAuth({ role, children }: iGM_RequireAuthProps) {
     );
   }
 
-  // 已登录但角色不足：不渲染受保护内容
-  if (role && !hasRole(role)) {
+  // 已登录但角色 / 管理人员身份均不满足：不渲染受保护内容
+  const roleAllowed = role ? hasRole(role) : false;
+  const staffAllowed = staff ? iGM_IsStaffUser(user) : false;
+  if ((role || staff) && !roleAllowed && !staffAllowed) {
     return (
       <div className={styles.notFound}>
         <ShieldOff size={36} strokeWidth={1.5} color="var(--igm-text-subtle)" />

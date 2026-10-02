@@ -59,8 +59,8 @@ const iGM_StatusClass: Record<iGM_OrgVerifyStatus, string> = {
   left: "",
 };
 
-/** 认证审核页主体（admin 或对应组织负责人；权限由后端最终校验） */
-function iGM_AdminOrgVerifyInner() {
+/** 认证审核页主体（admin 或对应组织负责人；embedded 时作为审核面板 Tab） */
+function iGM_AdminOrgVerifyInner({ embedded = false }: { embedded?: boolean }) {
   const t = useTranslations();
   const { locale } = iGM_UseLocale();
   const { user: currentUser } = iGM_UseAuth();
@@ -165,18 +165,20 @@ function iGM_AdminOrgVerifyInner() {
 
   return (
     <div className={pageStyles.page}>
-      {/* 页头 */}
-      <header className={pageStyles.pageHeader}>
-        <h1 className={pageStyles.pageTitle}>
-          <span className={pageStyles.pageTitleIcon}>
-            <BadgeCheck size={22} strokeWidth={1.8} />
-          </span>
-          {t("pages.adminOrgVerify.title")}
-        </h1>
-        <p className={pageStyles.pageDescription}>
-          {t("pages.adminOrgVerify.description")}
-        </p>
-      </header>
+      {/* 页头：嵌入审核面板时由面板统一提供，独立页面保留 */}
+      {!embedded && (
+        <header className={pageStyles.pageHeader}>
+          <h1 className={pageStyles.pageTitle}>
+            <span className={pageStyles.pageTitleIcon}>
+              <BadgeCheck size={22} strokeWidth={1.8} />
+            </span>
+            {t("pages.adminOrgVerify.title")}
+          </h1>
+          <p className={pageStyles.pageDescription}>
+            {t("pages.adminOrgVerify.description")}
+          </p>
+        </header>
+      )}
 
       {errorText && (
         <div className={`${uiStyles.alert} ${uiStyles.alertError}`}>{errorText}</div>
@@ -379,6 +381,12 @@ export function iGM_AdminOrgVerifyPage() {
       <IGM_AdminOrgVerifyInner />
     </IGM_RequireAuth>
   );
+}
+
+/** 模块二十五：审核面板「认证审核」Tab 内容（无独立页头） */
+export function iGM_OrgVerifyPanel() {
+  const IGM_AdminOrgVerifyInner = iGM_AdminOrgVerifyInner;
+  return <IGM_AdminOrgVerifyInner embedded />;
 }
 
 // 导出 //

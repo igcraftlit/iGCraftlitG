@@ -21,7 +21,7 @@ import { Elysia } from "elysia";
 import { iGM_Config } from "../iGM_Config/iGM_Config";
 import { iGM_Ok } from "../iGM_Types/iGM_Response";
 import {
-  iGM_RequireRole,
+  iGM_RequireStaff,
   iGM_RequireUser,
 } from "../iGM_Middleware/iGM_AuthGuard";
 import {
@@ -63,6 +63,7 @@ import {
   iGM_ParseRedirectUris,
   iGM_RefreshTokenService,
   iGM_ResetClientSecretService,
+  iGM_RevealClientSecretService,
   iGM_ReviewOAuthClientService,
   iGM_RevokeTokenService,
   iGM_RevokeUserConsentService,
@@ -534,6 +535,10 @@ async function iGM_HandleApply(ctx: iGM_RouteContext) {
     scopes: iGM_StringArrayField(ctx.body, "scopes"),
     purpose: iGM_Field(ctx.body, "purpose"),
     contact: iGM_Field(ctx.body, "contact"),
+    homepageUrl: iGM_Field(ctx.body, "homepageUrl"),
+    privacyPolicyUrl: iGM_Field(ctx.body, "privacyPolicyUrl"),
+    termsOfServiceUrl: iGM_Field(ctx.body, "termsOfServiceUrl"),
+    dataUsage: iGM_Field(ctx.body, "dataUsage"),
     agreeRules: iGM_BoolField(ctx.body, "agreeRules"),
     localTest: iGM_BoolField(ctx.body, "localTest"),
   };
@@ -570,6 +575,22 @@ async function iGM_HandleResetSecret(ctx: iGM_RouteContext) {
   );
 }
 
+/**
+ * POST /G_OAuth/apps/reveal-secret：领取审核通过时一次性发放的 client_secret。
+ * 申请通过后开发者打开「我的应用」即调用；首次返回明文并立即清空，
+ * 已领取过返回 409（oauth.errors.secretAlreadyRevealed），引导用户重置密钥。
+ */
+async function iGM_HandleRevealSecret(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
+  iGM_EnforceRateLimit(ctx, "oauthAppWrite", `user:${user.iGM_Id}`);
+  const clientId = iGM_Field(ctx.body, "clientId").trim();
+  if (!clientId) throw new iGM_OAuthError("oauth.errors.badRequest", 422);
+  return iGM_Ok(
+    await iGM_RevealClientSecretService(user, clientId),
+    "oauth.messages.secretRevealed",
+  );
+}
+
 /** GET /G_OAuth/apps/logs：查看本人应用的接入日志（分页） */
 async function iGM_HandleMyLogs(ctx: iGM_RouteContext) {
   const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
@@ -582,9 +603,10 @@ async function iGM_HandleMyLogs(ctx: iGM_RouteContext) {
 
 /* ---------- 站内端点：管理端审核 ---------- */
 
-/** GET /G_OAuth/admin/apps：按状态分页列出全部应用 */
+/** GET /G_OAuth/admin/apps：按状态分页列出全部应用
+ *  模块二十五：权限放宽为管理人员（管理员 + 受信任组织负责人） */
 async function iGM_HandleAdminList(ctx: iGM_RouteContext) {
-  iGM_RequireRole(await iGM_CurrentUser(ctx), "admin");
+  iGM_RequireStaff(await iGM_CurrentUser(ctx));
   const { page, pageSize } = iGM_PageQuery(ctx);
   return iGM_Ok(
     await iGM_AdminListOAuthClientsService(
@@ -595,9 +617,10 @@ async function iGM_HandleAdminList(ctx: iGM_RouteContext) {
   );
 }
 
-/** POST /G_OAuth/admin/review：通过或拒绝应用（通过时发放 client_secret，仅本次返回） */
+/** POST /G_OAuth/admin/review：通过或拒绝应用（通过时发放 client_secret，仅本次返回）
+ *  模块二十五：组织负责人可执行应用审核 */
 async function iGM_HandleAdminReview(ctx: iGM_RouteContext) {
-  const reviewer = iGM_RequireRole(await iGM_CurrentUser(ctx), "admin");
+  const reviewer = iGM_RequireStaff(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "adminWrite", `user:${reviewer.iGM_Id}`);
   const action = iGM_Field(ctx.body, "action");
   if (action !== "approve" && action !== "reject") {
@@ -615,9 +638,9 @@ async function iGM_HandleAdminReview(ctx: iGM_RouteContext) {
   );
 }
 
-/** POST /G_OAuth/admin/status：启用或禁用应用 */
+/** POST /G_OAuth/admin/status：启用或禁用应用（模块二十五：组织负责人可操作） */
 async function iGM_HandleAdminStatus(ctx: iGM_RouteContext) {
-  const reviewer = iGM_RequireRole(await iGM_CurrentUser(ctx), "admin");
+  const reviewer = iGM_RequireStaff(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "adminWrite", `user:${reviewer.iGM_Id}`);
   const disabled = iGM_BoolField(ctx.body, "disabled");
   await iGM_SetOAuthClientDisabledService(
@@ -632,9 +655,10 @@ async function iGM_HandleAdminStatus(ctx: iGM_RouteContext) {
   );
 }
 
-/** POST /G_OAuth/admin/delete：删除应用及其授权码 / 令牌 / 同意记录 */
+/** POST /G_OAuth/admin/delete：删除应用及其授权码 / 令牌 / 同意记录
+ *  模块二十五：组织负责人可删除违规应用 */
 async function iGM_HandleAdminDelete(ctx: iGM_RouteContext) {
-  const reviewer = iGM_RequireRole(await iGM_CurrentUser(ctx), "admin");
+  const reviewer = iGM_RequireStaff(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "adminWrite", `user:${reviewer.iGM_Id}`);
   const clientId = iGM_Field(ctx.body, "clientId").trim();
   if (!clientId) throw new iGM_OAuthError("oauth.errors.badRequest", 422);
@@ -698,6 +722,7 @@ export const G_OAuth = new Elysia({ name: "G_OAuth" })
   .get("/G_OAuth/apps/mine", iGM_HandleMyApps as never)
   .post("/G_OAuth/apps/withdraw", iGM_HandleWithdraw as never)
   .post("/G_OAuth/apps/reset-secret", iGM_HandleResetSecret as never)
+  .post("/G_OAuth/apps/reveal-secret", iGM_HandleRevealSecret as never)
   // 模块二十二：应用删除（软删除，所有者或管理员）
   .delete("/api/oauth/clients/:id", iGM_HandleDeleteClient as never)
   .get("/G_OAuth/apps/logs", iGM_HandleMyLogs as never)

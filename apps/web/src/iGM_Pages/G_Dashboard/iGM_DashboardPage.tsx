@@ -83,8 +83,8 @@ const iGM_OverviewTiles: {
   { key: "onlineUsers", icon: Users, value: (d) => d.onlineUsers },
 ];
 
-/** 看板主体 */
-function iGM_DashboardInner() {
+/** 看板主体（embedded 时作为综合面板的「运营看板」Tab） */
+function iGM_DashboardInner({ embedded = false }: { embedded?: boolean }) {
   const t = useTranslations();
 
   const [overview, setOverview] = useState<iGM_StatsOverview | null>(null);
@@ -144,18 +144,20 @@ function iGM_DashboardInner() {
 
   return (
     <div className={pageStyles.page}>
-      {/* 页头 */}
-      <header className={pageStyles.pageHeader}>
-        <h1 className={pageStyles.pageTitle}>
-          <span className={pageStyles.pageTitleIcon}>
-            <ChartColumn size={22} strokeWidth={1.8} />
-          </span>
-          {t("pages.dashboard.title")}
-        </h1>
-        <p className={pageStyles.pageDescription}>
-          {t("pages.dashboard.description")}
-        </p>
-      </header>
+      {/* 页头：嵌入综合面板时由面板统一提供，独立页面保留 */}
+      {!embedded && (
+        <header className={pageStyles.pageHeader}>
+          <h1 className={pageStyles.pageTitle}>
+            <span className={pageStyles.pageTitleIcon}>
+              <ChartColumn size={22} strokeWidth={1.8} />
+            </span>
+            {t("pages.dashboard.title")}
+          </h1>
+          <p className={pageStyles.pageDescription}>
+            {t("pages.dashboard.description")}
+          </p>
+        </header>
+      )}
 
       {/* 指标宫格 */}
       <div className={styles.metricsGrid}>
@@ -332,6 +334,12 @@ export function iGM_DashboardPage() {
       <IGM_DashboardInner />
     </IGM_RequireAuth>
   );
+}
+
+/** 模块二十五：综合面板「运营看板」Tab 内容（无独立页头） */
+export function iGM_OperationsBoardPanel() {
+  const IGM_DashboardInner = iGM_DashboardInner;
+  return <IGM_DashboardInner embedded />;
 }
 
 // 导出 //

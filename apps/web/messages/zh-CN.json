@@ -62,7 +62,11 @@
     "levels": "等级与考核",
     "tasks": "任务中心",
     "authorizedApps": "已授权应用",
-    "adminOAuth": "OAuth 应用审核"
+    "adminOAuth": "OAuth 应用审核",
+    "adminPanel": "综合面板",
+    "adminModeration": "审核面板",
+    "adminSystem": "系统面板",
+    "adminDeveloper": "开发者分区"
   },
   "topbar": {
     "menu": "菜单",
@@ -93,7 +97,9 @@
     "cardAdminTitle": "管理后台",
     "cardAdminDesc": "进入站点管理与维护功能",
     "cardLauncherTitle": "iGM Launcher",
-    "cardLauncherDesc": "下载 iGM CraftCeon Launcher，管理实例、Java 与游戏资源"
+    "cardLauncherDesc": "下载 iGM CraftCeon Launcher，管理实例、Java 与游戏资源",
+    "cardDeveloperTitle": "成为开发者",
+    "cardDeveloperDesc": "申请接入 iGCraftLit 账号体系，构建你的第三方应用"
   },
   "landing": {
     "brand": "iGCraftLit",
@@ -424,6 +430,22 @@
     "adminOAuth": {
       "title": "OAuth 应用审核",
       "description": "审核第三方应用接入申请，通过、拒绝、禁用或删除并记录操作日志"
+    },
+    "adminPanel": {
+      "title": "综合面板",
+      "description": "实时状态、运营看板与数据详情的统一入口，三个模块数据接口各自独立"
+    },
+    "adminModeration": {
+      "title": "审核面板",
+      "description": "内容审核、举报处理与组织认证审核的统一入口"
+    },
+    "adminSystem": {
+      "title": "系统面板",
+      "description": "查看数据库等系统信息；管理员可在此发送 SMTP 测试邮件"
+    },
+    "adminDeveloper": {
+      "title": "开发者分区",
+      "description": "开发者申请审核、OAuth 应用审核、开发者账号与调用量监测"
     },
     "authorizedApps": {
       "title": "已授权应用",
@@ -1104,7 +1126,7 @@
   },
   "footer": {
     "copyright": "© {year} iGCraftLit Community",
-    "devPortal": "iGM CLI Download API 开发者门户"
+    "devPortal": "iGCraftLit International Community · Open"
   },
   "points": {
     "loadFailed": "积分数据加载失败",
@@ -1405,6 +1427,60 @@
     "empty": "暂无排行数据"
   },
   "admin": {
+    "panel": {
+      "readonlyNotice": "你当前以受信任组织负责人身份访问：仅可查看与本组织相关的内容，审核操作不可用。",
+      "tabs": {
+        "realtime": "实时状态",
+        "operations": "运营看板",
+        "stats": "数据详情",
+        "contents": "内容审核",
+        "reports": "举报处理",
+        "orgVerify": "认证审核",
+        "systemInfo": "系统信息",
+        "mailTest": "邮件测试",
+        "devApplications": "开发者申请",
+        "appReview": "应用审核",
+        "devAccounts": "开发者账号",
+        "callStats": "调用量监测"
+      }
+    },
+    "system": {
+      "database": {
+        "title": "数据库",
+        "type": "数据库类型",
+        "provider": "驱动",
+        "version": "版本",
+        "connectionStatus": "连接状态",
+        "connected": "已连接",
+        "disconnected": "未连接",
+        "host": "主机",
+        "port": "端口",
+        "name": "数据库名"
+      }
+    },
+    "developer": {
+      "accounts": {
+        "empty": "暂无已通过的开发者账号",
+        "project": "项目名称",
+        "uid": "iGMUid",
+        "contact": "联系方式",
+        "appliedAt": "申请时间"
+      },
+      "callStats": {
+        "total": "总调用量",
+        "dailyTitle": "按日调用量",
+        "topClients": "应用调用量排行",
+        "topClientsEmpty": "所选时间范围内暂无应用调用记录",
+        "range7": "近 7 天",
+        "range30": "近 30 天",
+        "range90": "近 90 天",
+        "channel": {
+          "api": "API 调用量",
+          "sdk": "SDK 调用量",
+          "app": "应用调用量"
+        }
+      }
+    },
     "overview": {
       "users": "用户总数",
       "usersToday": "今日新增用户",
@@ -1436,7 +1512,16 @@
       "unban": "解封",
       "uid": "iGMUid",
       "delete": "删除",
-      "deleteConfirm": "确定要删除用户 {name} 吗？该用户的全部数据将被永久清除且无法恢复。"
+      "deleteConfirm": "确定要删除用户 {name} 吗？该用户的全部数据将被永久清除且无法恢复。",
+      "registerIp": "注册 IP",
+      "lastLoginIp": "最后登录 IP",
+      "ipLocation": "IP 归属地",
+      "ipUnknown": "未知",
+      "ipLoopback": "本机回环地址",
+      "ipPrivate": "内网地址",
+      "ipAbnormalTitle": "该 IP 关联账户数为 {count}，超过异常阈值，请重点排查",
+      "avatarZoom": "点击查看完整头像",
+      "lightboxClose": "关闭"
     },
     "contents": {
       "typePost": "帖子",
@@ -1504,6 +1589,12 @@
     }
   },
   "orgVerify": {
+    "current": {
+      "title": "当前所属组织",
+      "verified": "已认证",
+      "owner": "组织负责人",
+      "description": "你已加入该受信任组织，组织认证申请记录不再展示。"
+    },
     "apply": {
       "chooseOrg": "选择受信任组织",
       "reason": "申请理由",
@@ -2323,7 +2414,11 @@
       "viewLogs": "查看接入日志",
       "hideLogs": "收起日志",
       "logsEmpty": "暂无接入日志",
-      "logsTitle": "接入日志"
+      "logsTitle": "接入日志",
+      "homepageUrl": "应用主页",
+      "privacyPolicyUrl": "隐私政策链接",
+      "termsOfServiceUrl": "服务条款链接",
+      "dataUsage": "数据使用说明"
     },
     "admin": {
       "all": "全部",
@@ -2337,14 +2432,14 @@
       "disable": "禁用",
       "enable": "启用",
       "delete": "删除",
-      "approved": "已通过该应用申请，请立即复制并转交 client_secret",
+      "approved": "已通过该应用申请，client_secret 将由开发者在「我的 OAuth 应用」中一次性领取",
       "rejected": "已拒绝该应用申请",
       "disabled": "已禁用该应用，并撤销其已签发的全部令牌",
       "enabled": "已重新启用该应用",
       "deleted": "已删除该应用及其授权数据",
       "disableConfirm": "禁用后该应用无法再换取令牌，且已签发的令牌将被撤销。确定继续吗？",
       "deleteConfirm": "删除后将同时清理该应用的授权码、令牌与同意记录，且不可恢复。确定继续吗？",
-      "secretOnce": "client_secret 仅在本次展示，请立即复制并转交申请人，关闭后无法再次查看"
+      "secretOnce": "client_secret 由开发者在「我的 OAuth 应用」页面自行领取，仅展示一次，请提醒申请人及时保存"
     },
     "authorized": {
       "intro": "以下第三方应用已获得你的授权，可撤销不再信任的应用。",

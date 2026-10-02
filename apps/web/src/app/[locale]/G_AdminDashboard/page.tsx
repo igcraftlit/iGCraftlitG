@@ -1,10 +1,11 @@
 /**
  * 文件路径：apps/web/src/app/[locale]/G_AdminDashboard/page.tsx
  * 所属层：前端 / 路由入口（Next.js App Router 框架必需文件）
- * 路由：/G_AdminDashboard
+ * 路由：/G_AdminDashboard（G_Admin_Dashboard 综合面板）
  * 模块：G_AdminDashboard
- * 作用：管理后台数据概览路由入口，纯静态壳 + 客户端调后端 API
- * 说明：权限 moderator 及以上（页面 RequireAuth + 后端 iGM_AuthGuard 双重校验）
+ * 作用：管理后台综合面板路由入口，纯静态壳 + 客户端调后端 API
+ * 说明：模块二十五起整合实时状态 / 运营看板 / 数据详情；
+ *       权限协管员 / 管理员 / 受信任组织负责人（前端 RequireAuth + 后端强制）
  */
 
 // 导入依赖 //
@@ -23,7 +24,7 @@ export async function generateMetadata({
   const { locale } = await params;
   return iGM_BuildPageMetadata({
     locale,
-    messageKey: "pages.adminDashboard",
+    messageKey: "pages.adminPanel",
     path: "/G_AdminDashboard",
   });
 }

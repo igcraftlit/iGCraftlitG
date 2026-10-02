@@ -30,6 +30,8 @@ export interface iGM_CreateUserParams {
   verifiedOrgId?: string | null;
   /** 模块八：同意《用户管理规定》时的客户端 IP（来自请求上下文，非前端传值） */
   rulesAcceptedIp?: string | null;
+  /** 模块二十五：注册时客户端 IP（同时写入 iGM_RegisterIp，供异常 IP 排查） */
+  registerIp?: string | null;
   now: string;
 }
 
@@ -116,8 +118,9 @@ export async function iGM_CreateUser(
        (iGM_Id, iGM_Uid, iGM_Username, iGM_Email, iGM_PasswordHash,
         iGM_Role, iGM_Status, iGM_EmailVerified, iGM_VerifiedOrgId,
         iGM_RulesAcceptedIp, iGM_RulesAcceptedAt,
+        iGM_RegisterIp, iGM_LastLoginIp,
         iGM_CreatedAt, iGM_UpdatedAt)
-     VALUES (?, ?, ?, ?, ?, ?, 'active', 0, ?, ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, 'active', 0, ?, ?, ?, ?, ?, ?, ?)`,
     [
       params.id,
       params.uid,
@@ -128,6 +131,8 @@ export async function iGM_CreateUser(
       params.verifiedOrgId ?? null,
       params.rulesAcceptedIp ?? null,
       params.rulesAcceptedIp ? params.now : null,
+      params.registerIp ?? null,
+      params.registerIp ?? null,
       params.now,
       params.now,
     ],
@@ -280,6 +285,22 @@ export async function iGM_UpdateUserAdmin(
   return result.changes > 0;
 }
 
+/** 模块二十五：登录成功后回写最后登录 IP（失败不阻断登录流程） */
+export async function iGM_UpdateLastLoginIp(
+  userId: string,
+  ip: string | null,
+  now: string,
+): Promise<boolean> {
+  if (!ip) return false;
+  const result = await iGM_Db.run(
+    `UPDATE iGM_Users
+       SET iGM_LastLoginIp = ?, iGM_UpdatedAt = ?
+     WHERE iGM_Id = ?`,
+    [ip, now, userId],
+  );
+  return result.changes > 0;
+}
+
 /**
  * 物理删除用户（模块七第三轮：自助注销 / 管理员删号共用出口）。
  * 数据库连接已开启 PRAGMA foreign_keys=ON，会话、令牌、帖子、评论、
@@ -307,4 +328,5 @@ export default {
   iGM_ListUsers,
   iGM_CountUsers,
   iGM_UpdateUserAdmin,
+  iGM_UpdateLastLoginIp,
 };

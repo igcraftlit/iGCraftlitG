@@ -28,6 +28,7 @@ import {
   type iGM_TokenResponse,
 } from "../iGM_Types/iGM_OAuth";
 import {
+  iGM_ConsumePendingOAuthSecret,
   iGM_DeleteOAuthCodesByClient,
   iGM_DeleteOAuthConsentsByClient,
   iGM_DeleteOAuthConsent,
@@ -38,6 +39,7 @@ import {
   iGM_FindOAuthTokenByAccessHash,
   iGM_FindOAuthTokenByRefreshHash,
   iGM_InsertOAuthClient,
+  iGM_IssueOAuthClientSecretOnApprove,
   iGM_InsertOAuthCode,
   iGM_InsertOAuthLog,
   iGM_InsertOAuthToken,
@@ -90,6 +92,9 @@ const iGM_NameMax = 60;
 const iGM_DescriptionMax = 1000;
 const iGM_PurposeMax = 500;
 const iGM_ContactMax = 120;
+/** 模块二十五：合规字段长度限制 */
+const iGM_UrlMax = 300;
+const iGM_DataUsageMax = 1000;
 const iGM_MaxRedirectUris = 10;
 
 // 核心逻辑 //
@@ -107,11 +112,17 @@ function iGM_ToClientDto(row: iGM_OAuthClientRow): iGM_OAuthClientDto {
     scopes: row.iGM_Scopes.split(" ").filter(Boolean),
     purpose: row.iGM_Purpose,
     contact: row.iGM_Contact,
+    homepageUrl: row.iGM_HomepageUrl ?? "",
+    privacyPolicyUrl: row.iGM_PrivacyPolicyUrl ?? "",
+    termsOfServiceUrl: row.iGM_TermsOfServiceUrl ?? "",
+    dataUsage: row.iGM_DataUsage ?? "",
     ownerUid: row.iGM_OwnerUid,
     status: row.iGM_Status,
     reviewerId: row.iGM_ReviewerId,
     reviewComment: row.iGM_ReviewComment,
     secretRotatedAt: row.iGM_SecretRotatedAt,
+    secretRevealable:
+      row.iGM_Status === "approved" && !!row.iGM_PendingSecret,
     isLocalTest: row.iGM_IsLocalTest === 1,
     deletedAt: row.iGM_DeletedAt,
     createdAt: row.iGM_CreatedAt,
@@ -185,6 +196,29 @@ function iGM_IsSecureRedirectUri(uri: string): boolean {
 }
 
 /**
+ * 模块二十五：校验合规链接（应用主页 / 隐私政策 / 服务条款）。
+ * 必须为 http(s) 形式的合法 URL，生产链接要求 HTTPS；
+ * 本地回环地址仅在勾选「本地测试用途」时放行。
+ */
+function iGM_IsComplianceUrl(
+  raw: string,
+  allowLocal: boolean,
+): boolean {
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== "https:" && url.protocol !== "http:") return false;
+  if (url.protocol === "https:") return true;
+  return (
+    allowLocal &&
+    ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)
+  );
+}
+
+/**
  * 校验回调地址格式：HTTPS，或本地测试回调（http + 回环地址）。
  * 是否勾选「本地测试用途」由申请入参单独校验，此处只判断协议与主机是否合法。
  */
@@ -216,12 +250,20 @@ function iGM_ValidateApplyInput(input: iGM_OAuthApplyInput): {
   scopes: string;
   purpose: string;
   contact: string;
+  homepageUrl: string;
+  privacyPolicyUrl: string;
+  termsOfServiceUrl: string;
+  dataUsage: string;
   isLocalTest: boolean;
 } {
   const name = input.name.trim();
   const description = input.description.trim();
   const purpose = input.purpose.trim();
   const contact = input.contact.trim();
+  const homepageUrl = input.homepageUrl.trim();
+  const privacyPolicyUrl = input.privacyPolicyUrl.trim();
+  const termsOfServiceUrl = input.termsOfServiceUrl.trim();
+  const dataUsage = input.dataUsage.trim();
   const type = iGM_OAuthClientTypes.includes(
     input.type as (typeof iGM_OAuthClientTypes)[number],
   )
@@ -255,6 +297,31 @@ function iGM_ValidateApplyInput(input: iGM_OAuthApplyInput): {
   if (!contact || contact.length > iGM_ContactMax) {
     throw new iGM_OAuthError("oauth.errors.contactInvalid", 422);
   }
+  // 模块二十五：合规字段校验
+  if (
+    !homepageUrl ||
+    homepageUrl.length > iGM_UrlMax ||
+    !iGM_IsComplianceUrl(homepageUrl, input.localTest)
+  ) {
+    throw new iGM_OAuthError("oauth.errors.homepageInvalid", 422);
+  }
+  if (
+    !privacyPolicyUrl ||
+    privacyPolicyUrl.length > iGM_UrlMax ||
+    !iGM_IsComplianceUrl(privacyPolicyUrl, input.localTest)
+  ) {
+    throw new iGM_OAuthError("oauth.errors.privacyPolicyInvalid", 422);
+  }
+  if (
+    termsOfServiceUrl &&
+    (termsOfServiceUrl.length > iGM_UrlMax ||
+      !iGM_IsComplianceUrl(termsOfServiceUrl, input.localTest))
+  ) {
+    throw new iGM_OAuthError("oauth.errors.termsInvalid", 422);
+  }
+  if (!dataUsage || dataUsage.length > iGM_DataUsageMax) {
+    throw new iGM_OAuthError("oauth.errors.dataUsageInvalid", 422);
+  }
   if (!input.agreeRules) {
     throw new iGM_OAuthError("oauth.errors.agreeRequired", 422);
   }
@@ -267,6 +334,10 @@ function iGM_ValidateApplyInput(input: iGM_OAuthApplyInput): {
     scopes,
     purpose,
     contact,
+    homepageUrl,
+    privacyPolicyUrl,
+    termsOfServiceUrl,
+    dataUsage,
     isLocalTest: input.localTest,
   };
 }
@@ -425,7 +496,10 @@ export async function iGM_AdminListOAuthClientsService(
 }
 
 /**
- * 审核应用：通过时发放 client_id（已有）与 client_secret（仅本次返回）。
+ * 审核应用：通过时生成 client_secret。
+ * 模块二十五起密钥不再在审核响应中回传管理员，而是：
+ * 库中保存 SHA-256 哈希供客户端鉴权，明文暂存于 iGM_PendingSecret，
+ * 由开发者本人在「我的应用」页首次进入时一次性领取（领取后立即清空）。
  * 仅待审核可被审核；已通过的应用可被禁用 / 启用；管理员可删除。
  */
 export async function iGM_ReviewOAuthClientService(
@@ -434,7 +508,7 @@ export async function iGM_ReviewOAuthClientService(
   action: "approve" | "reject",
   comment: string | null,
   ip: string | null,
-): Promise<{ clientId: string; clientSecret: string | null }> {
+): Promise<{ clientId: string; secretIssued: boolean }> {
   const row = await iGM_FindOAuthClientByClientId(clientId);
   if (!row) {
     throw new iGM_OAuthError("oauth.errors.appNotFound", 404);
@@ -451,14 +525,16 @@ export async function iGM_ReviewOAuthClientService(
     throw new iGM_OAuthError("oauth.errors.appReviewed", 409);
   }
 
-  let secret: string | null = null;
+  let secretIssued = false;
   if (action === "approve") {
-    secret = iGM_OAuthRandomToken();
-    await iGM_SetOAuthClientSecret({
+    const secret = iGM_OAuthRandomToken();
+    await iGM_IssueOAuthClientSecretOnApprove({
       id: row.iGM_Id,
       secretHash: iGM_Sha256(secret),
+      pendingSecret: secret,
       now,
     });
+    secretIssued = true;
   }
   await iGM_Log({
     clientId: row.iGM_ClientId,
@@ -466,6 +542,40 @@ export async function iGM_ReviewOAuthClientService(
     action: action === "approve" ? "approve" : "reject",
     detail: comment?.trim() || null,
     ip,
+  });
+  return { clientId: row.iGM_ClientId, secretIssued };
+}
+
+/**
+ * 模块二十五：开发者一次性领取审核通过时发放的 client_secret。
+ * 申请通过后开发者进入「我的应用」页即调用本接口：
+ * 首次领取返回明文并立即清空暂存，此后只能通过「重置密钥」获取新密钥。
+ */
+export async function iGM_RevealClientSecretService(
+  user: iGM_UserRow,
+  clientId: string,
+): Promise<{ clientId: string; clientSecret: string }> {
+  const row = await iGM_FindOAuthClientByClientId(clientId);
+  if (!row || row.iGM_OwnerUid !== user.iGM_Uid) {
+    throw new iGM_OAuthError("oauth.errors.appNotFound", 404);
+  }
+  if (row.iGM_Status !== "approved") {
+    throw new iGM_OAuthError("oauth.errors.appNotApproved", 409);
+  }
+  const secret = await iGM_ConsumePendingOAuthSecret({
+    id: row.iGM_Id,
+    ownerUid: user.iGM_Uid,
+  });
+  if (!secret) {
+    // 已领取过（或为历史应用）：哈希不可逆，引导用户重置密钥
+    throw new iGM_OAuthError("oauth.errors.secretAlreadyRevealed", 409);
+  }
+  await iGM_Log({
+    clientId: row.iGM_ClientId,
+    userId: user.iGM_Id,
+    action: "secret.reveal",
+    detail: null,
+    ip: null,
   });
   return { clientId: row.iGM_ClientId, clientSecret: secret };
 }
@@ -1106,6 +1216,7 @@ export default {
   iGM_ListMyOAuthClientsService,
   iGM_WithdrawOAuthClientService,
   iGM_ResetClientSecretService,
+  iGM_RevealClientSecretService,
   iGM_ListMyOAuthLogsService,
   iGM_AdminListOAuthClientsService,
   iGM_ReviewOAuthClientService,

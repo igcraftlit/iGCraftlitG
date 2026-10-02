@@ -10,7 +10,7 @@
 // 导入依赖 //
 "use client";
 
-import { Rocket, Shield, UserRound, Users } from "lucide-react";
+import { Code2, Rocket, Shield, UserRound, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { iGM_NavCard as IGM_NavCard } from "../iGM_Components/iGM_NavCard/iGM_NavCard";
 import styles from "./iGM_Page.module.css";
@@ -59,6 +59,13 @@ export function G_Home() {
           icon={Rocket}
           title={t("home.cardLauncherTitle")}
           description={t("home.cardLauncherDesc")}
+        />
+        {/* 成为开发者：跳转开发者申请页 G_DeveloperApply */}
+        <IGM_NavCard
+          href="/G_DeveloperApply"
+          icon={Code2}
+          title={t("home.cardDeveloperTitle")}
+          description={t("home.cardDeveloperDesc")}
         />
       </section>
     </div>

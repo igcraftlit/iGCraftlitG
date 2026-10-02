@@ -61,6 +61,15 @@ export interface iGM_AgreementStatus {
   needsReaccept: boolean;
 }
 
+/**
+ * 模块二十五：「管理人员」身份判定（仅体验层显示控制，后端 iGM_AuthGuard 强制）。
+ * 管理员，或受信任组织负责人（verifiedOrg.isOwner 金标账号）。
+ */
+export function iGM_IsStaffUser(user: iGM_User | null | undefined): boolean {
+  if (!user) return false;
+  return user.role === "admin" || user.verifiedOrg?.isOwner === true;
+}
+
 // 核心逻辑 //
 /** 注册：成功后后端同时下发会话 Cookie；agreementVersion 为已同意的规定版本号 */
 export function iGM_ApiRegister(input: {

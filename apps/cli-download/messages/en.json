@@ -41,8 +41,8 @@
   },
   "placeholder": "Content coming soon. Stay tuned.",
   "footer": {
-    "builtBy": "Built by iGCraftLit × MuoCeon",
-    "copyright": "© {year} iGM CLI Download API. All rights reserved."
+    "builtBy": "iGCraftLit × MuoCeon Jointly Built",
+    "copyright": "© {year} iGM CLI Download API. All Rights Reserved."
   },
   "pages": {
     "docs": {
@@ -558,7 +558,12 @@
       "appNotFound": "Application not found",
       "withdrawNotAllowed": "This application cannot be withdrawn in its current state",
       "appNotApproved": "The application has not been approved yet",
-      "appReviewed": "This application has already been reviewed"
+      "appReviewed": "This application has already been reviewed",
+      "homepageInvalid": "Invalid homepage URL (HTTPS required)",
+      "privacyPolicyInvalid": "Invalid privacy policy URL (HTTPS required)",
+      "termsInvalid": "Invalid terms of service URL (HTTPS required)",
+      "dataUsageInvalid": "Please describe how user data is used",
+      "secretAlreadyRevealed": "The secret has already been revealed once. Use \"Reset secret\" if you need a new one."
     },
     "clientTypes": {
       "web": "Web application",
@@ -590,6 +595,7 @@
       "apply": "Application submitted",
       "withdraw": "Application withdrawn",
       "secretReset": "Secret reset",
+      "secretReveal": "Secret revealed",
       "approve": "Approved",
       "reject": "Rejected",
       "delete": "Application deleted",
@@ -601,7 +607,8 @@
       "consentRevoke": "Authorization revoked"
     },
     "messages": {
-      "deleted": "Application deleted"
+      "deleted": "Application deleted",
+      "secretRevealed": "The client_secret has been revealed. Save it securely now."
     },
     "apply": {
       "intro": "Let third-party sites sign users in with iGCraftLit accounts: submit your application details and receive a client_id and client_secret once approved.",
@@ -621,7 +628,21 @@
       "purposePlaceholder": "Explain how you will use the information the user authorizes",
       "contact": "Contact",
       "contactPlaceholder": "Email or another way to reach you",
-      "agreeRules": "I have read and agree to the OAuth integration rules and user data protection requirements",
+      "homepageUrl": "Homepage URL",
+      "homepageUrlPlaceholder": "https://example.com",
+      "homepageUrlHint": "The public homepage of your application; must be served over HTTPS",
+      "privacyPolicyUrl": "Privacy policy URL",
+      "privacyPolicyUrlPlaceholder": "https://example.com/privacy",
+      "privacyPolicyUrlHint": "A page explaining how user data is collected and used; must be served over HTTPS",
+      "termsOfServiceUrl": "Terms of service URL",
+      "termsOfServiceUrlPlaceholder": "https://example.com/terms",
+      "termsOptional": "(optional)",
+      "dataUsage": "Data usage description",
+      "dataUsagePlaceholder": "Describe which user data your app collects, the purpose, retention period and safeguards",
+      "dataUsageHint": "Reviewers assess this against the OAuth Integration Specification and the User Information Protection Requirements",
+      "complianceRequired": "Homepage URL, privacy policy URL and data usage description are required",
+      "complianceUrlInsecure": "Homepage, privacy policy and terms URLs must use HTTPS",
+      "agreeRules": "I have read and agree to the OAuth Integration Specification and the User Information Protection Requirements",
       "required": "Please complete all required fields",
       "redirectRequired": "Please provide at least one redirect URI",
       "redirectInsecure": "Redirect URIs must use HTTPS",
@@ -630,7 +651,7 @@
       "submitting": "Submitting…",
       "cancel": "Cancel",
       "failed": "Submission failed, please try again later",
-      "submittedNotice": "Your application has been submitted and is awaiting review. Once approved you can view the client_id and obtain the client_secret in \"My OAuth Apps\".",
+      "submittedNotice": "Your application has been submitted and is awaiting review. Once approved, open \"My OAuth Apps\" to view and copy your client_id and client_secret; the client_secret is shown only once.",
       "viewApps": "Go to My OAuth Apps",
       "reviewHint": "Reviews are handled by site administrators; the client_secret is issued only once, so keep it safe"
     },
@@ -820,6 +841,36 @@
             "Show users a human-readable, localized message (such as \"Your session has expired, please sign in again\"); never display raw error keys.",
             "After the notice, guide the user to the sign-in page or restart the authorization flow.",
             "When the refresh_token has expired (at most two quarters), do not auto-renew — authorization is required again."
+          ]
+        },
+        {
+          "id": "spec",
+          "title": "OAuth Integration Specification",
+          "paragraphs": [
+            "This specification applies to every third-party application that requests access to iGCraftLit account capabilities. Submitting an application constitutes agreement to comply with it."
+          ],
+          "bullets": [
+            "Redirect URIs: must match the registered values exactly and production URIs must use HTTPS; public clients (desktop, mobile and single-page applications) must enable PKCE (S256 only); local loopback hosts are allowed only for applications marked as local testing.",
+            "Scopes: openid (required; returns the unique user identifier sub, i.e. the iGMUid), profile (display name and avatar), email (email address), org (approved organization verification info); request only the minimum scopes your application needs.",
+            "Token lifetimes: the authorization code is single-use and valid for 5 minutes; the access_token lasts 1 hour by default; the refresh_token lasts at most 180 days, after which the user must complete authorization again — renewal is refused.",
+            "Error codes: invalid_request, invalid_client, invalid_grant, invalid_scope, unsupported_grant_type, invalid_token and access_denied, returned as error and error_description per RFC 6749.",
+            "The client_secret is shown exactly once on the \"My OAuth Apps\" page after approval and must be stored in a server-side environment variable or an equally secure location; reset it immediately if it may have leaked.",
+            "Never request authorization without the user's consent, share access tokens, or call userinfo beyond the purpose declared in the application."
+          ]
+        },
+        {
+          "id": "privacy",
+          "title": "User Information Protection Requirements",
+          "paragraphs": [
+            "Integrators handling iGCraftLit user information must meet the following requirements and disclose them clearly to users in the application's privacy policy."
+          ],
+          "bullets": [
+            "Data minimization: collect only the user data strictly necessary for the declared functionality; never use sub, email or organization information for purposes outside the application request.",
+            "Encrypted transmission: all traffic between the integrator and iGCraftLit, and between the integrator and end users, must use HTTPS/TLS; tokens and personal information must never be sent in clear text.",
+            "Data storage: personal information must be encrypted or pseudonymized; client_secret, access_token and refresh_token must never be embedded in frontend code, browser storage, logs or public repositories.",
+            "Data deletion: after a user revokes authorization or closes the account, the integrator must delete or anonymize their personal data within 30 days and immediately stop calling userinfo for that application.",
+            "Compliance statement: integrators must publish privacy policy and terms of service links on the application homepage, comply with applicable data protection laws, and bear responsibility for their own data security incidents.",
+            "iGCraftLit may audit integrated applications at any time; excessive collection, data leaks or other violations can lead to immediate application disabling and revocation of every issued token."
           ]
         }
       ]

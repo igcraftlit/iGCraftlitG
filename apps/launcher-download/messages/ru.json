@@ -1,7 +1,7 @@
 {
   "site": {
     "name": "iGM CraftCeon Launcher",
-    "tagline": "Совместная разработка iGCraftLit × MuoCeon"
+    "tagline": "iGCraftLit"
   },
   "nav": {
     "download": "Скачать",
@@ -18,7 +18,7 @@
   },
   "hero": {
     "title": "iGM CraftCeon Launcher",
-    "subtitle": "Совместная разработка iGCraftLit × MuoCeon",
+    "subtitle": "iGCraftLit",
     "description": "Универсальный лаунчер для игроков Minecraft: управление сборками, управление Java, загрузка ресурсов, проверка лицензии и офлайн-режим — всё готово к работе сразу.",
     "downloadCta": "Скачать для Windows x64",
     "docsCta": "Открыть документацию"
@@ -60,9 +60,9 @@
     }
   },
   "org": {
-    "title": "Соавторы",
-    "description": "iGM CraftCeon Launcher совместно проектируется и создаётся сообществом iGCraftLit Community и командой MuoCeon, поддерживается и развивается на постоянной основе.",
-    "badge": "Совместная разработка iGCraftLit × MuoCeon"
+    "title": "Команда",
+    "description": "iGM CraftCeon Launcher проектируется и создаётся командой iGCraftLit Community, поддерживается и развивается на постоянной основе.",
+    "badge": "iGCraftLit"
   },
   "download": {
     "title": "Скачать iGM CraftCeon Launcher",
@@ -205,26 +205,22 @@
   },
   "about": {
     "title": "О iGM CraftCeon Launcher",
-    "lead": "iGM CraftCeon Launcher — универсальный лаунчер Minecraft, совместно разработанный iGCraftLit Community и MuoCeon.",
+    "lead": "iGM CraftCeon Launcher — универсальный лаунчер Minecraft, разработанный командой iGCraftLit Community.",
     "missionTitle": "Наша цель",
     "mission": "Простой и надёжный лаунчер, объединяющий сборки, среды запуска, ресурсы и аккаунты, чтобы установка и запуск Minecraft снова стали простыми.",
     "igcraftlit": {
       "title": "iGCraftLit Community",
       "desc": "Обеспечивает ресурсы сообщества, систему аккаунтов и сервисы загрузки, задаёт стандарты."
     },
-    "muoceon": {
-      "title": "MuoCeon",
-      "desc": "Отвечает за клиент лаунчера, управление средами запуска и движок загрузки."
-    },
     "contactTitle": "Связаться с нами",
     "websiteLabel": "Сайт команды",
     "emailLabel": "Эл. почта"
   },
   "footer": {
-    "builtBy": "Совместная разработка iGCraftLit × MuoCeon",
+    "builtBy": "iGCraftLit",
     "website": "Сайт",
     "email": "Эл. почта",
-    "copyright": "© {year} iGM CraftCeon Launcher. Все права защищены."
+    "copyright": "© {year} iGM CraftCeon Launcher. All Rights Reserved."
   },
   "common": {
     "backToHome": "На главную",

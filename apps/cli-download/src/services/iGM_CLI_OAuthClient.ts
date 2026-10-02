@@ -4,7 +4,8 @@
  * 路由：调用后端 /G_OAuth/* 与 /G_Auth/me
  * 模块：iGM_CLI_OAuthClient
  * 作用：CLI 站 OAuth 应用接入相关接口的唯一前端调用出口
- * 内容：应用申请 / 撤回 / 重置密钥 / 接入日志、当前登录用户探测、后端错误键归一化
+ * 内容：应用申请 / 撤回 / 一次性领取密钥 / 重置密钥 / 接入日志、
+ *       当前登录用户探测、后端错误键归一化
  * 约束：只经 iGM_CLI_Request 发请求；client_secret 仅在发放当下返回一次，前端不落任何持久化存储
  */
 
@@ -65,11 +66,18 @@ export interface iGM_CLI_OAuthApplication {
   scopes: string[];
   purpose: string;
   contact: string;
+  /** 模块二十五：应用主页 / 隐私政策 / 服务条款 / 数据使用说明 */
+  homepageUrl: string;
+  privacyPolicyUrl: string;
+  termsOfServiceUrl: string;
+  dataUsage: string;
   ownerUid: string;
   status: iGM_CLI_OAuthClientStatus | string;
   reviewerId: string | null;
   reviewComment: string | null;
   secretRotatedAt: string | null;
+  /** 模块二十五：审核发放的一次性密钥是否仍待领取（进入页面时自动领取并展示） */
+  secretRevealable: boolean;
   /** 是否为本地测试用途应用（回调地址允许 http://localhost 等本地地址） */
   isLocalTest: boolean;
   createdAt: string;
@@ -109,6 +117,14 @@ export interface iGM_CLI_OAuthApplyPayload {
   scopes: string[];
   purpose: string;
   contact: string;
+  /** 模块二十五：应用主页（必填，HTTPS） */
+  homepageUrl: string;
+  /** 模块二十五：隐私政策链接（必填，HTTPS） */
+  privacyPolicyUrl: string;
+  /** 模块二十五：服务条款链接（选填，填写时须为 HTTPS） */
+  termsOfServiceUrl: string;
+  /** 模块二十五：数据使用说明（必填） */
+  dataUsage: string;
   agreeRules: boolean;
   /** 本地测试用途：为 true 时允许 http://localhost / 127.0.0.1 / [::1] 回调地址 */
   localTest: boolean;
@@ -151,6 +167,17 @@ export function iGM_CLI_ApiWithdrawOAuthApp(
   clientId: string,
 ): Promise<iGM_CLI_ApiResponse<{ clientId: string }>> {
   return iGM_CLI_Post("/G_OAuth/apps/withdraw", { clientId });
+}
+
+/**
+ * 模块二十五：一次性领取审核通过时发放的 client_secret（登录，应用所有者）。
+ * 申请通过后进入「我的应用」即调用：首次返回明文，后端随即清空暂存；
+ * 重复领取返回 409（oauth.errors.secretAlreadyRevealed），此时只能重置密钥。
+ */
+export function iGM_CLI_ApiRevealOAuthSecret(
+  clientId: string,
+): Promise<iGM_CLI_ApiResponse<{ clientId: string; clientSecret: string }>> {
+  return iGM_CLI_Post("/G_OAuth/apps/reveal-secret", { clientId });
 }
 
 /**
@@ -230,6 +257,7 @@ export default {
   iGM_CLI_ApiSubmitOAuthApply,
   iGM_CLI_ApiListMyOAuthApps,
   iGM_CLI_ApiWithdrawOAuthApp,
+  iGM_CLI_ApiRevealOAuthSecret,
   iGM_CLI_ApiResetOAuthSecret,
   iGM_CLI_ApiDeleteOAuthApp,
   iGM_CLI_ApiListMyOAuthLogs,

@@ -37,8 +37,12 @@ function iGM_FormatValue(value: unknown): string {
   }
 }
 
-/** 系统信息页主体（仅 admin） */
-function iGM_SettingsInner() {
+/**
+ * 系统信息页主体（管理员 + 受信任组织负责人）。
+ * embedded 时作为系统面板的「系统信息」Tab；数据库分组使用语言包键名，
+ * 明确展示类型（PostgreSQL）、版本与连接状态。
+ */
+function iGM_SettingsInner({ embedded = false }: { embedded?: boolean }) {
   const t = useTranslations();
 
   const [settings, setSettings] = useState<Record<string, unknown> | null>(null);
@@ -63,20 +67,45 @@ function iGM_SettingsInner() {
     };
   }, []);
 
+  /** 数据库子字段的语言包键名映射（未命中的键原样展示） */
+  function iGM_DbLabel(key: string): string {
+    if (["type", "provider", "version", "connectionStatus", "host", "port", "name"].includes(key)) {
+      return t(`admin.system.database.${key}`);
+    }
+    return key;
+  }
+
+  /** 数据库字段值展示：连接状态用语义徽标，PostgreSQL 版本过长时允许换行 */
+  function iGM_RenderDbValue(childKey: string, childValue: unknown) {
+    if (childKey === "connectionStatus") {
+      const connected = childValue === "connected";
+      return (
+        <span className={`${styles.statusBadge} ${connected ? styles.statusActive : styles.statusSuspended}`}>
+          {connected
+            ? t("admin.system.database.connected")
+            : t("admin.system.database.disconnected")}
+        </span>
+      );
+    }
+    return iGM_FormatValue(childValue);
+  }
+
   return (
     <div className={pageStyles.page}>
-      {/* 页头 */}
-      <header className={pageStyles.pageHeader}>
-        <h1 className={pageStyles.pageTitle}>
-          <span className={pageStyles.pageTitleIcon}>
-            <Settings size={22} strokeWidth={1.8} />
-          </span>
-          {t("pages.adminSettings.title")}
-        </h1>
-        <p className={pageStyles.pageDescription}>
-          {t("pages.adminSettings.description")}
-        </p>
-      </header>
+      {/* 页头：嵌入系统面板时由面板统一提供，独立页面保留 */}
+      {!embedded && (
+        <header className={pageStyles.pageHeader}>
+          <h1 className={pageStyles.pageTitle}>
+            <span className={pageStyles.pageTitleIcon}>
+              <Settings size={22} strokeWidth={1.8} />
+            </span>
+            {t("pages.adminSettings.title")}
+          </h1>
+          <p className={pageStyles.pageDescription}>
+            {t("pages.adminSettings.description")}
+          </p>
+        </header>
+      )}
 
       {loading ? (
         <div className={uiStyles.stateBox}>
@@ -96,15 +125,19 @@ function iGM_SettingsInner() {
                 {value !== null && typeof value === "object" && !Array.isArray(value) ? (
                   <>
                     <h2 className={`${uiStyles.sectionTitle} ${styles.settingGroupTitle}`}>
-                      {key}
+                      {key === "database" ? t("admin.system.database.title") : key}
                     </h2>
                     <div className={styles.settingList}>
                       {Object.entries(value as Record<string, unknown>).map(
                         ([childKey, childValue]) => (
                           <div key={childKey} className={styles.settingRow}>
-                            <span className={styles.settingKey}>{childKey}</span>
+                            <span className={styles.settingKey}>
+                              {key === "database" ? iGM_DbLabel(childKey) : childKey}
+                            </span>
                             <span className={styles.settingValue}>
-                              {iGM_FormatValue(childValue)}
+                              {key === "database"
+                                ? iGM_RenderDbValue(childKey, childValue)
+                                : iGM_FormatValue(childValue)}
                             </span>
                           </div>
                         ),
@@ -128,14 +161,20 @@ function iGM_SettingsInner() {
   );
 }
 
-/** 系统信息页（仅 admin，后端同样校验） */
+/** 系统信息页（管理员 + 受信任组织负责人，后端同样校验） */
 export function iGM_AdminSettingsPage() {
   const IGM_SettingsInner = iGM_SettingsInner;
   return (
-    <IGM_RequireAuth role="admin">
+    <IGM_RequireAuth staff>
       <IGM_SettingsInner />
     </IGM_RequireAuth>
   );
+}
+
+/** 模块二十五：系统面板「系统信息」Tab 内容（无独立页头） */
+export function iGM_SystemInfoPanel() {
+  const IGM_SettingsInner = iGM_SettingsInner;
+  return <IGM_SettingsInner embedded />;
 }
 
 // 导出 //

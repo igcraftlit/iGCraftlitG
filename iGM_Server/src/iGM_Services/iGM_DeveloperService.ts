@@ -21,6 +21,13 @@ import {
   iGM_WithdrawDeveloperApplication,
 } from "../iGM_Repositories/iGM_DeveloperRepository";
 import {
+  iGM_CountCallStatsByChannel,
+  iGM_CountCallStatsByClient,
+  iGM_CountCallStatsDaily,
+  iGM_CountCallStatsSince,
+  iGM_ListApprovedDeveloperAccounts,
+} from "../iGM_Repositories/iGM_DeveloperStatsRepository";
+import {
   iGM_FindUserById,
   iGM_FindUsersByIds,
 } from "../iGM_Repositories/iGM_UserRepository";
@@ -338,6 +345,118 @@ export async function iGM_ReviewDeveloperService(
   }
 }
 
+// 模块二十五：管理后台「开发者」分区 —— 开发者账号列表与调用量监测 //
+
+/** 调用量监测支持的时间范围（天） */
+export const iGM_CallStatsRanges = [7, 30, 90] as const;
+
+/** 已知通道：后续新增通道只需写事件，未知通道自动并入返回结果 */
+const iGM_DefaultChannels = ["api", "sdk", "app"];
+
+/**
+ * 已通过开发者账号列表：用户名 / iGMUid / 联系方式 / 申请时间。
+ * 数据源为 iGM_DeveloperApplications 中每个用户最近一条 approved 申请。
+ */
+export async function iGM_ListDeveloperAccountsService(): Promise<{
+  items: Array<{
+    applicationId: string;
+    userId: string;
+    username: string;
+    displayName: string | null;
+    uid: string;
+    contact: string;
+    projectName: string;
+    appliedAt: string;
+  }>;
+  total: number;
+}> {
+  const rows = await iGM_ListApprovedDeveloperAccounts();
+  return {
+    items: rows.map((row) => ({
+      applicationId: row.iGM_ApplicationId,
+      userId: row.iGM_UserId,
+      username: row.iGM_Username,
+      displayName: row.iGM_DisplayName,
+      uid: row.iGM_Uid,
+      contact: row.iGM_Contact,
+      projectName: row.iGM_ProjectName,
+      appliedAt: row.iGM_AppliedAt,
+    })),
+    total: rows.length,
+  };
+}
+
+/** UTC 日期 YYYY-MM-DD */
+function iGM_UtcDay(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+/**
+ * 调用量监测：按时间范围返回总量、分通道（api/sdk/app 及扩展通道）、
+ * 按日连续序列（无数据补 0）与按应用 Top 20。
+ */
+export async function iGM_GetDeveloperCallStatsService(daysRaw: number): Promise<{
+  days: number;
+  total: number;
+  channels: Record<string, number>;
+  daily: Array<{ date: string } & Record<string, number | string>>;
+  topClients: Array<{ clientId: string; count: number }>;
+}> {
+  const days = (iGM_CallStatsRanges as readonly number[]).includes(daysRaw)
+    ? daysRaw
+    : 7;
+  const since = new Date();
+  since.setUTCHours(0, 0, 0, 0);
+  since.setUTCDate(since.getUTCDate() - (days - 1));
+  const sinceIso = since.toISOString();
+
+  const [total, channelRows, dailyRows, clientRows] = await Promise.all([
+    iGM_CountCallStatsSince(sinceIso),
+    iGM_CountCallStatsByChannel(sinceIso),
+    iGM_CountCallStatsDaily(sinceIso),
+    iGM_CountCallStatsByClient(sinceIso),
+  ]);
+
+  // 通道汇总：默认通道固定返回（无数据为 0），未知扩展通道追加
+  const channels: Record<string, number> = {};
+  for (const channel of iGM_DefaultChannels) channels[channel] = 0;
+  for (const row of channelRows) {
+    channels[row.iGM_Channel] = row.iGM_Count;
+  }
+
+  // 按日矩阵：以通道行中的全部通道为列，缺失日补 0
+  const channelKeys = Object.keys(channels);
+  const dailyMap = new Map<string, Record<string, number>>();
+  for (const row of dailyRows) {
+    const entry = dailyMap.get(row.iGM_Day) ?? {};
+    entry[row.iGM_Channel] = row.iGM_Count;
+    dailyMap.set(row.iGM_Day, entry);
+  }
+  const daily: Array<{ date: string } & Record<string, number | string>> = [];
+  const cursor = new Date(since);
+  for (let index = 0; index < days; index += 1) {
+    const date = iGM_UtcDay(cursor);
+    const entry = dailyMap.get(date) ?? {};
+    const point: { date: string } & Record<string, number | string> = { date };
+    for (const channel of channelKeys) {
+      point[channel] = entry[channel] ?? 0;
+    }
+    daily.push(point);
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+
+  return {
+    days,
+    total,
+    channels,
+    daily,
+    topClients: clientRows.map((row) => ({
+      clientId: row.iGM_ClientId,
+      count: row.iGM_Count,
+    })),
+  };
+}
+
 // 导出 //
 export default {
   iGM_IsApprovedDeveloper,
@@ -348,4 +467,6 @@ export default {
   iGM_WithdrawDeveloperApplyService,
   iGM_AdminListDevelopersService,
   iGM_ReviewDeveloperService,
+  iGM_ListDeveloperAccountsService,
+  iGM_GetDeveloperCallStatsService,
 };

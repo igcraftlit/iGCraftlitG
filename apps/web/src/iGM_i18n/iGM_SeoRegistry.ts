@@ -57,6 +57,10 @@ export const iGM_SeoDisallowPatterns = [
   "/*/G_AdminOrgVerify",
   "/*/G_AdminSettings",
   "/*/G_AdminMails",
+  // 模块二十五：整合面板与开发者分区（登录态/管理功能，不收录）
+  "/*/G_AdminModeration",
+  "/*/G_AdminSystem",
+  "/*/G_AdminDeveloper",
   "/*/G_Auth",
   "/*/G_Settings",
   "/*/G_Notification",

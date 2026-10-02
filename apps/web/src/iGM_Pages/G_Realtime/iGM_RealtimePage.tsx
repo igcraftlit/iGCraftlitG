@@ -34,26 +34,28 @@ import styles from "./iGM_RealtimePage.module.css";
 // （数据类型来自 iGM_WebSocketProvider）
 
 // 核心逻辑 //
-/** 页面主体（已登录） */
-function iGM_RealtimeInner() {
+/** 页面主体（已登录；embedded 时作为综合面板的「实时状态」Tab） */
+function iGM_RealtimeInner({ embedded = false }: { embedded?: boolean }) {
   const t = useTranslations();
   const { user } = iGM_UseAuth();
   const { connected, onlineCount, onlineUsers, notifications } = iGM_UseWebSocket();
 
   return (
     <div className={pageStyles.page}>
-      {/* 页头 */}
-      <header className={pageStyles.pageHeader}>
-        <h1 className={pageStyles.pageTitle}>
-          <span className={pageStyles.pageTitleIcon}>
-            <Radio size={22} strokeWidth={1.8} />
-          </span>
-          {t("pages.realtime.title")}
-        </h1>
-        <p className={pageStyles.pageDescription}>
-          {t("pages.realtime.description")}
-        </p>
-      </header>
+      {/* 页头：嵌入综合面板时由面板统一提供，独立页面保留 */}
+      {!embedded && (
+        <header className={pageStyles.pageHeader}>
+          <h1 className={pageStyles.pageTitle}>
+            <span className={pageStyles.pageTitleIcon}>
+              <Radio size={22} strokeWidth={1.8} />
+            </span>
+            {t("pages.realtime.title")}
+          </h1>
+          <p className={pageStyles.pageDescription}>
+            {t("pages.realtime.description")}
+          </p>
+        </header>
+      )}
 
       {/* 连接状态与在线人数 */}
       <div className={styles.statusRow}>
@@ -169,6 +171,12 @@ export function iGM_RealtimePage() {
       <IGM_RealtimeInner />
     </IGM_RequireAuth>
   );
+}
+
+/** 模块二十五：综合面板「实时状态」Tab 内容（无独立页头） */
+export function iGM_RealtimePanel() {
+  const IGM_RealtimeInner = iGM_RealtimeInner;
+  return <IGM_RealtimeInner embedded />;
 }
 
 // 导出 //

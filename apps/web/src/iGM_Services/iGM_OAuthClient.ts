@@ -32,11 +32,18 @@ export interface iGM_OAuthApplication {
   scopes: string[];
   purpose: string;
   contact: string;
+  /** 模块二十五：应用主页 / 隐私政策 / 服务条款 / 数据使用说明 */
+  homepageUrl: string;
+  privacyPolicyUrl: string;
+  termsOfServiceUrl: string;
+  dataUsage: string;
   ownerUid: string;
   status: iGM_OAuthClientStatus | string;
   reviewerId: string | null;
   reviewComment: string | null;
   secretRotatedAt: string | null;
+  /** 模块二十五：一次性密钥是否仍待开发者领取 */
+  secretRevealable: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -97,13 +104,16 @@ export function iGM_ApiListOAuthAppsAdmin(params?: {
   return iGM_Get(`/G_OAuth/admin/apps${query ? `?${query}` : ""}`);
 }
 
-/** 审核应用：通过时返回 client_secret（仅本次返回，界面须即时展示） */
+/**
+ * 审核应用：通过后后端生成 client_secret，
+ * 明文不在审核响应中返回，由开发者在「我的应用」页一次性领取。
+ */
 export function iGM_ApiReviewOAuthApp(input: {
   clientId: string;
   action: "approve" | "reject";
   comment?: string;
 }): Promise<
-  iGM_ApiResponse<{ clientId: string; clientSecret: string | null }>
+  iGM_ApiResponse<{ clientId: string; secretIssued: boolean }>
 > {
   return iGM_Post("/G_OAuth/admin/review", input);
 }

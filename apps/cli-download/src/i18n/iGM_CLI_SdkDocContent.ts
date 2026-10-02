@@ -190,11 +190,9 @@ const iGM_CLI_SdkDocZhCN: iGM_CLI_SdkDocEntry = {
       {
         id: "tutor-1",
         title: "章节一 准备工作",
-        intro: "在写代码之前，先准备好账号、密钥与动态库。",
+        intro: "在写代码之前，先准备好账号与动态库。",
         bullets: [
           "注册 iGCraftLit 账号，并完成邮箱验证。",
-          "在开发者平台申请成为开发者，获取 64 位开发者密钥。",
-          "在账户设置中复制开发者密钥，妥善保存（仅服务端或本地环境变量持有）。",
           "下载对应平台的动态库（igm_downloader.dll / libigm_downloader.so / libigm_downloader.dylib）。",
         ],
       },
@@ -242,7 +240,7 @@ const iGM_CLI_SdkDocZhCN: iGM_CLI_SdkDocEntry = {
         bullets: [
           "常见错误码：加载失败、创建失败、启动失败、运行期失败各自对应不同返回。",
           "网络重试：运行期网络错误可调用 iGM_Launcher_Download_RetryTask 重试，建议配合指数退避。",
-          "令牌过期 / 密钥失效：密钥与 iGMUid 绑定，失效后在开发者平台重置并更新环境变量。",
+          "令牌过期：重新登录或走 OAuth 授权获取新的访问令牌，并更新环境变量。",
           "文件校验失败：回调 error 提示校验失败时，删除目标文件后重新创建任务。",
         ],
       },
@@ -278,10 +276,6 @@ const iGM_CLI_SdkDocZhCN: iGM_CLI_SdkDocEntry = {
           {
             q: "如何切换下载源？",
             a: "通过 SDK / API 的镜像源配置切换，或在创建任务前选择就近镜像；切换后已下载分片仍可复用。",
-          },
-          {
-            q: "如何获取开发者密钥？",
-            a: "在开发者平台申请成为开发者后，于账户设置中生成并复制 64 位开发者密钥，密钥与你的 iGMUid 绑定。",
           },
         ],
       },
@@ -373,11 +367,9 @@ const iGM_CLI_SdkDocEn: iGM_CLI_SdkDocEntry = {
       {
         id: "tutor-1",
         title: "Chapter 1 — Preparation",
-        intro: "Before writing code, get the account, key and library ready.",
+        intro: "Before writing code, get the account and library ready.",
         bullets: [
           "Register an iGCraftLit account and verify your email.",
-          "Apply to become a developer in the developer portal to obtain a 64-character developer key.",
-          "Copy the developer key from account settings and store it safely (server-side or in local env vars only).",
           "Download the library for your platform (igm_downloader.dll / libigm_downloader.so / libigm_downloader.dylib).",
         ],
       },
@@ -425,7 +417,7 @@ const iGM_CLI_SdkDocEn: iGM_CLI_SdkDocEntry = {
         bullets: [
           "Common errors: load, create, start and runtime failures each have distinct returns.",
           "Network retry: on a runtime network error, call iGM_Launcher_Download_RetryTask with exponential backoff.",
-          "Token expired / invalid key: the key is bound to your iGMUid; reset it in the portal and update env vars.",
+          "Token expired: sign in again or go through OAuth to obtain a new access token, then update env vars.",
           "Checksum failure: when the callback reports a checksum failure, delete the file and re-create the task.",
         ],
       },
@@ -461,10 +453,6 @@ const iGM_CLI_SdkDocEn: iGM_CLI_SdkDocEntry = {
           {
             q: "How do I switch the download source?",
             a: "Configure the mirror via the SDK / API settings or pick a nearby mirror before creating a task; downloaded chunks remain reusable.",
-          },
-          {
-            q: "How do I get a developer key?",
-            a: "After applying to become a developer, generate and copy the 64-character key in account settings; it is bound to your iGMUid.",
           },
         ],
       },

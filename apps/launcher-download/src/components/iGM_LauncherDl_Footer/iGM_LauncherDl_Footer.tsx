@@ -3,7 +3,7 @@
  * 所属层：前端 / 组件层
  * 路由：全局
  * 模块：iGM_LauncherDl_Downloader
- * 作用：站点页脚——官网入口、联系邮箱、团队署名 iGCraftLit × MuoCeon 联合构建、版权信息
+ * 作用：站点页脚——官网入口、联系邮箱、团队署名 iGCraftLit、版权信息
  * 内容：极简风格，图标使用 lucide-react，文案来自 next-intl 语言包
  */
 

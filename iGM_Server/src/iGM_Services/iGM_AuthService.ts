@@ -21,6 +21,7 @@ import {
   iGM_FindUserByUsername,
   iGM_GenerateUniqueUid,
   iGM_MarkEmailVerified,
+  iGM_UpdateLastLoginIp,
   iGM_UpdatePassword,
 } from "../iGM_Repositories/iGM_UserRepository";
 import {
@@ -221,6 +222,8 @@ export async function iGM_Register(
     verifiedOrgId: ownerOrg ? ownerOrg.orgId : null,
     // 模块八：注册前已在独立规定页阅读并同意，记录同意时的客户端 IP 与时间
     rulesAcceptedIp: context.ip,
+    // 模块二十五：注册 IP 同步写入用户表，供管理端异常 IP 关联排查
+    registerIp: context.ip,
     now,
   });
 
@@ -277,6 +280,12 @@ export async function iGM_Login(
   }
 
   iGM_ResetRateLimit("login", rateLimitKey);
+  // 模块二十五：回写最后登录 IP，失败仅记录日志、不阻断登录
+  try {
+    await iGM_UpdateLastLoginIp(user.iGM_Id, context.ip, new Date().toISOString());
+  } catch (error) {
+    console.warn("[iGM_AuthService] 最后登录 IP 回写失败", error);
+  }
   return await iGM_IssueSession(user, context);
 }
 

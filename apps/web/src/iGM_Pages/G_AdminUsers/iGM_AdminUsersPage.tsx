@@ -17,22 +17,33 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Ban, CircleCheck, LoaderCircle, Search, Trash2, Users } from "lucide-react";
+import {
+  Ban,
+  CircleCheck,
+  LoaderCircle,
+  MapPin,
+  Search,
+  Trash2,
+  Users,
+  X,
+} from "lucide-react";
 import {
   iGM_ApiAdminDeleteUser,
   iGM_ApiAdminSetUserRole,
   iGM_ApiAdminSetUserStatus,
   iGM_ApiAdminUsers,
   type iGM_AdminUser,
+  type iGM_IpLocation,
 } from "../../iGM_Services/iGM_AdminClient";
 import { iGM_RequireAuth as IGM_RequireAuth } from "../../iGM_Components/iGM_RequireAuth/iGM_RequireAuth";
 import { iGM_UseAuth } from "../../iGM_Providers/iGM_AuthProvider";
 import { iGM_ResolveErrorText } from "../../iGM_Components/iGM_AuthUI/iGM_AuthUI";
-import { iGM_FormatDate } from "../../iGM_Components/iGM_Format/iGM_Format";
+import { iGM_FormatDateTime } from "../../iGM_Components/iGM_Format/iGM_Format";
 import { iGM_UseLocale } from "../../iGM_Providers/iGM_LocaleProvider";
 import { iGM_Pagination as IGM_Pagination } from "../../iGM_Components/iGM_Pagination/iGM_Pagination";
 import { iGM_Avatar as IGM_Avatar } from "../../iGM_Components/iGM_Avatar/iGM_Avatar";
 import { iGM_VerifiedBadge as IGM_VerifiedBadge } from "../../iGM_Components/iGM_VerifiedBadge/iGM_VerifiedBadge";
+import { iGM_ResolveMediaUrl } from "../../iGM_Services/iGM_FileClient";
 import pageStyles from "../iGM_Page.module.css";
 import uiStyles from "../iGM_Module4.module.css";
 import tileStyles from "../iGM_Points.module.css";
@@ -56,9 +67,26 @@ function iGM_UsersInner() {
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
+  /** 模块二十五：头像放大灯箱当前用户（null 关闭） */
+  const [lightboxUser, setLightboxUser] = useState<iGM_AdminUser | null>(null);
 
   /** 当前用户是否 admin（决定封禁/角色操作可见性） */
   const isAdmin = currentUser?.role === "admin";
+
+  /**
+   * 模块二十五：IP 归属地文本。
+   * 回环 / 内网地址无语义地理位置，分别用语义键；公网取国家/地区/城市，
+   * 三段均缺失时显示「未知」。
+   */
+  function iGM_FormatLocation(location: iGM_IpLocation | null | undefined): string {
+    if (!location) return t("admin.users.ipUnknown");
+    if (location.kind === "loopback") return t("admin.users.ipLoopback");
+    if (location.kind === "private") return t("admin.users.ipPrivate");
+    const parts = [location.country, location.region, location.city].filter(
+      (part): part is string => !!part,
+    );
+    return parts.length > 0 ? parts.join(" ") : t("admin.users.ipUnknown");
+  }
 
   /** 加载用户列表 */
   const iGM_Load = useCallback(
@@ -193,16 +221,41 @@ function iGM_UsersInner() {
                 <div key={user.id} className={tileStyles.recordRow}>
                   <div className={tileStyles.recordMain}>
                     <span className={tileStyles.recordAction}>
-                      {/* 模块七：用户头像（空则首字符占位）+ 认证组织徽标 */}
+                      {/* 模块七：用户头像（空则首字符占位）；模块二十五：点击放大 */}
                       <span className={verifyStyles.userCell}>
-                        <IGM_Avatar
-                          src={user.avatar}
-                          name={user.displayName || user.username}
-                          size="sm"
-                        />
+                        {user.avatar ? (
+                          <button
+                            type="button"
+                            className={styles.avatarButton}
+                            onClick={() => setLightboxUser(user)}
+                            title={t("admin.users.avatarZoom")}
+                            aria-label={t("admin.users.avatarZoom")}
+                          >
+                            <IGM_Avatar
+                              src={user.avatar}
+                              name={user.displayName || user.username}
+                              size="sm"
+                            />
+                          </button>
+                        ) : (
+                          <IGM_Avatar
+                            src={user.avatar}
+                            name={user.displayName || user.username}
+                            size="sm"
+                          />
+                        )}
                         <span className={verifyStyles.userNameRow}>
                           {user.displayName || user.username}
                           <IGM_VerifiedBadge org={user.verifiedOrg} />
+                          {/* 模块二十五：异常 IP 红色小圆点（title 提示关联账户数） */}
+                          {user.ipAbnormal && (
+                            <span
+                              className={styles.abnormalDot}
+                              title={t("admin.users.ipAbnormalTitle", {
+                                count: user.ipRelatedCount,
+                              })}
+                            />
+                          )}
                           <span className={styles.userMeta}>
                             {" "}
                             · @{user.username} · {t(`admin.roles.${user.role}`)}
@@ -215,12 +268,28 @@ function iGM_UsersInner() {
                     <span className={styles.userMeta}>
                       {t("admin.users.uid")}：{user.uid}
                     </span>
+                    {/* 模块二十五：注册 IP / 最后登录 IP 与归属地 */}
+                    <span className={styles.ipLine}>
+                      <span className={styles.ipItem}>
+                        <MapPin size={11} strokeWidth={1.8} />
+                        {t("admin.users.registerIp")}：
+                        {user.registerIp ?? t("admin.users.ipUnknown")}
+                      </span>
+                      <span className={styles.ipItem}>
+                        {t("admin.users.lastLoginIp")}：
+                        {user.lastLoginIp ?? t("admin.users.ipUnknown")}
+                      </span>
+                      <span className={styles.ipItem}>
+                        {t("admin.users.ipLocation")}：
+                        {iGM_FormatLocation(user.ipLocation)}
+                      </span>
+                    </span>
                     <span className={styles.userMeta}>
                       {t("admin.users.meta", {
                         points: user.totalPoints,
                         posts: user.postCount,
                         comments: user.commentCount,
-                        date: iGM_FormatDate(locale, user.createdAt),
+                        date: iGM_FormatDateTime(locale, user.createdAt),
                       })}
                     </span>
                   </div>
@@ -296,15 +365,47 @@ function iGM_UsersInner() {
           />
         </section>
       )}
+
+      {/* 模块二十五：头像放大灯箱（点击遮罩或关闭按钮退出，禁止 emoji） */}
+      {lightboxUser?.avatar && (
+        <div
+          className={styles.lightboxOverlay}
+          onClick={() => setLightboxUser(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={t("admin.users.avatarZoom")}
+        >
+          <button
+            type="button"
+            className={styles.lightboxClose}
+            onClick={() => setLightboxUser(null)}
+            aria-label={t("admin.users.lightboxClose")}
+          >
+            <X size={18} strokeWidth={2} />
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            className={styles.lightboxImage}
+            src={iGM_ResolveMediaUrl(lightboxUser.avatar)}
+            alt={lightboxUser.displayName || lightboxUser.username}
+            onClick={(event) => event.stopPropagation()}
+          />
+          <span className={styles.lightboxCaption}>
+            {lightboxUser.displayName || lightboxUser.username}
+            {" · "}
+            {lightboxUser.uid}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
 
-/** 用户管理页（moderator 及以上进入，admin 专属操作按角色隐藏） */
+/** 用户管理页（协管员 / 管理员 / 受信任组织负责人进入，admin 专属操作按角色隐藏） */
 export function iGM_AdminUsersPage() {
   const IGM_UsersInner = iGM_UsersInner;
   return (
-    <IGM_RequireAuth role="moderator">
+    <IGM_RequireAuth role="moderator" staff>
       <IGM_UsersInner />
     </IGM_RequireAuth>
   );

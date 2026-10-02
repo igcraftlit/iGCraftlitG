@@ -16,8 +16,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
+  BadgeCheck,
   CircleCheck,
   ClipboardList,
+  Crown,
   FileDown,
   LoaderCircle,
   X,
@@ -32,6 +34,7 @@ import { iGM_FileDownloadUrl } from "../../iGM_Services/iGM_FileClient";
 import { iGM_RequireAuth as IGM_RequireAuth } from "../../iGM_Components/iGM_RequireAuth/iGM_RequireAuth";
 import { iGM_Link as Link } from "../../iGM_Components/iGM_Link/iGM_Link";
 import { iGM_ResolveErrorText } from "../../iGM_Components/iGM_AuthUI/iGM_AuthUI";
+import { iGM_UseAuth } from "../../iGM_Providers/iGM_AuthProvider";
 import { iGM_UseLocale } from "../../iGM_Providers/iGM_LocaleProvider";
 import { iGM_FormatDateTime } from "../../iGM_Components/iGM_Format/iGM_Format";
 import pageStyles from "../iGM_Page.module.css";
@@ -57,6 +60,13 @@ const iGM_StatusClass: Record<iGM_OrgVerifyStatus, string> = {
 function iGM_OrgVerifyStatusInner() {
   const t = useTranslations();
   const { locale } = iGM_UseLocale();
+  const { user } = iGM_UseAuth();
+
+  /**
+   * 模块二十五：已加入组织的用户不再展示「组织认证申请记录」栏，
+   * 只显示当前所属组织与认证状态。
+   */
+  const currentOrg = user?.verifiedOrg ?? null;
 
   const [items, setItems] = useState<iGM_OrgVerification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -123,7 +133,44 @@ function iGM_OrgVerifyStatusInner() {
         </div>
       )}
 
-      {loading ? (
+      {/* 模块二十五：已加入组织——只显示当前所属组织与认证状态，隐藏申请记录栏 */}
+      {currentOrg ? (
+        <section className={uiStyles.sectionCard}>
+          <h2 className={uiStyles.sectionTitle}>
+            <span className={uiStyles.sectionTitleIcon}>
+              <BadgeCheck size={16} strokeWidth={1.8} />
+            </span>
+            {t("orgVerify.current.title")}
+          </h2>
+          <div className={tileStyles.recordList}>
+            <div className={tileStyles.recordRow}>
+              <div className={tileStyles.recordMain}>
+                <span className={tileStyles.recordAction}>
+                  <span className={styles.userNameRow}>
+                    {currentOrg.name}
+                    <span
+                      className={`${adminStyles.statusBadge} ${adminStyles.statusActive}`}
+                    >
+                      {t("orgVerify.current.verified")}
+                    </span>
+                    {currentOrg.isOwner && (
+                      <span
+                        className={`${adminStyles.statusBadge} ${adminStyles.statusPending}`}
+                      >
+                        <Crown size={11} strokeWidth={1.8} />
+                        {t("orgVerify.current.owner")}
+                      </span>
+                    )}
+                  </span>
+                </span>
+                <span className={tileStyles.recordDesc}>
+                  {t("orgVerify.current.description")}
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : loading ? (
         <div className={uiStyles.stateBox}>
           <LoaderCircle size={16} className="igm-spin" />
           {t("community.state.loading")}

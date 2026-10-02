@@ -1,7 +1,7 @@
 {
   "site": {
     "name": "iGM CraftCeon Launcher",
-    "tagline": "Built jointly by iGCraftLit × MuoCeon"
+    "tagline": "iGCraftLit"
   },
   "nav": {
     "download": "Download",
@@ -18,7 +18,7 @@
   },
   "hero": {
     "title": "iGM CraftCeon Launcher",
-    "subtitle": "Built jointly by iGCraftLit × MuoCeon",
+    "subtitle": "iGCraftLit",
     "description": "An all-in-one launcher for Minecraft players: instance management, Java management, resource downloads, official account verification, and offline mode, ready out of the box.",
     "downloadCta": "Download for Windows x64",
     "docsCta": "View docs"
@@ -61,8 +61,8 @@
   },
   "org": {
     "title": "Credits",
-    "description": "iGM CraftCeon Launcher is designed and built jointly by the iGCraftLit Community and the MuoCeon team, maintained and iterated over the long term.",
-    "badge": "Built jointly by iGCraftLit × MuoCeon"
+    "description": "iGM CraftCeon Launcher is designed and built by the iGCraftLit Community team, maintained and iterated over the long term.",
+    "badge": "iGCraftLit"
   },
   "download": {
     "title": "Download iGM CraftCeon Launcher",
@@ -205,26 +205,22 @@
   },
   "about": {
     "title": "About iGM CraftCeon Launcher",
-    "lead": "iGM CraftCeon Launcher is an all-in-one Minecraft launcher designed and built jointly by the iGCraftLit Community and MuoCeon.",
+    "lead": "iGM CraftCeon Launcher is an all-in-one Minecraft launcher designed and built by the iGCraftLit Community team.",
     "missionTitle": "Our goal",
     "mission": "A simple and reliable launcher that ties instances, runtimes, resources, and accounts together, making Minecraft setup and launch simple again.",
     "igcraftlit": {
       "title": "iGCraftLit Community",
       "desc": "Runs community resources, the account system, and download services over the long term, and sets the standards."
     },
-    "muoceon": {
-      "title": "MuoCeon",
-      "desc": "Handles the engineering of the launcher client, runtime management, and the download engine."
-    },
     "contactTitle": "Contact us",
     "websiteLabel": "Website",
     "emailLabel": "Email"
   },
   "footer": {
-    "builtBy": "Built jointly by iGCraftLit × MuoCeon",
+    "builtBy": "iGCraftLit",
     "website": "Website",
     "email": "Email",
-    "copyright": "© {year} iGM CraftCeon Launcher. All rights reserved."
+    "copyright": "© {year} iGM CraftCeon Launcher. All Rights Reserved."
   },
   "common": {
     "backToHome": "Back to home",

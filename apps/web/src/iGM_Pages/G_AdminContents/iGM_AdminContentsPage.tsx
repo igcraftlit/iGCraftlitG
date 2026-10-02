@@ -43,8 +43,19 @@ type iGM_StatusFilter = "all" | "normal" | "hidden";
 type iGM_ReviewAction = "hide" | "restore" | "delete";
 
 // 核心逻辑 //
-/** 内容审核页主体（moderator 及以上） */
-function iGM_ContentsInner() {
+/**
+ * 内容审核页主体（moderator 及以上）。
+ * embedded：作为审核面板 Tab 时隐藏独立页头；
+ * readOnly：组织负责人只读——保留列表与状态徽标，隐藏审核操作按钮
+ *           （写权限仍由后端 moderator 强制）。
+ */
+function iGM_ContentsInner({
+  embedded = false,
+  readOnly = false,
+}: {
+  embedded?: boolean;
+  readOnly?: boolean;
+}) {
   const t = useTranslations();
   const { locale } = iGM_UseLocale();
 
@@ -118,18 +129,20 @@ function iGM_ContentsInner() {
 
   return (
     <div className={pageStyles.page}>
-      {/* 页头 */}
-      <header className={pageStyles.pageHeader}>
-        <h1 className={pageStyles.pageTitle}>
-          <span className={pageStyles.pageTitleIcon}>
-            <FileText size={22} strokeWidth={1.8} />
-          </span>
-          {t("pages.adminContents.title")}
-        </h1>
-        <p className={pageStyles.pageDescription}>
-          {t("pages.adminContents.description")}
-        </p>
-      </header>
+      {/* 页头：嵌入审核面板时由面板统一提供，独立页面保留 */}
+      {!embedded && (
+        <header className={pageStyles.pageHeader}>
+          <h1 className={pageStyles.pageTitle}>
+            <span className={pageStyles.pageTitleIcon}>
+              <FileText size={22} strokeWidth={1.8} />
+            </span>
+            {t("pages.adminContents.title")}
+          </h1>
+          <p className={pageStyles.pageDescription}>
+            {t("pages.adminContents.description")}
+          </p>
+        </header>
+      )}
 
       {errorText && (
         <div className={`${uiStyles.alert} ${uiStyles.alertError}`}>{errorText}</div>
@@ -219,33 +232,38 @@ function iGM_ContentsInner() {
                       ? t("admin.contents.statusHidden")
                       : t("admin.contents.statusNormal")}
                   </span>
-                  {isHidden(content.status) ? (
-                    <button
-                      type="button"
-                      className={styles.smallButton}
-                      onClick={() => iGM_HandleReview(content, "restore")}
-                    >
-                      <Eye size={13} strokeWidth={1.8} />
-                      {t("admin.contents.restore")}
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      className={styles.smallButton}
-                      onClick={() => iGM_HandleReview(content, "hide")}
-                    >
-                      <EyeOff size={13} strokeWidth={1.8} />
-                      {t("admin.contents.hide")}
-                    </button>
+                  {/* 只读模式（组织负责人）：仅展示状态，不提供审核操作 */}
+                  {!readOnly && (
+                    <>
+                      {isHidden(content.status) ? (
+                        <button
+                          type="button"
+                          className={styles.smallButton}
+                          onClick={() => iGM_HandleReview(content, "restore")}
+                        >
+                          <Eye size={13} strokeWidth={1.8} />
+                          {t("admin.contents.restore")}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className={styles.smallButton}
+                          onClick={() => iGM_HandleReview(content, "hide")}
+                        >
+                          <EyeOff size={13} strokeWidth={1.8} />
+                          {t("admin.contents.hide")}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className={`${styles.smallButton} ${styles.smallButtonDanger}`}
+                        onClick={() => iGM_HandleReview(content, "delete")}
+                      >
+                        <Trash2 size={13} strokeWidth={1.8} />
+                        {t("admin.contents.delete")}
+                      </button>
+                    </>
                   )}
-                  <button
-                    type="button"
-                    className={`${styles.smallButton} ${styles.smallButtonDanger}`}
-                    onClick={() => iGM_HandleReview(content, "delete")}
-                  >
-                    <Trash2 size={13} strokeWidth={1.8} />
-                    {t("admin.contents.delete")}
-                  </button>
                 </div>
               </div>
             ))}
@@ -269,6 +287,12 @@ export function iGM_AdminContentsPage() {
       <IGM_ContentsInner />
     </IGM_RequireAuth>
   );
+}
+
+/** 模块二十五：审核面板「内容审核」Tab 内容（无独立页头） */
+export function iGM_ContentsPanel({ readOnly = false }: { readOnly?: boolean }) {
+  const IGM_ContentsInner = iGM_ContentsInner;
+  return <IGM_ContentsInner embedded readOnly={readOnly} />;
 }
 
 // 导出 //

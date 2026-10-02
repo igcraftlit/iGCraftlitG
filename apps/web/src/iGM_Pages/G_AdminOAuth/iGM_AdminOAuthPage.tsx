@@ -4,10 +4,12 @@
  * 路由：/G_AdminOAuth
  * 模块：G_AdminOAuth
  * 作用：管理端 OAuth 应用审核——通过 / 拒绝 / 禁用 / 启用 / 删除
- * 内容：状态筛选 chips、分页应用列表（申请人、类型、描述、回调地址、scope、用途、联系方式）、
- *       审核意见输入与通过（返回 client_secret，仅本次展示一次）/ 拒绝，
+ * 内容：状态筛选 chips、分页应用列表（申请人、类型、描述、回调地址、scope、用途、联系方式、
+ *       应用主页、隐私政策、服务条款、数据使用说明）、审核意见输入与通过 / 拒绝，
  *       已通过可禁用（同时撤销其全部令牌），已禁用可重新启用，任意状态可删除
  * 说明：纯静态 SSG；权限为管理员，由后端 iGM_RequireRole 严格校验；
+ *       模块二十五起审核通过不再向管理员展示 client_secret，
+ *       密钥由开发者在「我的应用」页首次进入时一次性领取；
  *       所有操作写入 iGM_OAuthLogs 留痕
  */
 
@@ -17,11 +19,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
-  AlertTriangle,
-  Check,
   CircleCheck,
   CircleSlash,
-  Copy,
   LoaderCircle,
   Play,
   ShieldCheck,
@@ -66,8 +65,11 @@ const iGM_StatusBadgeClass: Record<string, string> = {
 };
 
 // 核心逻辑 //
-/** 管理端 OAuth 审核页主体（管理员，权限由后端最终校验） */
-function iGM_AdminOAuthInner() {
+/**
+ * 管理端 OAuth 审核页主体（模块二十五起：管理员或受信任组织负责人）。
+ * embedded 时作为开发者分区的「应用审核」Tab。
+ */
+function iGM_AdminOAuthInner({ embedded = false }: { embedded?: boolean }) {
   const t = useTranslations();
   const { locale } = iGM_UseLocale();
 
@@ -83,10 +85,6 @@ function iGM_AdminOAuthInner() {
   const [commentMap, setCommentMap] = useState<Record<string, string>>({});
   /** 正在提交操作的应用 clientId */
   const [actingId, setActingId] = useState<string | null>(null);
-  /** 通过后仅本次展示的明文密钥（clientId -> secret） */
-  const [secretMap, setSecretMap] = useState<Record<string, string>>({});
-  /** 已复制标记 */
-  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   /** 加载应用列表 */
   const iGM_Load = useCallback(
@@ -122,7 +120,7 @@ function iGM_AdminOAuthInner() {
     iGM_Load(next, 1);
   }
 
-  /** 审核（通过时返回明文密钥，仅本次展示） */
+  /** 审核（通过后密钥由开发者在「我的应用」一次性领取，管理端不展示明文） */
   function iGM_HandleReview(
     item: iGM_OAuthApplicationAdmin,
     action: "approve" | "reject",
@@ -136,13 +134,7 @@ function iGM_AdminOAuthInner() {
       action,
       comment: (commentMap[item.clientId] ?? "").trim() || undefined,
     })
-      .then((response) => {
-        if (action === "approve" && response.data?.clientSecret) {
-          setSecretMap((previous) => ({
-            ...previous,
-            [item.clientId]: response.data!.clientSecret as string,
-          }));
-        }
+      .then(() => {
         setSuccessText(
           t(
             action === "approve"
@@ -193,30 +185,22 @@ function iGM_AdminOAuthInner() {
       .finally(() => setActingId(null));
   }
 
-  /** 复制文本到剪贴板 */
-  async function iGM_Copy(text: string, clientId: string) {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedId(clientId);
-      window.setTimeout(() => setCopiedId(null), 1600);
-    } catch {
-      /* 剪贴板不可用时静默失败 */
-    }
-  }
-
   return (
     <div className={pageStyles.page}>
-      <header className={pageStyles.pageHeader}>
-        <h1 className={pageStyles.pageTitle}>
-          <span className={pageStyles.pageTitleIcon}>
-            <ShieldCheck size={22} strokeWidth={1.8} />
-          </span>
-          {t("pages.adminOAuth.title")}
-        </h1>
-        <p className={pageStyles.pageDescription}>
-          {t("pages.adminOAuth.description")}
-        </p>
-      </header>
+      {/* 页头：嵌入开发者分区时由面板统一提供，独立页面保留 */}
+      {!embedded && (
+        <header className={pageStyles.pageHeader}>
+          <h1 className={pageStyles.pageTitle}>
+            <span className={pageStyles.pageTitleIcon}>
+              <ShieldCheck size={22} strokeWidth={1.8} />
+            </span>
+            {t("pages.adminOAuth.title")}
+          </h1>
+          <p className={pageStyles.pageDescription}>
+            {t("pages.adminOAuth.description")}
+          </p>
+        </header>
+      )}
 
       {errorText && (
         <div className={`${uiStyles.alert} ${uiStyles.alertError}`}>
@@ -264,7 +248,6 @@ function iGM_AdminOAuthInner() {
       ) : (
         <div className={uiStyles.list}>
           {items.map((item) => {
-            const plainSecret = secretMap[item.clientId];
             return (
               <section key={item.id} className={styles.statusCard}>
                 <div className={styles.progressHead}>
@@ -334,6 +317,59 @@ function iGM_AdminOAuthInner() {
                   </span>
                   <span className={styles.statusValue}>{item.contact}</span>
                 </div>
+                {/* 模块二十五：合规字段，供审核评估 */}
+                {item.homepageUrl && (
+                  <div className={styles.statusRow}>
+                    <span className={styles.statusLabel}>
+                      {t("oauth.apps.homepageUrl")}
+                    </span>
+                    <span className={styles.statusValue}>
+                      <a href={item.homepageUrl} target="_blank" rel="noreferrer">
+                        {item.homepageUrl}
+                      </a>
+                    </span>
+                  </div>
+                )}
+                {item.privacyPolicyUrl && (
+                  <div className={styles.statusRow}>
+                    <span className={styles.statusLabel}>
+                      {t("oauth.apps.privacyPolicyUrl")}
+                    </span>
+                    <span className={styles.statusValue}>
+                      <a
+                        href={item.privacyPolicyUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {item.privacyPolicyUrl}
+                      </a>
+                    </span>
+                  </div>
+                )}
+                {item.termsOfServiceUrl && (
+                  <div className={styles.statusRow}>
+                    <span className={styles.statusLabel}>
+                      {t("oauth.apps.termsOfServiceUrl")}
+                    </span>
+                    <span className={styles.statusValue}>
+                      <a
+                        href={item.termsOfServiceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {item.termsOfServiceUrl}
+                      </a>
+                    </span>
+                  </div>
+                )}
+                {item.dataUsage && (
+                  <div className={styles.statusRow}>
+                    <span className={styles.statusLabel}>
+                      {t("oauth.apps.dataUsage")}
+                    </span>
+                    <span className={styles.statusValue}>{item.dataUsage}</span>
+                  </div>
+                )}
                 <div className={styles.statusRow}>
                   <span className={styles.statusLabel}>
                     {t("oauth.apps.createdAt")}
@@ -351,33 +387,6 @@ function iGM_AdminOAuthInner() {
                       {item.reviewComment}
                     </span>
                   </div>
-                )}
-
-                {/* 通过后仅本次展示的明文密钥 */}
-                {plainSecret && (
-                  <>
-                    <div className={styles.reviewHint}>
-                      <AlertTriangle size={15} strokeWidth={1.8} />
-                      <span>{t("oauth.admin.secretOnce")}</span>
-                    </div>
-                    <div className={styles.keyRow}>
-                      <span className={styles.keyBox}>{plainSecret}</span>
-                      <button
-                        type="button"
-                        className={styles.copyButton}
-                        onClick={() => iGM_Copy(plainSecret, item.clientId)}
-                      >
-                        {copiedId === item.clientId ? (
-                          <Check size={14} strokeWidth={1.8} />
-                        ) : (
-                          <Copy size={14} strokeWidth={1.8} />
-                        )}
-                        {copiedId === item.clientId
-                          ? t("oauth.apps.copied")
-                          : t("oauth.apps.copy")}
-                      </button>
-                    </div>
-                  </>
                 )}
 
                 {/* 审核意见（待审核时输入） */}
@@ -481,14 +490,20 @@ function iGM_AdminOAuthInner() {
   );
 }
 
-/** 管理端 OAuth 审核页（须登录，管理员权限由后端校验） */
+/** 管理端 OAuth 审核页（须登录，管理人员权限由后端校验） */
 export function iGM_AdminOAuthPage() {
   const IGM_AdminOAuthInner = iGM_AdminOAuthInner;
   return (
-    <IGM_RequireAuth>
+    <IGM_RequireAuth staff>
       <IGM_AdminOAuthInner />
     </IGM_RequireAuth>
   );
+}
+
+/** 模块二十五：开发者分区「应用审核」Tab 内容（无独立页头） */
+export function iGM_AdminOAuthPanel() {
+  const IGM_AdminOAuthInner = iGM_AdminOAuthInner;
+  return <IGM_AdminOAuthInner embedded />;
 }
 
 // 导出 //

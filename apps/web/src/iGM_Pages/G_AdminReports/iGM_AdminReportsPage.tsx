@@ -36,8 +36,19 @@ type iGM_StatusFilter = iGM_ReportStatus | "all";
 type iGM_ContentAction = "none" | "hide" | "delete";
 
 // 核心逻辑 //
-/** 举报处理页主体（moderator 及以上） */
-function iGM_ReportsInner() {
+/**
+ * 举报处理页主体（moderator 及以上）。
+ * embedded：作为审核面板 Tab 时隐藏独立页头；
+ * readOnly：组织负责人只读——保留举报列表，隐藏处理表单
+ *           （处理权限仍由后端 moderator 强制）。
+ */
+function iGM_ReportsInner({
+  embedded = false,
+  readOnly = false,
+}: {
+  embedded?: boolean;
+  readOnly?: boolean;
+}) {
   const t = useTranslations();
   const { locale } = iGM_UseLocale();
 
@@ -111,18 +122,20 @@ function iGM_ReportsInner() {
 
   return (
     <div className={pageStyles.page}>
-      {/* 页头 */}
-      <header className={pageStyles.pageHeader}>
-        <h1 className={pageStyles.pageTitle}>
-          <span className={pageStyles.pageTitleIcon}>
-            <Flag size={22} strokeWidth={1.8} />
-          </span>
-          {t("pages.adminReports.title")}
-        </h1>
-        <p className={pageStyles.pageDescription}>
-          {t("pages.adminReports.description")}
-        </p>
-      </header>
+      {/* 页头：嵌入审核面板时由面板统一提供，独立页面保留 */}
+      {!embedded && (
+        <header className={pageStyles.pageHeader}>
+          <h1 className={pageStyles.pageTitle}>
+            <span className={pageStyles.pageTitleIcon}>
+              <Flag size={22} strokeWidth={1.8} />
+            </span>
+            {t("pages.adminReports.title")}
+          </h1>
+          <p className={pageStyles.pageDescription}>
+            {t("pages.adminReports.description")}
+          </p>
+        </header>
+      )}
 
       {errorText && (
         <div className={`${uiStyles.alert} ${uiStyles.alertError}`}>{errorText}</div>
@@ -189,7 +202,8 @@ function iGM_ReportsInner() {
                   <span className={`${styles.statusBadge} ${statusClass[report.status]}`}>
                     {t(`admin.reports.status${report.status === "pending" ? "Pending" : report.status === "resolved" ? "Resolved" : "Dismissed"}`)}
                   </span>
-                  {report.status === "pending" && (
+                  {/* 只读模式（组织负责人）：不提供举报处理操作 */}
+                  {report.status === "pending" && !readOnly && (
                     <>
                       <select
                         className={styles.roleSelect}
@@ -247,6 +261,12 @@ export function iGM_AdminReportsPage() {
       <IGM_ReportsInner />
     </IGM_RequireAuth>
   );
+}
+
+/** 模块二十五：审核面板「举报处理」Tab 内容（无独立页头） */
+export function iGM_ReportsPanel({ readOnly = false }: { readOnly?: boolean }) {
+  const IGM_ReportsInner = iGM_ReportsInner;
+  return <IGM_ReportsInner embedded readOnly={readOnly} />;
 }
 
 // 导出 //

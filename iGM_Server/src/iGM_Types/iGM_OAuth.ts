@@ -49,12 +49,22 @@ export interface iGM_OAuthClientRow {
   iGM_Scopes: string;
   iGM_Purpose: string;
   iGM_Contact: string;
+  /** 模块二十五：应用主页 */
+  iGM_HomepageUrl: string;
+  /** 模块二十五：隐私政策链接 */
+  iGM_PrivacyPolicyUrl: string;
+  /** 模块二十五：服务条款链接 */
+  iGM_TermsOfServiceUrl: string;
+  /** 模块二十五：数据使用说明 */
+  iGM_DataUsage: string;
   /** 申请人 11 位 iGMUid */
   iGM_OwnerUid: string;
   iGM_Status: string;
   iGM_ReviewerId: string | null;
   iGM_ReviewComment: string | null;
   iGM_SecretRotatedAt: string | null;
+  /** 模块二十五：审核通过后待开发者领取的一次性明文密钥；领取后立即置空 */
+  iGM_PendingSecret: string | null;
   /** 模块二十二：是否为本地测试用途（1 时允许 http://localhost 等回调） */
   iGM_IsLocalTest: number;
   /** 模块二十二：软删除时间（非 NULL 表示已删除，行保留以占用 client_id） */
@@ -74,11 +84,21 @@ export interface iGM_OAuthClientDto {
   scopes: string[];
   purpose: string;
   contact: string;
+  /** 模块二十五：应用主页 */
+  homepageUrl: string;
+  /** 模块二十五：隐私政策链接 */
+  privacyPolicyUrl: string;
+  /** 模块二十五：服务条款链接 */
+  termsOfServiceUrl: string;
+  /** 模块二十五：数据使用说明 */
+  dataUsage: string;
   ownerUid: string;
   status: string;
   reviewerId: string | null;
   reviewComment: string | null;
   secretRotatedAt: string | null;
+  /** 模块二十五：一次性密钥是否仍待开发者领取（true 时进入应用页应立即展示） */
+  secretRevealable: boolean;
   /** 模块二十二：是否为本地测试用途（前端展示「仅开发调试使用」标签） */
   isLocalTest: boolean;
   /** 模块二十二：软删除时间（未删除为 null） */
@@ -182,6 +202,14 @@ export interface iGM_OAuthApplyInput {
   scopes: string[];
   purpose: string;
   contact: string;
+  /** 模块二十五：应用主页（必填，HTTPS） */
+  homepageUrl: string;
+  /** 模块二十五：隐私政策链接（必填，HTTPS） */
+  privacyPolicyUrl: string;
+  /** 模块二十五：服务条款链接（选填，填写时须为 HTTPS） */
+  termsOfServiceUrl: string;
+  /** 模块二十五：数据使用说明（必填） */
+  dataUsage: string;
   agreeRules: boolean;
   /** 模块二十二：是否为本地测试用途（勾选后允许 http://localhost 等回调） */
   localTest: boolean;

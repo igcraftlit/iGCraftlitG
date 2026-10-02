@@ -17,30 +17,23 @@ import {
   CalendarCheck,
   CalendarDays,
   CalendarPlus,
-  ChartColumn,
-  ChartLine,
   ClipboardList,
   Code2,
-  FileText,
-  Flag,
   FolderOpen,
   HardDriveDownload,
   GraduationCap,
   Home,
-  KeySquare,
+  LayoutDashboard,
   Library,
   ListChecks,
-  Mail,
   MessageSquare,
   MessageSquareText,
   MessagesSquare,
   Newspaper,
   NotebookPen,
   PenSquare,
-  Radio,
   ScrollText,
   Settings,
-  Shield,
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
@@ -67,6 +60,17 @@ export interface iGM_NavItem {
    * 与 roles 同时满足时才显示；后端仍按组织 owner 邮箱独立鉴权。
    */
   orgOwnerOnly?: boolean;
+  /**
+   * 模块二十五：仅管理人员（管理员或受信任组织负责人）可见。
+   * 与 roles 同时配置时满足其一即显示（供整合面板对协管员与负责人同时可见）；
+   * 仅为体验层控制，后端按 iGM_RequireStaff / iGM_RequireStaffOrRole 强制。
+   */
+  staffOnly?: boolean;
+  /**
+   * 模块二十五：已加入组织（verifiedOrg 非空，含负责人与成员）的用户隐藏。
+   * 用于移除「组织认证申请记录」入口——已认证用户只保留当前组织与认证状态。
+   */
+  hideForOrgMember?: boolean;
   /** 外链入口：新标签页打开，不参与站内高亮与语言前缀拼装 */
   external?: boolean;
   /**
@@ -264,9 +268,12 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
         labelKey: "nav.orgVerify",
         children: [
           {
+            // 模块二十五：已加入组织的用户不再显示「我的申请记录」，
+            // 只保留当前所属组织与认证状态（页面内同步隐藏该栏）
             href: "/G_OrgVerifyStatus",
             icon: ClipboardList,
             labelKey: "nav.orgVerifyStatus",
+            hideForOrgMember: true,
           },
           {
             // 模块七第三轮：组织负责人的本组织认证审核入口。
@@ -313,80 +320,50 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
     titleKey: "nav.groupAdmin",
     items: [
       {
+        // 模块二十五：管理后台入口对协管员、管理员与受信任组织负责人可见
         href: "/G_AdminDashboard",
-        icon: Shield,
+        icon: ShieldCheck,
         labelKey: "nav.admin",
-        // 管理入口 moderator 及以上可见，页面另有 RequireAuth 与后端权限校验
+        // 角色与管理人员身份满足其一即可（页面另有 RequireAuth 与后端强制校验）
         roles: ["moderator", "admin"],
+        staffOnly: true,
         children: [
+          {
+            // 模块二十五：综合面板（实时状态 + 运营看板 + 数据详情）
+            href: "/G_AdminDashboard",
+            icon: LayoutDashboard,
+            labelKey: "nav.adminPanel",
+            roles: ["moderator", "admin"],
+            staffOnly: true,
+          },
+          {
+            // 模块二十五：审核面板（内容审核 + 举报处理 + 认证审核）
+            href: "/G_AdminModeration",
+            icon: ShieldCheck,
+            labelKey: "nav.adminModeration",
+            roles: ["moderator", "admin"],
+            staffOnly: true,
+          },
           {
             href: "/G_AdminUsers",
             icon: Users,
             labelKey: "nav.adminUsers",
+            roles: ["moderator", "admin"],
+            staffOnly: true,
           },
           {
-            // 模块二十一：实时在线状态移入管理后台
-            href: "/G_Realtime",
-            icon: Radio,
-            labelKey: "nav.realtime",
-          },
-          {
-            // 模块九：运营看板（moderator 及以上，继承父节点角色）
-            href: "/G_Dashboard",
-            icon: ChartColumn,
-            labelKey: "nav.dashboard",
-          },
-          {
-            // 模块九：数据详情（moderator 及以上，继承父节点角色）
-            href: "/G_StatsDetail",
-            icon: ChartLine,
-            labelKey: "nav.statsDetail",
-          },
-          {
-            href: "/G_AdminContents",
-            icon: FileText,
-            labelKey: "nav.adminContents",
-          },
-          {
-            href: "/G_AdminReports",
-            icon: Flag,
-            labelKey: "nav.adminReports",
-          },
-          {
-            // 模块七：组织认证审核（全局视图仅 admin；
-            // 组织负责人入口在个人区 G_OrgVerify 下，按 isOwner 显示）
-            href: "/G_AdminOrgVerify",
-            icon: BadgeCheck,
-            labelKey: "nav.adminOrgVerify",
-            roles: ["admin"],
-          },
-          {
-            // 模块十六：开发者申请审核（全局视图仅 admin；
-            // 组织负责人入口在个人区，按 isOwner 显示）
-            href: "/G_DeveloperReview",
-            icon: Code2,
-            labelKey: "nav.developerReview",
-            roles: ["admin"],
-          },
-          {
-            // 模块二十一：OAuth 应用审核（仅 admin，后端 iGM_RequireRole 二次校验）
-            href: "/G_AdminOAuth",
-            icon: KeySquare,
-            labelKey: "nav.adminOAuth",
-            roles: ["admin"],
-          },
-          {
-            // 以下两项仅 admin（后端接口同样限 admin）
-            href: "/G_AdminSettings",
+            // 模块二十五：系统面板（系统信息 + 邮件测试）
+            href: "/G_AdminSystem",
             icon: Settings,
-            labelKey: "nav.adminSettings",
-            roles: ["admin"],
+            labelKey: "nav.adminSystem",
+            staffOnly: true,
           },
           {
-            href: "/G_AdminMails",
-            icon: Mail,
-            labelKey: "nav.adminMails",
-            roles: ["admin"],
+            // 模块二十五：开发者分区（申请审核 + 应用审核 + 账号 + 调用量）
+            href: "/G_AdminDeveloper",
+            icon: Code2,
+            labelKey: "nav.adminDeveloper",
+            staffOnly: true,
           },
         ],
       },

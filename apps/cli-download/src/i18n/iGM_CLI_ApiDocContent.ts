@@ -218,15 +218,11 @@ const iGM_CLI_ApiDocZhCN: iGM_CLI_ApiDocEntry = {
   },
   auth: {
     title: "鉴权方式",
-    lead: "公开资源的搜索与详情接口无需鉴权；创建与管理下载任务需要开发者身份。",
+    lead: "公开资源的搜索与详情接口无需鉴权；创建与管理下载任务时使用登录后获取的访问令牌（Token）即可，当前无需申请额外密钥。",
     items: [
       {
-        name: "开发者密钥（Developer Key）",
-        desc: "64 位字符串，与你的 iGMUid 绑定，在开发者平台申请生成，可随时重置。适合服务端集成与任务调度。",
-      },
-      {
         name: "Token（访问令牌）",
-        desc: "通过 OAuth 授权或 igm login 获取的访问令牌，代表具体用户身份，适合需要同步下载记录的客户端场景。",
+        desc: "通过 OAuth 授权或 igm login 获取的访问令牌，代表具体用户身份，适合服务端集成、任务调度与需要同步下载记录的客户端场景。",
       },
     ],
     headerTitle: "请求头示例",
@@ -253,11 +249,7 @@ const iGM_CLI_ApiDocZhCN: iGM_CLI_ApiDocEntry = {
     items: [
       {
         q: "需要登录才能调用 API 吗？",
-        a: "搜索与详情接口无需登录；创建与管理下载任务需要开发者密钥或用户 Token。",
-      },
-      {
-        q: "开发者密钥与 Token 该用哪个？",
-        a: "服务端集成请使用开发者密钥；代表用户身份的客户端请使用 OAuth 获取的 Token。",
+        a: "搜索与详情接口无需登录；创建与管理下载任务使用登录后获取的用户 Token 即可，无需额外密钥。",
       },
       {
         q: "如何获取 resourceId？",
@@ -397,15 +389,11 @@ const iGM_CLI_ApiDocEn: iGM_CLI_ApiDocEntry = {
   },
   auth: {
     title: "Authentication",
-    lead: "Search and detail endpoints for public resources need no authentication; creating and managing download tasks requires a developer identity.",
+    lead: "Search and detail endpoints for public resources need no authentication; creating and managing download tasks only requires the access token obtained after sign-in, no extra key is needed.",
     items: [
       {
-        name: "Developer Key",
-        desc: "A 64-character string bound to your iGMUid, generated in the developer portal and resettable at any time. Best for server-side integration and task scheduling.",
-      },
-      {
         name: "Token",
-        desc: "An access token obtained via OAuth or igm login, representing a specific user. Best for clients that must sync download history.",
+        desc: "An access token obtained via OAuth or igm login, representing a specific user. Suitable for server-side integration, task scheduling, and clients that must sync download history.",
       },
     ],
     headerTitle: "Request Header Example",
@@ -432,11 +420,7 @@ const iGM_CLI_ApiDocEn: iGM_CLI_ApiDocEntry = {
     items: [
       {
         q: "Do I need to sign in to call the API?",
-        a: "Search and detail endpoints need no sign-in; creating and managing tasks requires a developer key or user token.",
-      },
-      {
-        q: "Developer key or token — which one?",
-        a: "Use the developer key for server-side integration; use an OAuth token for clients acting on behalf of a user.",
+        a: "Search and detail endpoints need no sign-in; creating and managing tasks uses the user token obtained after sign-in, no extra key is required.",
       },
       {
         q: "How do I get a resourceId?",

@@ -55,7 +55,7 @@ export async function generateMetadata({
       default: "iGM CraftCeon Launcher",
       template: "%s | iGM CraftCeon Launcher",
     },
-    description: "iGCraftLit × MuoCeon 联合构建",
+    description: "iGCraftLit",
     alternates: {
       canonical: `${iGM_LauncherDl_SiteUrl}/${locale}`,
       languages,
@@ -64,7 +64,7 @@ export async function generateMetadata({
       type: "website",
       siteName: "iGM CraftCeon Launcher",
       title: "iGM CraftCeon Launcher",
-      description: "iGCraftLit × MuoCeon 联合构建",
+      description: "iGCraftLit",
       url: `${iGM_LauncherDl_SiteUrl}/${locale}`,
     },
   };

@@ -41,8 +41,8 @@
   },
   "placeholder": "内容即将上线，敬请期待。",
   "footer": {
-    "builtBy": "iGCraftLit × MuoCeon 联合构建",
-    "copyright": "© {year} iGM CLI Download API. 保留所有权利。"
+    "builtBy": "iGCraftLit × MuoCeon Jointly Built",
+    "copyright": "© {year} iGM CLI Download API. All Rights Reserved."
   },
   "pages": {
     "docs": {
@@ -558,7 +558,12 @@
       "appNotFound": "未找到该应用",
       "withdrawNotAllowed": "当前状态不可撤回",
       "appNotApproved": "应用尚未通过审核",
-      "appReviewed": "该申请已审核完成"
+      "appReviewed": "该申请已审核完成",
+      "homepageInvalid": "应用主页链接格式不正确（须为 HTTPS）",
+      "privacyPolicyInvalid": "隐私政策链接格式不正确（须为 HTTPS）",
+      "termsInvalid": "服务条款链接格式不正确（须为 HTTPS）",
+      "dataUsageInvalid": "请填写数据使用说明",
+      "secretAlreadyRevealed": "密钥已领取且仅展示一次，如需查看请使用「重置密钥」"
     },
     "clientTypes": {
       "web": "网页应用",
@@ -590,6 +595,7 @@
       "apply": "提交申请",
       "withdraw": "撤回申请",
       "secretReset": "重置密钥",
+      "secretReveal": "领取密钥",
       "approve": "审核通过",
       "reject": "审核拒绝",
       "delete": "删除应用",
@@ -601,7 +607,8 @@
       "consentRevoke": "撤销授权"
     },
     "messages": {
-      "deleted": "应用已删除"
+      "deleted": "应用已删除",
+      "secretRevealed": "client_secret 已领取，请立即妥善保存"
     },
     "apply": {
       "intro": "让第三方网站接入 iGCraftLit 账号登录：填写应用信息并提交，审核通过后发放 client_id 与 client_secret。",
@@ -621,6 +628,20 @@
       "purposePlaceholder": "说明你将如何使用用户授权的信息",
       "contact": "联系方式",
       "contactPlaceholder": "邮箱或其他可联系到你的方式",
+      "homepageUrl": "应用主页",
+      "homepageUrlPlaceholder": "https://example.com",
+      "homepageUrlHint": "应用对外提供服务的首页地址，必须使用 HTTPS",
+      "privacyPolicyUrl": "隐私政策链接",
+      "privacyPolicyUrlPlaceholder": "https://example.com/privacy",
+      "privacyPolicyUrlHint": "向用户说明数据收集与使用方式的隐私政策页面，必须使用 HTTPS",
+      "termsOfServiceUrl": "服务条款链接",
+      "termsOfServiceUrlPlaceholder": "https://example.com/terms",
+      "termsOptional": "（选填）",
+      "dataUsage": "数据使用说明",
+      "dataUsagePlaceholder": "说明你的应用将收集哪些用户数据、用途、存储期限与保护措施",
+      "dataUsageHint": "审核将依据《OAuth 接入规范》与《用户信息保护要求》评估此项",
+      "complianceRequired": "请填写应用主页、隐私政策链接与数据使用说明",
+      "complianceUrlInsecure": "应用主页、隐私政策与服务条款链接必须使用 HTTPS",
       "agreeRules": "我已阅读并同意 OAuth 接入规范与用户信息保护要求",
       "required": "请完整填写必填项",
       "redirectRequired": "请至少填写一条回调地址",
@@ -630,7 +651,7 @@
       "submitting": "提交中…",
       "cancel": "取消",
       "failed": "提交失败，请稍后重试",
-      "submittedNotice": "申请已提交，待管理员审核。通过后可在「我的 OAuth 应用」查看 client_id 并获取 client_secret。",
+      "submittedNotice": "申请已提交，待管理员审核。通过后进入「我的 OAuth 应用」即可查看并复制 client_id 与 client_secret，client_secret 仅展示一次。",
       "viewApps": "前往我的 OAuth 应用",
       "reviewHint": "审核由站点管理员处理；通过后会一次性发放 client_secret，请妥善保管"
     },
@@ -820,6 +841,36 @@
             "向用户展示多语言的人类可读提示（如「登录已过期，请重新登录」），禁止直接展示错误键值。",
             "提示后引导用户跳转至登录页或重新发起授权流程。",
             "refresh_token 已过期（最长两个季度）时不得自动续期，必须重新授权。"
+          ]
+        },
+        {
+          "id": "spec",
+          "title": "OAuth 接入规范",
+          "paragraphs": [
+            "本规范适用于所有申请接入 iGCraftLit 账号开放能力的第三方应用，提交申请即视为同意并遵守本规范。"
+          ],
+          "bullets": [
+            "回调地址：必须与申请登记值严格一致，生产环境仅允许 HTTPS；桌面、移动与单页应用等公开客户端必须启用 PKCE（仅支持 S256）；http://localhost 等本地回环地址仅限勾选「本地测试用途」的应用。",
+            "Scope 定义：openid（必选，返回用户唯一标识 sub，即 iGMUid）、profile（昵称与头像）、email（邮箱地址）、org（已通过审核的组织认证信息）；仅可申请业务必需的最小权限范围。",
+            "令牌生命周期：授权码一次性、5 分钟内有效；access_token 默认有效期 1 小时；refresh_token 最长 180 天，到期后必须重新引导用户完成授权，不予续期。",
+            "错误码：invalid_request、invalid_client、invalid_grant、invalid_scope、unsupported_grant_type、invalid_token、access_denied，统一按 RFC 6749 返回 error 与 error_description。",
+            "client_secret 审核通过后在「我的 OAuth 应用」页仅展示一次，必须保存在服务端环境变量或同等安全位置；疑似泄露时应立即重置。",
+            "严禁在未取得用户同意的情况下申请授权、共享访问令牌或超出申请用途调用 userinfo。"
+          ]
+        },
+        {
+          "id": "privacy",
+          "title": "用户信息保护要求",
+          "paragraphs": [
+            "接入方处理 iGCraftLit 用户信息必须满足以下要求，并在应用隐私政策中向用户如实明示。"
+          ],
+          "bullets": [
+            "数据最小化：仅收集实现所述功能所必需的用户数据，不得将 sub、邮箱、组织信息等用于申请用途之外的任何目的。",
+            "传输加密：接入方服务与本平台、接入方服务与用户终端之间的全部数据交互必须使用 HTTPS/TLS，禁止以明文传输令牌与个人信息。",
+            "数据存储：个人信息应加密或以脱敏方式存储；client_secret、access_token、refresh_token 不得写入前端代码、浏览器存储、日志或公开代码仓库。",
+            "用户数据删除：用户撤回授权或注销账号后，接入方应在 30 日内删除或匿名化其个人数据，并立即停止以该应用身份调用 userinfo。",
+            "合规声明：接入方须在应用主页公示隐私政策与服务条款链接，遵守适用的数据保护法律法规，并对自身数据安全事件承担责任。",
+            "iGCraftLit 有权对已接入应用进行抽查；发现超范围收集、泄露用户数据或其他违规行为时，可随时禁用应用并撤销其全部已签发令牌。"
           ]
         }
       ]

@@ -62,7 +62,11 @@
     "levels": "等級與考核",
     "tasks": "任務中心",
     "authorizedApps": "已授權應用",
-    "adminOAuth": "OAuth 應用審核"
+    "adminOAuth": "OAuth 應用審核",
+    "adminPanel": "綜合面板",
+    "adminModeration": "審核面板",
+    "adminSystem": "系統面板",
+    "adminDeveloper": "開發者分區"
   },
   "topbar": {
     "menu": "選單",
@@ -93,7 +97,9 @@
     "cardAdminTitle": "管理後台",
     "cardAdminDesc": "進入網站管理與維護功能",
     "cardLauncherTitle": "iGM Launcher",
-    "cardLauncherDesc": "下載 iGM CraftCeon Launcher，管理實例、Java 與遊戲資源"
+    "cardLauncherDesc": "下載 iGM CraftCeon Launcher，管理實例、Java 與遊戲資源",
+    "cardDeveloperTitle": "成為開發者",
+    "cardDeveloperDesc": "申請接入 iGCraftLit 帳號體系，建構你的第三方應用"
   },
   "landing": {
     "brand": "iGCraftLit",
@@ -424,6 +430,22 @@
     "adminOAuth": {
       "title": "OAuth 應用審核",
       "description": "審核第三方應用接入申請，通過、拒絕、停用或刪除並記錄操作日誌"
+    },
+    "adminPanel": {
+      "title": "綜合面板",
+      "description": "即時狀態、營運看板與數據詳情的統一入口，三個模組數據介面各自獨立"
+    },
+    "adminModeration": {
+      "title": "審核面板",
+      "description": "內容審核、檢舉處理與組織認證審核的統一入口"
+    },
+    "adminSystem": {
+      "title": "系統面板",
+      "description": "查看資料庫等系統資訊；管理員可在此發送 SMTP 測試郵件"
+    },
+    "adminDeveloper": {
+      "title": "開發者分區",
+      "description": "開發者申請審核、OAuth 應用審核、開發者帳號與呼叫量監測"
     },
     "authorizedApps": {
       "title": "已授權應用",
@@ -1104,7 +1126,7 @@
   },
   "footer": {
     "copyright": "© {year} iGCraftLit Community",
-    "devPortal": "iGM CLI Download API 開發者入口"
+    "devPortal": "iGCraftLit International Community · Open"
   },
   "points": {
     "loadFailed": "積分資料載入失敗",
@@ -1405,6 +1427,60 @@
     "empty": "暫無排行資料"
   },
   "admin": {
+    "panel": {
+      "readonlyNotice": "你目前以受信任組織負責人身份存取：僅可查看與本組織相關的內容，審核操作不可用。",
+      "tabs": {
+        "realtime": "即時狀態",
+        "operations": "營運看板",
+        "stats": "數據詳情",
+        "contents": "內容審核",
+        "reports": "檢舉處理",
+        "orgVerify": "認證審核",
+        "systemInfo": "系統資訊",
+        "mailTest": "郵件測試",
+        "devApplications": "開發者申請",
+        "appReview": "應用審核",
+        "devAccounts": "開發者帳號",
+        "callStats": "呼叫量監測"
+      }
+    },
+    "system": {
+      "database": {
+        "title": "資料庫",
+        "type": "資料庫類型",
+        "provider": "驅動",
+        "version": "版本",
+        "connectionStatus": "連線狀態",
+        "connected": "已連線",
+        "disconnected": "未連線",
+        "host": "主機",
+        "port": "連接埠",
+        "name": "資料庫名"
+      }
+    },
+    "developer": {
+      "accounts": {
+        "empty": "暫無已通過的開發者帳號",
+        "project": "專案名稱",
+        "uid": "iGMUid",
+        "contact": "聯絡方式",
+        "appliedAt": "申請時間"
+      },
+      "callStats": {
+        "total": "總呼叫量",
+        "dailyTitle": "按日呼叫量",
+        "topClients": "應用呼叫量排行",
+        "topClientsEmpty": "所選時間範圍內暫無應用呼叫記錄",
+        "range7": "近 7 天",
+        "range30": "近 30 天",
+        "range90": "近 90 天",
+        "channel": {
+          "api": "API 呼叫量",
+          "sdk": "SDK 呼叫量",
+          "app": "應用呼叫量"
+        }
+      }
+    },
     "overview": {
       "users": "使用者總數",
       "usersToday": "今日新增使用者",
@@ -1436,7 +1512,16 @@
       "unban": "解封",
       "uid": "iGMUid",
       "delete": "刪除",
-      "deleteConfirm": "確定要刪除使用者 {name} 嗎？該使用者的全部資料將被永久清除且無法復原。"
+      "deleteConfirm": "確定要刪除使用者 {name} 嗎？該使用者的全部資料將被永久清除且無法復原。",
+      "registerIp": "註冊 IP",
+      "lastLoginIp": "最後登入 IP",
+      "ipLocation": "IP 歸屬地",
+      "ipUnknown": "未知",
+      "ipLoopback": "本機回環位址",
+      "ipPrivate": "內網位址",
+      "ipAbnormalTitle": "該 IP 關聯帳號數為 {count}，超過異常閾值，請重點排查",
+      "avatarZoom": "點擊查看完整頭像",
+      "lightboxClose": "關閉"
     },
     "contents": {
       "typePost": "貼文",
@@ -1504,6 +1589,12 @@
     }
   },
   "orgVerify": {
+    "current": {
+      "title": "目前所屬組織",
+      "verified": "已認證",
+      "owner": "組織負責人",
+      "description": "你已加入該受信任組織，組織認證申請記錄不再顯示。"
+    },
     "apply": {
       "chooseOrg": "選擇受信任組織",
       "reason": "申請理由",
@@ -2323,7 +2414,11 @@
       "viewLogs": "查看接入日誌",
       "hideLogs": "收合日誌",
       "logsEmpty": "尚無接入日誌",
-      "logsTitle": "接入日誌"
+      "logsTitle": "接入日誌",
+      "homepageUrl": "應用首頁",
+      "privacyPolicyUrl": "隱私權政策連結",
+      "termsOfServiceUrl": "服務條款連結",
+      "dataUsage": "資料使用說明"
     },
     "admin": {
       "all": "全部",
@@ -2337,14 +2432,14 @@
       "disable": "停用",
       "enable": "啟用",
       "delete": "刪除",
-      "approved": "已通過該應用申請，請立即複製並轉交 client_secret",
+      "approved": "已通過該應用申請，client_secret 將由開發者在「我的 OAuth 應用」中一次性領取",
       "rejected": "已拒絕該應用申請",
       "disabled": "已停用該應用，並撤銷其已簽發的全部權杖",
       "enabled": "已重新啟用該應用",
       "deleted": "已刪除該應用及其授權資料",
       "disableConfirm": "停用後該應用無法再換取權杖，且已簽發的權杖將被撤銷。確定繼續嗎？",
       "deleteConfirm": "刪除後將同時清理該應用的授權碼、權杖與同意紀錄，且無法復原。確定繼續嗎？",
-      "secretOnce": "client_secret 僅在本次顯示，請立即複製並轉交申請人，關閉後無法再次查看"
+      "secretOnce": "client_secret 由開發者在「我的 OAuth 應用」頁面自行領取，僅展示一次，請提醒申請人及時保存"
     },
     "authorized": {
       "intro": "以下第三方應用已獲得你的授權，可撤銷不再信任的應用。",

@@ -62,7 +62,11 @@
     "levels": "レベルと審査",
     "tasks": "タスクセンター",
     "authorizedApps": "認可済みアプリ",
-    "adminOAuth": "OAuth アプリ審査"
+    "adminOAuth": "OAuth アプリ審査",
+    "adminPanel": "統合パネル",
+    "adminModeration": "審査パネル",
+    "adminSystem": "システムパネル",
+    "adminDeveloper": "開発者エリア"
   },
   "topbar": {
     "menu": "メニュー",
@@ -93,7 +97,9 @@
     "cardAdminTitle": "管理画面",
     "cardAdminDesc": "サイト管理とメンテナンス機能へ",
     "cardLauncherTitle": "iGM Launcher",
-    "cardLauncherDesc": "iGM CraftCeon Launcher をダウンロードし、インスタンス・Java・ゲームリソースを管理"
+    "cardLauncherDesc": "iGM CraftCeon Launcher をダウンロードし、インスタンス・Java・ゲームリソースを管理",
+    "cardDeveloperTitle": "デベロッパーになる",
+    "cardDeveloperDesc": "iGCraftLit アカウント連携を申請し、サードパーティアプリを開発しましょう"
   },
   "landing": {
     "brand": "iGCraftLit",
@@ -424,6 +430,22 @@
     "adminOAuth": {
       "title": "OAuth アプリ審査",
       "description": "サードパーティアプリの連携申請を審査し、承認・拒否・無効化・削除を行い操作ログを記録します"
+    },
+    "adminPanel": {
+      "title": "管理統合パネル",
+      "description": "リアルタイム状態、運用ボード、データ詳細の統合入口。3 つのモジュールのデータ API はそれぞれ独立しています"
+    },
+    "adminModeration": {
+      "title": "審査パネル",
+      "description": "コンテンツ審査、通報処理、組織認証審査の統合入口"
+    },
+    "adminSystem": {
+      "title": "システムパネル",
+      "description": "データベースなどのシステム情報を表示。管理者はここから SMTP テストメールを送信できます"
+    },
+    "adminDeveloper": {
+      "title": "開発者エリア",
+      "description": "開発者申請審査、OAuth アプリ審査、開発者アカウント、呼び出し量モニタリング"
     },
     "authorizedApps": {
       "title": "認可済みアプリ",
@@ -1104,7 +1126,7 @@
   },
   "footer": {
     "copyright": "© {year} iGCraftLit Community",
-    "devPortal": "iGM CLI Download API 開発者ポータル"
+    "devPortal": "iGCraftLit International Community · Open"
   },
   "points": {
     "loadFailed": "ポイントデータの読み込みに失敗しました",
@@ -1405,6 +1427,60 @@
     "empty": "ランキングデータはまだありません"
   },
   "admin": {
+    "panel": {
+      "readonlyNotice": "現在は信頼組織のオーナーとしてアクセスしています。自組織に関連する情報のみ閲覧でき、審査操作は利用できません。",
+      "tabs": {
+        "realtime": "リアルタイム状態",
+        "operations": "運用ボード",
+        "stats": "データ詳細",
+        "contents": "コンテンツ審査",
+        "reports": "通報処理",
+        "orgVerify": "認証審査",
+        "systemInfo": "システム情報",
+        "mailTest": "メールテスト",
+        "devApplications": "開発者申請",
+        "appReview": "アプリ審査",
+        "devAccounts": "開発者アカウント",
+        "callStats": "呼び出し量"
+      }
+    },
+    "system": {
+      "database": {
+        "title": "データベース",
+        "type": "データベース種別",
+        "provider": "ドライバー",
+        "version": "バージョン",
+        "connectionStatus": "接続状態",
+        "connected": "接続済み",
+        "disconnected": "未接続",
+        "host": "ホスト",
+        "port": "ポート",
+        "name": "データベース名"
+      }
+    },
+    "developer": {
+      "accounts": {
+        "empty": "承認済みの開発者アカウントはまだありません",
+        "project": "プロジェクト名",
+        "uid": "iGMUid",
+        "contact": "連絡先",
+        "appliedAt": "申請日時"
+      },
+      "callStats": {
+        "total": "総呼び出し数",
+        "dailyTitle": "日別呼び出し数",
+        "topClients": "アプリ呼び出し数ランキング",
+        "topClientsEmpty": "選択した期間にアプリの呼び出し記録はありません",
+        "range7": "過去 7 日間",
+        "range30": "過去 30 日間",
+        "range90": "過去 90 日間",
+        "channel": {
+          "api": "API 呼び出し数",
+          "sdk": "SDK 呼び出し数",
+          "app": "アプリ呼び出し数"
+        }
+      }
+    },
     "overview": {
       "users": "ユーザー総数",
       "usersToday": "本日の新規ユーザー",
@@ -1436,7 +1512,16 @@
       "unban": "解除",
       "uid": "iGMUid",
       "delete": "削除",
-      "deleteConfirm": "ユーザー {name} を削除しますか？そのユーザーのすべてのデータが完全に消去され、復元できません。"
+      "deleteConfirm": "ユーザー {name} を削除しますか？そのユーザーのすべてのデータが完全に消去され、復元できません。",
+      "registerIp": "登録 IP",
+      "lastLoginIp": "最終ログイン IP",
+      "ipLocation": "IP 所在地",
+      "ipUnknown": "不明",
+      "ipLoopback": "ループバックアドレス",
+      "ipPrivate": "プライベートネットワークアドレス",
+      "ipAbnormalTitle": "この IP には {count} 件のアカウントが紐付いており、異常しきい値を超えています。確認してください。",
+      "avatarZoom": "クリックしてフルサイズのアバターを表示",
+      "lightboxClose": "閉じる"
     },
     "contents": {
       "typePost": "投稿",
@@ -1504,6 +1589,12 @@
     }
   },
   "orgVerify": {
+    "current": {
+      "title": "現在の所属組織",
+      "verified": "認証済み",
+      "owner": "組織オーナー",
+      "description": "あなたはこの信頼組織のメンバーであるため、組織認証の申請履歴は表示されません。"
+    },
     "apply": {
       "chooseOrg": "信頼された組織を選択",
       "reason": "申請理由",
@@ -2323,7 +2414,11 @@
       "viewLogs": "連携ログを表示",
       "hideLogs": "ログを閉じる",
       "logsEmpty": "連携ログはまだありません",
-      "logsTitle": "連携ログ"
+      "logsTitle": "連携ログ",
+      "homepageUrl": "ホームページ URL",
+      "privacyPolicyUrl": "プライバシーポリシー URL",
+      "termsOfServiceUrl": "利用規約 URL",
+      "dataUsage": "データ利用説明"
     },
     "admin": {
       "all": "すべて",
@@ -2337,14 +2432,14 @@
       "disable": "無効化",
       "enable": "有効化",
       "delete": "削除",
-      "approved": "申請を承認しました。直ちに client_secret をコピーして申請者へ渡してください",
+      "approved": "申請を承認しました。開発者は「マイ OAuth アプリ」で client_secret を一度だけ取得できます",
       "rejected": "申請を拒否しました",
       "disabled": "アプリを無効化し、発行済みのすべてのトークンを取り消しました",
       "enabled": "アプリを再度有効化しました",
       "deleted": "アプリとその認可データを削除しました",
       "disableConfirm": "無効化するとアプリはトークンを取得できなくなり、発行済みのトークンもすべて取り消されます。続行しますか？",
       "deleteConfirm": "削除するとアプリの認可コード・トークン・同意記録もすべて削除され、元に戻せません。続行しますか？",
-      "secretOnce": "client_secret は今回のみ表示されます。直ちにコピーして申請者へ渡してください。閉じると再度確認できません"
+      "secretOnce": "client_secret は開発者が「マイ OAuth アプリ」ページで自身で取得し、一度だけ表示されます。申請者にすぐ保存するよう案内してください"
     },
     "authorized": {
       "intro": "以下のサードパーティアプリはあなたの認可を受けています。信頼しなくなったアプリは取り消せます。",

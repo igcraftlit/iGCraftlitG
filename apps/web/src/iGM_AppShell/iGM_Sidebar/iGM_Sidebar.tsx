@@ -22,6 +22,7 @@ import {
   type iGM_NavItem,
 } from "../../iGM_Navigation/iGM_NavConfig";
 import type { iGM_User } from "../../iGM_Services/iGM_AuthClient";
+import { iGM_IsStaffUser } from "../../iGM_Services/iGM_AuthClient";
 import { iGM_ApiGetMyDeveloper, iGM_DeveloperConsoleUrl, iGM_ResolveDeveloperEntry } from "../../iGM_Services/iGM_DeveloperClient";
 import { iGM_UseAuth } from "../../iGM_Providers/iGM_AuthProvider";
 import styles from "./iGM_Sidebar.module.css";
@@ -49,12 +50,23 @@ function iGM_BranchActive(pathname: string, item: iGM_NavItem): boolean {
   );
 }
 
-/** 单个导航项对当前用户是否可见：角色与组织负责人身份同时满足 */
+/**
+ * 单个导航项对当前用户是否可见：
+ * 角色命中或管理人员身份命中其一即可；组织负责人专属与已入组织隐藏单独判定。
+ */
 function iGM_CanSeeItem(item: iGM_NavItem, user: iGM_User | null): boolean {
-  if (item.roles && (user === null || !item.roles.includes(user.role))) {
-    return false;
+  if (item.roles || item.staffOnly) {
+    const roleAllowed = item.roles
+      ? user !== null && item.roles.includes(user.role)
+      : false;
+    const staffAllowed = item.staffOnly ? iGM_IsStaffUser(user) : false;
+    if (!roleAllowed && !staffAllowed) return false;
   }
   if (item.orgOwnerOnly && user?.verifiedOrg?.isOwner !== true) {
+    return false;
+  }
+  // 模块二十五：已加入组织（含负责人 / 成员）隐藏申请记录类入口
+  if (item.hideForOrgMember && user?.verifiedOrg) {
     return false;
   }
   return true;

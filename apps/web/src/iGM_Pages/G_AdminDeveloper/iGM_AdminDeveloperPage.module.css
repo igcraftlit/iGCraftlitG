@@ -1,0 +1,106 @@
+/*
+ * 文件路径：apps/web/src/iGM_Pages/G_AdminDeveloper/iGM_AdminDeveloperPage.module.css
+ * 所属层：前端 / 页面样式
+ * 路由：G_AdminDeveloper
+ * 模块：iGM_AdminDeveloper
+ * 作用：开发者分区（开发者账号列表 + 调用量监测）样式
+ * 内容：指标宫格、账号元信息、按日条形矩阵、应用调用量数字
+ */
+
+/* 指标宫格：与运营看板同款自适应栅格 */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+/* 账号条目次要文本 */
+.metaSub {
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--igm-text-muted);
+}
+
+.metaLine {
+  font-size: 12.5px;
+  color: var(--igm-text-muted);
+}
+
+.appliedAt {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  color: var(--igm-text-muted);
+  white-space: nowrap;
+}
+
+/* 按日调用量条形矩阵 */
+.dailyList {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 12px;
+}
+
+.dailyRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dailyDate {
+  width: 86px;
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--igm-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.dailyTrack {
+  display: flex;
+  flex: 1;
+  height: 16px;
+  gap: 2px;
+  align-items: center;
+}
+
+.dailyBar0,
+.dailyBar1,
+.dailyBar2 {
+  height: 12px;
+  min-width: 2px;
+  border-radius: 3px;
+}
+
+/* API 通道：主色 */
+.dailyBar0 {
+  background: var(--igm-accent);
+}
+
+/* SDK 通道：主色 65% 透明 */
+.dailyBar1 {
+  background: color-mix(in srgb, var(--igm-accent) 65%, transparent);
+}
+
+/* 应用通道：主色 35% 透明 */
+.dailyBar2 {
+  background: color-mix(in srgb, var(--igm-accent) 35%, transparent);
+}
+
+.dailyTotal {
+  width: 52px;
+  flex-shrink: 0;
+  text-align: right;
+  font-size: 12px;
+  color: var(--igm-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.clientCount {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--igm-text);
+  font-variant-numeric: tabular-nums;
+}

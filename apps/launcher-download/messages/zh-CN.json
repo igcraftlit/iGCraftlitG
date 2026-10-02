@@ -1,7 +1,7 @@
 {
   "site": {
     "name": "iGM CraftCeon Launcher",
-    "tagline": "iGCraftLit × MuoCeon 联合构建"
+    "tagline": "iGCraftLit"
   },
   "nav": {
     "download": "下载",
@@ -18,7 +18,7 @@
   },
   "hero": {
     "title": "iGM CraftCeon Launcher",
-    "subtitle": "iGCraftLit × MuoCeon 联合构建",
+    "subtitle": "iGCraftLit",
     "description": "为 Minecraft 玩家打造的一体化启动器：实例管理、Java 管理、资源下载、正版验证与离线模式，开箱即用。",
     "downloadCta": "下载 Windows x64",
     "docsCta": "查看文档"
@@ -60,9 +60,9 @@
     }
   },
   "org": {
-    "title": "组织署名",
-    "description": "iGM CraftCeon Launcher 由 iGCraftLit Community 与 MuoCeon 团队联合设计与构建，长期维护并持续迭代。",
-    "badge": "iGCraftLit × MuoCeon 联合构建"
+    "title": "团队署名",
+    "description": "iGM CraftCeon Launcher 由 iGCraftLit Community 团队设计与构建，长期维护并持续迭代。",
+    "badge": "iGCraftLit"
   },
   "download": {
     "title": "下载 iGM CraftCeon Launcher",
@@ -205,26 +205,22 @@
   },
   "about": {
     "title": "关于 iGM CraftCeon Launcher",
-    "lead": "iGM CraftCeon Launcher 是 iGCraftLit Community 与 MuoCeon 联合设计与构建的 Minecraft 一体化启动器。",
+    "lead": "iGM CraftCeon Launcher 是 iGCraftLit Community 团队设计与构建的 Minecraft 一体化启动器。",
     "missionTitle": "我们的目标",
     "mission": "以简洁可靠的启动器，串联实例、运行时、资源与账号，让 Minecraft 的安装与启动回归简单。",
     "igcraftlit": {
       "title": "iGCraftLit Community",
       "desc": "负责社区资源、账号体系与下载服务的长期运营与规范制定。"
     },
-    "muoceon": {
-      "title": "MuoCeon",
-      "desc": "负责启动器客户端、运行时管理与下载引擎的工程实现。"
-    },
     "contactTitle": "联系我们",
     "websiteLabel": "团队官网",
     "emailLabel": "联系邮箱"
   },
   "footer": {
-    "builtBy": "iGCraftLit × MuoCeon 联合构建",
+    "builtBy": "iGCraftLit",
     "website": "官网",
     "email": "联系邮箱",
-    "copyright": "© {year} iGM CraftCeon Launcher. 保留所有权利。"
+    "copyright": "© {year} iGM CraftCeon Launcher. All Rights Reserved."
   },
   "common": {
     "backToHome": "返回首页",

@@ -31,7 +31,7 @@ const iGM_LauncherDl_Cinzel = Cinzel({
 // 核心逻辑 //
 export const metadata: Metadata = {
   title: "iGM CraftCeon Launcher",
-  description: "iGCraftLit × MuoCeon 联合构建",
+  description: "iGCraftLit",
 };
 
 export const viewport: Viewport = {

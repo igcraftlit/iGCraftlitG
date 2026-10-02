@@ -62,7 +62,11 @@
     "levels": "Levels & Exams",
     "tasks": "Task Center",
     "authorizedApps": "Authorized Apps",
-    "adminOAuth": "OAuth App Review"
+    "adminOAuth": "OAuth App Review",
+    "adminPanel": "Dashboard",
+    "adminModeration": "Moderation",
+    "adminSystem": "System",
+    "adminDeveloper": "Developers"
   },
   "topbar": {
     "menu": "Menu",
@@ -93,7 +97,9 @@
     "cardAdminTitle": "Admin panel",
     "cardAdminDesc": "Access site administration and maintenance",
     "cardLauncherTitle": "iGM Launcher",
-    "cardLauncherDesc": "Download iGM CraftCeon Launcher to manage instances, Java and game resources"
+    "cardLauncherDesc": "Download iGM CraftCeon Launcher to manage instances, Java and game resources",
+    "cardDeveloperTitle": "Become a Developer",
+    "cardDeveloperDesc": "Apply to integrate iGCraftLit accounts and build your third-party apps"
   },
   "landing": {
     "brand": "iGCraftLit",
@@ -424,6 +430,22 @@
     "adminOAuth": {
       "title": "OAuth App Review",
       "description": "Review third-party app requests: approve, reject, disable or delete, with every action logged"
+    },
+    "adminPanel": {
+      "title": "Admin Dashboard",
+      "description": "Unified entry for real-time status, operations board and detailed statistics; the three modules keep independent data endpoints"
+    },
+    "adminModeration": {
+      "title": "Moderation Panel",
+      "description": "Unified entry for content moderation, reports and organization verification"
+    },
+    "adminSystem": {
+      "title": "System Panel",
+      "description": "View database and other system information; administrators can send SMTP test emails here"
+    },
+    "adminDeveloper": {
+      "title": "Developer Zone",
+      "description": "Developer applications, OAuth app reviews, developer accounts and API call analytics"
     },
     "authorizedApps": {
       "title": "Authorized Apps",
@@ -1104,7 +1126,7 @@
   },
   "footer": {
     "copyright": "© {year} iGCraftLit Community",
-    "devPortal": "iGM CLI Download API Developer Portal"
+    "devPortal": "iGCraftLit International Community · Open"
   },
   "points": {
     "loadFailed": "Failed to load points data",
@@ -1405,6 +1427,60 @@
     "empty": "No ranking data yet"
   },
   "admin": {
+    "panel": {
+      "readonlyNotice": "You are accessing as a trusted organization owner: only information related to your organization is visible and moderation actions are unavailable.",
+      "tabs": {
+        "realtime": "Real-time Status",
+        "operations": "Operations Board",
+        "stats": "Statistics",
+        "contents": "Content Moderation",
+        "reports": "Reports",
+        "orgVerify": "Verification Review",
+        "systemInfo": "System Information",
+        "mailTest": "Email Test",
+        "devApplications": "Developer Applications",
+        "appReview": "App Review",
+        "devAccounts": "Developer Accounts",
+        "callStats": "Call Analytics"
+      }
+    },
+    "system": {
+      "database": {
+        "title": "Database",
+        "type": "Database type",
+        "provider": "Driver",
+        "version": "Version",
+        "connectionStatus": "Connection status",
+        "connected": "Connected",
+        "disconnected": "Disconnected",
+        "host": "Host",
+        "port": "Port",
+        "name": "Database name"
+      }
+    },
+    "developer": {
+      "accounts": {
+        "empty": "No approved developer accounts yet",
+        "project": "Project",
+        "uid": "iGMUid",
+        "contact": "Contact",
+        "appliedAt": "Applied at"
+      },
+      "callStats": {
+        "total": "Total calls",
+        "dailyTitle": "Daily calls",
+        "topClients": "Top apps by calls",
+        "topClientsEmpty": "No application call records in the selected range",
+        "range7": "Last 7 days",
+        "range30": "Last 30 days",
+        "range90": "Last 90 days",
+        "channel": {
+          "api": "API calls",
+          "sdk": "SDK calls",
+          "app": "App calls"
+        }
+      }
+    },
     "overview": {
       "users": "Total users",
       "usersToday": "New users today",
@@ -1436,7 +1512,16 @@
       "unban": "Unban",
       "uid": "iGMUid",
       "delete": "Delete",
-      "deleteConfirm": "Are you sure you want to delete user {name}? All of their data will be permanently removed and cannot be restored."
+      "deleteConfirm": "Are you sure you want to delete user {name}? All of their data will be permanently removed and cannot be restored.",
+      "registerIp": "Registration IP",
+      "lastLoginIp": "Last login IP",
+      "ipLocation": "IP location",
+      "ipUnknown": "Unknown",
+      "ipLoopback": "Loopback address",
+      "ipPrivate": "Private network address",
+      "ipAbnormalTitle": "{count} accounts are associated with this IP, above the abnormal threshold. Please investigate.",
+      "avatarZoom": "Click to view full avatar",
+      "lightboxClose": "Close"
     },
     "contents": {
       "typePost": "Posts",
@@ -1504,6 +1589,12 @@
     }
   },
   "orgVerify": {
+    "current": {
+      "title": "Current organization",
+      "verified": "Verified",
+      "owner": "Organization owner",
+      "description": "You are a member of this trusted organization, so your verification application history is no longer shown."
+    },
     "apply": {
       "chooseOrg": "Choose a trusted organization",
       "reason": "Reason",
@@ -2323,7 +2414,11 @@
       "viewLogs": "View integration logs",
       "hideLogs": "Hide logs",
       "logsEmpty": "No integration logs yet",
-      "logsTitle": "Integration logs"
+      "logsTitle": "Integration logs",
+      "homepageUrl": "Homepage URL",
+      "privacyPolicyUrl": "Privacy policy URL",
+      "termsOfServiceUrl": "Terms of service URL",
+      "dataUsage": "Data usage description"
     },
     "admin": {
       "all": "All",
@@ -2337,14 +2432,14 @@
       "disable": "Disable",
       "enable": "Enable",
       "delete": "Delete",
-      "approved": "Application approved — copy and hand over the client_secret now",
+      "approved": "Application approved — the developer can now reveal the client_secret once in \"My OAuth Apps\"",
       "rejected": "Application rejected",
       "disabled": "Application disabled and all its issued tokens revoked",
       "enabled": "Application re-enabled",
       "deleted": "Application and its authorization data deleted",
       "disableConfirm": "Once disabled, the application can no longer exchange tokens and all issued tokens will be revoked. Continue?",
       "deleteConfirm": "Deleting will also remove the application's authorization codes, tokens and consents, and cannot be undone. Continue?",
-      "secretOnce": "The client_secret is shown only once — copy and hand it to the applicant now, as it cannot be viewed again after closing"
+      "secretOnce": "The client_secret is revealed by the developer on the \"My OAuth Apps\" page, shown only once — remind the applicant to save it promptly"
     },
     "authorized": {
       "intro": "The following third-party applications have your authorization. You can revoke any you no longer trust.",

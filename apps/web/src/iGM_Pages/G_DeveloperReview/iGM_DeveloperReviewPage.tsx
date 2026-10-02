@@ -61,8 +61,8 @@ const iGM_StateBadgeClass: Record<iGM_DeveloperStatus, string> = {
 };
 
 // 核心逻辑 //
-/** 开发者申请审核页主体（管理员或组织负责人；权限由后端最终校验） */
-function iGM_DeveloperReviewInner() {
+/** 开发者申请审核页主体（管理员或组织负责人；embedded 时作为开发者分区 Tab） */
+function iGM_DeveloperReviewInner({ embedded = false }: { embedded?: boolean }) {
   const t = useTranslations();
   const { locale } = iGM_UseLocale();
   const { user: currentUser } = iGM_UseAuth();
@@ -146,18 +146,20 @@ function iGM_DeveloperReviewInner() {
 
   return (
     <div className={pageStyles.page}>
-      {/* 页头 */}
-      <header className={pageStyles.pageHeader}>
-        <h1 className={pageStyles.pageTitle}>
-          <span className={pageStyles.pageTitleIcon}>
-            <Code2 size={22} strokeWidth={1.8} />
-          </span>
-          {t("pages.developerReview.title")}
-        </h1>
-        <p className={pageStyles.pageDescription}>
-          {t("pages.developerReview.description")}
-        </p>
-      </header>
+      {/* 页头：嵌入开发者分区时由面板统一提供，独立页面保留 */}
+      {!embedded && (
+        <header className={pageStyles.pageHeader}>
+          <h1 className={pageStyles.pageTitle}>
+            <span className={pageStyles.pageTitleIcon}>
+              <Code2 size={22} strokeWidth={1.8} />
+            </span>
+            {t("pages.developerReview.title")}
+          </h1>
+          <p className={pageStyles.pageDescription}>
+            {t("pages.developerReview.description")}
+          </p>
+        </header>
+      )}
 
       {errorText && (
         <div className={`${uiStyles.alert} ${uiStyles.alertError}`}>
@@ -349,6 +351,12 @@ export function iGM_DeveloperReviewPage() {
       <IGM_DeveloperReviewInner />
     </IGM_RequireAuth>
   );
+}
+
+/** 模块二十五：开发者分区「申请审核」Tab 内容（无独立页头） */
+export function iGM_DeveloperReviewPanel() {
+  const IGM_DeveloperReviewInner = iGM_DeveloperReviewInner;
+  return <IGM_DeveloperReviewInner embedded />;
 }
 
 // 导出 //

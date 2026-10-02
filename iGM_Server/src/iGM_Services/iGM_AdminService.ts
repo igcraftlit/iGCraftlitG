@@ -16,6 +16,7 @@ import { iGM_Config } from "../iGM_Config/iGM_Config";
 import { iGM_FindUserById, iGM_DeleteUser, iGM_UpdateUserAdmin } from "../iGM_Repositories/iGM_UserRepository";
 import { iGM_DeleteSessionsByUser } from "../iGM_Repositories/iGM_SessionRepository";
 import {
+  iGM_AbnormalIpThreshold,
   iGM_GetOverviewStats,
   iGM_InsertAdminLog,
   iGM_ListAdminLogs,
@@ -33,6 +34,7 @@ import {
   iGM_SetPostStatusService,
 } from "./iGM_ContentService";
 import { iGM_SendMail } from "./iGM_MailService";
+import { iGM_LookupIpLocation } from "./iGM_IpLocationService";
 import { iGM_ResolveUserOrgBadge } from "../iGM_Repositories/iGM_OrgVerifyRepository";
 import { iGM_ToUserDto, type iGM_UserRow } from "../iGM_Types/iGM_Auth";
 import type {
@@ -123,27 +125,49 @@ export async function iGM_ListUsersService(
   );
   return {
     items: await Promise.all(
-      items.map(async (row) => ({
-        id: row.iGM_Id,
-        // 模块七增强：管理员可查看每个用户的 11 位 iGMUid
-        uid: row.iGM_Uid,
-        username: row.iGM_Username,
-        email: row.iGM_Email,
-        role: row.iGM_Role as iGM_AdminUserDto["role"],
-        status: row.iGM_Status as iGM_AdminUserDto["status"],
-        emailVerified: row.iGM_EmailVerified === 1,
-        displayName: row.iGM_DisplayName,
-        avatar: row.iGM_Avatar,
-        // 模块七：认证组织徽标（负责人带 isOwner 金标）
-        verifiedOrg: await iGM_ResolveUserOrgBadge(
-          row.iGM_VerifiedOrgId ?? null,
-          row.iGM_Email,
-        ),
-        createdAt: row.iGM_CreatedAt,
-        totalPoints: row.iGM_TotalPoints,
-        postCount: row.iGM_PostCount,
-        commentCount: row.iGM_CommentCount,
-      })),
+      items.map(async (row) => {
+        // 模块二十五：异常 IP 判定——管理员（UID 首位 0）与测试账号（首位 9）
+        // 不参与标记；取注册 / 登录两个 IP 的最大关联账户数与阈值比较
+        const uidScope = row.iGM_Uid.slice(0, 1);
+        const ipRelatedCount = Math.max(
+          row.iGM_RegisterIpCount ?? 0,
+          row.iGM_LastLoginIpCount ?? 0,
+        );
+        const ipAbnormal =
+          uidScope !== "0" &&
+          uidScope !== "9" &&
+          ipRelatedCount > iGM_AbnormalIpThreshold;
+        // 归属地优先按注册 IP 解析，注册 IP 缺失时回退最后登录 IP
+        const ipLocation = iGM_LookupIpLocation(
+          row.iGM_RegisterIp ?? row.iGM_LastLoginIp,
+        );
+        return {
+          id: row.iGM_Id,
+          // 模块七增强：管理员可查看每个用户的 11 位 iGMUid
+          uid: row.iGM_Uid,
+          username: row.iGM_Username,
+          email: row.iGM_Email,
+          role: row.iGM_Role as iGM_AdminUserDto["role"],
+          status: row.iGM_Status as iGM_AdminUserDto["status"],
+          emailVerified: row.iGM_EmailVerified === 1,
+          displayName: row.iGM_DisplayName,
+          avatar: row.iGM_Avatar,
+          // 模块七：认证组织徽标（负责人带 isOwner 金标）
+          verifiedOrg: await iGM_ResolveUserOrgBadge(
+            row.iGM_VerifiedOrgId ?? null,
+            row.iGM_Email,
+          ),
+          registerIp: row.iGM_RegisterIp ?? null,
+          lastLoginIp: row.iGM_LastLoginIp ?? null,
+          ipLocation,
+          ipAbnormal,
+          ipRelatedCount,
+          createdAt: row.iGM_CreatedAt,
+          totalPoints: row.iGM_TotalPoints,
+          postCount: row.iGM_PostCount,
+          commentCount: row.iGM_CommentCount,
+        };
+      }),
     ),
     total,
     page,
@@ -509,22 +533,38 @@ export async function iGM_ListLogsService(
   };
 }
 
-/** 系统信息（只读，admin 专用） */
-export function iGM_GetSettingsService(): Record<string, unknown> {
-  // 实际使用 PostgreSQL（pg 连接池）；仅展示主机/端口/库名，不暴露账号密码
+/**
+ * 系统信息（只读，模块二十五起对管理人员开放：管理员 + 受信任组织负责人）。
+ * 数据库明确展示类型（PostgreSQL）、服务端版本与实时连接状态：
+ * 连接状态由本次 SELECT version() 探活得到，查询失败即 disconnected。
+ */
+export async function iGM_GetSettingsService(): Promise<Record<string, unknown>> {
+  // 仅展示主机/端口/库名，不暴露账号密码
   let databaseInfo: Record<string, string> = {
+    type: "PostgreSQL",
     provider: "PostgreSQL (pg)",
+    version: "",
+    connectionStatus: "disconnected",
   };
   try {
     const dbUrl = new URL(iGM_Config.databaseUrl);
-    databaseInfo = {
-      provider: "PostgreSQL (pg)",
-      host: dbUrl.hostname,
-      port: dbUrl.port || "5432",
-      name: decodeURIComponent(dbUrl.pathname.replace(/^\//, "")),
-    };
+    databaseInfo.host = dbUrl.hostname;
+    databaseInfo.port = dbUrl.port || "5432";
+    databaseInfo.name = decodeURIComponent(dbUrl.pathname.replace(/^\//, ""));
   } catch {
-    // 连接串无法解析时仅回退展示 provider，避免影响整个系统信息接口
+    // 连接串无法解析时保留默认字段，避免影响整个系统信息接口
+  }
+  // 实时探活并读取 PostgreSQL 服务端版本
+  try {
+    const row = (await iGM_Db
+      .query(`SELECT version() AS iGM_Version`)
+      .get()) as { iGM_Version?: string } | undefined;
+    if (row?.iGM_Version) {
+      databaseInfo.version = row.iGM_Version;
+      databaseInfo.connectionStatus = "connected";
+    }
+  } catch (error) {
+    console.warn("[iGM_AdminService] 数据库连接状态探活失败", error);
   }
   return {
     version: iGM_Config.version,

@@ -5,7 +5,8 @@
  * 模块：iGM_CLI_OAuthApply
  * 作用：OAuth 2.0 / OIDC 第三方接入应用申请表单
  * 内容：应用名称与类型、描述、回调地址（HTTPS，多条）、申请 scope、用途、
- *       联系方式、接入规范勾选、提交与取消；提交成功展示待审核提示与跳转「我的应用」
+ *       联系方式、应用主页、隐私政策、服务条款、数据使用说明、
+ *       接入规范勾选、提交与取消；提交成功展示待审核提示与跳转「我的应用」
  */
 
 // 导入依赖 //
@@ -55,6 +56,11 @@ function iGM_CLI_OAuthApplyForm() {
   const [scopes, setScopes] = useState<string[]>(["openid", "profile"]);
   const [purpose, setPurpose] = useState("");
   const [contact, setContact] = useState("");
+  // 模块二十五：合规字段
+  const [homepageUrl, setHomepageUrl] = useState("");
+  const [privacyPolicyUrl, setPrivacyPolicyUrl] = useState("");
+  const [termsOfServiceUrl, setTermsOfServiceUrl] = useState("");
+  const [dataUsage, setDataUsage] = useState("");
   const [agreeRules, setAgreeRules] = useState(false);
   const [localTest, setLocalTest] = useState(false);
 
@@ -103,6 +109,27 @@ function iGM_CLI_OAuthApplyForm() {
       setError(t("oauth.errors.localTestRequired"));
       return;
     }
+    // 模块二十五：合规字段校验（链接须为 HTTPS，本地回环仅在本地测试用途下放行）
+    const complianceUrls = [homepageUrl.trim(), privacyPolicyUrl.trim()];
+    if (
+      complianceUrls.some(
+        (uri) => !/^https:\/\//i.test(uri) && !iGM_CLI_IsLocalRedirect(uri),
+      ) ||
+      (termsOfServiceUrl.trim().length > 0 &&
+        !/^https:\/\//i.test(termsOfServiceUrl.trim()) &&
+        !iGM_CLI_IsLocalRedirect(termsOfServiceUrl.trim()))
+    ) {
+      setError(t("oauth.apply.complianceUrlInsecure"));
+      return;
+    }
+    if (
+      homepageUrl.trim().length === 0 ||
+      privacyPolicyUrl.trim().length === 0 ||
+      dataUsage.trim().length === 0
+    ) {
+      setError(t("oauth.apply.complianceRequired"));
+      return;
+    }
     if (!agreeRules) {
       setError(t("oauth.apply.rulesRequired"));
       return;
@@ -117,6 +144,10 @@ function iGM_CLI_OAuthApplyForm() {
       scopes,
       purpose: purpose.trim(),
       contact: contact.trim(),
+      homepageUrl: homepageUrl.trim(),
+      privacyPolicyUrl: privacyPolicyUrl.trim(),
+      termsOfServiceUrl: termsOfServiceUrl.trim(),
+      dataUsage: dataUsage.trim(),
       agreeRules,
       localTest,
     })
@@ -277,6 +308,62 @@ function iGM_CLI_OAuthApplyForm() {
           onChange={(event) => setContact(event.target.value)}
           placeholder={t("oauth.apply.contactPlaceholder")}
         />
+      </label>
+
+      {/* 模块二十五：合规字段——应用主页 / 隐私政策 / 服务条款 / 数据使用说明 */}
+      <label className={styles.field}>
+        <span className={styles.label}>{t("oauth.apply.homepageUrl")}</span>
+        <input
+          className={styles.input}
+          value={homepageUrl}
+          maxLength={300}
+          onChange={(event) => setHomepageUrl(event.target.value)}
+          placeholder={t("oauth.apply.homepageUrlPlaceholder")}
+        />
+        <span className={styles.hint}>{t("oauth.apply.homepageUrlHint")}</span>
+      </label>
+
+      <label className={styles.field}>
+        <span className={styles.label}>{t("oauth.apply.privacyPolicyUrl")}</span>
+        <input
+          className={styles.input}
+          value={privacyPolicyUrl}
+          maxLength={300}
+          onChange={(event) => setPrivacyPolicyUrl(event.target.value)}
+          placeholder={t("oauth.apply.privacyPolicyUrlPlaceholder")}
+        />
+        <span className={styles.hint}>
+          {t("oauth.apply.privacyPolicyUrlHint")}
+        </span>
+      </label>
+
+      <label className={styles.field}>
+        <span className={styles.label}>
+          {t("oauth.apply.termsOfServiceUrl")}
+          <span className={styles.scopeHint}>
+            {" "}
+            {t("oauth.apply.termsOptional")}
+          </span>
+        </span>
+        <input
+          className={styles.input}
+          value={termsOfServiceUrl}
+          maxLength={300}
+          onChange={(event) => setTermsOfServiceUrl(event.target.value)}
+          placeholder={t("oauth.apply.termsOfServiceUrlPlaceholder")}
+        />
+      </label>
+
+      <label className={styles.field}>
+        <span className={styles.label}>{t("oauth.apply.dataUsage")}</span>
+        <textarea
+          className={styles.textarea}
+          value={dataUsage}
+          maxLength={1000}
+          onChange={(event) => setDataUsage(event.target.value)}
+          placeholder={t("oauth.apply.dataUsagePlaceholder")}
+        />
+        <span className={styles.hint}>{t("oauth.apply.dataUsageHint")}</span>
       </label>
 
       <label className={styles.checkRow}>

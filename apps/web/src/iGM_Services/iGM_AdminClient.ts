@@ -47,10 +47,49 @@ export interface iGM_AdminUser {
   avatar: string | null;
   // 模块七：认证组织徽标（未认证为 null；负责人带 isOwner 金标）
   verifiedOrg: iGM_OrgBadge | null;
+  // 模块二十五：注册 / 最后登录 IP 与归属地、异常 IP 标记
+  registerIp: string | null;
+  lastLoginIp: string | null;
+  ipLocation: iGM_IpLocation;
+  /** 同 IP 关联账户数超过阈值（管理员 / 测试账号不参与） */
+  ipAbnormal: boolean;
+  ipRelatedCount: number;
   createdAt: string;
   totalPoints: number;
   postCount: number;
   commentCount: number;
+}
+
+/** IP 归属地（本地解析：回环 / 内网无国家地区城市；公网 IP 三段可能为空） */
+export interface iGM_IpLocation {
+  country: string | null;
+  region: string | null;
+  city: string | null;
+  kind: "loopback" | "private" | "public";
+}
+
+/** 模块二十五：已通过开发者账号条目 */
+export interface iGM_DeveloperAccount {
+  applicationId: string;
+  userId: string;
+  username: string;
+  displayName: string | null;
+  uid: string;
+  contact: string;
+  projectName: string;
+  appliedAt: string;
+}
+
+/** 模块二十五：开发者调用量监测数据 */
+export interface iGM_DeveloperCallStats {
+  days: number;
+  total: number;
+  /** 通道汇总：api / sdk / app 及后续扩展通道 */
+  channels: Record<string, number>;
+  /** 按日序列（UTC，无数据补 0） */
+  daily: Array<{ date: string } & Record<string, number | string>>;
+  /** 按应用调用量 Top 20 */
+  topClients: Array<{ clientId: string; count: number }>;
 }
 
 /** 后台内容条目（帖子或评论统一形态） */
@@ -224,11 +263,25 @@ export function iGM_ApiAdminLogs(
   return iGM_Get(`/G_Admin/logs?${params.toString()}`);
 }
 
-/** 系统信息（只读，仅 admin） */
+/** 系统信息（只读，管理员 + 受信任组织负责人） */
 export function iGM_ApiAdminSettings(): Promise<
   iGM_ApiResponse<Record<string, unknown>>
 > {
   return iGM_Get("/G_Admin/settings");
+}
+
+/** 模块二十五：已通过开发者账号列表（管理员 + 组织负责人） */
+export function iGM_ApiAdminDeveloperAccounts(): Promise<
+  iGM_ApiResponse<{ items: iGM_DeveloperAccount[]; total: number }>
+> {
+  return iGM_Get("/G_Admin/developers/accounts");
+}
+
+/** 模块二十五：开发者调用量监测（days 仅允许 7 / 30 / 90） */
+export function iGM_ApiAdminDeveloperCallStats(
+  days: 7 | 30 | 90,
+): Promise<iGM_ApiResponse<iGM_DeveloperCallStats>> {
+  return iGM_Get(`/G_Admin/developers/call-stats?days=${days}`);
 }
 
 // 导出 //
@@ -245,4 +298,6 @@ export default {
   iGM_ApiAdminSendTestMail,
   iGM_ApiAdminLogs,
   iGM_ApiAdminSettings,
+  iGM_ApiAdminDeveloperAccounts,
+  iGM_ApiAdminDeveloperCallStats,
 };

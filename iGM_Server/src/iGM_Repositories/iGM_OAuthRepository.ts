@@ -50,6 +50,14 @@ export async function iGM_InsertOAuthClient(params: {
   scopes: string;
   purpose: string;
   contact: string;
+  /** 模块二十五：应用主页 */
+  homepageUrl: string;
+  /** 模块二十五：隐私政策链接 */
+  privacyPolicyUrl: string;
+  /** 模块二十五：服务条款链接 */
+  termsOfServiceUrl: string;
+  /** 模块二十五：数据使用说明 */
+  dataUsage: string;
   ownerUid: string;
   /** 模块二十二：是否本地测试用途（1 时允许 http://localhost 等回调） */
   isLocalTest: boolean;
@@ -59,10 +67,11 @@ export async function iGM_InsertOAuthClient(params: {
     `INSERT INTO iGM_OAuthClients
        (iGM_Id, iGM_ClientId, iGM_ClientSecretHash, iGM_Name, iGM_Type,
         iGM_Description, iGM_RedirectUris, iGM_Scopes, iGM_Purpose,
-        iGM_Contact, iGM_OwnerUid, iGM_Status, iGM_ReviewerId,
-        iGM_ReviewComment, iGM_SecretRotatedAt, iGM_IsLocalTest,
-        iGM_DeletedAt, iGM_CreatedAt, iGM_UpdatedAt)
-     VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NULL, NULL, NULL, ?, NULL, ?, ?)`,
+        iGM_Contact, iGM_HomepageUrl, iGM_PrivacyPolicyUrl,
+        iGM_TermsOfServiceUrl, iGM_DataUsage, iGM_OwnerUid, iGM_Status,
+        iGM_ReviewerId, iGM_ReviewComment, iGM_SecretRotatedAt,
+        iGM_IsLocalTest, iGM_DeletedAt, iGM_CreatedAt, iGM_UpdatedAt)
+     VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NULL, NULL, NULL, ?, NULL, ?, ?)`,
     [
       params.id,
       params.clientId,
@@ -73,6 +82,10 @@ export async function iGM_InsertOAuthClient(params: {
       params.scopes,
       params.purpose,
       params.contact,
+      params.homepageUrl,
+      params.privacyPolicyUrl,
+      params.termsOfServiceUrl,
+      params.dataUsage,
       params.ownerUid,
       params.isLocalTest ? 1 : 0,
       params.now,
@@ -181,7 +194,60 @@ export async function iGM_UpdateOAuthClientStatus(params: {
   return result.changes > 0;
 }
 
-/** 写入 / 重置 client_secret 哈希（明文不落库） */
+/**
+ * 模块二十五：审核通过时发放 client_secret。
+ * 长期凭证只存 SHA-256 哈希；明文同时写入 iGM_PendingSecret，
+ * 等待开发者首次进入「我的应用」一次性领取，领取动作会立即清空该列。
+ */
+export async function iGM_IssueOAuthClientSecretOnApprove(params: {
+  id: string;
+  secretHash: string;
+  pendingSecret: string;
+  now: string;
+}): Promise<boolean> {
+  const result = await iGM_Db.run(
+    `UPDATE iGM_OAuthClients
+     SET iGM_ClientSecretHash = ?, iGM_PendingSecret = ?,
+         iGM_SecretRotatedAt = ?, iGM_UpdatedAt = ?
+     WHERE iGM_Id = ?`,
+    [
+      params.secretHash,
+      params.pendingSecret,
+      params.now,
+      params.now,
+      params.id,
+    ],
+  );
+  return result.changes > 0;
+}
+
+/**
+ * 模块二十五：开发者一次性领取审核发放的 client_secret。
+ * 原子操作：仅当待领取明文仍存在时返回并立即置空，重复领取得到 null。
+ */
+export async function iGM_ConsumePendingOAuthSecret(params: {
+  id: string;
+  ownerUid: string;
+}): Promise<string | null> {
+  const row = (await iGM_Db
+    .query(
+      `WITH old AS (
+         SELECT iGM_Id, iGM_PendingSecret AS iGM_Secret
+         FROM iGM_OAuthClients
+         WHERE iGM_Id = ? AND iGM_OwnerUid = ? AND iGM_PendingSecret IS NOT NULL
+         FOR UPDATE
+       )
+       UPDATE iGM_OAuthClients c
+       SET iGM_PendingSecret = NULL
+       FROM old
+       WHERE c.iGM_Id = old.iGM_Id
+       RETURNING old.iGM_Secret AS iGM_Secret`,
+    )
+    .get(params.id, params.ownerUid)) as { iGM_Secret: string | null } | undefined;
+  return row?.iGM_Secret ?? null;
+}
+
+/** 写入 / 重置 client_secret 哈希（重置同时作废尚未领取的一次性明文） */
 export async function iGM_SetOAuthClientSecret(params: {
   id: string;
   secretHash: string;
@@ -189,7 +255,8 @@ export async function iGM_SetOAuthClientSecret(params: {
 }): Promise<boolean> {
   const result = await iGM_Db.run(
     `UPDATE iGM_OAuthClients
-     SET iGM_ClientSecretHash = ?, iGM_SecretRotatedAt = ?, iGM_UpdatedAt = ?
+     SET iGM_ClientSecretHash = ?, iGM_PendingSecret = NULL,
+         iGM_SecretRotatedAt = ?, iGM_UpdatedAt = ?
      WHERE iGM_Id = ?`,
     [params.secretHash, params.now, params.now, params.id],
   );
@@ -576,6 +643,8 @@ export default {
   iGM_ListOAuthClientsForAdmin,
   iGM_ReviewOAuthClient,
   iGM_UpdateOAuthClientStatus,
+  iGM_IssueOAuthClientSecretOnApprove,
+  iGM_ConsumePendingOAuthSecret,
   iGM_SetOAuthClientSecret,
   iGM_WithdrawOAuthClient,
   iGM_SoftDeleteOAuthClient,
