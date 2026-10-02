@@ -95,6 +95,16 @@
     "currentTag": "現在のバージョン",
     "entries": [
       {
+        "version": "26.2.5 official version",
+        "date": "2026-10-02",
+        "items": [
+          "マルチスレッド分割ダウンロード：大容量ファイルを HTTP Range で並列取得し、ストリーミングでハッシュ検証。進捗表示がより滑らかに。",
+          "グローバルタスクキュー：最大 8 ファイルを同時処理し、レート制限時は並列数を下げてバックオフ。",
+          "バージョンライブラリの状態はローカルファイル基準に：ローカルのバージョンを削除すると即座に「未ダウンロード」表示となり、再ダウンロードも常に可能。",
+          "ディレクトリ構成の更新：選択したフォルダ配下の iGML/.minecraft にインストールし、MOD やシェーダーはインスタンスごとに分離。"
+        ]
+      },
+      {
         "version": "26.2.4 official version",
         "date": "2026-10-02",
         "items": [
@@ -158,7 +168,7 @@
         "title": "検証と起動",
         "lead": "ダウンロード後、PowerShell でインストーラーの完全性を検証できます：",
         "codeLabel": "powershell",
-        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.2.4.zip -Algorithm SHA256",
+        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.2.5.zip -Algorithm SHA256",
         "after": "計算結果をダウンロードページの SHA256 と比較し、一致すればファイルは完全です。"
       },
       "notes": {

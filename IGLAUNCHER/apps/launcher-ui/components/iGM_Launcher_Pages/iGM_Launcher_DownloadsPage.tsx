@@ -130,6 +130,9 @@ export function iGM_Launcher_DownloadsPage() {
   const [selectedVersion, setSelectedVersion] = useState<Record<string, string>>({});
 
   const [targetDir, setTargetDir] = useState("");
+  // 自动定位所用的目标实例；用户手动改过目录（targetEdited）后不再覆盖其选择
+  const [targetInstanceId, setTargetInstanceId] = useState("");
+  const [targetEdited, setTargetEdited] = useState(false);
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState("");
   const [startNotice, setStartNotice] = useState("");
@@ -143,6 +146,30 @@ export function iGM_Launcher_DownloadsPage() {
   const [installTaskId, setInstallTaskId] = useState("");
   const [installInstanceId, setInstallInstanceId] = useState("");
   const [revealedPath, setRevealedPath] = useState("");
+
+  /* ---------- 下载目标的自动匹配 ---------- */
+
+  /** 资源类型对应的实例内目标子目录（mods / shaderpacks / resourcepacks / saves / datapacks） */
+  const subdirOfType = (type: iGM_Launcher_ThirdPartyResourceType): string =>
+    IGM_LAUNCHER_THIRD_PARTY_INSTANCE_SUBDIRS[type] ?? "mods";
+
+  /** 当前生效的目标实例：优先用户选择，缺省取首个实例 */
+  const targetInstance = useMemo(
+    () => instances.find((item) => item.id === targetInstanceId) ?? instances[0] ?? null,
+    [instances, targetInstanceId],
+  );
+
+  /**
+   * 自动定位下载目录到「当前实例 / 对应类型子文件夹」。
+   * force 为 true 时（切换资源）忽略用户上次的手动选择，重新按规则定位；
+   * 找不到实例时不改动，交由用户手动选择目标文件夹。
+   */
+  const applyAutoTarget = (type: iGM_Launcher_ThirdPartyResourceType, force = false) => {
+    if (!force && targetEdited) return;
+    const instance = instances.find((item) => item.id === targetInstanceId) ?? instances[0] ?? null;
+    if (!instance) return;
+    setTargetDir(iGM_Launcher_JoinPath(instance.directory, subdirOfType(type)));
+  };
 
   /* ---------- 资源搜索 ---------- */
 
@@ -199,6 +226,9 @@ export function iGM_Launcher_DownloadsPage() {
     setStartError("");
     setStartNotice("");
     setVersionsError("");
+    // 切换资源即按「当前实例 + 资源类型」重新自动定位目标文件夹（用户仍可手动改）
+    setTargetEdited(false);
+    applyAutoTarget(resource.type, true);
     if (versions[resource.id]) return;
     setVersionsLoading(true);
     const response = await iGM_Launcher_BridgeCall("thirdParty:resource", {
@@ -708,17 +738,46 @@ export function iGM_Launcher_DownloadsPage() {
                         ) : null}
 
                         <IGM_Launcher_Field label={t("targetDirLabel")} hint={t("fabricNote")}>
+                          {/* 有实例时优先自动定位到该实例下的对应文件夹，可切换实例 */}
+                          {instances.length > 0 ? (
+                            <IGM_Launcher_Select
+                              value={targetInstance?.id ?? ""}
+                              onChange={(event) => {
+                                const nextId = event.target.value;
+                                setTargetInstanceId(nextId);
+                                const next = instances.find((item) => item.id === nextId);
+                                if (next) {
+                                  setTargetEdited(false);
+                                  setTargetDir(
+                                    iGM_Launcher_JoinPath(next.directory, subdirOfType(resource.type)),
+                                  );
+                                }
+                              }}
+                            >
+                              {instances.map((item) => (
+                                <option key={item.id} value={item.id}>
+                                  {item.name}
+                                </option>
+                              ))}
+                            </IGM_Launcher_Select>
+                          ) : null}
                           <div className={styles.targetRow}>
                             <IGM_Launcher_Input
                               value={targetDir}
                               placeholder={t("targetDirPlaceholder")}
-                              onChange={(event) => setTargetDir(event.target.value)}
+                              onChange={(event) => {
+                                setTargetEdited(true);
+                                setTargetDir(event.target.value);
+                              }}
                             />
                             <IGM_Launcher_Button
                               variant="secondary"
                               onClick={() =>
                                 void pickDir(targetDir.trim() || undefined).then((path) => {
-                                  if (path) setTargetDir(path);
+                                  if (path) {
+                                    setTargetEdited(true);
+                                    setTargetDir(path);
+                                  }
                                 })
                               }
                             >
@@ -727,6 +786,12 @@ export function iGM_Launcher_DownloadsPage() {
                             </IGM_Launcher_Button>
                           </div>
                         </IGM_Launcher_Field>
+
+                        {/* 防呆提示：明确告知各类文件应放入的文件夹（灰色小字） */}
+                        <p className={styles.note}>
+                          {t("folderHint", { folder: subdirOfType(resource.type) })}
+                        </p>
+                        <p className={styles.note}>{t("folderHintList")}</p>
 
                         {startError ? (
                           <p className={styles.errorText}>

@@ -18,8 +18,8 @@ const iGM_Installer_ElectrobunConfig = {
   app: {
     name: "iGM Installer",
     identifier: "com.igcraftlit.installer",
-    // 模块二十三后续更新：安装程序版本与启动器保持 26.2.4 一致（版本号只取数字部分）
-    version: "26.2.4",
+    // 安装程序版本与启动器保持 26.2.5 一致（版本号只取数字部分）
+    version: "26.2.5",
     description: "iGCraftLit launcher installer",
   },
   build: {

@@ -16,7 +16,7 @@
 // 导入依赖 //
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Boxes, CloudDownload, Download, RefreshCw } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
@@ -76,7 +76,17 @@ export function iGM_Launcher_VersionsPage() {
   const t = useTranslations("versions");
   const tCommon = useTranslations("common");
   const { navigate } = iGM_Launcher_UseShellLayout();
-  const { versionLibrary, syncingLibrary, syncVersionLibrary } = iGM_Launcher_UseStore();
+  const { versionLibrary, syncingLibrary, syncVersionLibrary, refreshVersionLibrary } =
+    iGM_Launcher_UseStore();
+
+  /*
+   * 每次进入版本库页面都实时重算安装状态：以本机 .minecraft 中真实存在的
+   * versions/<目录>/<目录>.json 为准，用户删除本地文件后立即反映为「未下载」，
+   * 绝不沿用缓存状态。
+   */
+  useEffect(() => {
+    void refreshVersionLibrary();
+  }, [refreshVersionLibrary]);
 
   // 当前选中的版本类型筛选（空串为全部），默认展示全部类型
   const [typeFilter, setTypeFilter] = useState<iGM_Launcher_TypeFilter>("");
@@ -224,7 +234,17 @@ export function iGM_Launcher_VersionsPage() {
                   </dl>
                   <div className={styles.versionActions}>
                     {entry.installed ? (
-                      <IGM_Launcher_Badge tone="success">{t("installed")}</IGM_Launcher_Badge>
+                      <>
+                        {/* 已下载仍允许重新下载：用于覆盖修复（本地文件被删改后可恢复） */}
+                        <IGM_Launcher_Badge tone="success">{t("installed")}</IGM_Launcher_Badge>
+                        <IGM_Launcher_Button
+                          variant="ghost"
+                          onClick={() => navigate("gameInstall", { version: entry.version })}
+                        >
+                          <RefreshCw size={14} strokeWidth={1.8} />
+                          {t("redownload")}
+                        </IGM_Launcher_Button>
+                      </>
                     ) : (
                       <IGM_Launcher_Button
                         variant="secondary"

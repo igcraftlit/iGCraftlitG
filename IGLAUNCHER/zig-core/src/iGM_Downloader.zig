@@ -3,9 +3,11 @@
 //! 路由：全局（内部模块 + C ABI）
 //! 模块：iGM_Downloader
 //! 作用：把「资源 id + 版本 + 加载器 + 目标目录」解析并下载为本地文件，支持流式进度、
-//!       暂停/恢复/取消/重试、断点续传、429/503 指数退避、SHA1 流式校验、按哈希去重缓存
+//!       暂停/恢复/取消/重试、断点续传、429/403 降并发指数退避、SHA1 流式校验、按哈希去重缓存；
+//!       大文件（>10MB）自动改用 HTTP Range 分片多线程并发下载（默认 8 片，网络稳定时升至 16），
+//!       分片完成后本地流式合并并校验哈希，进度按 100ms 节拍汇总回推
 //! 内容：进度结构体与回调类型、任务句柄与生命周期 C ABI、Modrinth 解析、HTTPS 流式下载、
-//!       进度节拍与速度平滑、原子改名、缓存命中复制
+//!       分片并发限流与分片工作线程、分片本地合并、进度节拍与速度平滑、原子改名、缓存命中复制
 
 // 导入依赖 //
 const std = @import("std");
@@ -34,8 +36,8 @@ pub const iGM_Launcher_Err_Null: c_int = -1;
 /// 任务状态不允许该操作
 pub const iGM_Launcher_Err_State: c_int = -2;
 
-/// 进度节拍（毫秒）
-pub const IGM_LAUNCHER_PROGRESS_TICK_MS: u64 = 120;
+/// 进度节拍（毫秒）：进度回调每 100ms 汇总一次，避免高频推送拖慢界面
+pub const IGM_LAUNCHER_PROGRESS_TICK_MS: u64 = 100;
 /// 读写缓冲（字节）
 pub const IGM_LAUNCHER_CHUNK_BYTES: usize = 64 * 1024;
 /// 暂停轮询间隔（毫秒）
@@ -44,19 +46,44 @@ pub const IGM_LAUNCHER_PAUSE_POLL_MS: u64 = 100;
 pub const IGM_LAUNCHER_REQUEST_JITTER_MIN_MS: u64 = 100;
 /// 请求间隔随机抖动上界（毫秒）
 pub const IGM_LAUNCHER_REQUEST_JITTER_MAX_MS: u64 = 300;
-/// 默认并发度
-pub const IGM_LAUNCHER_DEFAULT_CONCURRENCY: u8 = 1;
-/// 最大并发度
-pub const IGM_LAUNCHER_MAX_CONCURRENCY: u8 = 3;
-/// 429 / 503 最多重试次数
+/// 默认并发度（单文件分片线程数下界）
+pub const IGM_LAUNCHER_DEFAULT_CONCURRENCY: u8 = 8;
+/// 最大并发度（单文件分片线程数上限）
+pub const IGM_LAUNCHER_MAX_CONCURRENCY: u8 = 16;
+/// 429 / 403 / 503 最多重试次数
 pub const IGM_LAUNCHER_RETRY_MAX: u32 = 5;
+
+/// 分片下载阈值（字节）：超过该大小启用 Range 分片并发下载，以下走单流
+pub const IGM_LAUNCHER_SHARD_THRESHOLD_BYTES: u64 = 10 * 1024 * 1024;
+/// 分片数下界（略大于阈值的小文件用较少分片）
+pub const IGM_LAUNCHER_SHARD_MIN: u8 = 4;
+/// 分片数默认值
+pub const IGM_LAUNCHER_SHARD_DEFAULT: u8 = 8;
+/// 分片数上限（网络稳定且文件较大时提升）
+pub const IGM_LAUNCHER_SHARD_MAX: u8 = 16;
+/// 提升到最大分片数的尺寸门槛（字节）
+pub const IGM_LAUNCHER_SHARD_BOOST_BYTES: u64 = 64 * 1024 * 1024;
+/// 使用较少分片数的尺寸门槛（字节）
+pub const IGM_LAUNCHER_SHARD_SMALL_BYTES: u64 = 32 * 1024 * 1024;
+/// 全局分片线程安全上限：8 个文件并发 × 8 分片，防止线程数量失控
+pub const IGM_LAUNCHER_GLOBAL_THREAD_CAP: u32 = 64;
 /// Modrinth API 基址
 pub const IGM_LAUNCHER_MODRINTH_API: []const u8 = "https://api.modrinth.com/v2";
 /// 请求 User-Agent（Modrinth 要求可联系的 UA）
 pub const IGM_LAUNCHER_USER_AGENT: []const u8 = "iGM-CraftCeon/1.0 (contact: igcraftlit@outlook.com)";
 
-/// 当前并发度（当前实现为单任务，常量保留以便后续扩展）
+/// 当前并发度
 pub var iGM_Launcher_Download_Concurrency: u8 = IGM_LAUNCHER_DEFAULT_CONCURRENCY;
+
+/// 网络稳定标记：出现 429 / 403 / 503 时置 false（分片数回落为默认），
+/// 连续成功完成后置 true（大文件据此提升到最大分片数）。
+pub var iGM_Launcher_Global_Stable: std.atomic.Value(bool) = .init(true);
+
+/// 全局分片线程限流信号量：跨任务限制同时进行的分片下载线程数，避免线程数量失控。
+/// 静态初始化、无需释放；初始许可数见 IGM_LAUNCHER_GLOBAL_THREAD_CAP。
+var iGM_Downloader_Global_Limiter: std.Io.Semaphore = .{
+    .permits = IGM_LAUNCHER_GLOBAL_THREAD_CAP,
+};
 
 /// 进度结构体：64 字节（64 位平台），字段顺序与偏移不可变
 pub const iGM_Launcher_Progress = extern struct {
@@ -379,9 +406,426 @@ fn iGM_Downloader_Backoff(
     std.Io.sleep(rt.io, std.Io.Duration.fromMilliseconds(@intCast(delay)), .awake) catch {};
 }
 
-/// 流式下载单个文件：
+// ---- 多线程 Range 分片下载 ----
+
+/// 分片执行结果（由分片工作线程写入，主线程 join 后读取）
+const iGM_Downloader_SegmentResult = struct {
+    index: u8 = 0,
+    downloaded: u64 = 0,
+    success: bool = false,
+};
+
+/// 分片工作线程上下文；由主线程分配并保持到 join 完成，地址稳定
+const iGM_Downloader_SegmentContext = struct {
+    task: *iGM_Launcher_Download_Task,
+    rt: *iGM_FileManager.iGM_FileManager_Runtime,
+    allocator: std.mem.Allocator,
+    url: []const u8,
+    /// 该分片的临时文件路径 `<dest>.part.<i>`
+    part_path: []const u8,
+    index: u8,
+    /// 起始字节（含）
+    start: u64,
+    /// 结束字节（含）
+    end: u64,
+    /// 期望分片长度（字节）
+    expected_len: u64,
+    /// 全局已下载字节计数（所有分片共享）
+    progress: *std.atomic.Value(u64),
+    /// 已完成分片计数
+    finished: *std.atomic.Value(u8),
+    /// 服务端不支持 Range 标记
+    range_failed: *std.atomic.Value(bool),
+    /// 本分片结果
+    result: *iGM_Downloader_SegmentResult,
+};
+
+/// 根据文件大小与网络稳定状态决定分片数。
+/// 小于阈值返回 1（走单流）；网络稳定且文件较大时升到上限 16；小文件用下界 4，其余用默认 8。
+fn iGM_Downloader_ShardCount(size: i64) u8 {
+    if (size <= 0) return 1;
+    const bytes: u64 = @intCast(size);
+    if (bytes < IGM_LAUNCHER_SHARD_THRESHOLD_BYTES) return 1;
+    if (iGM_Launcher_Global_Stable.load(.acquire) and bytes >= IGM_LAUNCHER_SHARD_BOOST_BYTES) {
+        return IGM_LAUNCHER_SHARD_MAX;
+    }
+    if (bytes < IGM_LAUNCHER_SHARD_SMALL_BYTES) return IGM_LAUNCHER_SHARD_MIN;
+    return IGM_LAUNCHER_SHARD_DEFAULT;
+}
+
+/// 探测下载源是否支持 Range：发送 `Range: bytes=0-0`，返回 206 即支持。
+/// 只有确认支持才启用分片，避免服务端忽略 Range 导致合并出错。
+fn iGM_Downloader_SupportsRange(
+    client: *std.http.Client,
+    task: *iGM_Launcher_Download_Task,
+    url: []const u8,
+) bool {
+    const uri = std.Uri.parse(url) catch return false;
+    var request = client.request(.GET, uri, .{
+        .extra_headers = &.{
+            .{ .name = "User-Agent", .value = IGM_LAUNCHER_USER_AGENT },
+            .{ .name = "Range", .value = "bytes=0-0" },
+        },
+        .keep_alive = false,
+    }) catch return false;
+    defer request.deinit();
+    request.sendBodiless() catch return false;
+    var redirect_buffer: [4096]u8 = undefined;
+    const response = request.receiveHead(&redirect_buffer) catch return false;
+    const status = @intFromEnum(response.head.status);
+    task.last_status.store(status, .release);
+    iGM_Downloader_Log("分片探测返回状态码: {d}", .{status});
+    return status == 206;
+}
+
+/// 分片工作线程：下载 [start, end] 区间到独立临时文件，边下边累加全局进度。
+/// 429 / 403 / 503 立即把网络稳定标记置 false 并指数退避重试；
+/// 服务端忽略 Range 返回 200 时置 range_failed，交由主线程回退单流。
+fn iGM_Downloader_SegmentWorker(context: *iGM_Downloader_SegmentContext) void {
+    defer _ = context.finished.fetchAdd(1, .release);
+
+    const rt = context.rt;
+    const io = rt.io;
+    const task = context.task;
+
+    iGM_Downloader_Global_Limiter.waitUncancelable(io);
+    defer iGM_Downloader_Global_Limiter.post(io);
+
+    var client: std.http.Client = .{ .allocator = context.allocator, .io = io };
+    defer client.deinit();
+
+    const uri = std.Uri.parse(context.url) catch return;
+    var attempt: u32 = 0;
+
+    while (true) {
+        if (iGM_Downloader_WaitWhilePaused(rt, task)) return;
+
+        var range_buffer: [64]u8 = undefined;
+        const range_value = std.fmt.bufPrint(
+            &range_buffer,
+            "bytes={d}-{d}",
+            .{ context.start, context.end },
+        ) catch return;
+
+        var request = client.request(.GET, uri, .{
+            .extra_headers = &.{
+                .{ .name = "User-Agent", .value = IGM_LAUNCHER_USER_AGENT },
+                .{ .name = "Range", .value = range_value },
+            },
+            .keep_alive = false,
+        }) catch {
+            if (attempt < IGM_LAUNCHER_RETRY_MAX) {
+                attempt += 1;
+                iGM_Downloader_Backoff(rt, attempt);
+                continue;
+            }
+            return;
+        };
+        defer request.deinit();
+        request.sendBodiless() catch {
+            if (attempt < IGM_LAUNCHER_RETRY_MAX) {
+                attempt += 1;
+                iGM_Downloader_Backoff(rt, attempt);
+                continue;
+            }
+            return;
+        };
+
+        var redirect_buffer: [4096]u8 = undefined;
+        var response = request.receiveHead(&redirect_buffer) catch {
+            if (attempt < IGM_LAUNCHER_RETRY_MAX) {
+                attempt += 1;
+                iGM_Downloader_Backoff(rt, attempt);
+                continue;
+            }
+            return;
+        };
+        const status = @intFromEnum(response.head.status);
+        task.last_status.store(status, .release);
+
+        // 被限流 / 拒绝：立即降低并发（稳定标记置 false）并指数退避
+        if (status == 429 or status == 403 or status == 503) {
+            iGM_Launcher_Global_Stable.store(false, .release);
+            if (attempt < IGM_LAUNCHER_RETRY_MAX) {
+                attempt += 1;
+                iGM_Downloader_Backoff(rt, attempt);
+                continue;
+            }
+            return;
+        }
+        if (status == 200) {
+            // 服务端忽略 Range 返回整文件：交给主线程回退单流
+            context.range_failed.store(true, .release);
+            return;
+        }
+        if (status != 206) return;
+
+        const dir = std.Io.Dir.cwd();
+        var part_file = dir.createFile(io, context.part_path, .{ .truncate = true }) catch return;
+        defer part_file.close(io);
+
+        var write_buffer: [IGM_LAUNCHER_CHUNK_BYTES]u8 = undefined;
+        var file_writer = part_file.writer(io, &write_buffer);
+
+        var transfer_buffer: [8192]u8 = undefined;
+        const body = response.reader(&transfer_buffer);
+
+        var read_buffer: [IGM_LAUNCHER_CHUNK_BYTES]u8 = undefined;
+        var local: u64 = 0;
+        while (true) {
+            if (iGM_Downloader_WaitWhilePaused(rt, task)) return;
+            const read = body.readSliceShort(&read_buffer) catch return;
+            if (read == 0) break;
+            file_writer.interface.writeAll(read_buffer[0..read]) catch return;
+            local += @intCast(read);
+            _ = context.progress.fetchAdd(@intCast(read), .monotonic);
+        }
+        file_writer.interface.flush() catch return;
+
+        // 长度不符视为失败（连接被截断），交由主线程整体回退
+        if (local != context.expected_len) return;
+
+        context.result.downloaded = local;
+        context.result.success = true;
+        return;
+    }
+}
+
+/// 本地合并分片：按顺序读回各分片写入 `<dest>.part`，合并过程中流式计算 SHA1，
+/// 提供期望值时校验；任一分片缺失或校验失败则返回错误，由调用方清理。
+fn iGM_Downloader_MergeSegments(
+    rt: *iGM_FileManager.iGM_FileManager_Runtime,
+    segment_paths: []const []const u8,
+    part_path: []const u8,
+    expected_sha1: []const u8,
+) !void {
+    const io = rt.io;
+    const dir = std.Io.Dir.cwd();
+
+    var out_file = try dir.createFile(io, part_path, .{ .truncate = true });
+    defer out_file.close(io);
+    var write_buffer: [IGM_LAUNCHER_CHUNK_BYTES]u8 = undefined;
+    var out_writer = out_file.writer(io, &write_buffer);
+
+    var hasher = std.crypto.hash.Sha1.init(.{});
+    var read_buffer: [IGM_LAUNCHER_CHUNK_BYTES]u8 = undefined;
+
+    for (segment_paths) |segment_path| {
+        var in_file = try dir.openFile(io, segment_path, .{});
+        defer in_file.close(io);
+        while (true) {
+            const read = in_file.readStreaming(io, &.{read_buffer[0..]}) catch |err| switch (err) {
+                error.EndOfStream => break,
+                else => return error.SegmentReadFailed,
+            };
+            if (read == 0) break;
+            out_writer.interface.writeAll(read_buffer[0..read]) catch return error.FileWriteFailed;
+            hasher.update(read_buffer[0..read]);
+        }
+    }
+    out_writer.interface.flush() catch return error.FileWriteFailed;
+
+    if (expected_sha1.len > 0) {
+        var digest: [20]u8 = undefined;
+        hasher.final(&digest);
+        const hex = std.fmt.bytesToHex(digest, .lower);
+        if (!std.ascii.eqlIgnoreCase(&hex, expected_sha1)) return error.Sha1Mismatch;
+    }
+}
+
+/// 多线程分片下载主流程：
+/// 1) 按分片数把文件切成若干 [start, end] 区间，每个分片一个工作线程；
+/// 2) 主线程按 100ms 节拍汇总已下载字节并回调进度（暂停 / 取消照常生效）；
+/// 3) 全部完成后本地流式合并并校验哈希，再原子改名到目标路径。
+fn iGM_Downloader_DownloadSharded(
+    rt: *iGM_FileManager.iGM_FileManager_Runtime,
+    task: *iGM_Launcher_Download_Task,
+    url: []const u8,
+    dest_path: []const u8,
+    part_path: []const u8,
+    expected_sha1: []const u8,
+    total_size: u64,
+    shard_total: u8,
+) !iGM_Downloader_Outcome {
+    const io = rt.io;
+    const allocator = rt.allocator;
+    const count: usize = shard_total;
+
+    try iGM_FileManager.iGM_FileManager_EnsureParentDir(rt, dest_path);
+
+    const per: u64 = total_size / count;
+    const remainder: u64 = total_size % count;
+
+    const segment_paths = try allocator.alloc([]const u8, count);
+    const contexts = try allocator.alloc(iGM_Downloader_SegmentContext, count);
+    const results = try allocator.alloc(iGM_Downloader_SegmentResult, count);
+    const threads = try allocator.alloc(std.Thread, count);
+
+    var progress = std.atomic.Value(u64).init(0);
+    var finished = std.atomic.Value(u8).init(0);
+    var range_failed = std.atomic.Value(bool).init(false);
+
+    var start: u64 = 0;
+    for (0..count) |index| {
+        const extra: u64 = if (index < remainder) 1 else 0;
+        const length = per + extra;
+        const end: u64 = start + length - 1;
+        segment_paths[index] = try std.fmt.allocPrint(allocator, "{s}.{d}", .{ part_path, index });
+        results[index] = .{ .index = @intCast(index) };
+        contexts[index] = .{
+            .task = task,
+            .rt = rt,
+            .allocator = allocator,
+            .url = url,
+            .part_path = segment_paths[index],
+            .index = @intCast(index),
+            .start = start,
+            .end = end,
+            .expected_len = length,
+            .progress = &progress,
+            .finished = &finished,
+            .range_failed = &range_failed,
+            .result = &results[index],
+        };
+        start = end + 1;
+    }
+
+    var spawned: usize = 0;
+    for (0..count) |index| {
+        threads[index] = std.Thread.spawn(
+            .{},
+            iGM_Downloader_SegmentWorker,
+            .{&contexts[index]},
+        ) catch {
+            range_failed.store(true, .release);
+            break;
+        };
+        spawned += 1;
+    }
+
+    // 进度节拍：主线程汇总量，避免多个工作线程同时写进度快照造成竞争
+    var last_bytes: u64 = 0;
+    var last_speed: f64 = 0.0;
+    var last_tick = std.Io.Timestamp.now(io, .awake);
+    const tick_nanoseconds: i96 = @as(i96, IGM_LAUNCHER_PROGRESS_TICK_MS) * std.time.ns_per_ms;
+
+    while (true) {
+        if (task.cancel.load(.acquire)) break;
+        if (finished.load(.acquire) >= spawned) break;
+        std.Io.sleep(
+            io,
+            std.Io.Duration.fromMilliseconds(@intCast(IGM_LAUNCHER_PROGRESS_TICK_MS)),
+            .awake,
+        ) catch {};
+
+        const downloaded = progress.load(.monotonic);
+        const now = std.Io.Timestamp.now(io, .awake);
+        const elapsed = now.nanoseconds - last_tick.nanoseconds;
+        if (elapsed < tick_nanoseconds) continue;
+
+        const seconds = @max(@as(f64, @floatFromInt(elapsed)) / 1_000_000_000.0, 0.001);
+        const current_speed = @as(f64, @floatFromInt(downloaded - last_bytes)) / seconds;
+        last_speed = if (last_speed <= 0.0) current_speed else last_speed * 0.7 + current_speed * 0.3;
+        last_bytes = downloaded;
+        last_tick = now;
+        const eta: i64 = if (last_speed > 0.0)
+            @intFromFloat(@round(@as(f64, @floatFromInt(@max(total_size - downloaded, 0))) / last_speed))
+        else
+            -1;
+        iGM_Downloader_Emit(
+            task,
+            if (task.pause.load(.acquire)) iGM_Launcher_Status_Paused else iGM_Launcher_Status_Downloading,
+            @intCast(downloaded),
+            @intCast(total_size),
+            last_speed,
+            eta,
+            null,
+        );
+    }
+
+    for (0..spawned) |index| threads[index].join();
+
+    if (task.cancel.load(.acquire)) {
+        for (0..count) |index| iGM_FileManager.iGM_FileManager_Remove(rt, segment_paths[index]);
+        return .canceled;
+    }
+
+    var failed = range_failed.load(.acquire) or spawned < count;
+    var downloaded_total: u64 = 0;
+    for (0..spawned) |index| {
+        if (!results[index].success) failed = true;
+        downloaded_total += results[index].downloaded;
+    }
+
+    if (failed) {
+        for (0..count) |index| iGM_FileManager.iGM_FileManager_Remove(rt, segment_paths[index]);
+        if (range_failed.load(.acquire)) return error.RangeUnsupported;
+        return error.HttpStatusFailed;
+    }
+
+    iGM_Downloader_MergeSegments(rt, segment_paths, part_path, expected_sha1) catch |err| {
+        for (0..count) |index| iGM_FileManager.iGM_FileManager_Remove(rt, segment_paths[index]);
+        return err;
+    };
+    for (0..count) |index| iGM_FileManager.iGM_FileManager_Remove(rt, segment_paths[index]);
+
+    try iGM_FileManager.iGM_FileManager_RenameReplace(rt, part_path, dest_path);
+    iGM_Launcher_Global_Stable.store(true, .release);
+    return .{ .completed = @intCast(downloaded_total) };
+}
+
+/// 下载分发：大文件且服务端支持 Range 时走多线程分片，
+/// 否则回退单流；分片过程中发现服务端不支持 Range 时同样回退单流。
+fn iGM_Downloader_DownloadAny(
+    rt: *iGM_FileManager.iGM_FileManager_Runtime,
+    client: *std.http.Client,
+    task: *iGM_Launcher_Download_Task,
+    url: []const u8,
+    dest_path: []const u8,
+    part_path: []const u8,
+    expected_sha1: []const u8,
+    expected_size: i64,
+) !iGM_Downloader_Outcome {
+    const shard_total = iGM_Downloader_ShardCount(expected_size);
+    if (shard_total > 1 and iGM_Downloader_SupportsRange(client, task, url)) {
+        return iGM_Downloader_DownloadSharded(
+            rt,
+            task,
+            url,
+            dest_path,
+            part_path,
+            expected_sha1,
+            @intCast(expected_size),
+            shard_total,
+        ) catch |err| switch (err) {
+            error.RangeUnsupported => iGM_Downloader_DownloadFile(
+                rt,
+                client,
+                task,
+                url,
+                dest_path,
+                part_path,
+                expected_sha1,
+                expected_size,
+            ),
+            else => |other| return other,
+        };
+    }
+    return iGM_Downloader_DownloadFile(
+        rt,
+        client,
+        task,
+        url,
+        dest_path,
+        part_path,
+        expected_sha1,
+        expected_size,
+    );
+}
+
+/// 流式下载单个文件（单流路径，作为小文件 / 不支持分片时的兜底）：
 /// 1) 写入 `<dest>.part`，边写边算 SHA1；
-/// 2) 按 120ms 节拍回调进度（downloaded / total / speed / eta）；
+/// 2) 按 100ms 节拍回调进度（downloaded / total / speed / eta）；
 /// 3) 结束时（清单提供时）流式校验 SHA1，通过后原子改名到最终路径；
 /// 4) `<dest>.part` 已存在时以 Range 续传，服务器不支持则从头覆盖重下。
 fn iGM_Downloader_DownloadFile(
@@ -439,11 +883,15 @@ fn iGM_Downloader_DownloadFile(
         iGM_Downloader_Log("下载源返回状态码: {d}", .{status});
         task.last_status.store(status, .release);
 
-        // 429 / 503 指数退避
-        if ((status == 429 or status == 503) and attempt < IGM_LAUNCHER_RETRY_MAX) {
-            attempt += 1;
-            iGM_Downloader_Backoff(rt, attempt);
-            continue;
+        // 429 / 403 / 503：立即降低并发（稳定标记置 false）并指数退避
+        if (status == 429 or status == 403 or status == 503) {
+            iGM_Launcher_Global_Stable.store(false, .release);
+            if (attempt < IGM_LAUNCHER_RETRY_MAX) {
+                attempt += 1;
+                iGM_Downloader_Backoff(rt, attempt);
+                continue;
+            }
+            return error.HttpStatusFailed;
         }
         if (status != 200 and status != 206) return error.HttpStatusFailed;
 
@@ -697,7 +1145,7 @@ fn iGM_Downloader_Run(task: *iGM_Launcher_Download_Task) void {
     // SHA1 校验失败重试一次
     var sha_retry: bool = false;
     while (true) {
-        const outcome = iGM_Downloader_DownloadFile(
+        const outcome = iGM_Downloader_DownloadAny(
             &rt,
             &client,
             task,

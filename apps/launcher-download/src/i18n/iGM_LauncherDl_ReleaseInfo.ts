@@ -21,7 +21,7 @@ export type iGM_LauncherDl_ArchiveEntry = string;
 /** 当前版本号 */
 export const iGM_LauncherDl_Version = iGM_LauncherDl_ReleaseManifest.version;
 
-/** 版本展示文本：26.2.4 official version */
+/** 版本展示文本：26.2.5 official version */
 export const iGM_LauncherDl_VersionLabel =
   iGM_LauncherDl_ReleaseManifest.versionLabel;
 

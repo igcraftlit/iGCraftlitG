@@ -1341,7 +1341,7 @@ export const IGM_LAUNCHER_APP_NAME = "iGM Launcher";
 export const IGM_LAUNCHER_IDENTIFIER = "com.igcraftlit.launcher";
 
 /** 应用版本（界面关于页、窗口标题与启动参数统一显示该值） */
-export const IGM_LAUNCHER_VERSION = "26.2.4 official version";
+export const IGM_LAUNCHER_VERSION = "26.2.5 official version";
 
 /** 窗口标题：应用名称 + 版本号，供原生窗口标题栏与界面标题统一引用 */
 export const IGM_LAUNCHER_APP_TITLE = `${IGM_LAUNCHER_APP_NAME} ${IGM_LAUNCHER_VERSION}`;
@@ -1823,6 +1823,13 @@ export const IGM_LAUNCHER_GAME_DIR_SKIP_NAMES: readonly string[] = [
 /** 共享根目录（.minecraft 根）的目录名，系统默认候选均以其结尾 */
 export const IGM_LAUNCHER_MC_ROOT_DIR_NAME = ".minecraft";
 
+/**
+ * 启动器标志目录名：新结构为 <用户选择的根目录>/iGML/.minecraft，
+ * 用于把启动器数据与用户其他目录清晰隔离。
+ * 说明：旧结构（直接位于 <根目录>/.minecraft）仍可被扫描识别，不做迁移。
+ */
+export const IGM_LAUNCHER_IGML_DIR_NAME = "iGML";
+
 /** 实例隔离目录名：实例 gameDir 统一位于 <根目录>/instances/<实例名> */
 export const IGM_LAUNCHER_INSTANCES_DIR_NAME = "instances";
 
@@ -1843,6 +1850,7 @@ export const IGM_LAUNCHER_INSTANCE_SUBDIRS: readonly string[] = [
   "saves",
   "resourcepacks",
   "shaderpacks",
+  "modpacks",
 ] as const;
 
 /** 实例名长度上限（含扩展名前的文件名长度，兼顾 Windows 路径限制） */
@@ -1874,6 +1882,12 @@ export const IGM_LAUNCHER_FABRIC_META_URL = "https://meta.fabricmc.net/v2";
 
 /** 下载并发数：资源对象数量多，采用小并发避免被识别为异常流量 */
 export const IGM_LAUNCHER_DOWNLOAD_CONCURRENCY = 16;
+
+/**
+ * 游戏本体清单下载的全局最大并发文件数。
+ * 与 Zig 引擎的单文件分片线程配合：8 文件并发 × 8 分片，兼顾速度与限流安全。
+ */
+export const IGM_LAUNCHER_DOWNLOAD_MAX_FILE_CONCURRENCY = 8;
 
 /** 单个文件的下载重试次数（网络抖动时按指数退避重试） */
 export const IGM_LAUNCHER_DOWNLOAD_RETRY = 3;
@@ -2251,22 +2265,32 @@ export function iGM_Launcher_RootDirOfInstance(gameDir: string): string | null {
 
 /**
  * 由用户选择的前置目录解析共享 .minecraft 根目录。
- * 目录规则要求游戏目录固定为 <前置目录>/.minecraft：用户可把前置目录放在任意磁盘
- * （不限于系统盘），此处统一补齐 .minecraft 段；已以 .minecraft 结尾时保持原样，
- * 保证同一路径反复解析结果一致（幂等）。
+ * 新结构固定为 <前置目录>/iGML/.minecraft，用于把启动器数据与用户其他目录隔离；
+ * 已以 .minecraft 结尾（直接指定旧结构或官方目录）时保持原样使用，保证旧数据可复用；
+ * 已以 iGML 结尾时补一层 .minecraft。同一路径反复解析结果一致（幂等）。
  */
 export function iGM_Launcher_McRootOfParent(parentDir: string): string {
   const normalized = parentDir.trim().replace(/\\/g, "/").replace(/\/+$/, "");
   if (!normalized) return "";
   const segment = normalized.slice(normalized.lastIndexOf("/") + 1);
-  if (segment.toLowerCase() === IGM_LAUNCHER_MC_ROOT_DIR_NAME) return normalized;
-  return iGM_Launcher_JoinPath(normalized, IGM_LAUNCHER_MC_ROOT_DIR_NAME);
+  const lower = segment.toLowerCase();
+  if (lower === IGM_LAUNCHER_MC_ROOT_DIR_NAME) return normalized;
+  if (lower === IGM_LAUNCHER_IGML_DIR_NAME.toLowerCase()) {
+    return iGM_Launcher_JoinPath(normalized, IGM_LAUNCHER_MC_ROOT_DIR_NAME);
+  }
+  return iGM_Launcher_JoinPath(
+    normalized,
+    IGM_LAUNCHER_IGML_DIR_NAME,
+    IGM_LAUNCHER_MC_ROOT_DIR_NAME,
+  );
 }
 
 /**
  * 由共享 .minecraft 根目录反推前置目录，供界面把输入框回填为「前置目录」，
- * 与 iGM_Launcher_McRootOfParent 互为逆运算。根目录不以 .minecraft 结尾
- * （用户自定义命名）时原样返回，避免丢失用户输入。
+ * 与 iGM_Launcher_McRootOfParent 互为逆运算：
+ * - <前置>/iGML/.minecraft → <前置>（新结构，去掉两层）
+ * - <前置>/.minecraft → <前置>（旧结构 / 直接指定官方目录，去掉一层）
+ * - 其他自定义命名目录 → 原样返回，避免丢失用户输入。
  */
 export function iGM_Launcher_McParentOfRoot(rootDir: string): string {
   const normalized = rootDir.trim().replace(/\\/g, "/").replace(/\/+$/, "");
@@ -2274,10 +2298,22 @@ export function iGM_Launcher_McParentOfRoot(rootDir: string): string {
   const index = normalized.lastIndexOf("/");
   const segment = index >= 0 ? normalized.slice(index + 1) : normalized;
   if (segment.toLowerCase() !== IGM_LAUNCHER_MC_ROOT_DIR_NAME) return normalized;
-  if (index < 0) return "";
-  const parent = normalized.slice(0, index);
-  // 盘符根（C:/.minecraft）反推为 C:/，其余直接返回父级
-  return parent.length === 2 && parent.endsWith(":") ? `${parent}/` : parent;
+  const stripped = index < 0 ? "" : normalized.slice(0, index);
+  if (!stripped) return "";
+  // 新结构 <前置>/iGML/.minecraft：再剥掉 iGML 层
+  const innerIndex = stripped.lastIndexOf("/");
+  const innerSegment = innerIndex >= 0 ? stripped.slice(innerIndex + 1) : stripped;
+  if (innerSegment.toLowerCase() !== IGM_LAUNCHER_IGML_DIR_NAME.toLowerCase()) {
+    return iGM_Launcher_TrimDriveRoot(stripped);
+  }
+  const parent = innerIndex < 0 ? "" : stripped.slice(0, innerIndex);
+  return iGM_Launcher_TrimDriveRoot(parent);
+}
+
+/** 盘符根（C:）补回斜杠，其余原样返回；空串原样返回 */
+function iGM_Launcher_TrimDriveRoot(path: string): string {
+  if (path.length === 2 && path.endsWith(":")) return `${path}/`;
+  return path;
 }
 
 /**

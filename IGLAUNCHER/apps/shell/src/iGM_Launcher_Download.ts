@@ -4,8 +4,9 @@
  * 路由：全局（不对外暴露 URL，仅被 iGM_Launcher_Bridge 调用）
  * 模块：iGM_Launcher_Download
  * 作用：按官方目录规则把 Minecraft 游戏本体真实下载到共享根目录（.minecraft 根）
- * 内容：清单驱动主流程——主站下发版本文件清单，文本文件原样写盘、二进制文件逐文件
- *       经 Zig 引擎（bun:ffi）直链下载并实时叠加进度；
+ * 内容：清单驱动主流程——主站下发版本文件清单，文本文件原样写盘、二进制文件进入
+ *       全局任务队列（最大 8 文件并发）经 Zig 引擎（bun:ffi）直链下载；每个文件再由
+ *       引擎按 Range 分片多线程下载，进度聚合后统一广播；
  *       旧 Mojang 直连流程作为兜底保留：官方版本清单与版本 json 解析、客户端 jar、
  *       依赖库（含 natives 分类器）、资源索引与资源对象、Fabric 加载器 profile 与其依赖库；
  *       分阶段下载并实时维护进度快照，支持取消与失败重试；
@@ -28,6 +29,7 @@ import { dirname, join, normalize } from "node:path";
 import {
   IGM_LAUNCHER_ASSET_BASE_URL,
   IGM_LAUNCHER_DOWNLOAD_CONCURRENCY,
+  IGM_LAUNCHER_DOWNLOAD_MAX_FILE_CONCURRENCY,
   IGM_LAUNCHER_DOWNLOAD_RETRY,
   IGM_LAUNCHER_DOWNLOAD_TIMEOUT_MS,
   IGM_LAUNCHER_FABRIC_META_URL,
@@ -41,6 +43,7 @@ import {
 } from "@igm-launcher/shared";
 import {
   iGM_Launcher_SDK_Await,
+  iGM_Launcher_SDK_Cancel,
   iGM_Launcher_SDK_IsAvailable,
   iGM_Launcher_SDK_Release,
   iGM_Launcher_SDK_StartUrl,
@@ -536,17 +539,24 @@ async function iGM_Launcher_Download_ExecuteFromManifest(
   if (manifest.versionId) progress.versionId = manifest.versionId;
   if (manifest.loaderVersion) progress.loaderVersion = manifest.loaderVersion;
 
-  // 当前活动 SDK 任务编号：订阅据此只叠加当前文件的实时字节
-  let activeTaskId = "";
-  let sdkFileBase = progress.bytesDone;
-
   /*
-   * 逐文件下载期间把 SDK 快照的 downloaded 叠加到已完成基数上，
-   * 使进度条在单个大文件下载过程中也能平滑推进（而不是只在文件之间跳）。
+   * 全局任务队列：最多 IGM_LAUNCHER_DOWNLOAD_MAX_FILE_CONCURRENCY 个文件并发，
+   * 每个文件再由 Zig 引擎按 Range 分片多线程下载。
+   * 进度 = 「已完成文件字节 + 各活动文件实时字节」聚合；引擎侧已按 100ms 节流回调，
+   * 故此处订阅只做求和，不再自行节流。
    */
+  const completedBytes = { value: progress.bytesDone };
+  const active = new Map<string, number>();
+  const sumActive = (): number => {
+    let total = 0;
+    for (const downloaded of active.values()) total += downloaded;
+    return total;
+  };
+
   const unsubscribe = iGM_Launcher_SDK_Subscribe((snapshot) => {
-    if (!activeTaskId || snapshot.taskId !== activeTaskId) return;
-    progress.bytesDone = sdkFileBase + snapshot.downloaded;
+    if (!active.has(snapshot.taskId)) return;
+    active.set(snapshot.taskId, snapshot.downloaded);
+    progress.bytesDone = completedBytes.value + sumActive();
     iGM_Launcher_Download_Notify(progress);
   });
 
@@ -567,92 +577,119 @@ async function iGM_Launcher_Download_ExecuteFromManifest(
       iGM_Launcher_Download_Notify(progress);
     }
 
-    // 2) 二进制文件逐文件下载
+    // 2) 二进制文件全局任务队列下载（最大并发文件数见 IGM_LAUNCHER_DOWNLOAD_MAX_FILE_CONCURRENCY）
     const files = manifest.files ?? [];
     progress.filesTotal += files.length;
     progress.bytesTotal += files.reduce((sum, file) => sum + (file.size || 0), 0);
     iGM_Launcher_Download_Notify(progress);
 
-    for (const file of files) {
-      if (task.cancelled) return iGM_Launcher_Download_Finish(task, "cancelled");
+    let cursor = 0;
+    let failure = "";
 
-      // 本文件的已完成基数：SDK 实时叠加与最终累加都以此为准，避免重复计数
-      const fileBase = progress.bytesDone;
-      progress.currentFile = file.path;
-      progress.stage = iGM_Launcher_Download_StageOfPath(
-        file.path,
-        progress.loader,
-        progress.versionId,
-        progress.stage,
-      );
-      iGM_Launcher_Download_Notify(progress);
+    const worker = async (): Promise<void> => {
+      while (!task.cancelled && !failure) {
+        const index = cursor;
+        cursor += 1;
+        if (index >= files.length) return;
+        const file = files[index];
 
-      const absPath = iGM_Launcher_Download_AbsPath(progress.rootDir, file.path);
+        progress.currentFile = file.path;
+        progress.stage = iGM_Launcher_Download_StageOfPath(
+          file.path,
+          progress.loader,
+          progress.versionId,
+          progress.stage,
+        );
+        iGM_Launcher_Download_Notify(progress);
 
-      // 本地已存在且大小一致则跳过，避免重复下载
-      if (existsSync(absPath)) {
-        const info = await stat(absPath);
-        if (info.size > 0 && (file.size === 0 || info.size === file.size)) {
-          progress.bytesDone = fileBase + info.size;
-          progress.filesDone += 1;
-          iGM_Launcher_Download_Notify(progress);
-          continue;
-        }
-      }
+        const absPath = iGM_Launcher_Download_AbsPath(progress.rootDir, file.path);
 
-      let written = 0;
-      let sdkTaskId = "";
-      if (iGM_Launcher_SDK_IsAvailable()) {
         try {
-          const snapshot = iGM_Launcher_SDK_StartUrl({
-            url: file.url,
-            destPath: absPath,
-            sha1: file.sha1,
-            size: file.size,
-            version: progress.version,
-            loader: manifest.loader,
-            targetDir: progress.rootDir,
-          });
-          sdkTaskId = snapshot.taskId;
-          activeTaskId = sdkTaskId;
-          sdkFileBase = fileBase;
-          const final = await iGM_Launcher_SDK_Await(sdkTaskId);
-          if (final.status !== "completed") {
-            throw new Error(final.error || `文件下载未完成：${file.path}`);
+          // 本地已存在且大小一致则跳过，避免重复下载
+          if (existsSync(absPath)) {
+            const info = await stat(absPath);
+            if (info.size > 0 && (file.size === 0 || info.size === file.size)) {
+              completedBytes.value += info.size;
+              progress.filesDone += 1;
+              progress.bytesDone = completedBytes.value + sumActive();
+              iGM_Launcher_Download_Notify(progress);
+              continue;
+            }
           }
-          written = final.downloaded > 0 ? final.downloaded : file.size;
+
+          let written = 0;
+          let sdkTaskId = "";
+          if (iGM_Launcher_SDK_IsAvailable()) {
+            try {
+              const snapshot = iGM_Launcher_SDK_StartUrl({
+                url: file.url,
+                destPath: absPath,
+                sha1: file.sha1,
+                size: file.size,
+                version: progress.version,
+                loader: manifest.loader,
+                targetDir: progress.rootDir,
+              });
+              sdkTaskId = snapshot.taskId;
+              active.set(sdkTaskId, 0);
+              const final = await iGM_Launcher_SDK_Await(sdkTaskId);
+              if (final.status !== "completed") {
+                throw new Error(final.error || `文件下载未完成：${file.path}`);
+              }
+              written = final.downloaded > 0 ? final.downloaded : file.size;
+            } catch (error) {
+              /*
+               * SDK 创建阶段失败（符号缺失 / 参数非法等）不阻断整体安装，
+               * 回退到旧的 HTTP 直连下载，保证仍能完成安装；
+               * 已创建任务后的失败（含校验失败 / 404）则如实抛出，不掩盖真实原因。
+               */
+              if (sdkTaskId) throw error;
+              console.warn(
+                `[iGM_Launcher_Download] SDK 直链下载创建失败，回退 HTTP：${file.path}`,
+                error,
+              );
+            } finally {
+              if (sdkTaskId) {
+                active.delete(sdkTaskId);
+                iGM_Launcher_SDK_Release(sdkTaskId);
+              }
+            }
+          }
+
+          // SDK 不可用或创建失败时，回退旧的 HTTP 逐文件下载
+          if (!sdkTaskId) {
+            written = await iGM_Launcher_Download_File(progress.rootDir, {
+              url: file.url,
+              path: file.path,
+              size: file.size,
+              sha1: file.sha1,
+            });
+          }
+
+          if (task.cancelled) return;
+          completedBytes.value += written;
+          progress.filesDone += 1;
+          progress.bytesDone = completedBytes.value + sumActive();
+          iGM_Launcher_Download_Notify(progress);
         } catch (error) {
-          /*
-           * SDK 创建阶段失败（符号缺失 / 参数非法等）不阻断整体安装，
-           * 回退到旧的 HTTP 直连下载，保证仍能完成安装；
-           * 已创建任务后的失败（含校验失败 / 404）则如实抛出，不掩盖真实原因。
-           */
-          if (sdkTaskId) throw error;
-          console.warn(
-            `[iGM_Launcher_Download] SDK 直链下载创建失败，回退 HTTP：${file.path}`,
-            error,
-          );
-        } finally {
-          activeTaskId = "";
-          if (sdkTaskId) iGM_Launcher_SDK_Release(sdkTaskId);
+          // 任一文件失败即终止整个任务：取消其余活动下载并如实报错，不跳过、不伪造成功
+          if (!failure) {
+            failure = error instanceof Error ? error.message : `文件下载失败：${file.path}`;
+          }
+          for (const taskId of active.keys()) iGM_Launcher_SDK_Cancel(taskId);
+          return;
         }
       }
+    };
 
-      // SDK 不可用或创建失败时，回退旧的 HTTP 逐文件下载
-      if (!sdkTaskId) {
-        written = await iGM_Launcher_Download_File(progress.rootDir, {
-          url: file.url,
-          path: file.path,
-          size: file.size,
-          sha1: file.sha1,
-        });
-      }
+    const workerCount = Math.max(
+      1,
+      Math.min(IGM_LAUNCHER_DOWNLOAD_MAX_FILE_CONCURRENCY, files.length),
+    );
+    await Promise.all(Array.from({ length: workerCount }, () => worker()));
 
-      if (task.cancelled) return iGM_Launcher_Download_Finish(task, "cancelled");
-      progress.bytesDone = fileBase + written;
-      progress.filesDone += 1;
-      iGM_Launcher_Download_Notify(progress);
-    }
+    if (task.cancelled) return iGM_Launcher_Download_Finish(task, "cancelled");
+    if (failure) throw new Error(failure);
 
     // 3) 收尾校验：目标版本 json 必须真实存在，否则视为安装未完成
     progress.stage = "finalizing";

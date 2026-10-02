@@ -95,6 +95,16 @@
     "currentTag": "當前版本",
     "entries": [
       {
+        "version": "26.2.5 official version",
+        "date": "2026-10-02",
+        "items": [
+          "多執行緒分片下載：大檔案依 HTTP Range 平行下載並以串流校驗雜湊，進度回饋更順暢。",
+          "全域任務佇列：最多 8 個檔案並行，遇限流自動降低並行並退避重試。",
+          "版本庫狀態以本機檔案為準：刪除本機版本後立即顯示為未下載，並始終提供重新下載。",
+          "目錄規範調整：遊戲安裝到所選目錄下的 iGML/.minecraft，模組、光影等依實例隔離存放。"
+        ]
+      },
+      {
         "version": "26.2.4 official version",
         "date": "2026-10-02",
         "items": [
@@ -158,7 +168,7 @@
         "title": "校驗與啟動",
         "lead": "下載完成後，可在 PowerShell 中校驗安裝包完整性：",
         "codeLabel": "powershell",
-        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.2.4.zip -Algorithm SHA256",
+        "code": "Get-FileHash .\\iGM-CraftCeon-Launcher-Setup-26.2.5.zip -Algorithm SHA256",
         "after": "將計算結果與下載頁給出的 SHA256 比對，一致則表示檔案完整。"
       },
       "notes": {

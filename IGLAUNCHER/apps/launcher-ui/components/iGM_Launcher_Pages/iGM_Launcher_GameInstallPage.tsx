@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
+  IGM_LAUNCHER_IGML_DIR_NAME,
   IGM_LAUNCHER_INSTANCES_DIR_NAME,
   IGM_LAUNCHER_INSTANCE_SUBDIRS,
   IGM_LAUNCHER_LOADER_OPTIONS,
@@ -79,22 +80,27 @@ const IGM_LAUNCHER_DOWNLOAD_SUPPORTED_LOADERS: ReadonlySet<iGM_Launcher_LoaderTy
 
 // 核心逻辑 //
 
-/** 官方目录结构预览：versions / libraries / assets 共享，instances 下为各实例隔离目录 */
+/**
+ * 官方目录结构预览：<前置目录>/iGML/.minecraft，
+ * 其中 versions / libraries / assets 由全部实例共享，
+ * instances/<实例名> 下为各实例独立的 mods、config、saves 等目录。
+ */
 function iGM_Launcher_BuildLayoutLines(versionDirName: string): iGM_Launcher_LayoutLine[] {
   const lines: iGM_Launcher_LayoutLine[] = [
-    { text: `${IGM_LAUNCHER_MC_ROOT_DIR_NAME}/`, shared: false },
+    { text: `${IGM_LAUNCHER_IGML_DIR_NAME}/`, shared: false },
+    { text: `└─ ${IGM_LAUNCHER_MC_ROOT_DIR_NAME}/`, shared: false },
   ];
   for (const dir of IGM_LAUNCHER_SHARED_SUBDIRS) {
     lines.push({
-      text: `├─ ${dir}/${dir === "versions" ? `${versionDirName}/` : ""}`,
+      text: `   ├─ ${dir}/${dir === "versions" ? `${versionDirName}/` : ""}`,
       shared: true,
     });
   }
-  lines.push({ text: `└─ ${IGM_LAUNCHER_INSTANCES_DIR_NAME}/`, shared: false });
-  lines.push({ text: `   └─ <instance-name>/`, shared: false });
+  lines.push({ text: `   └─ ${IGM_LAUNCHER_INSTANCES_DIR_NAME}/`, shared: false });
+  lines.push({ text: `      └─ <instance-name>/`, shared: false });
   IGM_LAUNCHER_INSTANCE_SUBDIRS.forEach((dir, index) => {
     const last = index === IGM_LAUNCHER_INSTANCE_SUBDIRS.length - 1;
-    lines.push({ text: `      ${last ? "└─" : "├─"} ${dir}/`, shared: false });
+    lines.push({ text: `         ${last ? "└─" : "├─"} ${dir}/`, shared: false });
   });
   return lines;
 }

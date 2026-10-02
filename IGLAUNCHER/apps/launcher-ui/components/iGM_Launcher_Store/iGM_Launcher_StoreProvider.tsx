@@ -169,6 +169,11 @@ interface iGM_Launcher_StoreValue {
   importInstance: (jsonPath: string, importName?: string) => Promise<boolean>;
   /** 与主站版本资料库同步；silent 为 true 时不提示成功（用于后台定时同步） */
   syncVersionLibrary: (silent?: boolean) => Promise<void>;
+  /**
+   * 只重算本地安装状态（不联网）：实时扫描本机 .minecraft，
+   * 按磁盘上 versions/<目录>/<目录>.json 是否存在回填 installed。
+   */
+  refreshVersionLibrary: () => Promise<void>;
 
   /* ---- 模块六：共享根目录 / 已安装版本与加载器 / 实例名校验 ---- */
 
@@ -734,6 +739,16 @@ export function iGM_Launcher_StoreProvider({ children }: { children: ReactNode }
     [notify, t],
   );
 
+  /**
+   * 重算本地安装状态（不联网）：桥接层会重新扫描本机 .minecraft，
+   * 以磁盘真实文件为准回填 installed，绝不沿用缓存状态。
+   */
+  const refreshVersionLibrary = useCallback(async () => {
+    const response = await iGM_Launcher_BridgeCall("minecraft:library");
+    const library = response.data?.library;
+    if (response.success && library) setVersionLibrary(library);
+  }, []);
+
   /* ---------- 模块六：共享根目录 / 已安装版本与加载器 ---------- */
 
   const loadRootDir = useCallback(async (dirPath?: string) => {
@@ -1083,6 +1098,7 @@ export function iGM_Launcher_StoreProvider({ children }: { children: ReactNode }
       setDefaultGameDir,
       importInstance,
       syncVersionLibrary,
+      refreshVersionLibrary,
       rootDir,
       installedVersions,
       installedLoaders,
@@ -1144,6 +1160,7 @@ export function iGM_Launcher_StoreProvider({ children }: { children: ReactNode }
       setDefaultGameDir,
       importInstance,
       syncVersionLibrary,
+      refreshVersionLibrary,
       rootDir,
       installedVersions,
       installedLoaders,

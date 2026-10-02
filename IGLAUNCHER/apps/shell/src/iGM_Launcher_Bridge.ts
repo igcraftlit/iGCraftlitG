@@ -1004,6 +1004,18 @@ async function iGM_Launcher_HandleMinecraft(
       }
       try {
         /*
+         * 记忆下载根目录：把本次解析出的根目录真实建出并登记到本地配置，
+         * 下次启动 / 再次下载即可自动沿用（无需重复询问），
+         * 同时保证下载完成后本地扫描能立即识别到该目录，状态显示为「已下载」。
+         */
+        await mkdir(rootDir.path, { recursive: true });
+        const registeredRoot = await iGM_Launcher_GameDir_Add(rootDir.path);
+        const rootRecord = registeredRoot?.gameDirs.find(
+          (item) => normalize(item.path) === normalize(rootDir.path),
+        );
+        if (rootRecord) await iGM_Launcher_GameDir_SetDefault(rootRecord.id);
+
+        /*
          * 先向自己网站拉取版本文件清单（文件 URL / 相对路径 / 大小 / sha1 与文本文件）；
          * 拿到后交给下载引擎按清单逐文件走 Zig 引擎直连下载。
          * 清单接口不可达或失败时不阻断安装，降级为启动器自解析 Mojang 清单的兜底流程。
