@@ -118,7 +118,7 @@ interface iGM_Launcher_SDK_TaskRecord {
   snapshot: iGM_Launcher_SDK_TaskSnapshot;
 }
 
-/** 任务登记表：键为启动器侧自增序号（同时作为回调 user_data 传给 SDK） */
+/** 任务登记表：键为启动器侧任务编号（sdk-<序号>，序号同时作为回调 user_data 传给 SDK） */
 const iGM_Launcher_SDK_Tasks = new Map<string, iGM_Launcher_SDK_TaskRecord>();
 
 /** 任务序号自增器 */
@@ -126,6 +126,39 @@ let iGM_Launcher_SDK_TaskSeq = 0;
 
 /** 最近一次创建的任务编号（供不带 taskId 的查询使用） */
 let iGM_Launcher_SDK_LastTaskId: string | null = null;
+
+/** 进度订阅回调：主进程据此把进度实时推送给独立下载进度窗口 */
+export type iGM_Launcher_SDK_ProgressListener = (
+  snapshot: iGM_Launcher_SDK_TaskSnapshot,
+) => void;
+
+/** 进度订阅者集合（同一时刻通常只有下载进度窗口） */
+const iGM_Launcher_SDK_Listeners = new Set<iGM_Launcher_SDK_ProgressListener>();
+
+/**
+ * 订阅任务进度：返回取消订阅函数。
+ * 回调在 JS 主线程执行（threadsafe JSCallback 会把回调排队到主线程），
+ * 因此可直接向 webview 推送消息。
+ */
+export function iGM_Launcher_SDK_Subscribe(
+  listener: iGM_Launcher_SDK_ProgressListener,
+): () => void {
+  iGM_Launcher_SDK_Listeners.add(listener);
+  return () => {
+    iGM_Launcher_SDK_Listeners.delete(listener);
+  };
+}
+
+/** 广播一次任务快照；单个订阅者抛错不影响其余订阅者 */
+function iGM_Launcher_SDK_Notify(snapshot: iGM_Launcher_SDK_TaskSnapshot): void {
+  for (const listener of [...iGM_Launcher_SDK_Listeners]) {
+    try {
+      listener({ ...snapshot });
+    } catch (error) {
+      console.warn("[iGM_Launcher_SDK] 进度订阅回调异常：", error);
+    }
+  }
+}
 
 /** 按平台给出动态库文件名 */
 function iGM_Launcher_SDK_LibraryFileName(): string {
@@ -196,13 +229,20 @@ export function iGM_Launcher_SDK_EnsureLoaded(): boolean {
 
   iGM_Launcher_SDK_Loaded = true;
   const libraryPath = iGM_Launcher_SDK_FindLibraryPath();
-  if (!libraryPath) return false;
+  if (!libraryPath) {
+    console.warn(
+      "[SDK] 未找到 Zig 动态库，回退 HTTP 下载。候选路径：",
+      iGM_Launcher_SDK_LibraryCandidates(),
+    );
+    return false;
+  }
 
   try {
     iGM_Launcher_SDK_Handle = dlopen(libraryPath, iGM_Launcher_SDK_FfiSpec);
+    console.log(`[SDK] Zig 动态库已加载：${libraryPath}`);
     return true;
   } catch (error) {
-    console.warn("[iGM_Launcher_SDK] 动态库加载失败，回退后端 API 下载：", error);
+    console.error("[SDK] Zig 动态库加载失败，回退 HTTP 下载：", error);
     iGM_Launcher_SDK_Handle = null;
     return false;
   }
@@ -299,13 +339,24 @@ export function iGM_Launcher_SDK_Start(
   if (!resourceId) throw new Error("缺少资源 id");
   if (!targetDir) throw new Error("缺少下载目标目录");
 
-  const handle = symbols.iGM_Launcher_Download_CreateTask(
-    Buffer.from(`${resourceId}\0`, "utf8"),
-    Buffer.from(`${version}\0`, "utf8"),
-    Buffer.from(`${loader}\0`, "utf8"),
-    Buffer.from(`${targetDir}\0`, "utf8"),
-  ) as Pointer | null;
-  if (!handle) throw new Error("SDK 创建任务失败");
+  console.log(`[SDK] 准备创建任务，目标路径: ${targetDir}`);
+
+  let handle: Pointer | null = null;
+  try {
+    handle = symbols.iGM_Launcher_Download_CreateTask(
+      Buffer.from(`${resourceId}\0`, "utf8"),
+      Buffer.from(`${version}\0`, "utf8"),
+      Buffer.from(`${loader}\0`, "utf8"),
+      Buffer.from(`${targetDir}\0`, "utf8"),
+    ) as Pointer | null;
+  } catch (error) {
+    // bun:ffi 调用本身抛错（符号缺失 / 参数非法）也统一收敛为可读错误
+    const detail = error instanceof Error ? error.message : String(error);
+    console.error(`[SDK] 调用 CreateTask 异常：${detail}`);
+    throw new Error(`调用 CreateTask 异常：${detail}`);
+  }
+  console.log(`[SDK] 调用 CreateTask 返回: ${handle ? "0 (成功)" : "null (失败)"}`);
+  if (!handle) throw new Error("调用 CreateTask 返回空任务句柄");
 
   iGM_Launcher_SDK_TaskSeq += 1;
   const taskId = `sdk-${iGM_Launcher_SDK_TaskSeq}`;
@@ -326,10 +377,15 @@ export function iGM_Launcher_SDK_Start(
     createdAt: new Date().toISOString(),
   };
 
-  // 进度回调：threadSafe 允许 SDK 内部线程直接回调；首个事件即带回 SDK 任务编号
+  /*
+   * 进度回调：threadSafe 允许 SDK 内部线程回调（Bun 会把回调排队到 JS 主线程执行）。
+   * user_data 传的是启动器侧任务序号（小整数），登记表键为 `sdk-<序号>`，
+   * 故此处必须还原成同一形态的键，否则查不到登记项、进度会被静默丢弃
+   * （这是「点击下载无反应、进度条不动」的直接原因）。
+   */
   const callback = new JSCallback(
     (progressPointer: unknown, userPointer: unknown) => {
-      const key = String(Number(userPointer));
+      const key = `sdk-${Number(userPointer)}`;
       const record = iGM_Launcher_SDK_Tasks.get(key);
       if (!record) return;
       const parsed = iGM_Launcher_SDK_ParseProgress(progressPointer);
@@ -344,6 +400,8 @@ export function iGM_Launcher_SDK_Start(
         eta: parsed.eta < 0 ? 0 : parsed.eta,
         error: parsed.error,
       };
+      // 实时广播：独立下载进度窗口据此刷新，而不是只靠任务列表轮询
+      iGM_Launcher_SDK_Notify(record.snapshot);
     },
     { args: [FFIType.ptr, FFIType.ptr], returns: FFIType.void, threadsafe: true },
   );
@@ -354,12 +412,24 @@ export function iGM_Launcher_SDK_Start(
   // 注册回调：threadsafe 回调须传 JSCallback 本体（Bun 需据此建立线程安全引用），
   // user_data 传启动器侧任务序号（小整数），回调据此定位登记项
   symbols.iGM_Launcher_Download_SetProgressCallback(handle, callback, BigInt(iGM_Launcher_SDK_TaskSeq));
-  const started = symbols.iGM_Launcher_Download_StartTask(handle);
+
+  let started = 0;
+  try {
+    started = symbols.iGM_Launcher_Download_StartTask(handle);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    console.error(`[SDK] 调用 StartTask 异常：${detail}`);
+    iGM_Launcher_SDK_Release(taskId);
+    throw new Error(`调用 StartTask 异常：${detail}`);
+  }
+  console.log(`[SDK] 调用 StartTask 返回: ${started} ${started === 0 ? "(成功)" : "(错误码)"}`);
   if (started !== 0) {
     iGM_Launcher_SDK_Release(taskId);
-    throw new Error(`SDK 启动任务失败（错误码 ${started}）`);
+    throw new Error(`调用 StartTask 返回错误码 ${started}`);
   }
 
+  // 通知订阅者任务已创建，便于进度窗口立即拿到初始快照
+  iGM_Launcher_SDK_Notify(snapshot);
   return { ...snapshot };
 }
 
@@ -398,6 +468,8 @@ function iGM_Launcher_SDK_Control(
       symbols.iGM_Launcher_Download_CancelTask(record.handle);
       break;
   }
+  // 控制动作（暂停 / 恢复 / 重试 / 取消）也广播一次，保证进度窗口状态即时同步
+  iGM_Launcher_SDK_Notify(record.snapshot);
   return { ...record.snapshot };
 }
 

@@ -1,0 +1,262 @@
+/*
+ * 文件路径：apps/launcher-ui/components/iGM_Launcher_Pages/iGM_Launcher_DownloadProgressWindow.module.css
+ * 所属层：前端 / 页面样式层
+ * 路由：G_DownloadProgress
+ * 模块：iGM_Launcher_DownloadProgressWindow
+ * 作用：独立下载进度窗口（400x250）的窄窗样式：标题拖动区、状态行、进度条与底部操作
+ * 内容：极简表面与单一强调色，无渐变、无装饰动画；错误红字与降级弱提示；
+ *       全部尺寸走 --igm- 设计令牌
+ */
+
+/* 类型定义 */
+/* （样式文件无类型） */
+
+/* 核心逻辑 */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--igm-bg);
+  color: var(--igm-text);
+  font-family: var(--igm-font-sans);
+}
+
+/* 标题栏：整条为窗口拖动区 */
+.titleBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  height: 34px;
+  padding-left: 14px;
+  border-bottom: 1px solid var(--igm-border);
+  background-color: var(--igm-surface);
+  -webkit-app-region: drag;
+}
+
+.title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--igm-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  user-select: none;
+}
+
+.windowControls {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  -webkit-app-region: no-drag;
+}
+
+.controlButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  color: var(--igm-text-muted);
+}
+
+.controlButton:hover {
+  background-color: var(--igm-surface-subtle);
+  color: var(--igm-text);
+}
+
+/* 主体区 */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+  padding: 12px 16px 0;
+}
+
+.metaRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.resourceName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.version {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--igm-text-subtle);
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--igm-text-muted);
+}
+
+.statusText {
+  color: var(--igm-text);
+}
+
+.statusDoneIcon {
+  color: var(--igm-success);
+}
+
+.statusFailIcon {
+  color: var(--igm-danger);
+}
+
+.engineTag {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--igm-text-subtle);
+}
+
+/* 进度条 */
+.progressTrack {
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background-color: var(--igm-surface-subtle);
+  border: 1px solid var(--igm-border);
+}
+
+.progressFill {
+  height: 100%;
+  background-color: var(--igm-accent);
+  transition: width 0.2s linear;
+}
+
+.progressFillDone {
+  background-color: var(--igm-success);
+}
+
+.metricsRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--igm-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.percent {
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.sizeText {
+  margin-left: auto;
+}
+
+.speedText {
+  flex-shrink: 0;
+}
+
+/* 提示行：错误红字 / 降级弱提示 / 目标目录 */
+.noticeText,
+.targetText {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  word-break: break-all;
+}
+
+.noticeDanger {
+  color: var(--igm-danger);
+}
+
+.noticeWarning {
+  color: var(--igm-text-muted);
+}
+
+.targetText {
+  color: var(--igm-text-subtle);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 底部操作 */
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  min-height: 46px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--igm-border);
+  background-color: var(--igm-surface);
+}
+
+.primaryButton,
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 14px;
+  border-radius: var(--igm-radius);
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.primaryButton {
+  background-color: var(--igm-accent);
+  color: var(--igm-accent-contrast);
+}
+
+.primaryButton:hover {
+  background-color: var(--igm-accent-hover);
+}
+
+.secondaryButton {
+  border: 1px solid var(--igm-border-strong);
+  color: var(--igm-text);
+}
+
+.secondaryButton:hover:not(:disabled) {
+  border-color: var(--igm-accent);
+  color: var(--igm-accent);
+}
+
+.secondaryButton:disabled {
+  color: var(--igm-text-subtle);
+  border-color: var(--igm-border);
+}
+
+.footerHint {
+  font-size: 11px;
+  color: var(--igm-text-subtle);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 状态图标转圈：唯一动效，仅用于进行中状态 */
+.spinner {
+  color: var(--igm-accent);
+  animation: igm-progress-spin 1s linear infinite;
+}
+
+@keyframes igm-progress-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

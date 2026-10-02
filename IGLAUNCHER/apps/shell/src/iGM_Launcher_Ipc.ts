@@ -14,7 +14,7 @@
 
 // 导入依赖 //
 import type { BrowserWindow } from "electrobun/main";
-import type { iGM_Launcher_BridgeReply } from "@igm-launcher/shared";
+import type { iGM_Launcher_BridgeReply, iGM_Launcher_HostMessage } from "@igm-launcher/shared";
 import { iGM_Launcher_Bridge_Call } from "./iGM_Launcher_Bridge";
 
 // 类型定义 //
@@ -27,6 +27,48 @@ interface iGM_Launcher_IpcCallMessage {
 }
 
 // 核心逻辑 //
+
+/**
+ * 解析 webview 上报的宿主消息。
+ * Electrobun 的 webview 事件把消息体放在事件对象的 data.detail 上
+ * （事件构造为 new ElectrobunEvent("host-message", { detail })），
+ * 因此优先读取 data.detail，并兼容仅暴露 detail 的旧形态与已解析对象，
+ * 解析失败一律返回 null 并由调用方忽略。
+ * 主窗口与下载进度窗口共用本函数，避免两处解析口径不一致。
+ */
+export function iGM_Launcher_Ipc_ParseHostMessage(payload: unknown): iGM_Launcher_HostMessage | null {
+  const normalize = (value: unknown): iGM_Launcher_HostMessage | null => {
+    if (typeof value === "string") {
+      try {
+        return normalize(JSON.parse(value));
+      } catch {
+        return null;
+      }
+    }
+    if (value && typeof value === "object") {
+      const candidate = value as { type?: unknown };
+      if (typeof candidate.type === "string") {
+        return value as iGM_Launcher_HostMessage;
+      }
+    }
+    return null;
+  };
+
+  if (!payload || typeof payload !== "object") return null;
+
+  const data = (payload as { data?: unknown }).data;
+  if (data && typeof data === "object" && "detail" in data) {
+    const fromData = normalize((data as { detail: unknown }).detail);
+    if (fromData) return fromData;
+  }
+
+  if ("detail" in payload) {
+    const fromDetail = normalize((payload as { detail: unknown }).detail);
+    if (fromDetail) return fromDetail;
+  }
+
+  return normalize(payload);
+}
 
 /** 判断是否为桥接调用消息 */
 export function iGM_Launcher_Ipc_IsCallMessage(

@@ -1109,7 +1109,7 @@ const IGM_LAUNCHER_SDK_TASK_PREFIX = "sdk-";
  * SDK 直连下载源，创建阶段拿不到文件名 / 直链 / 校验值等元数据，
  * 这里按可用字段尽力回填；界面进度条只依赖 downloaded / total / percent / speed / eta。
  */
-function iGM_Launcher_SDK_ToThirdPartyTask(
+export function iGM_Launcher_SDK_ToThirdPartyTask(
   snapshot: iGM_Launcher_SDK_TaskSnapshot,
 ): iGM_Launcher_ThirdPartyTask {
   const now = new Date().toISOString();
@@ -1201,6 +1201,7 @@ async function iGM_Launcher_HandleThirdParty(
       if (!target) {
         return iGM_Launcher_Fail(IGM_LAUNCHER_BRIDGE_INVALID, "缺少下载目标目录");
       }
+      console.log(`[SDK] 准备创建任务，目标路径: ${target}`);
       if (iGM_Launcher_SDK_IsAvailable()) {
         try {
           const snapshot = iGM_Launcher_SDK_Start({
@@ -1209,16 +1210,46 @@ async function iGM_Launcher_HandleThirdParty(
             loader: params.loader ?? "fabric",
             targetDir: target,
           });
-          return iGM_Launcher_Ok({ task: iGM_Launcher_SDK_ToThirdPartyTask(snapshot) });
+          return iGM_Launcher_Ok({
+            task: iGM_Launcher_SDK_ToThirdPartyTask(snapshot),
+            engine: "sdk" as const,
+            engineError: "",
+          });
         } catch (error) {
-          // SDK 建单失败不抛给界面，继续走兜底路径
-          console.warn("[iGM Launcher] SDK 创建下载任务失败，回退后端 API：", error);
+          /*
+           * Zig 核心建单 / 启动失败：不再静默吞掉，而是把具体错误回传给界面，
+           * 由独立进度窗口展示红字「Zig 引擎调用失败：<详情>」，彻底消除静默失败。
+           */
+          const detail = error instanceof Error ? error.message : String(error);
+          console.error(`[SDK] Zig 引擎调用失败：${detail}`);
+          return iGM_Launcher_Ok({
+            task: null,
+            engine: "sdk" as const,
+            engineError: `Zig 引擎调用失败：${detail}`,
+          });
         }
       }
-      return iGM_Launcher_ThirdPartyRequest<{ task: iGM_Launcher_ThirdPartyTask }>(
-        `${IGM_LAUNCHER_API_THIRD_PARTY_PATH}/download`,
-        { body: { resourceId, versionId, target } },
-      );
+
+      // 动态库缺失 / 加载失败：回退主站后端统一下发的 HTTP 任务，并明确告知已降级
+      console.warn("[SDK] Zig 引擎不可用，已降级为 HTTP 下载");
+      const fallback = await iGM_Launcher_ThirdPartyRequest<{
+        task: iGM_Launcher_ThirdPartyTask;
+      }>(`${IGM_LAUNCHER_API_THIRD_PARTY_PATH}/download`, {
+        body: { resourceId, versionId, target },
+      });
+      if (!fallback.success || !fallback.data) {
+        return iGM_Launcher_Fail(
+          typeof fallback.code === "number" && fallback.code > 0
+            ? fallback.code
+            : IGM_LAUNCHER_BRIDGE_FAILED,
+          fallback.message || "创建下载任务失败",
+        );
+      }
+      return iGM_Launcher_Ok({
+        task: fallback.data.task,
+        engine: "http" as const,
+        engineError: "Zig 引擎不可用，已降级为 HTTP 下载",
+      });
     }
 
     /* 查询单个任务（不含任务编号时拒绝，避免误取其它任务） */

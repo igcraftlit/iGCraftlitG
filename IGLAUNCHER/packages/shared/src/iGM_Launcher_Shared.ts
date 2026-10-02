@@ -52,7 +52,29 @@ export type iGM_Launcher_HostMessage =
       id: string;
       method: iGM_Launcher_BridgeMethod;
       params?: iGM_Launcher_BridgeParams;
-    };
+    }
+  /**
+   * 下载中心 -> 主进程：打开独立下载进度窗口。
+   * 由下载中心在「开始下载」后发出，主进程据此创建新窗口并携带任务与引擎信息。
+   * 任务编号为空串表示建单本身失败，进度窗口据 engineError 直接展示红字错误。
+   */
+  | {
+      type: "window:open-download-progress";
+      /** 下载任务编号（SDK 任务形如 sdk-1）；建单失败时为空串 */
+      taskId: string;
+      /** 资源名称，仅用于窗口展示 */
+      resourceName: string;
+      /** 版本号，仅用于窗口展示 */
+      version: string;
+      /** 下载目标目录（绝对路径），供「打开所在文件夹」使用 */
+      targetDir: string;
+      /** 实际使用的下载引擎 */
+      engine: iGM_Launcher_ThirdPartyEngine;
+      /** 引擎提示 / 错误信息，无则空串 */
+      engineError: string;
+    }
+  /** 独立下载进度窗口就绪：主进程据此回填任务与引擎信息 */
+  | { type: "downloadProgress:init" };
 
 /**
  * 安装程序（apps/installer）界面与主进程之间的宿主消息。
@@ -770,6 +792,49 @@ export type iGM_Launcher_ThirdPartyTaskStatus =
   | "failed"
   | "canceled";
 
+/**
+ * 实际承担下载的引擎。
+ * sdk  Zig 原生核心（bun:ffi 直连 Modrinth，默认路径）；
+ * http 主站后端统一下发的任务（Zig 动态库缺失时的兜底路径）。
+ */
+export type iGM_Launcher_ThirdPartyEngine = "sdk" | "http";
+
+/** 独立下载进度窗口的宿主事件通道标识（主进程 -> 进度窗口单向推送） */
+export const IGM_LAUNCHER_DOWNLOAD_PROGRESS_CHANNEL = "iGM_Launcher_DownloadProgress";
+
+/**
+ * 独立下载进度窗口的宿主事件。
+ * init   窗口创建后回填任务与引擎信息；
+ * progress 进度 / 终态更新（实时推送，同时作为轮询兜底之外的主动通道）。
+ */
+export type iGM_Launcher_DownloadProgressEvent =
+  | {
+      channel: typeof IGM_LAUNCHER_DOWNLOAD_PROGRESS_CHANNEL;
+      type: "init";
+      /** 下载任务编号 */
+      taskId: string;
+      /** 资源名称 */
+      resourceName: string;
+      /** 版本号 */
+      version: string;
+      /** 下载目标目录 */
+      targetDir: string;
+      /** 实际使用的下载引擎 */
+      engine: iGM_Launcher_ThirdPartyEngine;
+      /** 引擎提示 / 错误信息，无则空串 */
+      engineError: string;
+    }
+  | {
+      channel: typeof IGM_LAUNCHER_DOWNLOAD_PROGRESS_CHANNEL;
+      type: "progress";
+      /** 下载任务编号 */
+      taskId: string;
+      /** 任务快照，任务不存在时为 null */
+      task: iGM_Launcher_ThirdPartyTask | null;
+      /** engineError 非空表示引擎级错误，窗口须展示红字 */
+      engineError: string;
+    };
+
 /** 第三方资源条目（搜索列表 / 资源详情共用） */
 export interface iGM_Launcher_ThirdPartyResource {
   /** 资源 id（主站内唯一，任务与版本均以其关联） */
@@ -1239,7 +1304,15 @@ export interface iGM_Launcher_BridgeDataMap {
     resource: iGM_Launcher_ThirdPartyResource;
     versions: iGM_Launcher_ThirdPartyVersion[];
   };
-  "thirdParty:download-start": { task: iGM_Launcher_ThirdPartyTask };
+  /*
+   * 发起下载：task 为 null 表示建单完全失败（界面应据 engineError 展示红字）；
+   * engine 标明实际引擎，engineError 非空时须在独立进度窗口内提示。
+   */
+  "thirdParty:download-start": {
+    task: iGM_Launcher_ThirdPartyTask | null;
+    engine: iGM_Launcher_ThirdPartyEngine;
+    engineError: string;
+  };
   "thirdParty:download-status": { task: iGM_Launcher_ThirdPartyTask | null };
   "thirdParty:download-list": { items: iGM_Launcher_ThirdPartyTask[] };
   "thirdParty:download-cancel": { task: iGM_Launcher_ThirdPartyTask };
@@ -1833,6 +1906,29 @@ export const IGM_LAUNCHER_THIRD_PARTY_INSTANCE_SUBDIRS: Record<
   map: "saves",
   datapack: "datapacks",
 };
+
+/* ---- 独立下载进度窗口常量 ---- */
+
+/** 独立下载进度窗口尺寸（窄窗，居中出现） */
+export const IGM_LAUNCHER_PROGRESS_WINDOW_SIZE = {
+  width: 400,
+  height: 250,
+} as const;
+
+/** 进度窗口界面在打包产物中的入口（Next 静态导出为 G_DownloadProgress.html） */
+export const IGM_LAUNCHER_PROGRESS_PACKAGED_ENTRY = "views://launcher/G_DownloadProgress.html";
+
+/** 进度窗口界面开发模式地址（与启动器界面同属 3210 端口） */
+export const IGM_LAUNCHER_PROGRESS_DEV_URL = "http://localhost:3210/G_DownloadProgress";
+
+/**
+ * 无进度回调的超时熔断阈值（毫秒）。
+ * 窗口打开后该时间内未收到任何进度事件 / 快照，界面须提示「Zig 引擎无响应」。
+ */
+export const IGM_LAUNCHER_PROGRESS_NO_CALLBACK_MS = 5000;
+
+/** 进度窗口内轮询任务快照的间隔（毫秒，作为主动推送的兜底） */
+export const IGM_LAUNCHER_PROGRESS_POLL_MS = 500;
 
 // 核心逻辑（模块二纯函数：Bun 桥接层与界面本地回退共用） //
 

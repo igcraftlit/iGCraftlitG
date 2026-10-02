@@ -24,6 +24,7 @@ import { iGM_Launcher_Core_Status } from "./iGM_Launcher_CoreBindings";
 import { IGM_LAUNCHER_BRIDGE_DATA_ROOT } from "./iGM_Launcher_Bridge";
 import { iGM_Launcher_Msa_IsConfigured } from "./iGM_Launcher_MsaAuth";
 import { iGM_Launcher_Ipc_HandleMessage } from "./iGM_Launcher_Ipc";
+import { iGM_Launcher_ProgressWindow_Open } from "./iGM_Launcher_DownloadProgressWindow";
 
 // 类型定义 //
 /** 主进程启动模式 */
@@ -106,6 +107,20 @@ function iGM_Launcher_HandleHostMessage(
       break;
     case "window:close":
       window.close();
+      break;
+    /*
+     * 下载中心发起下载后，把下载过程独立到窄进度窗口：
+     * 主进程据此创建新窗口并携带任务与引擎信息（详见 iGM_Launcher_DownloadProgressWindow）。
+     */
+    case "window:open-download-progress":
+      iGM_Launcher_ProgressWindow_Open({
+        taskId: message.taskId,
+        resourceName: message.resourceName,
+        version: message.version,
+        targetDir: message.targetDir,
+        engine: message.engine,
+        engineError: message.engineError,
+      });
       break;
   }
 }

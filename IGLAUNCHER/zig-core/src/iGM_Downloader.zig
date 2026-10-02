@@ -144,6 +144,8 @@ pub const iGM_Launcher_Download_Task = struct {
     pause: std.atomic.Value(bool) = .init(false),
     running: std.atomic.Value(bool) = .init(false),
     thread: ?std.Thread = null,
+    /// 最近一次 HTTP 状态码：用于把失败原因整理为可读文案（如「Modrinth 返回状态码 403」）
+    last_status: std.atomic.Value(u32) = .init(0),
     /// 进度快照：常驻任务内，保证回调期间地址有效
     /// 说明：bun:ffi 的 threadsafe JSCallback 会把回调排队到 JS 主线程后再执行，
     ///       若沿用「栈上构造」，消费端读到的将是已失效的栈内存，故改为任务常驻
@@ -165,6 +167,12 @@ pub const iGM_Launcher_Download_Task = struct {
 var iGM_Launcher_Task_Sequence: std.atomic.Value(u64) = .init(0);
 
 // 核心逻辑 //
+
+/// 关键节点日志：统一 `[SDK]` 前缀，输出到标准错误流。
+/// 仅打印文本，不创建任何窗口 / 控制台，符合「无终端弹窗」约束。
+fn iGM_Downloader_Log(comptime fmt: []const u8, args: anytype) void {
+    std.debug.print("[SDK] " ++ fmt ++ "\n", args);
+}
 
 /// 触发一次进度回调。
 /// 进度快照与错误缓冲常驻任务句柄内（progress_slot / error_slot）：
@@ -253,16 +261,21 @@ fn iGM_Downloader_PickFile(
     };
 }
 
-/// 发起一次 GET 并把响应体读入内存
+/// 发起一次 GET 并把响应体读入内存。
+/// 记录请求直链与第三方返回状态码（关键节点日志），
+/// 非 2xx / 3xx 时把状态码写入任务并返回 ModrinthStatusFailed，
+/// 避免把错误页当作正常 JSON 继续解析而给出难以定位的报错。
 fn iGM_Downloader_HttpGet(
     rt: *iGM_FileManager.iGM_FileManager_Runtime,
     client: *std.http.Client,
+    task: ?*iGM_Launcher_Download_Task,
     url: []const u8,
 ) ![]u8 {
     var body: std.Io.Writer.Allocating = .init(rt.allocator);
     defer body.deinit();
 
-    _ = try client.fetch(.{
+    iGM_Downloader_Log("正在请求 Modrinth 直链: {s}", .{url});
+    const result = try client.fetch(.{
         .location = .{ .url = url },
         .response_writer = &body.writer,
         .extra_headers = &.{
@@ -270,6 +283,10 @@ fn iGM_Downloader_HttpGet(
         },
         .keep_alive = false,
     });
+    const status = @intFromEnum(result.status);
+    iGM_Downloader_Log("第三方返回状态码: {d}", .{status});
+    if (task) |handle| handle.last_status.store(status, .release);
+    if (status < 200 or status >= 400) return error.ModrinthStatusFailed;
     return body.toOwnedSlice();
 }
 
@@ -279,6 +296,7 @@ fn iGM_Downloader_HttpGet(
 fn iGM_Downloader_Resolve(
     rt: *iGM_FileManager.iGM_FileManager_Runtime,
     client: *std.http.Client,
+    task: ?*iGM_Launcher_Download_Task,
     allocator: std.mem.Allocator,
     resource_id: []const u8,
     version: []const u8,
@@ -295,7 +313,7 @@ fn iGM_Downloader_Resolve(
             "{s}/project/{s}/version/{s}",
             .{ IGM_LAUNCHER_MODRINTH_API, resource_id, version },
         );
-        if (iGM_Downloader_HttpGet(rt, client, by_id)) |body| {
+        if (iGM_Downloader_HttpGet(rt, client, task, by_id)) |body| {
             if (std.json.parseFromSlice(iGM_Downloader_ModrinthVersion, allocator, body, parse_options)) |parsed| {
                 if (iGM_Downloader_PickFile(allocator, parsed.value)) |resolved| {
                     return resolved;
@@ -310,7 +328,7 @@ fn iGM_Downloader_Resolve(
         "{s}/project/{s}/version?loaders=%5B%22{s}%22%5D&game_versions=%5B%22{s}%22%5D",
         .{ IGM_LAUNCHER_MODRINTH_API, resource_id, loader, version },
     );
-    const body = try iGM_Downloader_HttpGet(rt, client, by_query);
+    const body = try iGM_Downloader_HttpGet(rt, client, task, by_query);
     const parsed = try std.json.parseFromSlice([]iGM_Downloader_ModrinthVersion, allocator, body, parse_options);
     if (parsed.value.len == 0) return error.NoMatchingResource;
     return iGM_Downloader_PickFile(allocator, parsed.value[0]);
@@ -407,6 +425,9 @@ fn iGM_Downloader_DownloadFile(
         var redirect_buffer: [4096]u8 = undefined;
         var response = try request.receiveHead(&redirect_buffer);
         const status = @intFromEnum(response.head.status);
+        iGM_Downloader_Log("正在请求 Modrinth 直链: {s}", .{url});
+        iGM_Downloader_Log("第三方返回状态码: {d}", .{status});
+        task.last_status.store(status, .release);
 
         // 429 / 503 指数退避
         if ((status == 429 or status == 503) and attempt < IGM_LAUNCHER_RETRY_MAX) {
@@ -530,6 +551,37 @@ fn iGM_Downloader_StoreCache(
     iGM_FileManager.iGM_FileManager_Copy(rt, dest_path, cache_file) catch {};
 }
 
+/// 把 Zig 错误整理为界面可读的中文文案（含第三方状态码），未知错误回退为错误名。
+/// 调用方提供栈上缓冲；文案会被 iGM_Downloader_Emit 立即复制进任务常驻缓冲，随后栈失效无影响。
+fn iGM_Downloader_ErrorText(
+    task: *iGM_Launcher_Download_Task,
+    err: anyerror,
+    buffer: []u8,
+) []const u8 {
+    const status = task.last_status.load(.acquire);
+    return switch (err) {
+        error.ModrinthStatusFailed => std.fmt.bufPrint(
+            buffer,
+            "无法连接 Modrinth（状态码 {d}）",
+            .{status},
+        ) catch "无法连接 Modrinth",
+        error.NoMatchingResource => "未找到匹配该游戏版本与加载器的资源",
+        error.NoDownloadableFile, error.FileMissingUrl => "该版本没有可直接下载的文件",
+        error.InvalidFileName => "资源文件名非法，已拒绝下载",
+        error.Sha1Mismatch => "文件校验失败（SHA1 不匹配）",
+        error.HttpStatusFailed => std.fmt.bufPrint(
+            buffer,
+            "下载直链返回状态码 {d}",
+            .{status},
+        ) catch "下载直链返回异常状态码",
+        error.HttpBodyReadFailed => "读取下载数据失败，请检查网络",
+        error.FileWriteFailed => "写入目标文件失败，请检查磁盘权限与剩余空间",
+        error.HashFailed => "计算文件校验值失败",
+        error.ResourceIdEmpty => "缺少资源 id",
+        else => @errorName(err),
+    };
+}
+
 /// 下载线程主流程：解析 → 命中缓存或下载 → 校验 → 回报终态
 fn iGM_Downloader_Run(task: *iGM_Launcher_Download_Task) void {
     const allocator = iGM_FileManager.iGM_FileManager_Allocator;
@@ -558,11 +610,15 @@ fn iGM_Downloader_Run(task: *iGM_Launcher_Download_Task) void {
     const resolved = iGM_Downloader_Resolve(
         &rt,
         &client,
+        task,
         arena,
         task.resource_id,
         task.version,
         task.loader,
     ) catch |err| {
+        var error_buffer: [256]u8 = undefined;
+        const message = iGM_Downloader_ErrorText(task, err, &error_buffer);
+        iGM_Downloader_Log("解析资源失败: {s}", .{message});
         iGM_Downloader_Emit(
             task,
             iGM_Launcher_Status_Failed,
@@ -570,7 +626,7 @@ fn iGM_Downloader_Run(task: *iGM_Launcher_Download_Task) void {
             0,
             0.0,
             -1,
-            @errorName(err),
+            message,
         );
         return;
     };
@@ -618,6 +674,9 @@ fn iGM_Downloader_Run(task: *iGM_Launcher_Download_Task) void {
                 sha_retry = true;
                 continue;
             }
+            var error_buffer: [256]u8 = undefined;
+            const message = iGM_Downloader_ErrorText(task, err, &error_buffer);
+            iGM_Downloader_Log("下载失败: {s}", .{message});
             iGM_Downloader_Emit(
                 task,
                 iGM_Launcher_Status_Failed,
@@ -625,7 +684,7 @@ fn iGM_Downloader_Run(task: *iGM_Launcher_Download_Task) void {
                 0,
                 0.0,
                 -1,
-                @errorName(err),
+                message,
             );
             return;
         };
@@ -731,6 +790,10 @@ export fn iGM_Launcher_Download_CreateTask(
         .loader = loader_owned,
         .target_dir = target_owned,
     };
+    iGM_Downloader_Log(
+        "创建下载任务 {s}: resource={s} version={s} loader={s} target={s}",
+        .{ task_id, resource_owned, version_owned, loader_owned, target_owned },
+    );
     return @ptrCast(task);
 }
 

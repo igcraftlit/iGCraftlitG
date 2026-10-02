@@ -18,11 +18,13 @@ import {
   IGM_LAUNCHER_BRIDGE_FAILED,
   IGM_LAUNCHER_BRIDGE_TIMEOUT_MS,
   IGM_LAUNCHER_DIALOG_TIMEOUT_MS,
+  IGM_LAUNCHER_DOWNLOAD_PROGRESS_CHANNEL,
   type iGM_Launcher_BridgeDataMap,
   type iGM_Launcher_BridgeMethod,
   type iGM_Launcher_BridgeParams,
   type iGM_Launcher_BridgeReply,
   type iGM_Launcher_BridgeResponse,
+  type iGM_Launcher_DownloadProgressEvent,
   type iGM_Launcher_HostMessage,
 } from "@igm-launcher/shared";
 import { iGM_Launcher_LocalBackend_Call } from "./iGM_Launcher_LocalBackend";
@@ -30,6 +32,9 @@ import { iGM_Launcher_LocalBackend_Call } from "./iGM_Launcher_LocalBackend";
 // 类型定义 //
 /** 待回包请求的兑现函数 */
 type iGM_Launcher_BridgeResolver = (response: iGM_Launcher_BridgeResponse) => void;
+
+/** 独立下载进度窗口宿主事件的订阅者 */
+type iGM_Launcher_DownloadProgressListener = (event: iGM_Launcher_DownloadProgressEvent) => void;
 
 declare global {
   interface Window {
@@ -50,6 +55,13 @@ const IGM_LAUNCHER_BRIDGE_CHANNEL = "iGM_Launcher_Bridge";
 
 /** 请求编号 -> 兑现函数 */
 const iGM_Launcher_BridgePending = new Map<string, iGM_Launcher_BridgeResolver>();
+
+/**
+ * 独立下载进度窗口宿主事件的订阅者集合。
+ * 进度窗口与主窗口共用同一条宿主消息通道，非回包消息统一在此分发，
+ * 使进度窗口无需轮询任务列表即可实时刷新进度。
+ */
+const iGM_Launcher_DownloadProgressListeners = new Set<iGM_Launcher_DownloadProgressListener>();
 
 /**
  * 按方法解析单次调用的等待超时（毫秒）。
@@ -80,6 +92,17 @@ function iGM_Launcher_ParseBridgeReply(message: unknown): iGM_Launcher_BridgeRep
   return candidate as iGM_Launcher_BridgeReply;
 }
 
+/** 校验并拆解主进程回推的下载进度窗口事件 */
+function iGM_Launcher_ParseDownloadProgressEvent(
+  message: unknown,
+): iGM_Launcher_DownloadProgressEvent | null {
+  if (!message || typeof message !== "object") return null;
+  const candidate = message as Partial<iGM_Launcher_DownloadProgressEvent>;
+  if (candidate.channel !== IGM_LAUNCHER_DOWNLOAD_PROGRESS_CHANNEL) return null;
+  if (candidate.type !== "init" && candidate.type !== "progress") return null;
+  return candidate as iGM_Launcher_DownloadProgressEvent;
+}
+
 /**
  * 接管宿主消息接收器（仅外壳内调用一次）。
  * 与 Electrobun 官方 Electroview 的做法一致：覆盖 receiveMessageFromHost，
@@ -93,12 +116,20 @@ function iGM_Launcher_EnsureBridgeReceiver(): void {
   iGM_Launcher_BridgeReceiverInstalled = true;
 
   const handle = (message: unknown) => {
+    // 1) 桥接回包：按请求编号兑现
     const reply = iGM_Launcher_ParseBridgeReply(message);
-    if (!reply) return;
-    const resolve = iGM_Launcher_BridgePending.get(reply.id);
-    if (!resolve) return;
-    iGM_Launcher_BridgePending.delete(reply.id);
-    resolve(reply.response);
+    if (reply) {
+      const resolve = iGM_Launcher_BridgePending.get(reply.id);
+      if (!resolve) return;
+      iGM_Launcher_BridgePending.delete(reply.id);
+      resolve(reply.response);
+      return;
+    }
+    // 2) 下载进度窗口事件：分发给订阅者（主窗口无订阅者时为空操作）
+    const event = iGM_Launcher_ParseDownloadProgressEvent(message);
+    if (event) {
+      iGM_Launcher_DownloadProgressListeners.forEach((listener) => listener(event));
+    }
   };
 
   channel.receiveMessageFromHost = handle;
@@ -163,4 +194,31 @@ export async function iGM_Launcher_BridgeCall<M extends iGM_Launcher_BridgeMetho
 }
 
 // 导出 //
+
+/**
+ * 直接向主进程发送一条宿主消息。
+ * 供独立下载进度窗口做就绪握手（downloadProgress:init）与窗口控制使用；
+ * 非外壳环境（浏览器预览）返回 false，调用方据此忽略。
+ */
+export function iGM_Launcher_SendHostMessage(message: iGM_Launcher_HostMessage): boolean {
+  const sendToHost = typeof window === "undefined" ? undefined : window.__electrobunSendToHost;
+  if (typeof sendToHost !== "function") return false;
+  sendToHost(message);
+  return true;
+}
+
+/**
+ * 订阅独立下载进度窗口的宿主事件（init / progress）。
+ * 返回取消订阅函数；调用时会顺带接管宿主消息接收器，避免消息落到预加载默认处理器。
+ */
+export function iGM_Launcher_SubscribeDownloadProgress(
+  listener: iGM_Launcher_DownloadProgressListener,
+): () => void {
+  iGM_Launcher_EnsureBridgeReceiver();
+  iGM_Launcher_DownloadProgressListeners.add(listener);
+  return () => {
+    iGM_Launcher_DownloadProgressListeners.delete(listener);
+  };
+}
+
 export default iGM_Launcher_BridgeCall;

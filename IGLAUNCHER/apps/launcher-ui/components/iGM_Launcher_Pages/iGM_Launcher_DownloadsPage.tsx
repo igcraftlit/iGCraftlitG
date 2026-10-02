@@ -66,7 +66,10 @@ import {
   iGM_Launcher_Input as IGM_Launcher_Input,
   iGM_Launcher_Select as IGM_Launcher_Select,
 } from "@/components/iGM_Launcher_Forms/iGM_Launcher_FormControls";
-import { iGM_Launcher_BridgeCall } from "@/components/iGM_Launcher_Bridge/iGM_Launcher_BridgeClient";
+import {
+  iGM_Launcher_BridgeCall,
+  iGM_Launcher_SendHostMessage,
+} from "@/components/iGM_Launcher_Bridge/iGM_Launcher_BridgeClient";
 import { iGM_Launcher_ResolveServerMessage } from "@/components/iGM_Launcher_Bridge/iGM_Launcher_ServerError";
 import { iGM_Launcher_UseStore } from "@/components/iGM_Launcher_Store/iGM_Launcher_StoreProvider";
 import styles from "./iGM_Launcher_DownloadsPage.module.css";
@@ -275,6 +278,23 @@ export function iGM_Launcher_DownloadsPage() {
       setStartError(iGM_Launcher_ResolveServerMessage(t, response.message, "startFailed"));
       return;
     }
+    /*
+     * 下载过程独立到窄进度窗口：无论建单成功与否都必须弹出窗口，
+     * 建单失败时把引擎错误（engineError）原样带过去，由窗口展示红字，
+     * 以此彻底消除「点击下载无反应」的静默失败。
+     */
+    const { task, engine, engineError } = response.data;
+    const versionLabel =
+      versions[resource.id]?.find((item) => item.id === versionId)?.version ?? "";
+    iGM_Launcher_SendHostMessage({
+      type: "window:open-download-progress",
+      taskId: task?.id ?? "",
+      resourceName: resource.name,
+      version: versionLabel,
+      targetDir: task?.targetDir ?? target,
+      engine,
+      engineError,
+    });
     setStartNotice(t("startQueued"));
     await refreshTasks();
   };
