@@ -120,8 +120,14 @@ const iGM_Launcher_SDK_FfiSpec = {
     args: [FFIType.ptr, FFIType.ptr, FFIType.ptr, FFIType.i64],
     returns: FFIType.ptr,
   },
+  /*
+   * user_data 在 Zig 侧类型为 ?*anyopaque，此处必须声明为 i64 而非 ptr：
+   * bun:ffi 不接受 BigInt 形式的 ptr（会抛 "Unable to convert 1 to a pointer"），
+   * 而 64 位平台上指针与 i64 同为 8 字节、传参 ABI 完全一致，
+   * 故统一按 i64 传递小整数序号，回调侧再 Number() 还原。
+   */
   iGM_Launcher_Download_SetProgressCallback: {
-    args: [FFIType.ptr, FFIType.function, FFIType.ptr],
+    args: [FFIType.ptr, FFIType.function, FFIType.i64],
     returns: FFIType.void,
   },
   iGM_Launcher_Download_StartTask: { args: [FFIType.ptr], returns: FFIType.i32 },
@@ -439,7 +445,9 @@ function iGM_Launcher_SDK_Launch(
       // 终态唤醒：逐文件编排在等待单个文件完成时依赖此回调
       iGM_Launcher_SDK_FlushWaiters(record);
     },
-    { args: [FFIType.ptr, FFIType.ptr], returns: FFIType.void, threadsafe: true },
+    // 第二个参数是 user_data（任务序号），按 i64 读取为 BigInt 后再 Number() 还原，
+    // 与 SetProgressCallback 的 i64 传参保持一致（见 iGM_Launcher_SDK_FfiSpec 注释）
+    { args: [FFIType.ptr, FFIType.i64], returns: FFIType.void, threadsafe: true },
   );
 
   iGM_Launcher_SDK_Tasks.set(taskId, { handle, callback, snapshot, waiters: [] });
@@ -447,7 +455,20 @@ function iGM_Launcher_SDK_Launch(
 
   // 注册回调：threadsafe 回调须传 JSCallback 本体（Bun 需据此建立线程安全引用），
   // user_data 传启动器侧任务序号（小整数），回调据此定位登记项
-  symbols.iGM_Launcher_Download_SetProgressCallback(handle, callback, BigInt(iGM_Launcher_SDK_TaskSeq));
+  try {
+    symbols.iGM_Launcher_Download_SetProgressCallback(
+      handle,
+      callback,
+      BigInt(iGM_Launcher_SDK_TaskSeq),
+    );
+  } catch (error) {
+    // bun:ffi 参数编组失败时（如把 BigInt 当指针传）必须显式清理已建句柄与回调，
+    // 否则登记项与 native 句柄会泄漏，且异常会穿透到调用方造成静默失败
+    const detail = error instanceof Error ? error.message : String(error);
+    console.error(`[SDK] 注册进度回调异常：${detail}`);
+    iGM_Launcher_SDK_Release(taskId);
+    throw new Error(`注册进度回调异常：${detail}`);
+  }
 
   let started = 0;
   try {

@@ -6,7 +6,9 @@
  * 作用：Electrobun 主进程入口：创建主窗口、加载静态界面、处理窗口控制消息并预留原生核心
  * 内容：窗口默认 1280x800 居中；开发模式加载 dev server，生产模式加载
  *       views://launcher/index.html；经 host-message 处理最小化 / 最大化切换 / 关闭；
- *       模块二十六 C：启动时调用 iGM_Launcher_Usage_Start 记录累计使用时长
+ *       模块二十六 C：启动时调用 iGM_Launcher_Usage_Start 记录累计使用时长；
+ *       安装进程级兜底（uncaughtException / unhandledRejection），异常写入崩溃日志，
+ *       避免主进程因未捕获异常静默退出（表现为「一点击功能就闪退」）
  *
  * 说明：Electrobun 2.0.1 的 BrowserWindowOptions 没有 minWidth/minHeight 字段，
  *       窗口最小可用尺寸（1024x640）由界面层 CSS 兜底，详见 AppShell 样式与验收报告。
@@ -14,6 +16,8 @@
  */
 
 // 导入依赖 //
+import { appendFileSync, mkdirSync } from "node:fs";
+import { join } from "node:path";
 import { BrowserWindow } from "electrobun/main";
 import {
   IGM_LAUNCHER_APP_TITLE,
@@ -127,7 +131,36 @@ function iGM_Launcher_HandleHostMessage(
   }
 }
 
+/**
+ * 安装进程级异常兜底。
+ * 打包版主进程 stdout 不被采集，未捕获异常只会让进程静默退出（界面表现为闪退），
+ * 故注册 uncaughtException / unhandledRejection：把错误追加写入数据目录下的
+ * iGM_Launcher_Crash.log，同时保留控制台输出；注册处理器本身也会阻止默认退出行为。
+ */
+function iGM_Launcher_InstallCrashGuards(): void {
+  const logPath = join(IGM_LAUNCHER_BRIDGE_DATA_ROOT, "iGM_Launcher_Crash.log");
+  const record = (kind: string, error: unknown): void => {
+    const detail =
+      error instanceof Error
+        ? `${error.message}\n${error.stack ?? ""}`
+        : typeof error === "string"
+          ? error
+          : JSON.stringify(error);
+    try {
+      mkdirSync(IGM_LAUNCHER_BRIDGE_DATA_ROOT, { recursive: true });
+      appendFileSync(logPath, `[${new Date().toISOString()}] ${kind}: ${detail}\n`, "utf8");
+    } catch {
+      // 日志写入失败时忽略，绝不因日志问题再次抛出
+    }
+    console.error(`[iGM Launcher] ${kind}`, error);
+  };
+  process.on("uncaughtException", (error) => record("uncaughtException", error));
+  process.on("unhandledRejection", (reason) => record("unhandledRejection", reason));
+}
+
 function iGM_Launcher_Bootstrap(): void {
+  // 最先安装兜底，保证后续任何初始化异常都不会静默终止进程
+  iGM_Launcher_InstallCrashGuards();
   const mode = iGM_Launcher_ResolveRunMode();
 
   // 原生核心状态：Zig 动态库未加载时返回占位状态，不影响外壳启动
