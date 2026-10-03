@@ -425,7 +425,7 @@ export function iGM_Launcher_SettingsPage({ params }: iGM_Launcher_PageProps) {
       {tab === "about" ? (
         <IGM_Launcher_SettingsGroup id="about" title={t("groupAbout")} icon={BadgeInfo}>
           <IGM_Launcher_SettingsRow label={t("aboutVersion")}>
-            {/* 版本号以 IGM_LAUNCHER_VERSION 为准（当前 26.3.2 official version），不再叠加 v 前缀 */}
+            {/* 版本号以 IGM_LAUNCHER_VERSION 为准（当前 26.3.3 official version），不再叠加 v 前缀 */}
             <IGM_Launcher_Badge tone="accent">{IGM_LAUNCHER_VERSION}</IGM_Launcher_Badge>
           </IGM_Launcher_SettingsRow>
           <IGM_Launcher_SettingsRow label={t("aboutCore")}>

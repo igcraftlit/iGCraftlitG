@@ -1455,7 +1455,7 @@ export const IGM_LAUNCHER_APP_NAME = "iGM CraftCeon Launcher";
 export const IGM_LAUNCHER_IDENTIFIER = "com.igcraftlit.launcher";
 
 /** 应用版本（界面关于页、窗口标题与启动参数统一显示该值） */
-export const IGM_LAUNCHER_VERSION = "26.3.2 official version";
+export const IGM_LAUNCHER_VERSION = "26.3.3 official version";
 
 /** 窗口标题：应用名称 + 版本号，供原生窗口标题栏与界面标题统一引用 */
 export const IGM_LAUNCHER_APP_TITLE = `${IGM_LAUNCHER_APP_NAME} ${IGM_LAUNCHER_VERSION}`;

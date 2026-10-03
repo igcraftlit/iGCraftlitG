@@ -16,7 +16,7 @@ pub const iGM_Downloader = @import("iGM_Downloader.zig");
 // 类型定义 //
 
 /// 核心版本号
-const iGM_Launcher_Core_Version_Text: [:0]const u8 = "26.3.2";
+const iGM_Launcher_Core_Version_Text: [:0]const u8 = "26.3.3";
 
 // 核心逻辑 //
 
