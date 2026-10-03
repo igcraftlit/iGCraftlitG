@@ -1,11 +1,60 @@
 {
   "releases": [
     {
+      "id": "d47a0c1e-7b2f-4a6e-93c9-26330a2e3f11",
+      "version": "26.3.3",
+      "releasedAt": "2026-10-03",
+      "updateType": "patch",
+      "isLatest": true,
+      "channel": "stable",
+      "platform": "Windows x64",
+      "fileName": "iGM-CraftCeon-Launcher-Setup-26.3.3.zip",
+      "fileSize": 70529430,
+      "fileSizeLabel": "67.26 MB",
+      "sha256": "794072ae83cfeffc2272666865f4c08783dc67da0569ea7663cc04d40882ae58",
+      "downloadUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/download/v26.3.3/iGM-CraftCeon-Launcher-Setup-26.3.3.zip",
+      "releasePageUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/tag/v26.3.3",
+      "notes": {
+        "zh-CN": {
+          "added": [
+            "首页新增启动实例选择下拉框，可直接在开始游戏前切换实例",
+            "关系网新增节点预览卡片：悬停或点击节点可查看名称、类型、简介、下载量与兼容版本，支持一键设为中心或跳转资源详情"
+          ],
+          "improved": [
+            "顶栏移除深浅色与语言切换按钮，主题、语言、Java、关于统一收归设置页四个子标签管理",
+            "关系网连线改为二次贝塞尔曲线并在连线中点标注兼容 / 派生关系，相邻边随选中节点高亮",
+            "主题预设统一为 8 套（跟随系统、浅色、深色、OLED、素雅、古典黑、复古、现代）"
+          ],
+          "fixed": [
+            "修复背景图下玻璃态面板层叠与模糊效果，面板统一半透明底色与 12px 背景模糊",
+            "修复社区头像显示，已登录时直接渲染社区真实头像",
+            "修复预发布版本（如 26.3-rc-1）未归入同族导致关系网缺少兼容 / 派生连线的问题"
+          ]
+        },
+        "en": {
+          "added": [
+            "Added an instance picker above the Start Game button to switch instances directly",
+            "Added node preview cards to the relation graph: hover or click a node for name, type, summary, downloads and compatible versions, with set-as-center and open-detail actions"
+          ],
+          "improved": [
+            "Removed theme and language toggles from the top bar; theme, language, Java and About are now managed under four tabs in Settings",
+            "Relation graph edges are now quadratic bezier curves with compatible/derived labels at the midpoint, and adjacent edges highlight with the selected node",
+            "Theme presets consolidated to 8 (system, light, dark, OLED, elegant, classic dark, retro, modern)"
+          ],
+          "fixed": [
+            "Fixed glassmorphism layering and blur over background images; panels now use unified translucent colors with a 12px backdrop blur",
+            "Fixed community avatar rendering to show the real community avatar when signed in",
+            "Fixed pre-release versions (e.g. 26.3-rc-1) not being grouped into their family, which removed compatible/derived edges from the relation graph"
+          ]
+        }
+      }
+    },
+    {
       "id": "95c861d9-9c54-4b74-952d-773c142e8749",
       "version": "26.3.2",
       "releasedAt": "2026-10-03",
       "updateType": "minor",
-      "isLatest": true,
+      "isLatest": false,
       "channel": "stable",
       "platform": "Windows x64",
       "fileName": "iGM-CraftCeon-Launcher-Setup-26.3.2.zip",
