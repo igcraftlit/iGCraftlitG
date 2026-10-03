@@ -9,9 +9,9 @@
       "channel": "stable",
       "platform": "Windows x64",
       "fileName": "iGM-CraftCeon-Launcher-Setup-26.3.3.zip",
-      "fileSize": 70530453,
-      "fileSizeLabel": "67.26 MB",
-      "sha256": "5ff66514fccf492786b9de50b70e1f1f9370a806bf6163e9eb44734c37b446a2",
+      "fileSize": 70353660,
+      "fileSizeLabel": "67.09 MB",
+      "sha256": "998acc233b105974aae9f82570123ed00059967a5e869d8a55581e1be6b71fc2",
       "downloadUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/download/v26.3.3/iGM-CraftCeon-Launcher-Setup-26.3.3.zip",
       "releasePageUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/tag/v26.3.3",
       "notes": {
@@ -29,7 +29,7 @@
             "修复背景图下玻璃态面板层叠与模糊效果，面板统一半透明底色与 12px 背景模糊",
             "修复社区头像显示，已登录时直接渲染社区真实头像",
             "修复预发布版本（如 26.3-rc-1）未归入同族导致关系网缺少兼容 / 派生连线的问题",
-            "修复资源中心下载模组 / 光影 / 材质包时点击下载即闪退的问题"
+            "修复资源中心下载模组 / 光影 / 材质包时点击下载导致启动器整个进程退出的问题：原生下载核心改为可移植构建（不再依赖构建机 CPU 指令集），进度获取改为轮询，不再从原生线程跨线程回调界面层"
           ]
         },
         "en": {
@@ -46,7 +46,7 @@
             "Fixed glassmorphism layering and blur over background images; panels now use unified translucent colors with a 12px backdrop blur",
             "Fixed community avatar rendering to show the real community avatar when signed in",
             "Fixed pre-release versions (e.g. 26.3-rc-1) not being grouped into their family, which removed compatible/derived edges from the relation graph",
-            "Fixed an immediate crash when starting a mod / shader / resource pack download from the Resource Center"
+            "Fixed the whole launcher process exiting when starting a mod / shader / resource pack download from the Resource Center: the native download core now builds portably (no longer tied to the build machine CPU features), and progress is polled instead of being pushed from the native thread into the UI thread"
           ]
         }
       }
