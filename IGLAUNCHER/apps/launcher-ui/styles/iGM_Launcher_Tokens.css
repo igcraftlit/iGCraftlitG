@@ -6,7 +6,7 @@
  * 作用：与 igcraftlit.com 主站一致的 --igm- 前缀 CSS 变量，
  *       由 html[data-theme] 驱动明暗主题，追加启动器布局尺寸令牌
  * 内容：中性灰阶色板、单一强调色、圆角/阴影、AppShell 布局尺寸；
- *       模块二十六 B 追加五套预设主题（html[data-igm-theme-preset]）与背景层令牌；
+ *       模块二十六 B 追加八套预设主题（html[data-igm-theme-preset]）与背景层令牌；
  *       模块二十六 F 追加品牌艺术字体令牌 --igm-font-brand（Orbitron，开源可商用）
  */
 
@@ -61,10 +61,10 @@ html[data-theme="light"] {
   /* 模块二十六 B：背景层令牌（由 iGM_Launcher_AppearanceStore 运行时覆写） */
   /* 背景图（none 表示无背景图，运行时写入 url("data:...")） */
   --igm-launcher-bg-image: none;
-  /* 背景模糊强度（px，由外观页滑块映射） */
+  /* 背景模糊强度（px，由外观页滑块映射，作用于底层背景图） */
   --igm-launcher-bg-blur: 0px;
-  /* 有背景图时各面板的不透明度（0-1，面板底色按此比例保留） */
-  --igm-launcher-panel-alpha: 0.78;
+  /* 玻璃面板的强制模糊半径：无论背景模糊滑块如何取值，面板一律使用该值 */
+  --igm-launcher-panel-blur: 12px;
 }
 
 /* 深色主题 */
@@ -89,115 +89,200 @@ html[data-theme="dark"] {
   --igm-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.5);
 }
 
-/* 模块二十六 B：预设主题（html[data-igm-theme-preset]，独立于 next-themes 的 data-theme） */
+/* 模块二十六 B：八套预设主题（html[data-igm-theme-preset]，独立于 next-themes 的 data-theme） */
 /* 置于明暗主题之后，二者同属性选择器权重相同时由预设胜出，实现“预设优先、未选则跟随明暗” */
+/* system 不在此声明，移除属性后回落为上面的明暗主题，从而跟随系统 */
 
-/* 极简白 */
-html[data-igm-theme-preset="minimal-white"] {
-  --igm-bg: #fafafa;
+/* 浅色 */
+html[data-igm-theme-preset="light"] {
+  --igm-bg: #f7f7f8;
   --igm-surface: #ffffff;
-  --igm-surface-subtle: #f2f2f4;
-  --igm-border: #e6e6e9;
-  --igm-border-strong: #d6d6da;
-  --igm-text: #17181a;
-  --igm-text-muted: #6f7177;
-  --igm-text-subtle: #a3a5ab;
-  --igm-accent: #18181b;
-  --igm-accent-hover: #303034;
+  --igm-surface-subtle: #f1f1f3;
+  --igm-border: #e4e4e7;
+  --igm-border-strong: #d4d4d8;
+  --igm-text: #18181b;
+  --igm-text-muted: #71717a;
+  --igm-text-subtle: #a1a1aa;
+  --igm-accent: #2563eb;
+  --igm-accent-hover: #1d4ed8;
   --igm-accent-contrast: #ffffff;
-  --igm-accent-soft: rgba(24, 24, 27, 0.06);
-  --igm-danger: #d92d20;
-  --igm-danger-soft: rgba(217, 45, 32, 0.08);
-  --igm-success: #12805c;
-  --igm-success-soft: rgba(18, 128, 92, 0.1);
-  --igm-shadow: 0 1px 2px rgba(16, 16, 18, 0.05);
-  --igm-shadow-hover: 0 4px 16px rgba(16, 16, 18, 0.1);
+  --igm-accent-soft: rgba(37, 99, 235, 0.08);
+  --igm-danger: #dc2626;
+  --igm-danger-soft: rgba(220, 38, 38, 0.08);
+  --igm-success: #16a34a;
+  --igm-success-soft: rgba(22, 163, 74, 0.1);
+  --igm-shadow: 0 1px 2px rgba(24, 24, 27, 0.06);
+  --igm-shadow-hover: 0 4px 16px rgba(24, 24, 27, 0.1);
 }
 
-/* 暗夜黑 */
-html[data-igm-theme-preset="night-black"] {
-  --igm-bg: #050506;
-  --igm-surface: #101012;
-  --igm-surface-subtle: #17171a;
-  --igm-border: #26262b;
-  --igm-border-strong: #38383f;
-  --igm-text: #f2f2f4;
-  --igm-text-muted: #a0a0a8;
-  --igm-text-subtle: #6c6c76;
-  --igm-accent: #f2f2f4;
-  --igm-accent-hover: #ffffff;
-  --igm-accent-contrast: #0a0a0b;
-  --igm-accent-soft: rgba(242, 242, 244, 0.1);
+/* 深色 */
+html[data-igm-theme-preset="dark"] {
+  --igm-bg: #0c0c0e;
+  --igm-surface: #161618;
+  --igm-surface-subtle: #1d1d20;
+  --igm-border: #2a2a2e;
+  --igm-border-strong: #3a3a40;
+  --igm-text: #ededef;
+  --igm-text-muted: #9b9ba3;
+  --igm-text-subtle: #6b6b74;
+  --igm-accent: #60a5fa;
+  --igm-accent-hover: #93c5fd;
+  --igm-accent-contrast: #0c0c0e;
+  --igm-accent-soft: rgba(96, 165, 250, 0.12);
   --igm-danger: #f87171;
   --igm-danger-soft: rgba(248, 113, 113, 0.12);
   --igm-success: #4ade80;
   --igm-success-soft: rgba(74, 222, 128, 0.12);
+  --igm-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --igm-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+/* OLED（纯黑，深色界面省电优先） */
+html[data-igm-theme-preset="oled"] {
+  --igm-bg: #000000;
+  --igm-surface: #000000;
+  --igm-surface-subtle: #0a0a0c;
+  --igm-border: #1e1e22;
+  --igm-border-strong: #33333a;
+  --igm-text: #f5f5f7;
+  --igm-text-muted: #9a9aa2;
+  --igm-text-subtle: #65656d;
+  --igm-accent: #ffffff;
+  --igm-accent-hover: #e4e4e7;
+  --igm-accent-contrast: #000000;
+  --igm-accent-soft: rgba(255, 255, 255, 0.1);
+  --igm-danger: #ff6b6b;
+  --igm-danger-soft: rgba(255, 107, 107, 0.14);
+  --igm-success: #4ade80;
+  --igm-success-soft: rgba(74, 222, 128, 0.14);
+  --igm-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  --igm-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.7);
+}
+
+/* 素雅（低饱和灰白） */
+html[data-igm-theme-preset="elegant"] {
+  --igm-bg: #f2f2ef;
+  --igm-surface: #fafaf8;
+  --igm-surface-subtle: #ededE9;
+  --igm-border: #e0e0da;
+  --igm-border-strong: #ccccc5;
+  --igm-text: #3b3b38;
+  --igm-text-muted: #7c7c76;
+  --igm-text-subtle: #a5a5a0;
+  --igm-accent: #6b7a8f;
+  --igm-accent-hover: #57657a;
+  --igm-accent-contrast: #ffffff;
+  --igm-accent-soft: rgba(107, 122, 143, 0.1);
+  --igm-danger: #b3564a;
+  --igm-danger-soft: rgba(179, 86, 74, 0.1);
+  --igm-success: #5c7d5c;
+  --igm-success-soft: rgba(92, 125, 92, 0.1);
+  --igm-shadow: 0 1px 2px rgba(60, 60, 56, 0.06);
+  --igm-shadow-hover: 0 4px 16px rgba(60, 60, 56, 0.1);
+}
+
+/* 古典黑（深色 + 暗金点缀） */
+html[data-igm-theme-preset="classic-dark"] {
+  --igm-bg: #14100b;
+  --igm-surface: #1c1710;
+  --igm-surface-subtle: #241d14;
+  --igm-border: #3a2f20;
+  --igm-border-strong: #52432c;
+  --igm-text: #f0e6d2;
+  --igm-text-muted: #b09a76;
+  --igm-text-subtle: #857a5f;
+  --igm-accent: #c9a227;
+  --igm-accent-hover: #dbb43a;
+  --igm-accent-contrast: #1a1408;
+  --igm-accent-soft: rgba(201, 162, 39, 0.16);
+  --igm-danger: #d16a5a;
+  --igm-danger-soft: rgba(209, 106, 90, 0.16);
+  --igm-success: #8aae5f;
+  --igm-success-soft: rgba(138, 174, 95, 0.16);
   --igm-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   --igm-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.6);
 }
 
-/* 星图蓝 */
-html[data-igm-theme-preset="star-blue"] {
-  --igm-bg: #070b18;
-  --igm-surface: #0e1426;
-  --igm-surface-subtle: #141c33;
-  --igm-border: #1e2a4a;
-  --igm-border-strong: #2c3c66;
-  --igm-text: #e8eefc;
-  --igm-text-muted: #9fb0d4;
-  --igm-text-subtle: #6a7ba3;
-  --igm-accent: #4c8dff;
-  --igm-accent-hover: #77a9ff;
-  --igm-accent-contrast: #04101f;
-  --igm-accent-soft: rgba(76, 141, 255, 0.14);
-  --igm-danger: #ff6b6b;
-  --igm-danger-soft: rgba(255, 107, 107, 0.14);
-  --igm-success: #45d39a;
-  --igm-success-soft: rgba(69, 211, 154, 0.14);
-  --igm-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
-  --igm-shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.55);
+/* 复古（暖色泛黄） */
+html[data-igm-theme-preset="retro"] {
+  --igm-bg: #f3e9d2;
+  --igm-surface: #faf3e0;
+  --igm-surface-subtle: #efe3c8;
+  --igm-border: #d8c6a2;
+  --igm-border-strong: #bfa87e;
+  --igm-text: #4a3c28;
+  --igm-text-muted: #8a7350;
+  --igm-text-subtle: #a89070;
+  --igm-accent: #a8622f;
+  --igm-accent-hover: #bd7440;
+  --igm-accent-contrast: #fff8ec;
+  --igm-accent-soft: rgba(168, 98, 47, 0.14);
+  --igm-danger: #b04a35;
+  --igm-danger-soft: rgba(176, 74, 53, 0.12);
+  --igm-success: #6f8f4a;
+  --igm-success-soft: rgba(111, 143, 74, 0.14);
+  --igm-shadow: 0 1px 2px rgba(74, 60, 40, 0.1);
+  --igm-shadow-hover: 0 4px 16px rgba(74, 60, 40, 0.16);
 }
 
-/* 极光绿 */
-html[data-igm-theme-preset="aurora-green"] {
-  --igm-bg: #06120d;
-  --igm-surface: #0c1a14;
-  --igm-surface-subtle: #10241b;
-  --igm-border: #1b3428;
-  --igm-border-strong: #27503d;
-  --igm-text: #e6f6ee;
-  --igm-text-muted: #93b8a5;
-  --igm-text-subtle: #628374;
-  --igm-accent: #34d399;
-  --igm-accent-hover: #5fe0b3;
-  --igm-accent-contrast: #04140d;
-  --igm-accent-soft: rgba(52, 211, 153, 0.14);
-  --igm-danger: #ff7a7a;
-  --igm-danger-soft: rgba(255, 122, 122, 0.14);
-  --igm-success: #34d399;
-  --igm-success-soft: rgba(52, 211, 153, 0.14);
-  --igm-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
-  --igm-shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.55);
+/* 现代（高对比黑白极简） */
+html[data-igm-theme-preset="modern"] {
+  --igm-bg: #ffffff;
+  --igm-surface: #ffffff;
+  --igm-surface-subtle: #f4f4f5;
+  --igm-border: #111111;
+  --igm-border-strong: #000000;
+  --igm-text: #000000;
+  --igm-text-muted: #52525b;
+  --igm-text-subtle: #7c7c85;
+  --igm-accent: #000000;
+  --igm-accent-hover: #27272a;
+  --igm-accent-contrast: #ffffff;
+  --igm-accent-soft: rgba(0, 0, 0, 0.06);
+  --igm-danger: #c81e1e;
+  --igm-danger-soft: rgba(200, 30, 30, 0.08);
+  --igm-success: #0f7b3f;
+  --igm-success-soft: rgba(15, 123, 63, 0.1);
+  --igm-shadow: none;
+  --igm-shadow-hover: 0 2px 0 rgba(0, 0, 0, 0.9);
 }
 
-/* 落日橙 */
-html[data-igm-theme-preset="sunset-orange"] {
-  --igm-bg: #170d06;
-  --igm-surface: #22150c;
-  --igm-surface-subtle: #2c1c10;
-  --igm-border: #3d2818;
-  --igm-border-strong: #5a3c24;
-  --igm-text: #fbeade;
-  --igm-text-muted: #c9a68f;
-  --igm-text-subtle: #997663;
-  --igm-accent: #fb923c;
-  --igm-accent-hover: #fdae66;
-  --igm-accent-contrast: #1a0d04;
-  --igm-accent-soft: rgba(251, 146, 60, 0.16);
-  --igm-danger: #f87171;
-  --igm-danger-soft: rgba(248, 113, 113, 0.14);
-  --igm-success: #4ade80;
-  --igm-success-soft: rgba(74, 222, 128, 0.14);
-  --igm-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
-  --igm-shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.55);
+/*
+ * 玻璃态：有背景图时，全部使用表面色的面板自动切换为半透明，
+ * 底层背景图经 backdrop-filter 模糊后透出（模糊值由 --igm-launcher-panel-blur 统一控制）。
+ * 明暗由 data-theme 决定，预设为浅色系 / 深色系时分别覆写，保证玻璃底色与主题一致。
+ */
+html[data-igm-bg="image"] {
+  --igm-surface: rgba(255, 255, 255, 0.1);
+  --igm-surface-subtle: rgba(255, 255, 255, 0.06);
+  --igm-border: rgba(255, 255, 255, 0.24);
+  --igm-border-strong: rgba(255, 255, 255, 0.36);
 }
+
+html[data-theme="dark"][data-igm-bg="image"] {
+  --igm-surface: rgba(0, 0, 0, 0.3);
+  --igm-surface-subtle: rgba(0, 0, 0, 0.22);
+  --igm-border: rgba(255, 255, 255, 0.12);
+  --igm-border-strong: rgba(255, 255, 255, 0.2);
+}
+
+html[data-igm-theme-preset="light"][data-igm-bg="image"],
+html[data-igm-theme-preset="elegant"][data-igm-bg="image"],
+html[data-igm-theme-preset="retro"][data-igm-bg="image"],
+html[data-igm-theme-preset="modern"][data-igm-bg="image"] {
+  --igm-surface: rgba(255, 255, 255, 0.1);
+  --igm-surface-subtle: rgba(255, 255, 255, 0.06);
+  --igm-border: rgba(255, 255, 255, 0.24);
+  --igm-border-strong: rgba(255, 255, 255, 0.36);
+}
+
+html[data-igm-theme-preset="dark"][data-igm-bg="image"],
+html[data-igm-theme-preset="oled"][data-igm-bg="image"],
+html[data-igm-theme-preset="classic-dark"][data-igm-bg="image"] {
+  --igm-surface: rgba(0, 0, 0, 0.3);
+  --igm-surface-subtle: rgba(0, 0, 0, 0.22);
+  --igm-border: rgba(255, 255, 255, 0.12);
+  --igm-border-strong: rgba(255, 255, 255, 0.2);
+}
+
+/* 模块二十六 B：八套预设主题见上方（system / light / dark / oled / elegant / classic-dark / retro / modern） */

@@ -3,8 +3,11 @@
  * 所属层：前端 / 页面层
  * 路由：G_Home（SPA 页 id：home）
  * 模块：iGM_Launcher_HomePage
- * 作用：首页，展示欢迎 Hero、开始游戏主按钮、累计使用时长、最近实例、最近更新、版本库同步状态
- * 内容：Hero 中心的「开始游戏」启动当前选中实例，未选中时禁用并给出引导；
+ * 作用：首页，展示欢迎 Hero、社区头像、实例选择、开始游戏主按钮、累计使用时长、最近实例、
+ *       最近更新、版本库同步状态
+ * 内容：Hero 中心上方提供「启动实例」下拉框，无需进入实例管理页即可切换当前启动实例；
+ *       已登录社区账号时渲染主站真实头像（account.avatar，<img> 直出，不用图标或首字母代替）；
+ *       「开始游戏」启动当前选中实例，未选中时禁用并给出引导；
  *       点击后弹登录方式选择（正版 / 离线），确认后跳独立启动进度页，与实例管理页一致；
  *       累计使用时长（小时）由桥接方法 usage:get 读取；
  *       布局改为左侧主内容 + 右侧账户面板（iGM_Launcher_AccountPanel），窄窗时账户面板下移；
@@ -51,6 +54,8 @@ export function iGM_Launcher_HomePage() {
     syncingLibrary,
     syncVersionLibrary,
     selectedInstanceId,
+    selectInstance,
+    account,
     mcBindings,
   } = iGM_Launcher_UseStore();
 
@@ -58,6 +63,8 @@ export function iGM_Launcher_HomePage() {
   const [launchOpen, setLaunchOpen] = useState(false);
   // 累计使用时长（毫秒），首帧为 null
   const [usageMs, setUsageMs] = useState<number | null>(null);
+  // 社区头像加载失败时隐藏图片（不以图标或首字母代替）
+  const [avatarFailed, setAvatarFailed] = useState(false);
 
   // 当前选中实例（未选中或已被删除时为空）
   const selectedInstance = useMemo(
@@ -103,7 +110,18 @@ export function iGM_Launcher_HomePage() {
           <IGM_Launcher_Card className={styles.hero}>
             <div className={styles.heroBody}>
               <div className={styles.heroText}>
-                <h2 className={styles.heroTitle}>{t("welcome")}</h2>
+                <div className={styles.heroHeading}>
+                  {/* 已登录社区账号：直出主站真实头像，加载失败时隐藏（不以图标或首字母代替） */}
+                  {account.signedIn && account.avatar && !avatarFailed ? (
+                    <img
+                      className={styles.heroAvatar}
+                      src={account.avatar}
+                      alt={t("avatarAlt")}
+                      onError={() => setAvatarFailed(true)}
+                    />
+                  ) : null}
+                  <h2 className={styles.heroTitle}>{t("welcome")}</h2>
+                </div>
                 <p className={styles.heroDesc}>{t("welcomeDesc")}</p>
                 <div className={styles.heroActions}>
                   {/* SPA 切页：与侧边栏共用 AppShell 的页面状态，不产生导航请求 */}
@@ -123,6 +141,22 @@ export function iGM_Launcher_HomePage() {
               </div>
 
               <div className={styles.heroStart}>
+                {/* 首页直接选择启动实例，无需进入实例管理页 */}
+                <label className={styles.instancePick}>
+                  <span className={styles.instancePickLabel}>{t("selectInstanceLabel")}</span>
+                  <select
+                    className={styles.instanceSelect}
+                    value={selectedInstanceId ?? ""}
+                    onChange={(event) => selectInstance(event.target.value || null)}
+                  >
+                    <option value="">{t("selectInstanceNone")}</option>
+                    {instances.map((instance) => (
+                      <option key={instance.id} value={instance.id}>
+                        {instance.name} · {instance.minecraftVersion}
+                      </option>
+                    ))}
+                  </select>
+                </label>
                 <IGM_Launcher_Button
                   variant="primary"
                   className={styles.startButton}

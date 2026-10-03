@@ -31,6 +31,11 @@
   box-shadow: var(--igm-shadow-hover);
 }
 
+/* 有背景图时对话框同样玻璃态，模糊底层背景保证可读性 */
+:global(html[data-igm-bg="image"]) .dialog {
+  backdrop-filter: blur(var(--igm-launcher-panel-blur));
+}
+
 .dialogHead {
   display: flex;
   align-items: center;

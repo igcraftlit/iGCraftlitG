@@ -37,6 +37,7 @@ export interface iGM_GraphVersionRow {
 export interface iGM_GraphResourceRow {
   iGM_Id: string;
   iGM_Title: string;
+  iGM_Description: string | null;
   iGM_ResourceType: string;
   iGM_McVersions: string | null;
   iGM_DownloadCount: number;
@@ -61,7 +62,7 @@ export async function iGM_ListGraphVersionRows(): Promise<iGM_GraphVersionRow[]>
 export async function iGM_ListGraphResourceRows(): Promise<iGM_GraphResourceRow[]> {
   return (await iGM_Db
     .query(
-      `SELECT iGM_Id, iGM_Title, iGM_ResourceType, iGM_McVersions, iGM_DownloadCount
+      `SELECT iGM_Id, iGM_Title, iGM_Description, iGM_ResourceType, iGM_McVersions, iGM_DownloadCount
          FROM iGM_Resources
         WHERE iGM_ResourceType IS NOT NULL AND iGM_Status = 'published'
         ORDER BY iGM_CreatedAt DESC
@@ -160,7 +161,7 @@ export async function iGM_FindGraphResourceById(
   return (
     ((await iGM_Db
       .query(
-        `SELECT iGM_Id, iGM_Title, iGM_ResourceType, iGM_McVersions, iGM_DownloadCount
+        `SELECT iGM_Id, iGM_Title, iGM_Description, iGM_ResourceType, iGM_McVersions, iGM_DownloadCount
            FROM iGM_Resources WHERE iGM_Id = ?`,
       )
       .get(id)) as iGM_GraphResourceRow | undefined) ?? null

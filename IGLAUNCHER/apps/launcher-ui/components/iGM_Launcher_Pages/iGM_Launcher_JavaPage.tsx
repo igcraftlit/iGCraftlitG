@@ -5,7 +5,9 @@
  * 模块：iGM_Launcher_JavaPage
  * 作用：Java 运行时管理页：检测、添加、测试、移除、设为默认与下载占位
  * 内容：检测按共享层占位候选路径执行，下载为纯界面占位（不发起真实请求）；
- *       Java 记录落在 D:/IGLAUNCHER/data/java/java.json，实例可单独绑定运行时
+ *       Java 记录落在 D:/IGLAUNCHER/data/java/java.json，实例可单独绑定运行时；
+ *       模块二十六修正后本页既是独立页，也作为设置页「Java」子标签的内嵌内容，
+ *       内嵌时（embedded=true）不渲染页头，由设置页统一提供标题与子标签
  */
 
 // 导入依赖 //
@@ -33,13 +35,17 @@ import {
 } from "@/components/iGM_Launcher_Forms/iGM_Launcher_FormControls";
 import { iGM_Launcher_ConfirmDialog as IGM_Launcher_ConfirmDialog } from "@/components/iGM_Launcher_Dialogs/iGM_Launcher_Dialogs";
 import { iGM_Launcher_UseStore } from "@/components/iGM_Launcher_Store/iGM_Launcher_StoreProvider";
+import type { iGM_Launcher_PageProps } from "./iGM_Launcher_PageRegistry";
 import styles from "./iGM_Launcher_JavaPage.module.css";
 
 // 类型定义 //
 /* （Java 记录结构由共享层 iGM_Launcher_JavaRuntime 提供） */
 
+/** 页面入参：embedded 为真时作为设置页子标签内容渲染，不输出页头 */
+type iGM_Launcher_JavaPageProps = iGM_Launcher_PageProps & { embedded?: boolean };
+
 // 核心逻辑 //
-export function iGM_Launcher_JavaPage() {
+export function iGM_Launcher_JavaPage({ embedded = false }: iGM_Launcher_JavaPageProps) {
   const t = useTranslations("java");
   const tCommon = useTranslations("common");
   const {
@@ -95,16 +101,24 @@ export function iGM_Launcher_JavaPage() {
 
   return (
     <div className={styles.page}>
-      <IGM_Launcher_PageHeader
-        title={t("title")}
-        description={t("subtitle")}
-        actions={
-          <IGM_Launcher_Button variant="primary" onClick={() => void detectJava()}>
-            <RefreshCw size={15} strokeWidth={1.8} />
-            {t("detect")}
-          </IGM_Launcher_Button>
-        }
-      />
+      {embedded ? null : (
+        <IGM_Launcher_PageHeader
+          title={t("title")}
+          description={t("subtitle")}
+          actions={
+            <IGM_Launcher_Button variant="primary" onClick={() => void detectJava()}>
+              <RefreshCw size={15} strokeWidth={1.8} />
+              {t("detect")}
+            </IGM_Launcher_Button>
+          }
+        />
+      )}
+      {embedded ? (
+        <IGM_Launcher_Button variant="primary" onClick={() => void detectJava()}>
+          <RefreshCw size={15} strokeWidth={1.8} />
+          {t("detect")}
+        </IGM_Launcher_Button>
+      ) : null}
 
       {/* 全局默认 Java */}
       <IGM_Launcher_Card className={styles.defaultCard}>

@@ -4,7 +4,7 @@
  * 路由：G_Home（/）
  * 模块：iGM_Launcher_HomePage
  * 作用：首页左右两栏布局（左侧主内容 + 右侧账户面板）与 Hero、三栏卡片的响应式栅格
- * 内容：Hero 中心为开始游戏主按钮，右侧展示当前目标实例或未选中引导；
+ * 内容：Hero 标题旁展示社区真实头像，右侧为实例选择下拉框与开始游戏主按钮；
  *       左侧下方为最近实例 / 最近更新 / 版本库同步状态三栏；
  *       窄窗时账户面板下移至主内容下方，栅格自动收敛为单列
  */
@@ -51,6 +51,22 @@
   min-width: 220px;
 }
 
+/* 标题行：社区头像 + 欢迎标题 */
+.heroHeading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.heroAvatar {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border);
+  object-fit: cover;
+}
+
 .heroTitle {
   font-size: 24px;
   font-weight: 600;
@@ -92,6 +108,37 @@
   align-items: center;
   gap: 8px;
   min-width: 180px;
+}
+
+/* 首页实例选择下拉框 */
+.instancePick {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  min-width: 180px;
+  max-width: 260px;
+}
+
+.instancePickLabel {
+  font-size: 11px;
+  color: var(--igm-text-subtle);
+}
+
+.instanceSelect {
+  width: 100%;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-border);
+  background-color: var(--igm-surface);
+  color: var(--igm-text);
+  font-size: 13px;
+}
+
+.instanceSelect:focus {
+  outline: none;
+  border-color: var(--igm-accent);
 }
 
 .startButton {

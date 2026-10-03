@@ -10,7 +10,7 @@
  *       由主进程读回 data URL 后再写入 --igm-launcher-bg-image
  *
  * 说明：主题预设写入 html[data-igm-theme-preset]，与 next-themes 的 data-theme
- *       并行且互不冲突（default 时移除该属性，回落为明暗主题）；
+ *       并行且互不冲突（system 时移除该属性，回落为随系统的明暗主题）；
  *       自定义主色覆写 --igm-accent 系列（含 hover/contrast/soft 派生值）。
  */
 
@@ -142,8 +142,8 @@ export function iGM_Launcher_ApplyAppearance(
   if (typeof document === "undefined") return prefs;
   const root = document.documentElement;
 
-  // 主题预设
-  if (prefs.themePreset === "default") {
+  // 主题预设：system 表示跟随系统明暗，移除属性回落 next-themes 的 data-theme
+  if (prefs.themePreset === "system") {
     delete root.dataset[IGM_LAUNCHER_THEME_PRESET_ATTRIBUTE];
   } else {
     root.dataset[IGM_LAUNCHER_THEME_PRESET_ATTRIBUTE] = prefs.themePreset;

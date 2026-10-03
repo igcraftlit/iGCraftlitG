@@ -3,26 +3,38 @@
  * 所属层：前端 / 组件层
  * 路由：G_ResourceCenter（SPA 页 id：resourceCenter）内嵌
  * 模块：iGM_Launcher_RelationGraph
- * 作用：以 SVG 径向布局绘制资源中心关系图（中心节点在圆心，周边节点按 ring 分层）
+ * 作用：以 SVG 径向布局绘制资源中心树状关系图（中心节点在圆心，周边节点按 ring 分层）
  * 内容：经 resource:graph 桥接加载图数据；中心节点高亮（更大、强调色描边）；
- *       边按 compatible（实线）/ dependency（虚线）/ derived（点线）区分线型与颜色并配图例；
- *       点击节点以该节点为新中心重新加载，中心为版本 / 资源时分别给出下载入口；
+ *       一级节点（ring 1）为直接关联，二级节点（ring 2）为间接关联；
+ *       边为二次贝塞尔曲线，按 compatible（实线）/ dependency（虚线）/ derived（点线）
+ *       区分线型与颜色，线中点标注关系类型（兼容 / 依赖 / 派生），并配图例；
+ *       悬停或点击节点在画布右上角弹出预览卡片（名称、类型、简介、下载量、兼容版本），
+ *       卡片内可将该节点设为新中心或跳转到对应资源详情 / 版本下载页；
  *       支持滚轮缩放（0.4x-3x）与鼠标拖拽平移，提供「重置视图」；
  *       加载 / 失败 / 空态均有本地化文案，缺失节点引用的边安全跳过（不产生 NaN）。
  *
  * 说明：不引入任何第三方图库，布局由本组件按 ring 自行计算；
- *       缩放与平移只在 SVG 内部做变换，不改变页面滚动。
+ *       缩放与平移只在 SVG 内部做变换，不改变页面滚动；不使用花哨动画，保证性能流畅。
  */
 
 // 导入依赖 //
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
-import { AlertCircle, Download, Loader2, Maximize2 } from "lucide-react";
+import {
+  AlertCircle,
+  Crosshair,
+  Download,
+  Loader2,
+  Maximize2,
+  X,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import type {
   iGM_Launcher_ResourceGraphData,
+  iGM_Launcher_ResourceGraphEdge,
   iGM_Launcher_ResourceGraphNode,
+  iGM_Launcher_ResourceRelationType,
 } from "@igm-launcher/shared";
 import {
   iGM_Launcher_Badge as IGM_Launcher_Badge,
@@ -51,6 +63,15 @@ interface iGM_Launcher_GraphPlaced {
   y: number;
 }
 
+/** 计算后的边几何（含曲线控制点与标签位置） */
+interface iGM_Launcher_GraphEdgePlaced {
+  edge: iGM_Launcher_ResourceGraphEdge;
+  path: string;
+  labelX: number;
+  labelY: number;
+  key: string;
+}
+
 /** 当前请求的中心（版本号或资源 id 二选一） */
 interface iGM_Launcher_GraphCenter {
   version?: string;
@@ -65,6 +86,12 @@ const IGM_GRAPH_BASE_RADIUS = 108;
 /** 缩放范围 */
 const IGM_GRAPH_MIN_ZOOM = 0.4;
 const IGM_GRAPH_MAX_ZOOM = 3;
+/** 曲线相对直线的垂直弯曲量（逻辑坐标） */
+const IGM_GRAPH_CURVE_OFFSET = 26;
+/** 预览卡片最多展示的关联版本数 */
+const IGM_GRAPH_PREVIEW_VERSION_LIMIT = 6;
+/** 简介最多展示的字符数 */
+const IGM_GRAPH_PREVIEW_DESC_LIMIT = 90;
 
 // 核心逻辑 //
 
@@ -77,6 +104,14 @@ function iGM_Launcher_Clamp(value: number, min: number, max: number): number {
 function iGM_Launcher_ShortLabel(label: string, max = 14): string {
   const text = label.trim();
   return text.length > max ? `${text.slice(0, max)}…` : text;
+}
+
+/** 简介超长截断 */
+function iGM_Launcher_ShortDescription(description: string | undefined): string {
+  const text = (description ?? "").trim();
+  return text.length > IGM_GRAPH_PREVIEW_DESC_LIMIT
+    ? `${text.slice(0, IGM_GRAPH_PREVIEW_DESC_LIMIT)}…`
+    : text;
 }
 
 export function iGM_Launcher_RelationGraph({
@@ -98,6 +133,10 @@ export function iGM_Launcher_RelationGraph({
   // 视图变换：缩放与平移（平移为屏幕像素）
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+
+  // 预览节点：悬停的节点（hovered）与点击固定的节点（selected，优先展示）
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const svgRef = useRef<SVGSVGElement>(null);
   // 拖拽起点与是否发生位移（位移超过阈值时抑制节点点击）
@@ -130,7 +169,9 @@ export function iGM_Launcher_RelationGraph({
       return;
     }
     setGraph(response.data.graph);
-    // 切中心后回到默认视图，避免旧平移造成节点跑出可视区
+    // 切中心后清空预览选择并回到默认视图，避免旧平移造成节点跑出可视区
+    setSelectedId(null);
+    setHoveredId(null);
     setZoom(1);
     setPan({ x: 0, y: 0 });
   }, [center.version, center.resourceId]);
@@ -182,20 +223,80 @@ export function iGM_Launcher_RelationGraph({
     return map;
   }, [placed]);
 
-  /** 两端都在节点集合内的边（缺失节点安全跳过） */
-  const edges = useMemo(() => {
+  /** 两端都在节点集合内的边（缺失节点安全跳过），带二次贝塞尔几何与标签坐标 */
+  const edges = useMemo<iGM_Launcher_GraphEdgePlaced[]>(() => {
     if (!graph) return [];
     return graph.edges
-      .map((edge) => {
+      .map((edge, index) => {
         const from = positionById.get(edge.from);
         const to = positionById.get(edge.to);
         if (!from || !to) return null;
-        return { edge, from, to };
+        // 垂直于连线方向的单位向量，奇偶边反向弯曲，避免双向边完全重叠
+        const dx = to.x - from.x;
+        const dy = to.y - from.y;
+        const length = Math.hypot(dx, dy) || 1;
+        const nx = -dy / length;
+        const ny = dx / length;
+        const sign = index % 2 === 0 ? 1 : -1;
+        const midX = (from.x + to.x) / 2;
+        const midY = (from.y + to.y) / 2;
+        const cx = midX + nx * IGM_GRAPH_CURVE_OFFSET * sign;
+        const cy = midY + ny * IGM_GRAPH_CURVE_OFFSET * sign;
+        // 二次贝塞尔 t=0.5 处的点：0.25*P0 + 0.5*C + 0.25*P2
+        const labelX = 0.25 * from.x + 0.5 * cx + 0.25 * to.x;
+        const labelY = 0.25 * from.y + 0.5 * cy + 0.25 * to.y;
+        return {
+          edge,
+          path: `M ${from.x} ${from.y} Q ${cx} ${cy} ${to.x} ${to.y}`,
+          labelX,
+          labelY,
+          key: `${edge.from}-${edge.to}-${edge.relation}-${index}`,
+        };
       })
       .filter((item): item is NonNullable<typeof item> => item !== null);
   }, [graph, positionById]);
 
   const centerNode = graph?.nodes.find((node) => node.center) ?? null;
+
+  /** 当前预览的节点：点击固定优先，否则取悬停节点 */
+  const activeNode = useMemo(() => {
+    if (!graph) return null;
+    const id = selectedId ?? hoveredId;
+    if (!id) return null;
+    return graph.nodes.find((node) => node.id === id) ?? null;
+  }, [graph, selectedId, hoveredId]);
+
+  /** 预览节点直接关联的版本（经兼容 / 依赖边连接的版本节点标签） */
+  const activeVersions = useMemo(() => {
+    if (!graph || !activeNode) return [];
+    const labels: string[] = [];
+    const seen = new Set<string>();
+    const collect = (edge: iGM_Launcher_ResourceGraphEdge, otherId: string) => {
+      if (edge.relation !== "compatible" && edge.relation !== "dependency") return;
+      const other = graph.nodes.find((node) => node.id === otherId);
+      if (other && other.kind === "version" && !seen.has(other.label)) {
+        seen.add(other.label);
+        labels.push(other.label);
+      }
+    };
+    for (const edge of graph.edges) {
+      if (edge.from === activeNode.id) collect(edge, edge.to);
+      else if (edge.to === activeNode.id) collect(edge, edge.from);
+    }
+    return labels.slice(0, IGM_GRAPH_PREVIEW_VERSION_LIMIT);
+  }, [graph, activeNode]);
+
+  /** 与当前预览节点相连的边集合（用于高亮） */
+  const activeEdgeKeys = useMemo(() => {
+    if (!activeNode) return new Set<string>();
+    return new Set(
+      edges
+        .filter(
+          (item) => item.edge.from === activeNode.id || item.edge.to === activeNode.id,
+        )
+        .map((item) => item.key),
+    );
+  }, [edges, activeNode]);
 
   /* ---------- 交互 ---------- */
 
@@ -242,12 +343,27 @@ export function iGM_Launcher_RelationGraph({
     setPan({ x: 0, y: 0 });
   };
 
-  /** 点击节点：以该节点为新中心重新加载 */
+  /** 点击节点：固定 / 取消固定预览卡片（拖拽位移时不触发） */
   const handleNodeClick = (node: iGM_Launcher_ResourceGraphNode) => {
     if (movedRef.current) return;
+    setSelectedId((current) => (current === node.id ? null : node.id));
+  };
+
+  /** 将预览节点设为新中心（版本节点以版本号展开，资源节点以 id 展开） */
+  const handleSetCenter = (node: iGM_Launcher_ResourceGraphNode) => {
     if (node.center) return;
     if (node.kind === "version") setCenter({ version: node.label });
     else setCenter({ resourceId: node.id });
+  };
+
+  /** 关系类型本地化文案 */
+  const relationLabel = (relation: iGM_Launcher_ResourceRelationType): string =>
+    t(`legend_${relation}`);
+
+  /** 节点层级本地化文案 */
+  const ringLabel = (node: iGM_Launcher_ResourceGraphNode): string => {
+    if (node.center || node.ring <= 0) return t("ringCenter");
+    return node.ring === 1 ? t("ringFirst") : t("ringSecond");
   };
 
   /** 中心节点的操作入口 */
@@ -270,6 +386,77 @@ export function iGM_Launcher_RelationGraph({
             {t("actionOpenResource")}
           </IGM_Launcher_Button>
         )}
+      </div>
+    );
+  };
+
+  /** 悬停 / 点击节点的预览卡片 */
+  const renderPreview = () => {
+    if (!activeNode) return null;
+    const description = iGM_Launcher_ShortDescription(activeNode.description);
+    return (
+      <div className={styles.preview} role="dialog" aria-label={t("previewTitle")}>
+        <div className={styles.previewHead}>
+          <span className={styles.previewName} title={activeNode.label}>
+            {activeNode.label}
+          </span>
+          <button
+            type="button"
+            className={styles.previewClose}
+            aria-label={t("previewClose")}
+            onClick={() => setSelectedId(null)}
+          >
+            <X size={13} strokeWidth={1.8} />
+          </button>
+        </div>
+        <div className={styles.previewBadges}>
+          <IGM_Launcher_Badge tone={activeNode.kind === "version" ? "accent" : "neutral"}>
+            {t(activeNode.kind === "version" ? "kind_version" : "kind_resource")}
+          </IGM_Launcher_Badge>
+          <IGM_Launcher_Badge tone="muted">{ringLabel(activeNode)}</IGM_Launcher_Badge>
+          {activeNode.kind === "resource" && activeNode.resourceType ? (
+            <IGM_Launcher_Badge tone="muted">{activeNode.resourceType}</IGM_Launcher_Badge>
+          ) : null}
+          {activeNode.kind === "version" && activeNode.versionType ? (
+            <IGM_Launcher_Badge tone="muted">{activeNode.versionType}</IGM_Launcher_Badge>
+          ) : null}
+        </div>
+        {activeNode.kind === "resource" ? (
+          <>
+            <p className={styles.previewDesc}>
+              {description || t("previewNoDescription")}
+            </p>
+            <p className={styles.previewLine}>
+              <span className={styles.previewField}>{t("previewDownloads")}</span>
+              {t("downloadsValue", { count: activeNode.downloadCount ?? 0 })}
+            </p>
+          </>
+        ) : null}
+        {activeVersions.length > 0 ? (
+          <div className={styles.previewVersions}>
+            <span className={styles.previewField}>{t("previewVersions")}</span>
+            <span className={styles.previewVersionList}>{activeVersions.join("、")}</span>
+          </div>
+        ) : null}
+        <div className={styles.previewActions}>
+          {activeNode.center ? null : (
+            <IGM_Launcher_Button variant="secondary" onClick={() => handleSetCenter(activeNode)}>
+              <Crosshair size={14} strokeWidth={1.8} />
+              {t("actionSetCenter")}
+            </IGM_Launcher_Button>
+          )}
+          {activeNode.kind === "version" ? (
+            <IGM_Launcher_Button variant="primary" onClick={() => onOpenVersion(activeNode.label)}>
+              <Download size={14} strokeWidth={1.8} />
+              {t("actionDownloadVersion")}
+            </IGM_Launcher_Button>
+          ) : (
+            <IGM_Launcher_Button variant="primary" onClick={() => onOpenResource(activeNode)}>
+              <Download size={14} strokeWidth={1.8} />
+              {t("actionOpenResource")}
+            </IGM_Launcher_Button>
+          )}
+        </div>
       </div>
     );
   };
@@ -317,84 +504,109 @@ export function iGM_Launcher_RelationGraph({
         <p className={styles.stateText}>{t("empty")}</p>
       ) : (
         <>
-          <svg
-            ref={svgRef}
-            className={styles.canvas}
-            viewBox={`0 0 ${IGM_GRAPH_VIEW} ${IGM_GRAPH_VIEW}`}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onPointerLeave={handlePointerUp}
-            role="img"
-            aria-label={t("title")}
-          >
-            <g transform={`translate(${IGM_GRAPH_HALF} ${IGM_GRAPH_HALF})`}>
-              <g transform={`translate(${pan.x} ${pan.y}) scale(${zoom})`}>
-                {/* 同心圆参考线 */}
-                {Array.from(new Set(placed.filter((item) => item.node.ring > 0).map((item) => item.node.ring))).map(
-                  (ring) => {
-                    const sample = placed.find((item) => item.node.ring === ring);
-                    const radius = sample ? Math.hypot(sample.x, sample.y) : 0;
+          <div className={styles.canvasWrap}>
+            <svg
+              ref={svgRef}
+              className={styles.canvas}
+              viewBox={`0 0 ${IGM_GRAPH_VIEW} ${IGM_GRAPH_VIEW}`}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerLeave={handlePointerUp}
+              role="img"
+              aria-label={t("title")}
+            >
+              <g transform={`translate(${IGM_GRAPH_HALF} ${IGM_GRAPH_HALF})`}>
+                <g transform={`translate(${pan.x} ${pan.y}) scale(${zoom})`}>
+                  {/* 同心圆参考线 */}
+                  {Array.from(new Set(placed.filter((item) => item.node.ring > 0).map((item) => item.node.ring))).map(
+                    (ring) => {
+                      const sample = placed.find((item) => item.node.ring === ring);
+                      const radius = sample ? Math.hypot(sample.x, sample.y) : 0;
+                      return (
+                        <circle
+                          key={`ring-${ring}`}
+                          cx={0}
+                          cy={0}
+                          r={radius}
+                          className={styles.ring}
+                        />
+                      );
+                    },
+                  )}
+
+                  {/* 关系边：二次贝塞尔曲线，按 relation 区分线型与颜色 */}
+                  {edges.map((item) => {
+                    const highlighted = activeEdgeKeys.has(item.key);
                     return (
-                      <circle
-                        key={`ring-${ring}`}
-                        cx={0}
-                        cy={0}
-                        r={radius}
-                        className={styles.ring}
-                      />
+                      <g key={item.key} className={highlighted ? styles.edgeGroupActive : undefined}>
+                        <path
+                          d={item.path}
+                          className={`${styles.edge} ${
+                            item.edge.relation === "dependency"
+                              ? styles.edgeDependency
+                              : item.edge.relation === "derived"
+                                ? styles.edgeDerived
+                                : styles.edgeCompatible
+                          }`}
+                        />
+                        {/* 边中点关系类型标注 */}
+                        <g transform={`translate(${item.labelX} ${item.labelY})`}>
+                          <rect
+                            x={-16}
+                            y={-8}
+                            width={32}
+                            height={16}
+                            rx={4}
+                            className={styles.edgeLabelBg}
+                          />
+                          <text
+                            textAnchor="middle"
+                            y={3.5}
+                            className={styles.edgeLabel}
+                          >
+                            {relationLabel(item.edge.relation)}
+                          </text>
+                        </g>
+                      </g>
                     );
-                  },
-                )}
+                  })}
 
-                {/* 关系边：按 relation 区分线型与颜色 */}
-                {edges.map(({ edge, from, to }, index) => (
-                  <line
-                    key={`${edge.from}-${edge.to}-${edge.relation}-${index}`}
-                    x1={from.x}
-                    y1={from.y}
-                    x2={to.x}
-                    y2={to.y}
-                    className={`${styles.edge} ${
-                      edge.relation === "dependency"
-                        ? styles.edgeDependency
-                        : edge.relation === "derived"
-                          ? styles.edgeDerived
-                          : styles.edgeCompatible
-                    }`}
-                  />
-                ))}
-
-                {/* 节点 */}
-                {placed.map(({ node, x, y }) => {
-                  const isCenter = node.center || node.id === graph.centerId;
-                  const radius = isCenter ? 30 : 20;
-                  return (
-                    <g
-                      key={node.id}
-                      className={styles.node}
-                      transform={`translate(${x} ${y})`}
-                      onClick={() => handleNodeClick(node)}
-                    >
-                      <circle
-                        r={radius}
-                        className={`${styles.nodeCircle} ${
-                          node.kind === "version" ? styles.nodeVersion : styles.nodeResource
-                        } ${isCenter ? styles.nodeCenter : ""}`}
-                      />
-                      <text
-                        y={radius + 14}
-                        textAnchor="middle"
-                        className={`${styles.nodeLabel} ${isCenter ? styles.nodeLabelCenter : ""}`}
+                  {/* 节点 */}
+                  {placed.map(({ node, x, y }) => {
+                    const isCenter = node.center || node.id === graph.centerId;
+                    const isActive = activeNode?.id === node.id;
+                    const radius = isCenter ? 30 : 20;
+                    return (
+                      <g
+                        key={node.id}
+                        className={`${styles.node} ${isActive ? styles.nodeActive : ""}`}
+                        transform={`translate(${x} ${y})`}
+                        onPointerEnter={() => setHoveredId(node.id)}
+                        onPointerLeave={() => setHoveredId((current) => (current === node.id ? null : current))}
+                        onClick={() => handleNodeClick(node)}
                       >
-                        {iGM_Launcher_ShortLabel(node.label, isCenter ? 18 : 14)}
-                      </text>
-                    </g>
-                  );
-                })}
+                        <circle
+                          r={radius}
+                          className={`${styles.nodeCircle} ${
+                            node.kind === "version" ? styles.nodeVersion : styles.nodeResource
+                          } ${isCenter ? styles.nodeCenter : ""}`}
+                        />
+                        <text
+                          y={radius + 14}
+                          textAnchor="middle"
+                          className={`${styles.nodeLabel} ${isCenter ? styles.nodeLabelCenter : ""}`}
+                        >
+                          {iGM_Launcher_ShortLabel(node.label, isCenter ? 18 : 14)}
+                        </text>
+                      </g>
+                    );
+                  })}
+                </g>
               </g>
-            </g>
-          </svg>
+            </svg>
+            {renderPreview()}
+          </div>
           <p className={styles.hintText}>{t("clickHint")}</p>
         </>
       )}

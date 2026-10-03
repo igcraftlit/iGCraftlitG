@@ -183,7 +183,7 @@ async function iGM_ResolveCenter(
 
 /** 构建节点索引：id -> 展示信息 */
 async function iGM_BuildNodeIndex(): Promise<
-  Map<string, { kind: iGM_ResourceGraphNodeKind; label: string; versionType?: string; resourceType?: string; downloadCount?: number }>
+  Map<string, { kind: iGM_ResourceGraphNodeKind; label: string; versionType?: string; resourceType?: string; description?: string; downloadCount?: number }>
 > {
   const [versions, resources] = await Promise.all([
     iGM_ListGraphVersionRows(),
@@ -191,7 +191,7 @@ async function iGM_BuildNodeIndex(): Promise<
   ]);
   const index = new Map<
     string,
-    { kind: iGM_ResourceGraphNodeKind; label: string; versionType?: string; resourceType?: string; downloadCount?: number }
+    { kind: iGM_ResourceGraphNodeKind; label: string; versionType?: string; resourceType?: string; description?: string; downloadCount?: number }
   >();
   for (const version of versions) {
     index.set(version.iGM_Id, {
@@ -205,6 +205,7 @@ async function iGM_BuildNodeIndex(): Promise<
       kind: "resource",
       label: resource.iGM_Title,
       resourceType: resource.iGM_ResourceType,
+      description: resource.iGM_Description?.trim() || undefined,
       downloadCount: Number(resource.iGM_DownloadCount ?? 0),
     });
   }
@@ -263,6 +264,7 @@ export async function iGM_GetResourceGraph(
         label: info.label,
         versionType: info.versionType,
         resourceType: info.resourceType,
+        description: info.description,
         downloadCount: info.downloadCount,
         ring,
         center: id === center.id,
@@ -276,6 +278,7 @@ export async function iGM_GetResourceGraph(
       kind: "resource",
       label: resource.iGM_Title,
       resourceType: resource.iGM_ResourceType,
+      description: resource.iGM_Description?.trim() || undefined,
       downloadCount: Number(resource.iGM_DownloadCount ?? 0),
       ring,
       center: id === center.id,

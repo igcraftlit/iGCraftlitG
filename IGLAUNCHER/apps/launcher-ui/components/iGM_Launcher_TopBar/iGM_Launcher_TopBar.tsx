@@ -5,7 +5,9 @@
  * 模块：iGM_Launcher_TopBar
  * 作用：窗口顶部栏，承担原生标题栏职责（自定义窗口 chrome）
  * 内容：左侧 LOGO 与名称（可拖动窗口），中间账户入口（读取状态中心显示
- *       头像、用户名与认证标识），右侧明暗切换、中英切换与窗口控制按钮
+ *       头像、用户名与认证标识），右侧窗口控制按钮；
+ *       模块二十六修正：移除顶栏的深浅色切换与语言切换按钮，
+ *       主题 / 语言 / 关于 / Java / 背景统一在设置页内切换
  */
 
 // 导入依赖 //
@@ -17,8 +19,6 @@ import { useTranslations } from "next-intl";
 import { IGM_LAUNCHER_APP_NAME } from "@igm-launcher/shared";
 import { iGM_Launcher_UseStore } from "@/components/iGM_Launcher_Store/iGM_Launcher_StoreProvider";
 import { iGM_Launcher_UseShellLayout } from "@/components/iGM_Launcher_AppShell/iGM_Launcher_AppShell";
-import { iGM_Launcher_ThemeToggle as IGM_Launcher_ThemeToggle } from "@/components/iGM_Launcher_ThemeToggle/iGM_Launcher_ThemeToggle";
-import { iGM_Launcher_LanguageSwitcher as IGM_Launcher_LanguageSwitcher } from "@/components/iGM_Launcher_LanguageSwitcher/iGM_Launcher_LanguageSwitcher";
 import { iGM_Launcher_WindowControls as IGM_Launcher_WindowControls } from "@/components/iGM_Launcher_WindowControls/iGM_Launcher_WindowControls";
 import styles from "./iGM_Launcher_TopBar.module.css";
 
@@ -68,11 +68,6 @@ export function iGM_Launcher_TopBar() {
             aria-label={signedIn ? t("verified") : t("statusGuest")}
           />
         </button>
-
-        <span className={styles.divider} aria-hidden="true" />
-
-        <IGM_Launcher_ThemeToggle />
-        <IGM_Launcher_LanguageSwitcher />
 
         <span className={styles.divider} aria-hidden="true" />
 

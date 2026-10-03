@@ -3,8 +3,8 @@
  * 所属层：前端 / 组件层样式
  * 路由：G_ResourceCenter（SPA 页 id：resourceCenter）内嵌
  * 模块：iGM_Launcher_RelationGraph
- * 作用：关系图容器、工具栏与图例、SVG 画布、同心圆参考线、关系边线型、
- *       版本 / 资源 / 中心节点及标签的极简样式
+ * 作用：关系图容器、工具栏与图例、SVG 画布、同心圆参考线、曲线关系边与关系标注、
+ *       版本 / 资源 / 中心节点及标签、悬停 / 点击预览卡片的极简样式
  */
 
 .wrap {
@@ -78,6 +78,10 @@
 }
 
 /* 画布：固定高度，宽高自适应，保留方形比例 */
+.canvasWrap {
+  position: relative;
+}
+
 .canvas {
   width: 100%;
   height: 460px;
@@ -101,10 +105,11 @@
   stroke-dasharray: 2 6;
 }
 
-/* 关系边：实线 / 虚线 / 点线区分关系类型 */
+/* 关系边：曲线，实线 / 虚线 / 点线区分关系类型 */
 .edge {
   fill: none;
   stroke-width: 1.6;
+  opacity: 0.72;
 }
 
 .edgeCompatible {
@@ -119,6 +124,32 @@
 .edgeDerived {
   stroke: var(--igm-text-subtle);
   stroke-dasharray: 2 5;
+}
+
+/* 预览节点的相邻边高亮 */
+.edgeGroupActive .edge {
+  opacity: 1;
+  stroke-width: 2.4;
+}
+
+/* 边中点关系类型标注 */
+.edgeLabelBg {
+  fill: var(--igm-surface);
+  stroke: var(--igm-border);
+  stroke-width: 0.8;
+  opacity: 0.9;
+}
+
+.edgeGroupActive .edgeLabelBg {
+  opacity: 1;
+  stroke: var(--igm-accent);
+}
+
+.edgeLabel {
+  font-size: 9px;
+  fill: var(--igm-text-muted);
+  pointer-events: none;
+  user-select: none;
 }
 
 /* 节点 */
@@ -147,6 +178,12 @@
   fill: var(--igm-accent-soft);
 }
 
+/* 悬停 / 选中的节点描边增强 */
+.nodeActive .nodeCircle {
+  stroke-width: 3;
+  filter: drop-shadow(0 0 5px var(--igm-accent));
+}
+
 .nodeLabel {
   font-size: 11px;
   fill: var(--igm-text-muted);
@@ -157,6 +194,102 @@
   font-size: 13px;
   font-weight: 600;
   fill: var(--igm-text);
+}
+
+/* 预览卡片：悬浮在画布右上角 */
+.preview {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 264px;
+  max-width: calc(100% - 24px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: var(--igm-radius-lg);
+  border: 1px solid var(--igm-border-strong);
+  background-color: var(--igm-surface);
+  backdrop-filter: blur(var(--igm-launcher-panel-blur));
+  box-shadow: var(--igm-shadow-hover);
+  pointer-events: auto;
+}
+
+.previewHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.previewName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+  word-break: break-all;
+}
+
+.previewClose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  color: var(--igm-text-subtle);
+}
+
+.previewClose:hover {
+  background-color: var(--igm-surface-subtle);
+  color: var(--igm-text);
+}
+
+.previewBadges {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.previewDesc {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--igm-text-muted);
+  word-break: break-all;
+}
+
+.previewLine {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--igm-text);
+}
+
+.previewVersions {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.previewField {
+  font-size: 11px;
+  color: var(--igm-text-subtle);
+}
+
+.previewVersionList {
+  font-size: 12px;
+  color: var(--igm-text-muted);
+  word-break: break-all;
+}
+
+.previewActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
 }
 
 /* 状态文本 */

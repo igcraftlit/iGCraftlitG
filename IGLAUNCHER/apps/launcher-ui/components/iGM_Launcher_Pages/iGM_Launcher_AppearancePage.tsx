@@ -6,7 +6,9 @@
  * 作用：外观与主题页：预设主题选择、自定义主色取色、背景图上传与清除、模糊强度滑块
  * 内容：全部改动实时预览（立即覆写 html 数据集与内联 CSS 变量），并持久化到
  *       IGM_LAUNCHER_DATA_ROOT/appearance/appearance.json；背景图经主进程校验
- *       （JPG/PNG/WebP，≤5MB）后拷贝到数据目录并回传 data URL
+ *       （JPG/PNG/WebP，≤5MB）后拷贝到数据目录并回传 data URL；
+ *       模块二十六修正后本页既是独立页，也作为设置页「外观」子标签的内嵌内容，
+ *       内嵌时（embedded=true）不渲染页头，由设置页统一提供标题与子标签
  */
 
 // 导入依赖 //
@@ -44,6 +46,7 @@ import {
   iGM_Launcher_PersistAppearance as IGM_Launcher_PersistAppearance,
   IGM_LAUNCHER_APPEARANCE_BLUR_MAX as IGM_LAUNCHER_APPEARANCE_BLUR_MAX,
 } from "@/components/iGM_Launcher_Appearance/iGM_Launcher_AppearanceStore";
+import type { iGM_Launcher_PageProps } from "./iGM_Launcher_PageRegistry";
 import styles from "./iGM_Launcher_AppearancePage.module.css";
 
 // 类型定义 //
@@ -52,25 +55,32 @@ interface iGM_Launcher_PresetOption {
   labelKey: string;
 }
 
+/** 页面入参：embedded 为真时作为设置页子标签内容渲染，不输出页头 */
+type iGM_Launcher_AppearancePageProps = iGM_Launcher_PageProps & { embedded?: boolean };
+
 // 核心逻辑 //
 /** 预设主题清单：value 与 iGM_Launcher_Tokens.css 的 html[data-igm-theme-preset] 一一对应 */
 const IGM_LAUNCHER_PRESET_OPTIONS: iGM_Launcher_PresetOption[] = [
-  { value: "default", labelKey: "presetDefault" },
-  { value: "minimal-white", labelKey: "presetMinimalWhite" },
-  { value: "night-black", labelKey: "presetNightBlack" },
-  { value: "star-blue", labelKey: "presetStarBlue" },
-  { value: "aurora-green", labelKey: "presetAuroraGreen" },
-  { value: "sunset-orange", labelKey: "presetSunsetOrange" },
+  { value: "system", labelKey: "presetSystem" },
+  { value: "light", labelKey: "presetLight" },
+  { value: "dark", labelKey: "presetDark" },
+  { value: "oled", labelKey: "presetOled" },
+  { value: "elegant", labelKey: "presetElegant" },
+  { value: "classic-dark", labelKey: "presetClassicDark" },
+  { value: "retro", labelKey: "presetRetro" },
+  { value: "modern", labelKey: "presetModern" },
 ];
 
 /** 预设 -> 色板样式类（显式映射，避免动态拼串导致的类型与哈希不确定性） */
 const IGM_LAUNCHER_PRESET_SWATCH: Record<iGM_Launcher_ThemePreset, string> = {
-  default: styles.swatchDefault,
-  "minimal-white": styles.swatchMinimalWhite,
-  "night-black": styles.swatchNightBlack,
-  "star-blue": styles.swatchStarBlue,
-  "aurora-green": styles.swatchAuroraGreen,
-  "sunset-orange": styles.swatchSunsetOrange,
+  system: styles.swatchSystem,
+  light: styles.swatchLight,
+  dark: styles.swatchDark,
+  oled: styles.swatchOled,
+  elegant: styles.swatchElegant,
+  "classic-dark": styles.swatchClassicDark,
+  retro: styles.swatchRetro,
+  modern: styles.swatchModern,
 };
 
 /** 格式化文件大小 */
@@ -80,7 +90,7 @@ function iGM_Launcher_FormatSize(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
 }
 
-export function iGM_Launcher_AppearancePage() {
+export function iGM_Launcher_AppearancePage({ embedded = false }: iGM_Launcher_AppearancePageProps) {
   const t = useTranslations("appearance");
   const [prefs, setPrefs] = useState<iGM_Launcher_AppearancePrefs>(() =>
     iGM_Launcher_NormalizeAppearance(null),
@@ -161,7 +171,7 @@ export function iGM_Launcher_AppearancePage() {
 
   return (
     <div className={styles.page}>
-      <IGM_Launcher_PageHeader title={t("title")} description={t("subtitle")} />
+      {embedded ? null : <IGM_Launcher_PageHeader title={t("title")} description={t("subtitle")} />}
 
       {/* 预设主题 */}
       <IGM_Launcher_Card className={styles.group}>

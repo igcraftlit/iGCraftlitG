@@ -37,6 +37,8 @@ export interface iGM_ResourceGraphNode {
   versionType?: string;
   /** 资源节点：资源类型（mod / texture_pack / modpack 等） */
   resourceType?: string;
+  /** 资源节点：简介（iGM_Resources.iGM_Description，供关系图预览卡片展示） */
+  description?: string;
   /** 资源节点：下载数 */
   downloadCount?: number;
   /** 距中心节点的跳数（0 为中心） */
@@ -80,11 +82,15 @@ export function iGM_IsResourceRelationType(
 
 /**
  * 计算版本号所属「版本族」：取前两段数字（如 1.20.1 -> 1.20）。
- * 段数不足两段时返回原串；用于同族版本互为兼容的规则推导。
+ * 第二段带预发布后缀时先截去 '-' 之后的部分（如 26.3-rc-1 / 26.3-snapshot-1 -> 26.3），
+ * 使预发布版本与同号正式版归入同一族；段数不足两段时返回原串。
+ * 用于同族版本互为兼容的规则推导。
  */
 export function iGM_ResolveVersionFamily(version: string): string {
   const parts = version.split(".");
-  return parts.length >= 2 ? `${parts[0]}.${parts[1]}` : version;
+  if (parts.length < 2) return version;
+  const minor = parts[1].split("-")[0];
+  return `${parts[0]}.${minor}`;
 }
 
 // 导出 //

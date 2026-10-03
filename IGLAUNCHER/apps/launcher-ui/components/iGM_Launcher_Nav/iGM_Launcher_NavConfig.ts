@@ -5,10 +5,10 @@
  * 模块：iGM_Launcher_NavConfig
  * 作用：定义 AppShell 侧边栏的分组与导航项（图标、目标页面、占位标记）
  * 内容：主页区块（首页）、游戏区块（实例、资源中心）、
- *       账户区块（账户）、设置区块（外观、设置、关于）；
+ *       账户区块（账户）、系统区块（设置）；
  *       模块七移除「启动」动作项与「组织认证」占位项，启动入口统一收敛到实例管理页；
- *       模块二十六 B 新增一级项「外观」并把 Java 管理移入设置页内（不再占用导航），
- *       正版验证只保留账户页内的正式入口，不再单独占用导航项；
+ *       模块二十六修正把「外观」与「关于」并入设置页子标签，导航只保留单一「设置」一级项，
+ *       Java 管理同样在设置页内完成；
  *       模块二十六 E 把「下载中心」与「资源库」合并为单一「资源中心」入口；
  *       界面为 SPA 单页，导航项只声明目标页面 id，不涉及任何 URL，
  *       理由：Electrobun 打包后以 views:// 自定义协议读取静态产物，
@@ -19,9 +19,7 @@
 import {
   Boxes,
   Home,
-  Info,
   Library,
-  Palette,
   Settings,
   UserRound,
   type LucideIcon,
@@ -68,10 +66,8 @@ export const IGM_LAUNCHER_NAV_GROUPS: readonly iGM_Launcher_NavGroup[] = [
   {
     labelKey: "groupSystem",
     items: [
-      // 模块二十六 B：外观独立成一级项；Java 管理移入设置页内，不再占用导航
-      { id: "appearance", labelKey: "appearance", icon: Palette, pageId: "appearance" },
+      // 模块二十六修正：外观与关于并入设置页子标签，导航仅保留单一「设置」一级项
       { id: "settings", labelKey: "settings", icon: Settings, pageId: "settings" },
-      { id: "about", labelKey: "about", icon: Info, pageId: "about" },
     ],
   },
 ] as const;

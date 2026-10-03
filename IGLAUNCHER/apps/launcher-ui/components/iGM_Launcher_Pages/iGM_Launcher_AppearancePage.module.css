@@ -81,28 +81,36 @@
 }
 
 /* 主题色板缩略（左下角强调色块由渐变叠加表现） */
-.swatchDefault {
+.swatchSystem {
   background: linear-gradient(135deg, #f7f7f8 50%, #0c0c0e 50%);
 }
 
-.swatchMinimalWhite {
-  background: linear-gradient(135deg, #fafafa 58%, #18181b 58%);
+.swatchLight {
+  background: linear-gradient(135deg, #ffffff 58%, #2563eb 58%);
 }
 
-.swatchNightBlack {
-  background: linear-gradient(135deg, #101012 58%, #f2f2f4 58%);
+.swatchDark {
+  background: linear-gradient(135deg, #161618 58%, #60a5fa 58%);
 }
 
-.swatchStarBlue {
-  background: linear-gradient(135deg, #0e1426 58%, #4c8dff 58%);
+.swatchOled {
+  background: linear-gradient(135deg, #000000 58%, #f5f5f7 58%);
 }
 
-.swatchAuroraGreen {
-  background: linear-gradient(135deg, #0c1a14 58%, #34d399 58%);
+.swatchElegant {
+  background: linear-gradient(135deg, #fafaf8 58%, #6b7a8f 58%);
 }
 
-.swatchSunsetOrange {
-  background: linear-gradient(135deg, #22150c 58%, #fb923c 58%);
+.swatchClassicDark {
+  background: linear-gradient(135deg, #1c1710 58%, #c9a227 58%);
+}
+
+.swatchRetro {
+  background: linear-gradient(135deg, #faf3e0 58%, #a8622f 58%);
+}
+
+.swatchModern {
+  background: linear-gradient(135deg, #ffffff 58%, #000000 58%);
 }
 
 .presetLabel {

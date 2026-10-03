@@ -999,6 +999,8 @@ export interface iGM_Launcher_ResourceGraphNode {
   versionType?: string;
   /** 资源节点：资源类型（mod / texture_pack / modpack 等） */
   resourceType?: string;
+  /** 资源节点：简介（主站 iGM_Description，供关系图预览卡片展示） */
+  description?: string;
   /** 资源节点：累计下载数 */
   downloadCount?: number;
   /** 距中心节点的跳数（0 为中心） */
@@ -1567,17 +1569,19 @@ export type iGM_Launcher_GlassPreset = (typeof IGM_LAUNCHER_GLASS_PRESETS)[numbe
 /* ---- 模块二十六 B：外观与主题系统 ---- */
 
 /**
- * 可选主题预设（default 表示跟随 next-themes 的明暗模式）。
+ * 可选主题预设（system 表示跟随系统，由 next-themes 的 data-theme 决定）。
  * 取值写入 html[data-igm-theme-preset]，与 next-themes 的 data-theme 并存且互不冲突：
- * 预设选择器带独立属性名，未选择预设时移除该属性，回落为明暗主题。
+ * 选择 system 时移除该属性，回落为随系统的明暗主题。
  */
 export const IGM_LAUNCHER_THEME_PRESETS = [
-  "default",
-  "minimal-white",
-  "night-black",
-  "star-blue",
-  "aurora-green",
-  "sunset-orange",
+  "system",
+  "light",
+  "dark",
+  "oled",
+  "elegant",
+  "classic-dark",
+  "retro",
+  "modern",
 ] as const;
 
 /** 主题预设类型 */
@@ -1585,7 +1589,7 @@ export type iGM_Launcher_ThemePreset = (typeof IGM_LAUNCHER_THEME_PRESETS)[numbe
 
 /** 外观偏好（持久化到 IGM_LAUNCHER_DATA_ROOT/appearance/appearance.json） */
 export interface iGM_Launcher_AppearancePrefs {
-  /** 主题预设，default 表示跟随明暗模式 */
+  /** 主题预设，system 表示跟随系统明暗模式 */
   themePreset: iGM_Launcher_ThemePreset;
   /** 自定义主色（#rrggbb），null 表示使用预设主题自带强调色 */
   accentColor: string | null;
@@ -1615,7 +1619,7 @@ export const IGM_LAUNCHER_BG_BLUR_MAX = 40;
 
 /** 外观偏好默认值 */
 export function iGM_Launcher_EmptyAppearance(): iGM_Launcher_AppearancePrefs {
-  return { themePreset: "default", accentColor: null, backgroundPath: null, backgroundBlur: 0 };
+  return { themePreset: "system", accentColor: null, backgroundPath: null, backgroundBlur: 0 };
 }
 
 /* ---- 模块二十六 C：累计使用时长与离线账户 ---- */
@@ -1675,7 +1679,7 @@ export function iGM_Launcher_NormalizeAppearance(input: unknown): iGM_Launcher_A
   const themePreset: iGM_Launcher_ThemePreset =
     typeof source.themePreset === "string" && presetList.includes(source.themePreset)
       ? (source.themePreset as iGM_Launcher_ThemePreset)
-      : "default";
+      : "system";
   const accentColor =
     typeof source.accentColor === "string" && /^#[0-9a-fA-F]{6}$/.test(source.accentColor)
       ? source.accentColor.toLowerCase()

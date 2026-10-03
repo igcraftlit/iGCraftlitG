@@ -11,7 +11,7 @@
  */
 
 // 导入依赖 //
-import type { ComponentType } from "react";
+import { createElement, type ComponentType } from "react";
 import type {
   iGM_Launcher_LaunchMode,
   iGM_Launcher_ThirdPartyEngine,
@@ -41,8 +41,8 @@ import { iGM_Launcher_DownloadProgressPage } from "./iGM_Launcher_DownloadProgre
  * 第八模块新增两个独立进度页：launchProgress（启动进度，由实例管理页选定登录方式后跳转）
  * 与 downloadProgress（下载进度，由下载安装页点「开始下载」后跳转），
  * 两者均不经侧边栏，只靠代码 navigate() 进入。
- * "about" 复用设置页组件，并额外定位到页内的关于分组，
- * 以便侧边栏「设置」与「关于」各自独立高亮
+ * "about" 复用设置页组件并强制进入「关于」子标签（模块二十六修正后不再有侧边栏入口，
+ * 仅保留页面 id 以兼容历史跳转）
  */
 export type iGM_Launcher_PageId =
   | "home"
@@ -77,6 +77,8 @@ export interface iGM_Launcher_PageParams {
   engine?: iGM_Launcher_ThirdPartyEngine;
   /** 启动进度页的登录方式（由实例管理页的登录方式选择对话框传入） */
   mode?: iGM_Launcher_LaunchMode;
+  /** 设置页初始子标签（general / appearance / java / about） */
+  tab?: string;
 }
 
 /** 所有页面组件的统一入参 */
@@ -85,6 +87,13 @@ export interface iGM_Launcher_PageProps {
 }
 
 // 核心逻辑 //
+/** about 页 id 的兼容包装：渲染设置页并强制进入「关于」子标签 */
+function iGM_Launcher_AboutSettingsPage(props: iGM_Launcher_PageProps) {
+  return createElement(iGM_Launcher_SettingsPage, {
+    params: { ...(props.params ?? {}), tab: "about" },
+  });
+}
+
 export const IGM_LAUNCHER_PAGE_REGISTRY: Record<
   iGM_Launcher_PageId,
   ComponentType<iGM_Launcher_PageProps>
@@ -102,14 +111,12 @@ export const IGM_LAUNCHER_PAGE_REGISTRY: Record<
   accountMsBind: iGM_Launcher_AccountMsBindPage,
   accountProfile: iGM_Launcher_AccountProfilePage,
   settings: iGM_Launcher_SettingsPage,
-  about: iGM_Launcher_SettingsPage,
+  about: iGM_Launcher_AboutSettingsPage,
   appearance: iGM_Launcher_AppearancePage,
 };
 
-/** 切页后需要滚动定位的页内锚点 */
-export const IGM_LAUNCHER_PAGE_ANCHORS: Partial<Record<iGM_Launcher_PageId, string>> = {
-  about: "about",
-};
+/** 切页后需要滚动定位的页内锚点（设置页改为子标签后暂无锚点） */
+export const IGM_LAUNCHER_PAGE_ANCHORS: Partial<Record<iGM_Launcher_PageId, string>> = {};
 
 // 导出 //
 export default IGM_LAUNCHER_PAGE_REGISTRY;

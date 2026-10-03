@@ -81,7 +81,7 @@ export function iGM_Launcher_StatusBar() {
           type="button"
           className={styles.itemButton}
           title={defaultJava ? defaultJava.path : t("javaNotFound")}
-          onClick={() => navigate("java")}
+          onClick={() => navigate("settings", { tab: "java" })}
         >
           <Coffee size={13} strokeWidth={1.8} />
           <span>

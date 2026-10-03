@@ -49,14 +49,9 @@
   padding: 18px;
 }
 
-/* 模块二十六 B：有背景图时卡片半透明并模糊底层背景，形成玻璃面板 */
+/* 模块二十六 B：有背景图时卡片强制模糊底层背景（底色已由 --igm-surface 令牌变为半透明） */
 :global(html[data-igm-bg="image"]) .card {
-  background-color: color-mix(
-    in srgb,
-    var(--igm-surface) calc(var(--igm-launcher-panel-alpha) * 100%),
-    transparent
-  );
-  backdrop-filter: blur(var(--igm-launcher-bg-blur));
+  backdrop-filter: blur(var(--igm-launcher-panel-blur));
 }
 
 /* 徽章 */
