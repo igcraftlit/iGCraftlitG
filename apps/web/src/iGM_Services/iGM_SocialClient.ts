@@ -17,6 +17,8 @@ import {
   type iGM_ApiResponse,
 } from "./iGM_Request";
 import type { iGM_Author } from "./iGM_CommunityClient";
+import type { iGM_UserRole } from "./iGM_AuthClient";
+import type { iGM_OrgBadge } from "./iGM_OrgVerifyClient";
 
 // 类型定义 //
 /** 好友申请状态 */
@@ -110,6 +112,38 @@ export interface iGM_BlockListData {
 /** 动态流数据 */
 export interface iGM_FeedData {
   items: iGM_FeedItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+/** 社区广场用户搜索的公开资料（不含邮箱等隐私字段） */
+export interface iGM_UserSearchProfile {
+  id: string;
+  /** 11 位全局唯一 UID */
+  uid: string;
+  username: string;
+  displayName: string | null;
+  avatar: string | null;
+  bio: string | null;
+  role: iGM_UserRole;
+  /** 认证组织徽标（未认证为 null） */
+  verifiedOrg: iGM_OrgBadge | null;
+}
+
+/** 用户搜索结果条目：资料 + 当前用户视角好友状态 */
+export interface iGM_UserSearchResult {
+  user: iGM_UserSearchProfile;
+  /** 好友状态（当前用户视角；陌生人且非自己为 null） */
+  friendState: iGM_FriendState;
+  /** 是否为当前登录用户本人 */
+  isSelf: boolean;
+}
+
+/** 用户搜索分页数据 */
+export interface iGM_UserSearchData {
+  items: iGM_UserSearchResult[];
   total: number;
   page: number;
   pageSize: number;
@@ -223,6 +257,16 @@ export function iGM_ApiGetFeed(
   return iGM_Get(`/G_Social/feed?page=${page}`);
 }
 
+/* ---------- 社区广场用户搜索 ---------- */
+/** 搜索用户（iGMUid 精确 / 用户名模糊，需登录） */
+export function iGM_ApiSearchUsers(
+  keyword: string,
+  page = 1,
+): Promise<iGM_ApiResponse<{ data: iGM_UserSearchData }>> {
+  const params = new URLSearchParams({ q: keyword, page: String(page) });
+  return iGM_Get(`/G_Social/users/search?${params.toString()}`);
+}
+
 // 导出 //
 export default {
   iGM_ApiGetRelationState,
@@ -239,4 +283,5 @@ export default {
   iGM_ApiUnblock,
   iGM_ApiListBlocks,
   iGM_ApiGetFeed,
+  iGM_ApiSearchUsers,
 };

@@ -5,7 +5,7 @@
  * 模块：G_Social
  * 作用：社交关系与动态流接口集合
  * 内容：关系状态汇总、关注/取消关注、关注/粉丝列表、好友申请/处理/删除、
- *       拉黑/取消拉黑/黑名单、动态流
+ *       拉黑/取消拉黑/黑名单、社区广场用户搜索（iGMUid/用户名）、动态流
  * 约束：统一响应 { success, code, message, data }；
  *       除名单与状态公开只读外，写入要求登录并做基础限流
  */
@@ -35,6 +35,7 @@ import {
   iGM_ListFriendsService,
   iGM_RemoveFriendService,
   iGM_RespondFriendRequestService,
+  iGM_SearchUsersService,
   iGM_SendFriendRequestService,
   iGM_UnblockService,
   iGM_UnfollowService,
@@ -167,6 +168,17 @@ async function iGM_HandleBlockList(ctx: iGM_RouteContext) {
   });
 }
 
+/* ---------- 社区广场用户搜索（iGMUid 精确 / 用户名模糊） ---------- */
+async function iGM_HandleUserSearch(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
+  iGM_EnforceRateLimit(ctx, "userSearch", `user:${user.iGM_Id}`);
+  const keyword = iGM_Query(ctx.query, "q");
+  const { page, pageSize } = iGM_PageQuery(ctx);
+  return iGM_Ok({
+    data: await iGM_SearchUsersService(user, keyword, page, pageSize),
+  });
+}
+
 /* ---------- 动态流 ---------- */
 async function iGM_HandleFeed(ctx: iGM_RouteContext) {
   const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
@@ -191,6 +203,7 @@ export const G_Social = new Elysia({ name: "G_Social" })
   .post("/G_Social/block", iGM_HandleBlock as never)
   .post("/G_Social/unblock", iGM_HandleUnblock as never)
   .get("/G_Social/blocks", iGM_HandleBlockList as never)
+  .get("/G_Social/users/search", iGM_HandleUserSearch as never)
   .get("/G_Social/feed", iGM_HandleFeed as never);
 
 // 导出 //

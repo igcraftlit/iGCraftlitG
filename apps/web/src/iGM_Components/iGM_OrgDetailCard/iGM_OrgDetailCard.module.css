@@ -144,3 +144,96 @@ html[data-theme="dark"] .ownerChipIcon {
   line-height: 1.6;
   color: var(--igm-text-muted);
 }
+
+/* 社交生态优化：公开成员列表区 */
+.membersBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--igm-border);
+}
+
+.membersTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.membersCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border-strong);
+  background: var(--igm-surface-subtle);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--igm-text-muted);
+}
+
+.memberList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.memberRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--igm-border);
+  background: var(--igm-surface-subtle);
+}
+
+.memberInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.memberNameRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.memberName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.memberMeta {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--igm-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.membersEmpty {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}

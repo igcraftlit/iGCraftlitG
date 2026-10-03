@@ -38,6 +38,17 @@ export interface iGM_AdminVerificationListRow extends iGM_OrgVerificationRow {
   iGM_ReviewerName: string | null;
 }
 
+/** 组织成员列表行（用户公开资料 + 最近一次通过申请的更新时间） */
+export interface iGM_OrgMemberListRow {
+  iGM_Id: string;
+  iGM_Username: string;
+  iGM_DisplayName: string | null;
+  iGM_Avatar: string | null;
+  iGM_Uid: string;
+  iGM_Email: string;
+  iGM_JoinedAt: string | null;
+}
+
 // 核心逻辑 //
 /* ---------- 组织查询 ---------- */
 
@@ -331,6 +342,34 @@ export async function iGM_InsertLeaveRecord(params: {
   return row;
 }
 
+/* ---------- 组织成员 ---------- */
+
+/**
+ * 查询组织当前成员：iGM_VerifiedOrgId 指向该组织的 active 用户。
+ * joinedAt 取该用户在当前组织最近一条 approved 申请的更新时间
+ * （关联子查询按 UpdatedAt 倒序取首行；历史缺失为 NULL）。
+ * 邮箱仅用于服务层负责人判定，不进入对外 DTO。
+ */
+export async function iGM_ListOrgMembers(
+  orgId: string,
+): Promise<iGM_OrgMemberListRow[]> {
+  return (await iGM_Db
+    .query(
+      `SELECT u.iGM_Id, u.iGM_Username, u.iGM_DisplayName, u.iGM_Avatar,
+              u.iGM_Uid, u.iGM_Email,
+              (SELECT v.iGM_UpdatedAt FROM iGM_OrgVerifications v
+                WHERE v.iGM_UserId = u.iGM_Id
+                  AND v.iGM_OrgId = u.iGM_VerifiedOrgId
+                  AND v.iGM_Status = 'approved'
+                ORDER BY v.iGM_UpdatedAt DESC
+                LIMIT 1) AS iGM_JoinedAt
+         FROM iGM_Users u
+        WHERE u.iGM_VerifiedOrgId = ? AND u.iGM_Status = 'active'
+        ORDER BY iGM_JoinedAt DESC, u.iGM_CreatedAt DESC`,
+    )
+    .all(orgId)) as iGM_OrgMemberListRow[];
+}
+
 /* ---------- 用户认证字段 ---------- */
 
 /** 写入/清除用户认证组织（审核通过时写入），并刷新 updatedAt */
@@ -364,5 +403,6 @@ export default {
   iGM_ListVerificationsByUser,
   iGM_UpdateVerificationStatus,
   iGM_ListVerificationsForAdmin,
+  iGM_ListOrgMembers,
   iGM_SetUserVerifiedOrg,
 };

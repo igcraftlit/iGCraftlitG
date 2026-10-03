@@ -36,7 +36,7 @@ import {
 import { iGM_SendMail } from "./iGM_MailService";
 import { iGM_LookupIpLocation } from "./iGM_IpLocationService";
 import { iGM_ResolveUserOrgBadge } from "../iGM_Repositories/iGM_OrgVerifyRepository";
-import { iGM_ToUserDto, type iGM_UserRow } from "../iGM_Types/iGM_Auth";
+import { type iGM_UserRow } from "../iGM_Types/iGM_Auth";
 import type {
   iGM_AdminContentDto,
   iGM_AdminLogDto,
@@ -418,6 +418,7 @@ export async function iGM_ListReportsService(
         targetSummary,
         targetStatus,
         reason: row.iGM_Reason,
+        reasonDetail: row.iGM_ReasonDetail ?? "",
         status: row.iGM_Status,
         handlerId: row.iGM_HandlerId,
         handlerName: row.iGM_HandlerId

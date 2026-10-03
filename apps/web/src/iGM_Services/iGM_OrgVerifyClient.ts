@@ -41,6 +41,11 @@ export interface iGM_Organization {
   /** 模块七增强：关于组织内容（负责人可编辑） */
   aboutContent: string;
   logo: string | null;
+  /**
+   * 社交生态优化：登记负责人账号是否已入驻。
+   * 仅受信任组织列表下发；false 时申请将长期挂起，申请页展示官方联系提示。
+   */
+  hasOwner?: boolean;
 }
 
 /** 我的组织详情：组织信息 + 当前用户是否为负责人 */
@@ -70,6 +75,12 @@ export interface iGM_AdminOrgVerification extends iGM_OrgVerification {
   userDisplayName: string | null;
   userAvatar: string | null;
   userEmail: string;
+  /**
+   * 当前查看者是否可审核该条申请。
+   * 社交生态优化后仅对应组织负责人（且非本人申请）为 true；
+   * admin/moderator 只读恒为 false，以前端不渲染操作控件。
+   */
+  canReview: boolean;
 }
 
 /** 管理端申请分页数据 */
@@ -79,6 +90,28 @@ export interface iGM_AdminOrgVerificationPage {
   page: number;
   pageSize: number;
   totalPages: number;
+  /** 当前查看者视角：true=负责人可操作视图；false=管理只读视图（后端权威） */
+  canReview: boolean;
+}
+
+/** 组织成员条目（组织详情页公开成员列表） */
+export interface iGM_OrgMember {
+  id: string;
+  username: string;
+  displayName: string | null;
+  avatar: string | null;
+  /** 11 位全局唯一 UID */
+  uid: string;
+  /** 加入组织时间；历史数据缺失时为 null */
+  joinedAt: string | null;
+  /** 是否为该组织负责人 */
+  isOwner: boolean;
+}
+
+/** 组织成员列表数据（公开只读） */
+export interface iGM_OrgMemberListData {
+  organization: iGM_OrgBadge;
+  items: iGM_OrgMember[];
 }
 
 // 核心逻辑 //
@@ -100,6 +133,17 @@ export function iGM_ApiOrgDetail(input: {
   if (input.orgId) params.set("orgId", input.orgId);
   if (input.slug) params.set("slug", input.slug);
   return iGM_Get(`/G_OrgVerify/org-detail?${params.toString()}`);
+}
+
+/** 组织公开成员列表（G_OrgDetails 成员区，支持 id 或 slug） */
+export function iGM_ApiOrgMembers(input: {
+  orgId?: string | null;
+  slug?: string | null;
+}): Promise<iGM_ApiResponse<iGM_OrgMemberListData>> {
+  const params = new URLSearchParams();
+  if (input.orgId) params.set("orgId", input.orgId);
+  if (input.slug) params.set("slug", input.slug);
+  return iGM_Get(`/G_OrgVerify/org-members?${params.toString()}`);
 }
 
 /** 我的组织详情（需登录，附当前用户负责人标记） */
@@ -185,6 +229,7 @@ export function iGM_ApiAdminOrgVerificationReview(input: {
 export default {
   iGM_ApiOrgVerifyOrganizations,
   iGM_ApiOrgDetail,
+  iGM_ApiOrgMembers,
   iGM_ApiOrgVerifyMyOrg,
   iGM_ApiOrgVerifySubmit,
   iGM_ApiOrgVerifyMine,

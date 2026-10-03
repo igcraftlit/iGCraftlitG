@@ -24,6 +24,8 @@ import { iGM_OrgVerifyError } from "./iGM_Services/iGM_OrgVerifyService";
 // 模块十：社交关系与私信业务错误
 import { iGM_SocialError } from "./iGM_Services/iGM_SocialService";
 import { iGM_MessageError } from "./iGM_Services/iGM_MessageService";
+// 社交生态优化：帖子举报业务错误
+import { iGM_ReportError } from "./iGM_Services/iGM_ReportService";
 import { G_Health } from "./iGM_Routes/G_Health";
 import { G_Api } from "./iGM_Routes/G_Api";
 import { G_Auth } from "./iGM_Routes/G_Auth";
@@ -118,6 +120,11 @@ const iGM_Server = new Elysia()
     }
     // 模块十私信业务错误：隐私设置/撤回时限等
     if (error instanceof iGM_MessageError) {
+      set.status = error.status;
+      return iGM_Fail(error.status, error.message);
+    }
+    // 社交生态优化：举报业务错误（原因非法/重复举报等）
+    if (error instanceof iGM_ReportError) {
       set.status = error.status;
       return iGM_Fail(error.status, error.message);
     }

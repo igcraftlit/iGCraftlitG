@@ -3,9 +3,11 @@
  * 所属层：前端 / 应用骨架层
  * 路由：全局
  * 模块：iGM_Sidebar
- * 作用：左侧树状导航栏，当前路由高亮，父节点可展开折叠
+ * 作用：左侧树状导航栏，滑动气泡指示当前路由，父节点可展开折叠
  * 响应式：桌面端常驻展开，平板端折叠为图标栏（仅父级入口），移动端抽屉化
- * 内容：按服务类型分区，区内父子层级递归渲染；当前路由所在分支自动展开
+ * 内容：按服务类型分区，区内父子层级递归渲染；当前路由所在分支自动展开；
+ *       单一半透明气泡（Moving Pill）以 FLIP 思路在活动节点间平滑滑移，
+ *       位置于每次绘制后测量节点几何得到，路由切换/展开折叠/断点变化均重算
  */
 
 // 导入依赖 //
@@ -149,6 +151,119 @@ export function iGM_Sidebar({ open, onNavigate }: iGM_SidebarProps) {
     items: iGM_FilterItems(group.items, user),
   })).filter((group) => group.items.length > 0);
 
+  /* ---------- 滑动气泡（Moving Pill） ---------- */
+  /** 导航容器（气泡的定位参照，须为最近 positioned 祖先） */
+  const navRef = useRef<HTMLElement | null>(null);
+  /** 已渲染链接节点表：键为 `层级:解析后href`，同名父子靠层级区分 */
+  const linkRefs = useRef(new Map<string, HTMLAnchorElement>());
+  const [pill, setPill] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+  } | null>(null);
+
+  /** 解析节点实际跳转目标（开发者入口动态，其余取静态配置） */
+  function iGM_ResolveTarget(item: iGM_NavItem): {
+    href: string;
+    external: boolean;
+  } {
+    return item.developerEntry
+      ? developerTarget
+      : { href: item.href, external: item.external === true };
+  }
+
+  /** 在可见导航树中查找命中当前路由的最深节点，并记录其顶级根 href（供平板栏回退） */
+  function iGM_FindActiveNode(): {
+    key: string;
+    depth: number;
+    rootHref: string;
+  } | null {
+    let found: { key: string; depth: number; rootHref: string } | null = null;
+    const visit = (item: iGM_NavItem, depth: number, rootHref: string): void => {
+      const target = iGM_ResolveTarget(item);
+      if (!target.external && iGM_IsActive(pathname, target.href)) {
+        if (!found || depth > found.depth) {
+          found = { key: `${depth}:${target.href}`, depth, rootHref };
+        }
+      }
+      item.children?.forEach((child) => visit(child, depth + 1, rootHref));
+    };
+    visibleGroups.forEach((group) =>
+      group.items.forEach((root) =>
+        visit(root, 0, iGM_ResolveTarget(root).href),
+      ),
+    );
+    return found;
+  }
+
+  /** 上一次提交的气泡几何（无活动项时为 null），用于跳过等值更新避免渲染循环 */
+  const lastPillRef = useRef<{
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+  } | null>(null);
+
+  /**
+   * 测量活动链接相对导航容器的几何并同步气泡。
+   * 在绘制后的 effect 中执行：上一位置保留一帧，CSS transition 自然从旧位滑移；
+   * 平板图标栏下命中的子节点 display:none（offsetParent 为空）时回退到可见的顶级父节点。
+   * 几何未变化时不触发 setState（ResizeObserver 初始回调与连续提交下防止更新风暴）。
+   */
+  function iGM_SyncPill(): void {
+    const node = iGM_FindActiveNode();
+    let next: typeof lastPillRef.current = null;
+    if (node) {
+      let element = linkRefs.current.get(node.key) ?? null;
+      if (!element || element.offsetParent === null) {
+        element = linkRefs.current.get(`0:${node.rootHref}`) ?? null;
+      }
+      if (element && element.offsetParent !== null) {
+        next = {
+          top: element.offsetTop,
+          left: element.offsetLeft,
+          width: element.offsetWidth,
+          height: element.offsetHeight,
+        };
+      }
+    }
+    const prev = lastPillRef.current;
+    if (
+      prev !== null &&
+      next !== null &&
+      prev.top === next.top &&
+      prev.left === next.left &&
+      prev.width === next.width &&
+      prev.height === next.height
+    ) {
+      return;
+    }
+    if (prev === null && next === null) return;
+    lastPillRef.current = next;
+    setPill(next);
+  }
+
+  /** 最新同步函数引用（供仅挂载一次的观察器调用，避免闭包陈旧） */
+  const syncPillRef = useRef(iGM_SyncPill);
+  syncPillRef.current = iGM_SyncPill;
+
+  // 每次提交后测量（路由、展开态、过滤结果、开发者目标变化均覆盖），
+  // rAF 兜底首帧字体/布局 settling；等值几何在 iGM_SyncPill 内被短路
+  useEffect(() => {
+    iGM_SyncPill();
+    const raf = requestAnimationFrame(iGM_SyncPill);
+    return () => cancelAnimationFrame(raf);
+  });
+
+  // 仅挂载一次：断点切换与侧栏尺寸变化时重测，观察器不随提交反复拆装
+  useEffect(() => {
+    const nav = navRef.current;
+    const observer = new ResizeObserver(() => syncPillRef.current());
+    if (nav) observer.observe(nav);
+    return () => observer.disconnect();
+  }, []);
+
   /** 节点是否展开：手动覆盖优先，否则按当前路由自动展开 */
   function iGM_IsOpen(item: iGM_NavItem): boolean {
     return overrides[item.href] ?? iGM_BranchActive(pathname, item);
@@ -175,10 +290,15 @@ export function iGM_Sidebar({ open, onNavigate }: iGM_SidebarProps) {
     const expanded = hasChildren && iGM_IsOpen(item);
 
     return (
-      <li key={item.href}>
+      <li key={`${depth}:${target.href}`}>
         <div className={styles.itemRow}>
           <Link
             href={target.href}
+            ref={(el) => {
+              const key = `${depth}:${target.href}`;
+              if (el) linkRefs.current.set(key, el);
+              else linkRefs.current.delete(key);
+            }}
             className={`${styles.navLink} ${active ? styles.navLinkActive : ""} ${
               depth > 0 ? styles.navLinkChild : ""
             }`}
@@ -230,7 +350,22 @@ export function iGM_Sidebar({ open, onNavigate }: iGM_SidebarProps) {
       className={`${styles.sidebar} ${open ? styles.open : ""}`}
       aria-label={t("nav.groupMain")}
     >
-      <nav className={styles.nav}>
+      <nav className={styles.nav} ref={navRef}>
+        {/* 滑动指示气泡：单一节点在活动链接间平滑滑移，装饰性元素不参与读屏 */}
+        <span
+          aria-hidden
+          className={styles.activePill}
+          data-hidden={pill ? undefined : "true"}
+          style={
+            pill
+              ? {
+                  transform: `translate(${pill.left}px, ${pill.top}px)`,
+                  width: `${pill.width}px`,
+                  height: `${pill.height}px`,
+                }
+              : undefined
+          }
+        />
         {visibleGroups.map((group) => (
           <section key={group.titleKey} className={styles.group}>
             <h3 className={styles.groupTitle}>{t(group.titleKey)}</h3>

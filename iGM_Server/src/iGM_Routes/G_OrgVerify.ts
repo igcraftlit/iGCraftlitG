@@ -4,9 +4,9 @@
  * 路由：/G_OrgVerify/*
  * 模块：G_OrgVerify
  * 作用：模块七组织认证用户侧接口集合
- * 内容：受信任组织列表、公开组织详情、我的组织详情、提交认证申请、
- *       我的申请记录、取消待审核申请、退出组织、负责人编辑“关于组织”
- * 权限：组织列表与组织详情公开可读；其余要求登录；写操作限流
+ * 内容：受信任组织列表、公开组织详情、组织成员公开列表、我的组织详情、
+ *       提交认证申请、我的申请记录、取消待审核申请、退出组织、负责人编辑“关于组织”
+ * 权限：组织列表、组织详情与组织成员公开可读；其余要求登录；写操作限流
  * 说明：管理端审核接口在 G_Admin 路由（/G_Admin/org-verifications/*）；
  *       业务错误统一抛 iGM_OrgVerifyError / iGM_AuthError，
  *       由 iGM_ServerMain 全局错误处理器格式化为统一响应体
@@ -30,6 +30,7 @@ import {
   iGM_GetMyOrgService,
   iGM_GetOrganizationDetailService,
   iGM_LeaveOrgService,
+  iGM_ListOrgMembersService,
   iGM_ListMyVerificationsService,
   iGM_ListTrustedOrgsService,
   iGM_SubmitVerificationService,
@@ -53,6 +54,15 @@ async function iGM_HandleOrgDetail(ctx: iGM_RouteContext) {
     slug: iGM_Query(ctx.query, "slug") || null,
   });
   return iGM_Ok({ organization });
+}
+
+/* ---------- 组织成员列表（公开，支持 id 或 slug） ---------- */
+async function iGM_HandleOrgMembers(ctx: iGM_RouteContext) {
+  const data = await iGM_ListOrgMembersService({
+    id: iGM_Query(ctx.query, "orgId") || null,
+    slug: iGM_Query(ctx.query, "slug") || null,
+  });
+  return iGM_Ok(data);
 }
 
 /* ---------- 我的组织详情（登录，附负责人标记） ---------- */
@@ -120,6 +130,7 @@ async function iGM_HandleUpdateAbout(ctx: iGM_RouteContext) {
 export const G_OrgVerify = new Elysia({ name: "G_OrgVerify" })
   .get("/G_OrgVerify/organizations", iGM_HandleOrganizations as never)
   .get("/G_OrgVerify/org-detail", iGM_HandleOrgDetail as never)
+  .get("/G_OrgVerify/org-members", iGM_HandleOrgMembers as never)
   .get("/G_OrgVerify/my-org", iGM_HandleMyOrg as never)
   .post("/G_OrgVerify/submit", iGM_HandleSubmit as never)
   .get("/G_OrgVerify/my", iGM_HandleMine as never)

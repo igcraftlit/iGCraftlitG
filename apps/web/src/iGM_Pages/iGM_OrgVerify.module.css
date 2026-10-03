@@ -57,6 +57,28 @@
   line-height: 1.6;
 }
 
+/* 社交生态优化：无负责人入驻的组织不可选中，提示申请将挂起 */
+.orgCardPending {
+  cursor: default;
+  border-style: dashed;
+  opacity: 0.85;
+}
+
+.orgPendingTip {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  margin-top: 2px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--igm-text-muted);
+}
+
+.orgPendingTip svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
 /* ===== 申请记录/审核行的补充 ===== */
 .proofLink {
   display: inline-flex;

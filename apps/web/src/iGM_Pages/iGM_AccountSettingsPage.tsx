@@ -2,10 +2,11 @@
  * 文件路径：apps/web/src/iGM_Pages/iGM_AccountSettingsPage.tsx
  * 所属层：前端 / 页面层
  * 路由：/G_Settings
- * 模块：G_Settings / G_Auth
- * 作用：账户设置页，展示账户信息、邮箱验证状态、修改密码、删除账号与登出
+ * 模块：G_Settings / G_Auth / G_Message
+ * 作用：账户设置页，展示账户信息、邮箱验证状态、修改密码、私信隐私、
+ *       删除账号与登出
  * 内容：账户信息列表、角色/状态徽标、未验证提醒、修改密码表单、
- *       删除账号（邮箱验证码二次校验）、登出按钮
+ *       私信隐私（允许谁向我发起私信）、删除账号（邮箱验证码二次校验）、登出按钮
  * 说明：需要登录，由 iGM_RequireAuth 守卫；
  *       修改密码的当前密码为可选项——不填时需先向本人邮箱索取验证码完成身份验证
  */
@@ -14,15 +15,18 @@
 "use client";
 
 import { iGM_UseLocaleRouter } from "../iGM_i18n/iGM_UseLocaleRouter";
-import { useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 
 import { iGM_Link as Link } from "../iGM_Components/iGM_Link/iGM_Link";
 import { useTranslations } from "next-intl";
 import {
   BadgeCheck,
   KeyRound,
+  LoaderCircle,
+  Lock,
   LogOut,
   MailWarning,
+  Save,
   Settings,
   Trash2,
   UserRound,
@@ -36,6 +40,11 @@ import {
   iGM_ApiSendPasswordChangeCode,
 } from "../iGM_Services/iGM_AuthClient";
 import type { iGM_UserRole } from "../iGM_Services/iGM_AuthClient";
+import {
+  iGM_ApiGetMessageSettings,
+  iGM_ApiUpdateMessageSettings,
+  type iGM_MessageAllowFrom,
+} from "../iGM_Services/iGM_MessageClient";
 // JSX 要求组件标识符首字母大写，iGM_ 前缀组件在使用处统一别名为 IGM_
 import { iGM_RequireAuth as IGM_RequireAuth } from "../iGM_Components/iGM_RequireAuth/iGM_RequireAuth";
 import {
@@ -46,6 +55,7 @@ import {
   iGM_SubmitButton as IGM_SubmitButton,
 } from "../iGM_Components/iGM_AuthUI/iGM_AuthUI";
 import authStyles from "../iGM_Components/iGM_AuthUI/iGM_AuthUI.module.css";
+import socialStyles from "./iGM_Module10.module.css";
 import pageStyles from "./iGM_Page.module.css";
 
 // 类型定义 //
@@ -59,7 +69,125 @@ const iGM_RoleBadgeClass: Record<iGM_UserRole, string> = {
 /** 发送修改密码验证码的冷却秒数 */
 const iGM_CodeCooldown = 60;
 
+/** 私信隐私可选范围顺序 */
+const iGM_MessagePrivacyOptions: iGM_MessageAllowFrom[] = [
+  "everyone",
+  "friends",
+  "none",
+];
+
 // 核心逻辑 //
+/** 私信隐私设置区块：选择允许谁向我发起私信（由原 /G_MessageSettings 迁入） */
+function iGM_MessagePrivacySection() {
+  const t = useTranslations();
+  const [allowFrom, setAllowFrom] = useState<iGM_MessageAllowFrom>("everyone");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [errorText, setErrorText] = useState<string | null>(null);
+  const [successText, setSuccessText] = useState<string | null>(null);
+
+  /** 读取当前私信隐私设置 */
+  const iGM_Load = useCallback(async () => {
+    setLoading(true);
+    setErrorText(null);
+    try {
+      const response = await iGM_ApiGetMessageSettings();
+      if (response.data) setAllowFrom(response.data.allowFrom);
+    } catch (error) {
+      setErrorText(iGM_ResolveErrorText(t, error));
+    } finally {
+      setLoading(false);
+    }
+  }, [t]);
+
+  useEffect(() => {
+    void iGM_Load();
+  }, [iGM_Load]);
+
+  /** 保存私信隐私设置 */
+  async function iGM_HandleSave() {
+    setSaving(true);
+    setErrorText(null);
+    setSuccessText(null);
+    try {
+      const response = await iGM_ApiUpdateMessageSettings(allowFrom);
+      if (response.data) setAllowFrom(response.data.allowFrom);
+      setSuccessText(t("message.settingsSaved"));
+    } catch (error) {
+      setErrorText(iGM_ResolveErrorText(t, error));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className={authStyles.settingsSection}>
+      <h2 className={authStyles.settingsSectionTitle}>
+        <span className={authStyles.settingsSectionIcon}>
+          <Lock size={16} strokeWidth={1.8} />
+        </span>
+        {t("message.settingsTitle")}
+      </h2>
+      <p style={{ margin: "0 0 12px", fontSize: 13, lineHeight: 1.6, opacity: 0.75 }}>
+        {t("message.settingsDescription")}
+      </p>
+
+      {loading ? (
+        <div className={socialStyles.stateBox}>
+          <LoaderCircle size={16} className="igm-spin" />
+          {t("message.stateLoading")}
+        </div>
+      ) : (
+        <>
+          <div className={socialStyles.radioList}>
+            {iGM_MessagePrivacyOptions.map((option) => (
+              <label
+                key={option}
+                className={`${socialStyles.radioCard} ${
+                  allowFrom === option ? socialStyles.radioCardActive : ""
+                }`}
+              >
+                <input
+                  className={socialStyles.radioInput}
+                  type="radio"
+                  name="igm-settings-message-allow-from"
+                  checked={allowFrom === option}
+                  onChange={() => setAllowFrom(option)}
+                />
+                <span className={socialStyles.radioText}>
+                  <span className={socialStyles.radioTitle}>
+                    {t(`message.allowFrom.${option}.title`)}
+                  </span>
+                  <span className={socialStyles.radioDescription}>
+                    {t(`message.allowFrom.${option}.description`)}
+                  </span>
+                </span>
+              </label>
+            ))}
+          </div>
+
+          {errorText && (
+            <IGM_Alert tone="error">{errorText}</IGM_Alert>
+          )}
+          {successText && (
+            <IGM_Alert tone="success">{successText}</IGM_Alert>
+          )}
+
+          <div style={{ marginTop: 12 }}>
+            <IGM_SecondaryButton onClick={() => void iGM_HandleSave()} loading={saving}>
+              <Save size={15} strokeWidth={1.8} />
+              {t("message.saveSettings")}
+            </IGM_SecondaryButton>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// JSX 要求组件标识符首字母大写
+const IGM_MessagePrivacySection = iGM_MessagePrivacySection;
+
 /** 账户设置页主体（在登录守卫内） */
 function iGM_AccountSettingsInner() {
   const t = useTranslations();
@@ -440,6 +568,11 @@ function iGM_AccountSettingsInner() {
               </IGM_SubmitButton>
             </form>
           </div>
+
+          <hr className={authStyles.divider} />
+
+          {/* 私信隐私：由原 /G_MessageSettings 迁入 */}
+          <IGM_MessagePrivacySection />
 
           <hr className={authStyles.divider} />
 

@@ -1,0 +1,70 @@
+/*
+ * 文件路径：apps/web/src/iGM_Components/iGM_FriendButton/iGM_FriendButton.module.css
+ * 所属层：前端 / 通用组件样式
+ * 路由：G_Community、G_User、G_Post 用户操作区
+ * 模块：iGM_FriendButton
+ * 作用：好友状态按钮（主按钮/次按钮/已成好友徽标）
+ * 内容：与全站设计令牌一致的轻量按钮样式，禁用态 44px 触屏热区
+ */
+
+.primaryButton,
+.ghostButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--igm-radius);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.primaryButton {
+  border: none;
+  background: var(--igm-accent);
+  color: var(--igm-accent-contrast);
+}
+
+.primaryButton:hover:not(:disabled) {
+  background: var(--igm-accent-hover);
+}
+
+.ghostButton {
+  border: 1px solid var(--igm-border-strong);
+  background: transparent;
+  color: var(--igm-text-muted);
+}
+
+.ghostButton:hover:not(:disabled) {
+  border-color: var(--igm-accent);
+  color: var(--igm-accent);
+}
+
+.primaryButton:disabled,
+.ghostButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.friendBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--igm-accent) 40%, transparent);
+  color: var(--igm-accent);
+  font-size: 12.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+@media (max-width: 767.98px) {
+  .primaryButton,
+  .ghostButton {
+    min-height: 40px;
+  }
+}

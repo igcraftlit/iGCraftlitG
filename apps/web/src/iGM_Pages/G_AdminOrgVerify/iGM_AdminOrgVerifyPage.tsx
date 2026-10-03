@@ -3,13 +3,15 @@
  * 所属层：前端 / 页面层
  * 路由：/G_AdminOrgVerify
  * 模块：G_AdminOrgVerify
- * 作用：认证审核——组织认证申请列表检索、审核（通过/拒绝 + 审核意见）
- * 内容：状态筛选 chips、组织筛选（仅 admin 可见，负责人后端强制本组织）、
+ * 作用：认证审核——身份双模申请列表：组织负责人可审核本组织申请；
+ *       admin/moderator 为全量只读视图（显著提示，无操作控件）
+ * 内容：只读/负责人模式提示、状态筛选 chips、组织筛选（只读视图）、
  *       分页申请列表（申请人头像/邮箱/组织/理由/证明材料）、
- *       审核意见输入与通过/拒绝按钮
+ *       负责人审核意见输入与通过/拒绝按钮（按钮显隐以后端条目 canReview 为准）
  * 说明：纯静态 SSG，数据在客户端经 iGM_OrgVerifyClient 调用本地后端；
- *       审核权限为 admin 或对应组织负责人，由后端严格校验并写操作日志；
- *       不能审核自己的申请（前端隐藏按钮，后端二次拦截）
+ *       社交生态优化后审核权唯一化至对应组织负责人，admin/moderator 只读，
+ *       模式与条目可操作性均以后端 canReview 字段为唯一事实来源；
+ *       不能审核自己的申请（负责人本人行不渲染控件，后端二次拦截）
  */
 
 // 导入依赖 //
@@ -21,6 +23,7 @@ import {
   BadgeCheck,
   CircleCheck,
   CircleSlash,
+  Eye,
   FileDown,
   LoaderCircle,
 } from "lucide-react";
@@ -59,21 +62,26 @@ const iGM_StatusClass: Record<iGM_OrgVerifyStatus, string> = {
   left: "",
 };
 
-/** 认证审核页主体（admin 或对应组织负责人；embedded 时作为审核面板 Tab） */
+/** 认证审核页主体（负责人可操作视图或管理只读视图；embedded 时作为审核面板 Tab） */
 function iGM_AdminOrgVerifyInner({ embedded = false }: { embedded?: boolean }) {
   const t = useTranslations();
   const { locale } = iGM_UseLocale();
   const { user: currentUser } = iGM_UseAuth();
-  /** admin 可切换组织筛选；负责人仅能看到自己组织（后端强制） */
-  const isAdmin = currentUser?.role === "admin";
 
   const [statusFilter, setStatusFilter] = useState<iGM_StatusFilter>("pending");
-  /** 组织筛选：null = 全部组织（仅 admin 可选） */
+  /** 组织筛选：null = 全部组织（仅管理只读视图可选） */
   const [orgFilter, setOrgFilter] = useState<string | null>(null);
   const [orgs, setOrgs] = useState<iGM_Organization[]>([]);
   const [items, setItems] = useState<iGM_AdminOrgVerification[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  /**
+   * 当前查看者视角（后端列表 canReview 权威下发）：
+   * true=对应组织负责人，可审核本组织申请；false=admin/moderator 全量只读。
+   * 首屏加载完成前不渲染横幅与操作区，避免模式闪烁。
+   */
+  const [canReviewView, setCanReviewView] = useState(false);
+  const [modeResolved, setModeResolved] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
@@ -83,15 +91,15 @@ function iGM_AdminOrgVerifyInner({ embedded = false }: { embedded?: boolean }) {
   /** 正在提交审核的申请 ID（防重复点击） */
   const [reviewingId, setReviewingId] = useState<string | null>(null);
 
-  /** admin 加载受信任组织列表用于筛选；负责人无需组织筛选器 */
+  /** 管理只读视图加载受信任组织列表用于筛选；负责人由后端强制本组织无需筛选 */
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!modeResolved || canReviewView) return;
     iGM_ApiOrgVerifyOrganizations()
       .then((response) => {
         if (response.data) setOrgs(response.data.items);
       })
       .catch(() => undefined);
-  }, [isAdmin]);
+  }, [modeResolved, canReviewView]);
 
   /** 加载申请列表 */
   const iGM_Load = useCallback(
@@ -112,11 +120,16 @@ function iGM_AdminOrgVerifyInner({ embedded = false }: { embedded?: boolean }) {
             setItems(response.data.items);
             setPage(response.data.page);
             setTotalPages(response.data.totalPages);
+            // 模式以后端下发为准，前端不按角色猜测，避免与审核权状态机漂移
+            setCanReviewView(response.data.canReview);
             setCommentMap({});
           }
         })
         .catch(() => setLoadFailed(true))
-        .finally(() => setLoading(false));
+        .finally(() => {
+          setLoading(false);
+          setModeResolved(true);
+        });
     },
     [],
   );
@@ -190,6 +203,14 @@ function iGM_AdminOrgVerifyInner({ embedded = false }: { embedded?: boolean }) {
         </div>
       )}
 
+      {/* 管理只读视图：显著提示审核权已收口至对应组织负责人 */}
+      {modeResolved && !loading && !canReviewView && (
+        <div className={uiStyles.alert}>
+          <Eye size={15} strokeWidth={1.8} className={uiStyles.alertIcon} />
+          {t("orgVerify.admin.readonlyNotice")}
+        </div>
+      )}
+
       {/* 状态筛选 */}
       <div className={uiStyles.chips}>
         {(
@@ -212,8 +233,8 @@ function iGM_AdminOrgVerifyInner({ embedded = false }: { embedded?: boolean }) {
         ))}
       </div>
 
-      {/* 组织筛选（仅 admin：全部组织 + 各受信任组织；负责人由后端限定本组织） */}
-      {isAdmin && orgs.length > 0 && (
+      {/* 组织筛选（仅管理只读视图：全部组织 + 各受信任组织；负责人由后端限定本组织） */}
+      {!canReviewView && orgs.length > 0 && (
         <div className={uiStyles.chips} aria-label={t("orgVerify.admin.filterOrg")}>
           <button
             type="button"
@@ -250,8 +271,6 @@ function iGM_AdminOrgVerifyInner({ embedded = false }: { embedded?: boolean }) {
         <section className={uiStyles.sectionCard}>
           <div className={tileStyles.recordList}>
             {items.map((item) => {
-              /** 自己的申请不可审核（后端同样拦截） */
-              const isSelf = item.userId === currentUser?.id;
               return (
                 <div key={item.id} className={tileStyles.recordRow}>
                   <div className={tileStyles.recordMain}>
@@ -308,55 +327,58 @@ function iGM_AdminOrgVerifyInner({ embedded = false }: { embedded?: boolean }) {
                         : ""}
                     </span>
                   </div>
-                  {/* 待审核：审核意见 + 通过/拒绝 */}
-                  {item.status === "pending" && (
+                  {/* 待审核：仅后端标记 canReview 的负责人行渲染操作区；
+                      只读视图无任何操作按钮；负责人本人申请给克制提示 */}
+                  {item.status === "pending" && item.canReview && (
                     <div className={styles.rowActions}>
-                      {isSelf ? (
+                      <input
+                        className={verifyStyles.commentInput}
+                        type="text"
+                        value={commentMap[item.id] ?? ""}
+                        maxLength={500}
+                        placeholder={t("orgVerify.admin.commentPlaceholder")}
+                        aria-label={t("orgVerify.list.reviewComment")}
+                        onChange={(event) =>
+                          setCommentMap((previous) => ({
+                            ...previous,
+                            [item.id]: event.target.value,
+                          }))
+                        }
+                      />
+                      <button
+                        type="button"
+                        className={styles.smallButton}
+                        disabled={reviewingId === item.id}
+                        onClick={() => iGM_HandleReview(item, "approve")}
+                      >
+                        {reviewingId === item.id ? (
+                          <LoaderCircle size={13} className="igm-spin" />
+                        ) : (
+                          <CircleCheck size={13} strokeWidth={1.8} />
+                        )}
+                        {t("orgVerify.admin.approve")}
+                      </button>
+                      <button
+                        type="button"
+                        className={`${styles.smallButton} ${styles.smallButtonDanger}`}
+                        disabled={reviewingId === item.id}
+                        onClick={() => iGM_HandleReview(item, "reject")}
+                      >
+                        <CircleSlash size={13} strokeWidth={1.8} />
+                        {t("orgVerify.admin.reject")}
+                      </button>
+                    </div>
+                  )}
+                  {item.status === "pending" &&
+                    !item.canReview &&
+                    canReviewView &&
+                    item.userId === currentUser?.id && (
+                      <div className={styles.rowActions}>
                         <span className={styles.userMeta}>
                           {t("orgVerify.admin.selfTip")}
                         </span>
-                      ) : (
-                        <>
-                          <input
-                            className={verifyStyles.commentInput}
-                            type="text"
-                            value={commentMap[item.id] ?? ""}
-                            maxLength={500}
-                            placeholder={t("orgVerify.admin.commentPlaceholder")}
-                            aria-label={t("orgVerify.list.reviewComment")}
-                            onChange={(event) =>
-                              setCommentMap((previous) => ({
-                                ...previous,
-                                [item.id]: event.target.value,
-                              }))
-                            }
-                          />
-                          <button
-                            type="button"
-                            className={styles.smallButton}
-                            disabled={reviewingId === item.id}
-                            onClick={() => iGM_HandleReview(item, "approve")}
-                          >
-                            {reviewingId === item.id ? (
-                              <LoaderCircle size={13} className="igm-spin" />
-                            ) : (
-                              <CircleCheck size={13} strokeWidth={1.8} />
-                            )}
-                            {t("orgVerify.admin.approve")}
-                          </button>
-                          <button
-                            type="button"
-                            className={`${styles.smallButton} ${styles.smallButtonDanger}`}
-                            disabled={reviewingId === item.id}
-                            onClick={() => iGM_HandleReview(item, "reject")}
-                          >
-                            <CircleSlash size={13} strokeWidth={1.8} />
-                            {t("orgVerify.admin.reject")}
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  )}
+                      </div>
+                    )}
                 </div>
               );
             })}

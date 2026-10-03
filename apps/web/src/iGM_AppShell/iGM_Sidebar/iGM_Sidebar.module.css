@@ -42,12 +42,39 @@
   }
 }
 
-/* 导航整体 */
+/* 导航整体（relative：作为滑动气泡的定位参照） */
 .nav {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 20px;
   padding: 20px 12px;
+}
+
+/*
+ * 滑动指示气泡（Moving Pill）：唯一半透明节点，
+ * 通过 transform/尺寸 transition 在活动链接间柔和滑移；
+ * 位于链接层之下，不拦截指针；data-hidden 时仅淡出（无活动项）。
+ */
+.activePill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: var(--igm-radius);
+  background: var(--igm-accent-soft);
+  pointer-events: none;
+  z-index: 0;
+  transform-origin: 0 0;
+  opacity: 1;
+  transition:
+    transform var(--igm-motion-nav) var(--igm-motion-ease),
+    width var(--igm-motion-nav) var(--igm-motion-ease),
+    height var(--igm-motion-nav) var(--igm-motion-ease),
+    opacity var(--igm-motion-nav) var(--igm-motion-ease);
+}
+
+.activePill[data-hidden="true"] {
+  opacity: 0;
 }
 
 /* 分区 */
@@ -79,15 +106,17 @@
   gap: 2px;
 }
 
-/* 导航链接 */
+/* 导航链接（位于气泡层之上，自身保持透明背景） */
 .navLink {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 8px 12px;
   border-radius: var(--igm-radius);
   color: var(--igm-text-muted);
-  /* 当前路由高亮随页面切换平滑滑移，无跳变（侧边导航联动） */
+  /* 悬停底色与活动文字色平滑过渡；活动背景由滑动气泡承担 */
   transition:
     background-color var(--igm-motion-nav) var(--igm-motion-ease),
     color var(--igm-motion-nav) var(--igm-motion-ease);
@@ -98,10 +127,9 @@
   color: var(--igm-text);
 }
 
-/* 当前路由高亮 */
+/* 当前路由：仅强调文字（背景由 .activePill 滑移呈现） */
 .navLinkActive,
 .navLinkActive:hover {
-  background: var(--igm-accent-soft);
   color: var(--igm-accent);
   font-weight: 500;
 }
@@ -234,9 +262,10 @@
   }
 }
 
-/* 无障碍：系统偏好减少动态时，高亮与抽屉即时切换，不做过渡 */
+/* 无障碍：系统偏好减少动态时，气泡、高亮与抽屉即时切换，不做过渡 */
 @media (prefers-reduced-motion: reduce) {
   .sidebar,
+  .activePill,
   .navLink,
   .navToggle,
   .chevron,

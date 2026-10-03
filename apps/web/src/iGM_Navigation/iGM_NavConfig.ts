@@ -26,9 +26,7 @@ import {
   LayoutDashboard,
   Library,
   ListChecks,
-  MessageSquare,
   MessageSquareText,
-  MessagesSquare,
   Newspaper,
   NotebookPen,
   PenSquare,
@@ -124,9 +122,12 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
         labelKey: "nav.activities",
         children: [
           {
+            // 社交生态优化：活动发布权收回，仅协管员/管理员可见入口；
+            // 普通用户仅可浏览与报名，后端 iGM_CreateActivityService 同步强制 403
             href: "/G_ActivityEdit",
             icon: CalendarPlus,
             labelKey: "nav.createActivity",
+            roles: ["moderator", "admin"],
           },
         ],
       },
@@ -166,13 +167,7 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
               },
             ],
           },
-          {
-            // 模块二十：下载中心（登录用户；页面另有 RequireAuth 校验）
-            href: "/G_DownloadCenter",
-            icon: HardDriveDownload,
-            labelKey: "nav.downloadCenter",
-            roles: ["user", "moderator", "admin"],
-          },
+          // 社交生态优化：下载中心迁移至顶部栏右侧（iGM_TopBar），侧边栏不再列入口
         ],
       },
       {
@@ -233,34 +228,9 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
         icon: FolderOpen,
         labelKey: "nav.myFiles",
       },
-      {
-        // 模块十：好友管理（登录用户）
-        href: "/G_Friends",
-        icon: Users,
-        labelKey: "nav.friends",
-        roles: ["user", "moderator", "admin"],
-        children: [
-          {
-            href: "/G_UserRelations",
-            icon: MessageSquare,
-            labelKey: "nav.userRelations",
-          },
-        ],
-      },
-      {
-        // 模块十：私信（登录用户）
-        href: "/G_Messages",
-        icon: MessagesSquare,
-        labelKey: "nav.messages",
-        roles: ["user", "moderator", "admin"],
-        children: [
-          {
-            href: "/G_MessageSettings",
-            icon: BellRing,
-            labelKey: "nav.messageSettings",
-          },
-        ],
-      },
+      // 社交生态优化：好友与私信合并入社区广场（G_Community 子标签），
+      // 不再占用侧边一级菜单；黑名单/关注等关系管理（G_UserRelations）
+      // 入口改挂用户资料页
       // 模块七：组织认证（申请 + 我的申请记录）
       {
         href: "/G_OrgVerify",

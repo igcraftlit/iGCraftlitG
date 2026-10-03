@@ -4,14 +4,15 @@
  * 路由：G_OrgVerify、G_Admin
  * 模块：iGM_OrgVerifyService
  * 作用：模块七组织认证核心业务编排
- * 内容：受信任组织列表与详情、提交申请、我的申请记录、取消待审核申请、
- *       我的组织详情、退出组织、负责人编辑“关于组织”、
- *       管理端/负责人申请列表、详情、审核（通过/拒绝）并写入用户认证字段
+ * 内容：受信任组织列表与详情、组织成员公开列表、提交申请、我的申请记录、
+ *       取消待审核申请、我的组织详情、退出组织、负责人编辑“关于组织”、
+ *       管理端只读/负责人可操作申请列表与详情、负责人审核（通过/拒绝）
  * 规则：仅登录用户可申请；同一用户同一时间最多一条待审核申请；
  *       已认证用户不能重复申请，需先退出；
- *       审核人限 admin 或对应组织负责人，负责人仅能审核本组织申请；
+ *       社交生态优化后审核权唯一化：仅对应组织负责人可审核本组织申请，
+ *       admin/moderator 仅可只读查看全部申请，不能执行审核；
  *       任何人都不能审核自己的申请；审核/退出操作写入 iGM_AdminLogs；
- *       提交/通过/拒绝/退出时发送邮件（admin 审核时同步通知组织负责人）
+ *       提交/通过/拒绝/退出时发送邮件通知申请人
  */
 
 // 导入依赖 //
@@ -24,6 +25,7 @@ import {
   iGM_FindVerificationById,
   iGM_InsertLeaveRecord,
   iGM_InsertVerification,
+  iGM_ListOrgMembers,
   iGM_ListTrustedOrganizations,
   iGM_ListVerificationsByUser,
   iGM_ListVerificationsForAdmin,
@@ -42,6 +44,8 @@ import type {
   iGM_AdminOrgVerificationListData,
   iGM_MyOrgDetailDto,
   iGM_OrganizationDto,
+  iGM_OrgMemberDto,
+  iGM_OrgMemberListData,
   iGM_OrgVerificationDto,
   iGM_OrgVerificationRow,
   iGM_OrgVerifyStatus,
@@ -114,9 +118,10 @@ async function iGM_ToVerificationDto(
   };
 }
 
-/** 管理端列表行转 DTO */
+/** 管理端列表行转 DTO；canReview 为当前查看者对该条的审核权限 */
 async function iGM_ToAdminVerificationDto(
   row: iGM_AdminVerificationListRow,
+  canReview: boolean,
 ): Promise<iGM_AdminOrgVerificationDto> {
   return {
     ...(await iGM_ToVerificationDto(row, row.iGM_ReviewerName)),
@@ -125,6 +130,7 @@ async function iGM_ToAdminVerificationDto(
     userDisplayName: row.iGM_UserDisplayName,
     userAvatar: row.iGM_UserAvatar,
     userEmail: row.iGM_UserEmail,
+    canReview,
   };
 }
 
@@ -156,38 +162,23 @@ async function iGM_NotifyByMail(params: {
   });
 }
 
-/** admin 审核时同步通知对应组织负责人（审核人即负责人本人时不重复发送） */
-async function iGM_NotifyOwnerByMail(params: {
-  ownerEmail: string | null | undefined;
-  applicant: iGM_UserRow;
-  orgName: string;
-  kind: "approved" | "rejected";
-  comment?: string | null;
-}): Promise<void> {
-  const ownerEmail = params.ownerEmail?.trim();
-  // 无负责人邮箱，或申请人/负责人同一邮箱时，不重复通知
-  if (!ownerEmail || iGM_SameEmail(ownerEmail, params.applicant.iGM_Email)) return;
-  const owner = await iGM_FindUserByEmail(ownerEmail);
-  void iGM_SendOrgVerifyMail({
-    to: ownerEmail,
-    username: owner?.iGM_Username ?? ownerEmail,
-    orgName: params.orgName,
-    kind: params.kind,
-    comment: params.comment ?? null,
-    locale: "zh-CN",
-  }).catch((error) => {
-    console.error(
-      `[iGM_OrgVerifyService] 负责人 ${params.kind} 邮件发送失败：`,
-      error instanceof Error ? error.message : error,
-    );
-  });
-}
-
 /* ---------- 用户侧：组织 ---------- */
 
-/** 受信任组织列表（申请页卡片数据源） */
+/**
+ * 受信任组织列表（申请页卡片数据源）。
+ * 社交生态优化：附带 hasOwner——登记负责人邮箱已有站内账号时为 true；
+ * 无负责人入驻的组织其申请无人审核，前端据 hasOwner 提示挂起与官方联系方式。
+ */
 export async function iGM_ListTrustedOrgsService(): Promise<iGM_OrganizationDto[]> {
-  return (await iGM_ListTrustedOrganizations()).map(iGM_ToOrganizationDto);
+  const rows = await iGM_ListTrustedOrganizations();
+  return Promise.all(
+    rows.map(async (row) => ({
+      ...iGM_ToOrganizationDto(row),
+      hasOwner: row.iGM_OwnerEmail
+        ? (await iGM_FindUserByEmail(row.iGM_OwnerEmail)) !== null
+        : false,
+    })),
+  );
 }
 
 /** 公开组织详情（G_OrgDetails，按 id 或 slug 查询） */
@@ -413,11 +404,17 @@ export async function iGM_LeaveOrgService(
   });
 }
 
-/* ---------- 管理端 / 负责人 ---------- */
+/* ---------- 管理端只读 / 负责人审核 ---------- */
+
+/** 管理身份判定：管理员或协管员具备只读查看全部申请的权限 */
+function iGM_IsReviewStaff(user: iGM_UserRow): boolean {
+  return user.iGM_Role === "admin" || user.iGM_Role === "moderator";
+}
 
 /**
- * 审核权限判定：admin 可审核全部组织；负责人仅可审核自己组织；
- * 任何人都不能审核自己的申请。
+ * 审核动作权限判定（社交生态优化后审核权唯一化）：
+ * 仅申请对应组织的负责人可审核；admin/moderator 一律 403 只读；
+ * 任何人都不能审核自己的申请（负责人本人申请同样 422）。
  * @returns 校验通过的申请对应组织行
  */
 async function iGM_AssertCanReview(
@@ -431,14 +428,18 @@ async function iGM_AssertCanReview(
   if (!org) {
     throw new iGM_OrgVerifyError("orgVerify.errors.orgNotFound", 404);
   }
-  if (reviewer.iGM_Role === "admin") return org;
+  // 仅组织负责人（邮箱匹配，与其在站内的角色无关）具备最终审核权
   if (iGM_SameEmail(org.iGM_OwnerEmail, reviewer.iGM_Email)) return org;
   throw new iGM_OrgVerifyError("orgVerify.errors.forbidden", 403);
 }
 
 /**
- * 申请列表（按审核人权限过滤）
- * admin：可按组织筛选，可看全部；负责人：强制仅自己组织；其余：403
+ * 申请列表（按查看者权限双模，Owner 身份优先）
+ * - 组织负责人（邮箱判定，与其站内角色无关）：可操作视图，
+ *   强制仅自己组织，canReview=true；即使同时具备 admin/moderator 角色，
+ *   进入认证面板时也只处理本组织，审核权与管理只读视图互斥；
+ * - 其余 admin/moderator：管理只读视图，可按组织筛选、可看全部，canReview=false；
+ * - 其余用户：403。
  */
 export async function iGM_AdminListVerificationsService(
   reviewer: iGM_UserRow,
@@ -453,17 +454,20 @@ export async function iGM_AdminListVerificationsService(
     : null;
 
   let orgFilter: string | null = null;
-  if (reviewer.iGM_Role === "admin") {
-    // admin 可选择组织筛选；传入非法 id 时按无筛选处理（不泄露存在性）
+  let canReview = false;
+  // Owner 身份优先：以组织负责人邮箱判定，不看站内角色
+  const ownerOrg = await iGM_FindOrganizationByOwnerEmail(reviewer.iGM_Email);
+  if (ownerOrg) {
+    // 可操作视图：强制仅本人负责的组织，忽略传入的 orgId
+    orgFilter = ownerOrg.iGM_Id;
+    canReview = true;
+  } else if (iGM_IsReviewStaff(reviewer)) {
+    // 管理只读视图：可选择组织筛选；传入非法 id 时按无筛选处理（不泄露存在性）
     if (orgIdRaw?.trim() && (await iGM_FindOrganizationById(orgIdRaw.trim()))) {
       orgFilter = orgIdRaw.trim();
     }
   } else {
-    const ownerOrg = await iGM_FindOrganizationByOwnerEmail(reviewer.iGM_Email);
-    if (!ownerOrg) {
-      throw new iGM_OrgVerifyError("orgVerify.errors.forbidden", 403);
-    }
-    orgFilter = ownerOrg.iGM_Id;
+    throw new iGM_OrgVerifyError("orgVerify.errors.forbidden", 403);
   }
 
   const { items, total } = await iGM_ListVerificationsForAdmin(
@@ -473,22 +477,42 @@ export async function iGM_AdminListVerificationsService(
     pageSize,
   );
   return {
-    items: await Promise.all(items.map((item) => iGM_ToAdminVerificationDto(item))),
+    items: await Promise.all(
+      // 条目级收窄：自己提交的申请不可审核（即便审核人就是组织负责人）
+      items.map((item) =>
+        iGM_ToAdminVerificationDto(
+          item,
+          canReview && item.iGM_UserId !== reviewer.iGM_Id,
+        ),
+      ),
+    ),
     total,
     page,
     pageSize,
     totalPages: Math.max(1, Math.ceil(total / pageSize)),
+    canReview,
   };
 }
 
-/** 申请详情（admin 或对应组织负责人） */
+/**
+ * 申请详情（管理只读或对应组织负责人）。
+ * 可见性：admin/moderator 全部可读；负责人可读本组织（含自己的申请）；其余 403。
+ * 可操作性 canReview：仅对应组织负责人且非本人申请时为 true；
+ * 自己的申请详情只读返回（canReview=false），审核动作仍由审核接口判 422。
+ */
 export async function iGM_AdminGetVerificationService(
   reviewer: iGM_UserRow,
   verificationId: string,
 ): Promise<iGM_AdminOrgVerificationDto> {
   const row = await iGM_FindVerificationById(verificationId.trim());
   if (!row) throw new iGM_OrgVerifyError("orgVerify.errors.notFound", 404);
-  await iGM_AssertCanReview(reviewer, row);
+  const org = await iGM_FindOrganizationById(row.iGM_OrgId);
+  if (!org) throw new iGM_OrgVerifyError("orgVerify.errors.orgNotFound", 404);
+  const isOwner = iGM_SameEmail(org.iGM_OwnerEmail, reviewer.iGM_Email);
+  if (!iGM_IsReviewStaff(reviewer) && !isOwner) {
+    throw new iGM_OrgVerifyError("orgVerify.errors.forbidden", 403);
+  }
+  const canReview = isOwner && row.iGM_UserId !== reviewer.iGM_Id;
   const applicant = await iGM_FindUserById(row.iGM_UserId);
   const reviewUser = row.iGM_ReviewerId
     ? await iGM_FindUserById(row.iGM_ReviewerId)
@@ -500,14 +524,16 @@ export async function iGM_AdminGetVerificationService(
     userDisplayName: applicant?.iGM_DisplayName ?? null,
     userAvatar: applicant?.iGM_Avatar ?? null,
     userEmail: applicant?.iGM_Email ?? "",
+    canReview,
   };
 }
 
 /**
  * 审核申请：approve 通过 / reject 拒绝
- * 规则：仅 pending 可审；审核人限 admin 或对应组织负责人；不能审核自己的申请；
- *       通过时写入用户认证组织；审核操作写入 iGM_AdminLogs；
- *       邮件通知申请人；审核人为 admin 时同步抄送组织负责人
+ * 规则：仅 pending 可审；审核权限唯一——仅对应组织负责人；
+ *       admin/moderator 在 iGM_AssertCanReview 处被拦截（403）；
+ *       不能审核自己的申请（422）；通过时写入用户认证组织；
+ *       审核操作写入 iGM_AdminLogs；邮件通知申请人
  */
 export async function iGM_ReviewVerificationService(
   reviewer: iGM_UserRow,
@@ -558,7 +584,6 @@ export async function iGM_ReviewVerificationService(
     now,
   });
 
-  const applicant = await iGM_FindUserById(row.iGM_UserId);
   await iGM_NotifyByMail({
     userId: row.iGM_UserId,
     orgName: org.iGM_Name,
@@ -566,22 +591,55 @@ export async function iGM_ReviewVerificationService(
     comment: reviewComment,
     locale,
   });
-  // admin 代为审核时同步通知组织负责人；负责人本人审核不重复通知
-  if (reviewer.iGM_Role === "admin" && applicant) {
-    await iGM_NotifyOwnerByMail({
-      ownerEmail: org.iGM_OwnerEmail,
-      applicant,
-      orgName: org.iGM_Name,
-      kind: action === "approve" ? "approved" : "rejected",
-      comment: reviewComment,
-    });
+}
+
+/* ---------- 组织成员（公开只读） ---------- */
+
+/**
+ * 组织成员列表（组织详情页展示，公开可读）：
+ * 按 orgId 或 slug 定位受信任组织，返回当前成员的头像、用户名、iGMUid、
+ * 加入时间与负责人标记；负责人排首位，其余按加入时间倒序。
+ * 无成员组织返回空数组；组织不存在或未受信任返回 404。
+ */
+export async function iGM_ListOrgMembersService(input: {
+  id?: string | null;
+  slug?: string | null;
+}): Promise<iGM_OrgMemberListData> {
+  const id = input.id?.trim();
+  const slug = input.slug?.trim();
+  const org = id
+    ? await iGM_FindOrganizationById(id)
+    : slug
+      ? await iGM_FindOrganizationBySlug(slug)
+      : null;
+  if (!org || org.iGM_IsTrusted !== 1) {
+    throw new iGM_OrgVerifyError("orgVerify.errors.orgNotFound", 404);
   }
+
+  const rows = await iGM_ListOrgMembers(org.iGM_Id);
+  const items: iGM_OrgMemberDto[] = rows.map((row) => ({
+    id: row.iGM_Id,
+    username: row.iGM_Username,
+    displayName: row.iGM_DisplayName,
+    avatar: row.iGM_Avatar,
+    uid: row.iGM_Uid,
+    joinedAt: row.iGM_JoinedAt,
+    isOwner: iGM_SameEmail(org.iGM_OwnerEmail, row.iGM_Email),
+  }));
+  // 负责人置顶；其余维持仓储的加入时间倒序
+  items.sort((a, b) => Number(b.isOwner) - Number(a.isOwner));
+
+  return {
+    organization: { id: org.iGM_Id, name: org.iGM_Name, slug: org.iGM_Slug },
+    items,
+  };
 }
 
 // 导出 //
 export default {
   iGM_ListTrustedOrgsService,
   iGM_GetOrganizationDetailService,
+  iGM_ListOrgMembersService,
   iGM_GetMyOrgService,
   iGM_UpdateOrgAboutService,
   iGM_SubmitVerificationService,

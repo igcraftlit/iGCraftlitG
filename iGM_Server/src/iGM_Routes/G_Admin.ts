@@ -212,9 +212,9 @@ async function iGM_HandleSettings(ctx: iGM_RouteContext) {
   return iGM_Ok(await iGM_GetSettingsService());
 }
 
-/* ---------- 模块七：组织认证申请列表（admin 全部；负责人仅本组织） ---------- */
+/* ---------- 模块七：组织认证申请列表（admin/moderator 只读全部；负责人可操作仅本组织） ---------- */
 async function iGM_HandleOrgVerifications(ctx: iGM_RouteContext) {
-  // 权限在 service 内按 admin / 组织负责人判定，路由层仅要求登录
+  // 社交生态优化：路由层仅要求登录，双模权限（只读/可操作）由 service 判定
   const reviewer = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const page = Number(iGM_Query(ctx.query, "page", "1"));
   const pageSize = Number(iGM_Query(ctx.query, "pageSize", "10"));
@@ -229,7 +229,7 @@ async function iGM_HandleOrgVerifications(ctx: iGM_RouteContext) {
   );
 }
 
-/* ---------- 模块七：组织认证申请详情（admin / 对应组织负责人） ---------- */
+/* ---------- 模块七：组织认证申请详情（admin/moderator 只读；对应组织负责人可操作） ---------- */
 async function iGM_HandleOrgVerificationDetail(ctx: iGM_RouteContext) {
   const reviewer = iGM_RequireUser(await iGM_CurrentUser(ctx));
   const id = iGM_Query(ctx.query, "id");
@@ -239,9 +239,9 @@ async function iGM_HandleOrgVerificationDetail(ctx: iGM_RouteContext) {
   });
 }
 
-/* ---------- 模块七：审核组织认证申请 ---------- */
+/* ---------- 模块七：审核组织认证申请（审核权唯一：仅对应组织负责人） ---------- */
 async function iGM_HandleOrgVerificationReview(ctx: iGM_RouteContext) {
-  // 负责人可能是普通角色：仅要求登录，具体 admin/owner 权限由 service 判定
+  // 负责人可能是普通角色：仅要求登录；admin/moderator 与非负责人均由 service 拦截
   const reviewer = iGM_RequireUser(await iGM_CurrentUser(ctx));
   iGM_EnforceRateLimit(ctx, "adminWrite", `user:${reviewer.iGM_Id}:${iGM_ClientIp(ctx)}`);
   const verificationId = iGM_Field(ctx.body, "verificationId").trim();

@@ -28,8 +28,10 @@ import {
   LoaderCircle,
   X,
 } from "lucide-react";
-import { iGM_ApiUploadFile } from "../../iGM_Services/iGM_FileClient";
-import { iGM_FilePreviewUrl } from "../../iGM_Services/iGM_FileClient";
+import {
+  iGM_ApiUploadFile,
+  iGM_FilePreviewUrl,
+} from "../../iGM_Services/iGM_FileClient";
 import styles from "./iGM_PostImageUploader.module.css";
 
 // 类型定义 //
@@ -54,6 +56,14 @@ interface iGM_PostImageUploaderProps {
 const iGM_MaxImages = 9;
 /** 单张体积上限：5MB */
 const iGM_MaxImageSize = 5 * 1024 * 1024;
+
+/** 单个文件预校验，失败返回错误文案键（纯函数，置模块级避免每次渲染重建） */
+function iGM_ValidateFile(file: File): string | null {
+  if (!file.type.startsWith("image/")) return "community.errors.imageInvalid";
+  if (file.size <= 0) return "community.errors.imageInvalid";
+  if (file.size > iGM_MaxImageSize) return "community.errors.imageInvalid";
+  return null;
+}
 
 // 核心逻辑 //
 /** 多图上传组件：选择/粘贴 + 预览 + 拖拽排序 + 删除 */
@@ -86,14 +96,6 @@ export function iGM_PostImageUploader({
       });
     };
   }, []);
-
-  /** 单个文件预校验，失败返回错误文案键 */
-  function iGM_ValidateFile(file: File): string | null {
-    if (!file.type.startsWith("image/")) return "community.errors.imageInvalid";
-    if (file.size <= 0) return "community.errors.imageInvalid";
-    if (file.size > iGM_MaxImageSize) return "community.errors.imageInvalid";
-    return null;
-  }
 
   /** 处理一批文件：校验数量与类型后逐个上传 */
   const iGM_HandleFiles = useCallback(

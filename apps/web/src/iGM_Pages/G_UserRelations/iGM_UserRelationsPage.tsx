@@ -195,7 +195,7 @@ export function iGM_UserRelationsPage() {
                     </div>
                     <div className={styles.rowActions}>
                       <Link
-                        href={`/G_MessageDetail?peerId=${encodeURIComponent(entry.user.id)}`}
+                        href={`/G_Community?tab=messages&peerId=${encodeURIComponent(entry.user.id)}`}
                         className={styles.iconButton}
                         title={t("social.sendMessage")}
                       >

@@ -5,7 +5,7 @@
  * 模块：iGM_PostClient
  * 作用：单篇帖子与评论操作相关后端接口的唯一前端调用出口
  * 内容：帖子详情、编辑、删除、隐藏/恢复；评论列表、发表回复、
- *       编辑评论、删除评论、隐藏/恢复评论；点赞与收藏状态切换
+ *       编辑评论、删除评论、隐藏/恢复评论；点赞与收藏状态切换；帖子举报
  * 约束：只经 iGM_Request 发请求，会话 Cookie 由 iGM_Request 统一携带
  */
 
@@ -28,6 +28,25 @@ import type {
 // 类型定义 //
 /** 点赞目标类型 */
 export type iGM_LikeTarget = "post" | "comment";
+
+/** 举报原因分类码（与后端 iGM_ReportReason 对齐） */
+export type iGM_ReportReason =
+  | "spam"
+  | "abuse"
+  | "porn"
+  | "illegal"
+  | "plagiarism"
+  | "other";
+
+/** 举报原因全集（供弹窗按固定顺序渲染） */
+export const iGM_ReportReasons: readonly iGM_ReportReason[] = [
+  "spam",
+  "abuse",
+  "porn",
+  "illegal",
+  "plagiarism",
+  "other",
+];
 
 /** 点赞操作返回 */
 export interface iGM_LikeState {
@@ -142,6 +161,19 @@ export function iGM_ApiToggleFavorite(input: {
   return iGM_Post("/G_Post/favorite", input);
 }
 
+/** 提交帖子举报（原因白名单 + 5-500 字描述，重复 pending 由后端返回 409） */
+export function iGM_ApiReportPost(input: {
+  postId: string;
+  reason: iGM_ReportReason;
+  detail: string;
+}): Promise<iGM_ApiResponse<{ reportId: string }>> {
+  return iGM_Post("/G_Post/report", {
+    postId: input.postId,
+    reason: input.reason,
+    detail: input.detail,
+  });
+}
+
 // 导出 //
 export default {
   iGM_ApiGetPost,
@@ -155,4 +187,5 @@ export default {
   iGM_ApiSetCommentStatus,
   iGM_ApiToggleLike,
   iGM_ApiToggleFavorite,
+  iGM_ApiReportPost,
 };

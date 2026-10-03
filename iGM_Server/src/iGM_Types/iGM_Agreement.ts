@@ -12,8 +12,14 @@
 // （本文件仅包含类型定义，无运行时依赖）
 
 // 类型定义 //
-/** 当前生效的《用户管理规定》版本号（与前端 docs/iGM_UserAgreement.md 一致） */
-export const iGM_UserAgreementVersion = "1.0.0";
+/**
+ * 当前生效的《用户管理规定》版本号
+ * （站内简版以 apps/web/messages 五语言 userRules 条文为准；
+ *   长版 docs/iGM_UserAgreement.md frontmatter 版本号须同步）
+ * 1.1.0：新增组织认证、积分等级任务勋章、开发者平台与 OAuth、资源发布、
+ *        社区活动、社交与私信隐私、举报机制等章条（2026 版社交生态增补）
+ */
+export const iGM_UserAgreementVersion = "1.1.0";
 
 /** iGM_UserAgreements 表数据行 */
 export interface iGM_UserAgreementRow {

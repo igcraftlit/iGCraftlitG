@@ -33,6 +33,7 @@ import {
 } from "../../iGM_Services/iGM_ActivityClient";
 import { iGM_FilePreviewUrl } from "../../iGM_Services/iGM_FileClient";
 import { iGM_ResolveErrorText } from "../../iGM_Components/iGM_AuthUI/iGM_AuthUI";
+import { iGM_UseAuth } from "../../iGM_Providers/iGM_AuthProvider";
 // JSX 要求组件标识符首字母大写，iGM_ 前缀组件在使用处统一别名为 IGM_
 import { iGM_Avatar as IGM_Avatar } from "../../iGM_Components/iGM_Avatar/iGM_Avatar";
 import { iGM_Pagination as IGM_Pagination } from "../../iGM_Components/iGM_Pagination/iGM_Pagination";
@@ -70,6 +71,10 @@ export function iGM_ActivityPage() {
   const t = useTranslations();
   const router = iGM_UseLocaleRouter();
   const searchParams = useSearchParams();
+  // 社交生态优化：活动发布权收回至协管员/管理员，入口与后端角色守卫保持同一口径
+  const { status: authStatus, hasRole } = iGM_UseAuth();
+  const canCreateActivity =
+    authStatus === "authenticated" && hasRole("moderator");
 
   // 筛选与分页状态：首屏从查询参数读取，保证静态壳可分享链接
   const [status, setStatus] = useState<iGM_ActivityStatus | "">(
@@ -166,10 +171,12 @@ export function iGM_ActivityPage() {
             onChange={(event) => setKeywordInput(event.target.value)}
           />
         </form>
-        <Link href="/G_ActivityEdit" className={styles.primaryButton}>
-          <CalendarPlus size={15} strokeWidth={1.8} />
-          {t("activity.create")}
-        </Link>
+        {canCreateActivity && (
+          <Link href="/G_ActivityEdit" className={styles.primaryButton}>
+            <CalendarPlus size={15} strokeWidth={1.8} />
+            {t("activity.create")}
+          </Link>
+        )}
       </div>
 
       {/* 状态筛选条 */}

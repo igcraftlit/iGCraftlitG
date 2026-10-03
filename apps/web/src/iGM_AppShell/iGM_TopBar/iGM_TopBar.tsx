@@ -17,6 +17,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   BadgeCheck,
   ChevronDown,
+  HardDriveDownload,
   LogOut,
   Menu,
   Settings,
@@ -201,6 +202,17 @@ export function iGM_TopBar({ onOpenMenu, drawerOpen = false }: iGM_TopBarProps) 
               </div>
             )}
           </div>
+        )}
+        {/* 下载中心：社交生态优化后由侧边导航迁移至顶栏右侧（登录可见，页面另有鉴权） */}
+        {status === "authenticated" && (
+          <Link
+            href="/G_DownloadCenter"
+            className={styles.downloadLink}
+            title={t("nav.downloadCenter")}
+          >
+            <HardDriveDownload size={16} strokeWidth={1.8} />
+            <span className={styles.downloadLabel}>{t("nav.downloadCenter")}</span>
+          </Link>
         )}
         <IGM_LanguageSwitcher />
         <IGM_ThemeToggle />

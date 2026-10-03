@@ -11,6 +11,8 @@
 
 // 导入依赖 //
 import type { iGM_AuthorDto } from "./iGM_Community";
+import type { iGM_UserRole } from "./iGM_Auth";
+import type { iGM_OrgBadgeDto } from "./iGM_OrgVerify";
 
 // 类型定义 //
 /** 好友申请状态：pending 待处理 / accepted 已通过 / rejected 已拒绝 */
@@ -115,7 +117,46 @@ export interface iGM_FeedData {
   totalPages: number;
 }
 
+/** 社区广场用户搜索的公开资料 DTO（不含邮箱等隐私字段） */
+export interface iGM_UserSearchProfileDto {
+  id: string;
+  /** 11 位全局唯一 UID */
+  uid: string;
+  username: string;
+  displayName: string | null;
+  avatar: string | null;
+  bio: string | null;
+  role: iGM_UserRole;
+  /** 认证组织徽标（未认证为 null） */
+  verifiedOrg: iGM_OrgBadgeDto | null;
+}
+
+/** 社区广场用户搜索结果条目：资料 + 当前用户视角好友状态 */
+export interface iGM_UserSearchResultDto {
+  user: iGM_UserSearchProfileDto;
+  /** 好友状态（当前用户视角；陌生人且非自己为 null） */
+  friendState: iGM_FriendState;
+  /** 是否为当前登录用户本人 */
+  isSelf: boolean;
+}
+
+/** 用户搜索分页数据 */
+export interface iGM_UserSearchData {
+  items: iGM_UserSearchResultDto[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
 // 核心逻辑 //
+/** 用户搜索关键词长度限制 */
+export const iGM_UserSearchKeywordMin = 1;
+export const iGM_UserSearchKeywordMax = 32;
+/** 用户搜索默认/最大每页条数 */
+export const iGM_UserSearchDefaultPageSize = 20;
+export const iGM_UserSearchMaxPageSize = 50;
+
 /** 允许的好友状态常量 */
 export const iGM_FriendStatuses: iGM_FriendStatus[] = [
   "pending",
@@ -134,4 +175,11 @@ export function iGM_IsFriendStatus(
 }
 
 // 导出 //
-export default { iGM_FriendStatuses, iGM_IsFriendStatus };
+export default {
+  iGM_FriendStatuses,
+  iGM_IsFriendStatus,
+  iGM_UserSearchKeywordMin,
+  iGM_UserSearchKeywordMax,
+  iGM_UserSearchDefaultPageSize,
+  iGM_UserSearchMaxPageSize,
+};

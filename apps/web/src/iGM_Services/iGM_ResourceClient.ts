@@ -5,7 +5,7 @@
  * 模块：iGM_ResourceClient
  * 作用：资源库相关后端接口的唯一前端调用出口
  * 内容：资源列表（分类/标签/搜索/分页）、分类字典、资源详情、创建、编辑、
- *       删除、上架下架、下载地址构造
+ *       删除、上架下架、下载地址构造；本站 + Modrinth 融合搜索
  * 约束：只经 iGM_Request 发请求；类型与后端 iGM_Types/iGM_Resource.ts 保持一致
  */
 
@@ -102,6 +102,72 @@ export interface iGM_ResourceQuery {
   pageSize?: number;
 }
 
+/** 融合搜索统一资源类型（与后端 iGM_UnifiedResourceType 对齐） */
+export type iGM_UnifiedResourceType =
+  | "mod"
+  | "shader"
+  | "resourcepack"
+  | "map"
+  | "datapack";
+
+/** 融合搜索类型过滤：具体类型或 all */
+export type iGM_UnifiedResourceTypeFilter = iGM_UnifiedResourceType | "all";
+
+/** 融合搜索资源来源 */
+export type iGM_UnifiedResourceSource = "site" | "modrinth";
+
+/** 融合搜索五类资源常量（筛选胶囊固定顺序） */
+export const iGM_UnifiedResourceTypes: readonly iGM_UnifiedResourceType[] = [
+  "mod",
+  "shader",
+  "resourcepack",
+  "map",
+  "datapack",
+];
+
+/** 融合资源作者（第三方仅有名称） */
+export interface iGM_UnifiedResourceAuthor {
+  name: string | null;
+  id: string | null;
+}
+
+/** 融合搜索统一资源条目（镜像后端 iGM_UnifiedResourceDto） */
+export interface iGM_UnifiedResource {
+  source: iGM_UnifiedResourceSource;
+  sourceId: string;
+  slug: string | null;
+  name: string;
+  summary: string;
+  type: iGM_UnifiedResourceType;
+  coverUrl: string | null;
+  author: iGM_UnifiedResourceAuthor;
+  downloads: number;
+  versions: string[];
+  /** 详情分流路由（本站 G_ResourceDetail / 第三方 G_ThirdPartyDetail） */
+  detailUrl: string;
+  updatedAt: string;
+}
+
+/** 融合搜索分页数据 */
+export interface iGM_UnifiedResourceSearchData {
+  items: iGM_UnifiedResource[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  type: iGM_UnifiedResourceTypeFilter;
+  degraded: boolean;
+  degradedSources: iGM_UnifiedResourceSource[];
+}
+
+/** 融合搜索查询参数 */
+export interface iGM_UnifiedResourceQuery {
+  q?: string;
+  type?: iGM_UnifiedResourceTypeFilter;
+  page?: number;
+  pageSize?: number;
+}
+
 /** 资源创建/编辑提交载荷 */
 export interface iGM_ResourcePayload {
   resourceId?: string;
@@ -157,6 +223,20 @@ export function iGM_ApiListResourceCategories(): Promise<
   return iGM_Get("/G_Resource/categories");
 }
 
+/** 融合搜索：本站资源 + Modrinth 混合按下载量排序（不区分来源） */
+export function iGM_ApiUnifiedResourceSearch(
+  query: iGM_UnifiedResourceQuery,
+): Promise<iGM_ApiResponse<iGM_UnifiedResourceSearchData>> {
+  return iGM_Get(
+    `/G_Resource/unified-search${iGM_BuildQuery({
+      q: query.q,
+      type: query.type,
+      page: query.page,
+      pageSize: query.pageSize,
+    })}`,
+  );
+}
+
 /** 资源详情 */
 export function iGM_ApiGetResource(
   resourceId: string,
@@ -206,6 +286,7 @@ export function iGM_ResourceDownloadUrl(resourceId: string): string {
 export default {
   iGM_ApiListResources,
   iGM_ApiListResourceCategories,
+  iGM_ApiUnifiedResourceSearch,
   iGM_ApiGetResource,
   iGM_ApiCreateResource,
   iGM_ApiUpdateResource,

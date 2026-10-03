@@ -229,6 +229,8 @@ export const iGM_Config: iGM_AppConfig = {
     createComment: { windowMs: 60 * 1000, max: 10 },
     // 模块三：点赞/收藏——1 分钟内最多 60 次
     interact: { windowMs: 60 * 1000, max: 60 },
+    // 社交生态优化：帖子举报提交——10 分钟内最多 10 次
+    reportSubmit: { windowMs: 10 * 60 * 1000, max: 10 },
     // 模块三：资料编辑——10 分钟内最多 10 次
     profileUpdate: { windowMs: 10 * 60 * 1000, max: 10 },
     // 模块四：文件上传——10 分钟内最多 30 次
@@ -257,6 +259,8 @@ export const iGM_Config: iGM_AppConfig = {
     statsQuery: { windowMs: 60 * 1000, max: 60 },
     // 模块十：社交写操作（关注/好友/黑名单）——1 分钟内最多 30 次
     socialWrite: { windowMs: 60 * 1000, max: 30 },
+    // 社交生态优化：社区广场用户搜索——1 分钟内最多 30 次
+    userSearch: { windowMs: 60 * 1000, max: 30 },
     // 模块十：私信发送/撤回——1 分钟内最多 30 条
     messageWrite: { windowMs: 60 * 1000, max: 30 },
     // 模块十：Minecraft 资源写操作——10 分钟内最多 20 次

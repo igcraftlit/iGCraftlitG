@@ -1,10 +1,9 @@
 /*
  * 文件路径：apps/web/src/iGM_Pages/iGM_Module10.module.css
  * 所属层：前端 / 页面样式
- * 路由：G_UserRelations、G_Friends、G_Feed、G_Messages、G_MessageDetail、
- *       G_MessageSettings
+ * 路由：G_UserRelations、G_Community（好友/私信标签）、G_Feed、G_Settings
  * 模块：iGM_Module10
- * 作用：模块十社交关系与私信页面的共享样式
+ * 作用：社交关系与私信相关面板的共享样式
  * 内容：卡片、行式列表、标签页、按钮、关系操作行、私信气泡、输入区
  */
 

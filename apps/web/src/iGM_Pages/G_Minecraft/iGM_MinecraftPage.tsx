@@ -1,14 +1,16 @@
 /**
  * 文件路径：apps/web/src/iGM_Pages/G_Minecraft/iGM_MinecraftPage.tsx
  * 所属层：前端 / 页面层
- * 路由：/G_Minecraft?source=&type=&version=&loader=&platform=&q=&page=
+ * 路由：/G_Minecraft?q=&type=&page=（旧 source/version/loader/platform 参数忽略）
  * 模块：G_Minecraft
- * 作用：Minecraft 资源分区首页——来源切换（本站资源 / 第三方资源）、多维筛选、搜索、资源横条列表
- * 内容：分区横幅、来源切换标签、资源类型/MC 版本/加载器/平台筛选胶囊、搜索框、
- *       本站资源卡片横条（封面/类型/标题/下载量/兼容信息）与第三方资源横条、分页
+ * 作用：Minecraft 资源生态融合页——本站资源与 Modrinth 资源统一搜索、
+ *       混合排序、统一卡片，按来源分流到各自详情页
+ * 内容：分区横幅、全局搜索框、五类资源胶囊、来源降级提示、统一资源卡片
+ *       （封面/来源徽章/类型/名称/简介/作者/下载量）、分页、空态与错误重试
  * 说明：
  *   - 纯静态 SSG，数据在客户端经 iGM_Request 调用本地后端
- *   - 模块二十一：第三方资源并入本页，来源切换标签切换本站资源与第三方资源
+ *   - 社交生态优化：移除来源切换与本站专属筛选，统一走
+ *     GET /G_Resource/unified-search，不区分来源混合排序
  */
 
 // 导入依赖 //
@@ -18,6 +20,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
+  AlertTriangle,
   Blocks,
   Download,
   LoaderCircle,
@@ -28,19 +31,13 @@ import {
 } from "lucide-react";
 import { iGM_Link as Link } from "../../iGM_Components/iGM_Link/iGM_Link";
 import {
-  iGM_ApiListMinecraft,
-  iGM_ApiMinecraftOptions,
-  type iGM_MinecraftOptions,
-  type iGM_MinecraftQuery,
-} from "../../iGM_Services/iGM_MinecraftClient";
-import type { iGM_ResourceListData } from "../../iGM_Services/iGM_ResourceClient";
-import {
-  iGM_ApiSearchThirdParty,
-  type iGM_ThirdPartyResource,
-  type iGM_ThirdPartyResourceType,
-  type iGM_ThirdPartySearchData,
-} from "../../iGM_Services/iGM_ThirdPartyClient";
-import { iGM_FilePreviewUrl } from "../../iGM_Services/iGM_FileClient";
+  iGM_ApiUnifiedResourceSearch,
+  iGM_UnifiedResourceTypes,
+  type iGM_UnifiedResource,
+  type iGM_UnifiedResourceType,
+  type iGM_UnifiedResourceTypeFilter,
+} from "../../iGM_Services/iGM_ResourceClient";
+import { iGM_ResolveMediaUrl } from "../../iGM_Services/iGM_FileClient";
 import { iGM_ResolveErrorText } from "../../iGM_Components/iGM_AuthUI/iGM_AuthUI";
 import { iGM_UseLocaleRouter } from "../../iGM_i18n/iGM_UseLocaleRouter";
 import { iGM_Pagination as IGM_Pagination } from "../../iGM_Components/iGM_Pagination/iGM_Pagination";
@@ -50,262 +47,165 @@ import m10 from "../iGM_Module10.module.css";
 import styles from "../iGM_Minecraft.module.css";
 
 // 类型定义 //
-/** 每页资源数 */
-const iGM_PageSize = 12;
+/** 融合搜索固定页大小（与后端 iGM_UnifiedResourceDefaultPageSize 对齐） */
+const iGM_PageSize = 24;
 
-/** 筛选维度（用于事件处理与 URL 同步） */
-type iGM_FilterKey = "type" | "version" | "loader" | "platform";
-
-/** 资源来源：本站资源 / 第三方资源 */
-type iGM_Source = "site" | "thirdparty";
-
-/** 第三方资源类型选项（与后端 iGM_ThirdPartyResourceTypes 一致） */
-const iGM_ThirdPartyTypes: readonly iGM_ThirdPartyResourceType[] = [
-  "mod",
-  "shader",
-  "resourcepack",
-  "map",
-  "datapack",
-];
-
-/** 地址栏查询拼装参数 */
-interface iGM_QueryInput {
-  source: iGM_Source;
-  type?: string;
-  version?: string;
-  loader?: string;
-  platform?: string;
-  q?: string;
+/** 合法类型参数白名单；非法值（含旧来源参数）归一化为 all */
+function iGM_ResolveTypeFilter(raw: string | null): iGM_UnifiedResourceTypeFilter {
+  return raw && (iGM_UnifiedResourceTypes as readonly string[]).includes(raw)
+    ? (raw as iGM_UnifiedResourceType)
+    : "all";
 }
 
 // 核心逻辑 //
-/** 资源类型的本地化标签（缺失时回退原值） */
-function iGM_TypeLabel(t: ReturnType<typeof useTranslations>, value: string | null): string {
-  if (!value) return "";
-  const key = `minecraft.resourceTypes.${value}`;
-  return t.has(key) ? t(key) : value;
-}
-
-/** 第三方资源类型的本地化标签（缺失时回退原值） */
-function iGM_ThirdPartyTypeLabel(
-  t: ReturnType<typeof useTranslations>,
-  value: string,
-): string {
-  const key = `thirdParty.resourceTypes.${value}`;
-  return t.has(key) ? t(key) : value;
-}
-
-/** 按来源拼装地址栏查询串（第三方仅保留 type 与 q） */
-function iGM_BuildQuery(input: iGM_QueryInput): string {
-  const params = new URLSearchParams();
-  params.set("source", input.source);
-  if (input.type) params.set("type", input.type);
-  if (input.q) params.set("q", input.q);
-  if (input.source === "site") {
-    if (input.version) params.set("version", input.version);
-    if (input.loader) params.set("loader", input.loader);
-    if (input.platform) params.set("platform", input.platform);
-  }
-  return `/G_Minecraft?${params.toString()}`;
-}
-
-/** Minecraft 分区首页主体（在 Suspense 内使用 useSearchParams） */
+/** Minecraft 融合资源页主体（在 Suspense 内使用 useSearchParams） */
 export function iGM_MinecraftPage() {
   const t = useTranslations();
   const router = iGM_UseLocaleRouter();
   const searchParams = useSearchParams();
 
-  const [options, setOptions] = useState<iGM_MinecraftOptions | null>(null);
-  const [source, setSource] = useState<iGM_Source>(
-    searchParams.get("source") === "thirdparty" ? "thirdparty" : "site",
+  const [type, setType] = useState<iGM_UnifiedResourceTypeFilter>(() =>
+    iGM_ResolveTypeFilter(searchParams.get("type")),
   );
-  const [type, setType] = useState(searchParams.get("type") ?? "");
-  const [version, setVersion] = useState(searchParams.get("version") ?? "");
-  const [loader, setLoader] = useState(searchParams.get("loader") ?? "");
-  const [platform, setPlatform] = useState(searchParams.get("platform") ?? "");
   const [keywordInput, setKeywordInput] = useState(searchParams.get("q") ?? "");
   const [search, setSearch] = useState(searchParams.get("q") ?? "");
-  const [page, setPage] = useState(1);
-  const [data, setData] = useState<iGM_ResourceListData | null>(null);
-  const [tpData, setTpData] = useState<iGM_ThirdPartySearchData | null>(null);
+  const [page, setPage] = useState(() => {
+    const raw = Number.parseInt(searchParams.get("page") ?? "1", 10);
+    return Number.isFinite(raw) && raw > 0 ? raw : 1;
+  });
+  const [data, setData] = useState<iGM_UnifiedResource[] | null>(null);
+  const [totalPages, setTotalPages] = useState(1);
+  const [degraded, setDegraded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [errorText, setErrorText] = useState<string | null>(null);
 
-  /** 拉取表单选项字典（仅一次） */
-  useEffect(() => {
-    let cancelled = false;
-    iGM_ApiMinecraftOptions()
-      .then((response) => {
-        if (!cancelled) setOptions(response.data);
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  /** 同步筛选状态到地址栏（保留既有参数语义，忽略历史 source 等参数） */
+  const iGM_SyncUrl = useCallback(
+    (next: { q?: string; type?: iGM_UnifiedResourceTypeFilter; page?: number }) => {
+      const params = new URLSearchParams();
+      const q = next.q ?? search;
+      const typeValue = next.type ?? type;
+      const pageValue = next.page ?? page;
+      if (q) params.set("q", q);
+      if (typeValue !== "all") params.set("type", typeValue);
+      if (pageValue > 1) params.set("page", String(pageValue));
+      router.replace(`/G_Minecraft?${params.toString()}`);
+    },
+    [router, search, type, page],
+  );
 
-  /** 按当前来源与筛选拉取资源列表 */
+  /** 拉取融合搜索结果 */
   const iGM_Load = useCallback(async () => {
     setLoading(true);
     setErrorText(null);
     try {
-      if (source === "thirdparty") {
-        const response = await iGM_ApiSearchThirdParty({
-          q: search || undefined,
-          type: (type as iGM_ThirdPartyResourceType) || undefined,
-          page,
-          pageSize: iGM_PageSize,
-        });
-        setTpData(response.data);
-      } else {
-        const query: iGM_MinecraftQuery = {
-          type: type || undefined,
-          version: version || undefined,
-          loader: loader || undefined,
-          platform: platform || undefined,
-          search: search || undefined,
-          page,
-          pageSize: iGM_PageSize,
-        };
-        const response = await iGM_ApiListMinecraft(query);
-        setData(response.data);
+      const response = await iGM_ApiUnifiedResourceSearch({
+        q: search || undefined,
+        type,
+        page,
+        pageSize: iGM_PageSize,
+      });
+      const payload = response.data;
+      if (!payload) {
+        setData([]);
+        setTotalPages(1);
+        setDegraded(false);
+        return;
       }
+      setData(payload.items);
+      setTotalPages(payload.totalPages);
+      // 以后端归一化后的类型为准，避免非法入参残留
+      setType(payload.type);
+      setDegraded(payload.degraded);
     } catch (error) {
       setErrorText(iGM_ResolveErrorText(t, error));
+      setData(null);
     } finally {
       setLoading(false);
     }
-  }, [source, type, version, loader, platform, search, page, t]);
+  }, [search, type, page, t]);
 
   useEffect(() => {
     void iGM_Load();
   }, [iGM_Load]);
 
-  /**
-   * 切换资源来源，重置分页并同步地址栏。
-   * 两栏的资源类型取值域不同（本站为上传类型、第三方为 Modrinth 类型），
-   * 切换时一并清空类型筛选，避免把对方的类型值带过去导致查不到结果。
-   */
-  function iGM_SwitchSource(next: iGM_Source): void {
-    if (next === source) return;
-    setSource(next);
-    setType("");
-    setPage(1);
-    setErrorText(null);
-    router.replace(
-      iGM_BuildQuery({ source: next, version, loader, platform, q: search }),
-    );
-  }
-
-  /** 切换本站资源筛选维度 */
-  function iGM_ToggleFilter(key: iGM_FilterKey, value: string): void {
-    if (key === "type") setType(value);
-    if (key === "version") setVersion(value);
-    if (key === "loader") setLoader(value);
-    if (key === "platform") setPlatform(value);
-    setPage(1);
-    router.replace(
-      iGM_BuildQuery({
-        source: "site",
-        type: key === "type" ? value : type,
-        version: key === "version" ? value : version,
-        loader: key === "loader" ? value : loader,
-        platform: key === "platform" ? value : platform,
-        q: search,
-      }),
-    );
-  }
-
-  /** 切换第三方资源类型 */
-  function iGM_ToggleThirdPartyType(value: string): void {
-    setType(value);
-    setPage(1);
-    router.replace(iGM_BuildQuery({ source: "thirdparty", type: value, q: search }));
-  }
-
-  /** 提交搜索（两栏共用） */
+  /** 提交关键词搜索 */
   function iGM_HandleSearch(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
     const keyword = keywordInput.trim();
     setSearch(keyword);
     setPage(1);
-    router.replace(
-      iGM_BuildQuery({ source, type, version, loader, platform, q: keyword }),
-    );
+    iGM_SyncUrl({ q: keyword, page: 1 });
   }
 
-  /** 渲染一组筛选胶囊 */
-  function iGM_RenderFilterGroup(
-    label: string,
-    values: string[],
-    current: string,
-    key: iGM_FilterKey,
-    localized = false,
-  ) {
-    return (
-      <div className={styles.filterGroup}>
-        <span className={styles.filterLabel}>{label}</span>
-        <div className={styles.filterChips}>
-          <button
-            type="button"
-            className={`${styles.mcChip} ${current === "" ? styles.mcChipActive : ""}`}
-            onClick={() => iGM_ToggleFilter(key, "")}
-          >
-            {t("minecraft.all")}
-          </button>
-          {values.map((value) => (
-            <button
-              key={value}
-              type="button"
-              className={`${styles.mcChip} ${current === value ? styles.mcChipActive : ""}`}
-              onClick={() => iGM_ToggleFilter(key, value)}
-            >
-              {localized ? iGM_TypeLabel(t, value) : value}
-            </button>
-          ))}
-        </div>
-      </div>
-    );
+  /** 切换资源类型胶囊 */
+  function iGM_HandleTypeChange(next: iGM_UnifiedResourceTypeFilter): void {
+    setType(next);
+    setPage(1);
+    iGM_SyncUrl({ type: next, page: 1 });
   }
 
-  /** 渲染第三方资源横条卡片 */
-  function iGM_RenderThirdPartyCard(item: iGM_ThirdPartyResource) {
-    const href = `/G_ThirdPartyDetail?id=${encodeURIComponent(item.id)}`;
+  /** 翻页 */
+  function iGM_HandlePageChange(next: number): void {
+    setPage(next);
+    iGM_SyncUrl({ page: next });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  /** 渲染单张统一资源卡片 */
+  function iGM_RenderUnifiedCard(item: iGM_UnifiedResource) {
+    const isSite = item.source === "site";
     return (
-      <article key={item.id} className={styles.tpCard}>
-        <Link href={href} className={styles.tpCover}>
+      <article key={`${item.source}:${item.sourceId}`} className={styles.urCard}>
+        <Link href={item.detailUrl} className={styles.urCover}>
           {item.coverUrl ? (
-            // 第三方图源，使用原生 img 避免额外域名配置
-            <img src={item.coverUrl} alt={item.name} loading="lazy" />
+            <img
+              src={iGM_ResolveMediaUrl(item.coverUrl)}
+              alt={item.name}
+              loading="lazy"
+              crossOrigin={isSite ? "anonymous" : undefined}
+            />
           ) : (
-            <span className={styles.tpCoverFallback}>
-              <Package size={18} strokeWidth={1.5} />
+            <span className={styles.urCoverFallback}>
+              <Package size={20} strokeWidth={1.5} />
             </span>
           )}
+          <span className={styles.urBadges}>
+            <span
+              className={`${styles.urSourceBadge} ${
+                isSite ? styles.urSourceSite : styles.urSourceModrinth
+              }`}
+            >
+              {isSite
+                ? t("minecraft.sourceSite")
+                : t("thirdParty.sourceModrinth")}
+            </span>
+          </span>
+          <span className={styles.urTypeBadge}>
+            {t(`thirdParty.resourceTypes.${item.type}`)}
+          </span>
         </Link>
 
-        <div className={styles.tpBody}>
-          <Link href={href} className={styles.tpTitle}>
+        <div className={styles.urBody}>
+          <Link href={item.detailUrl} className={styles.urTitle}>
             {item.name}
           </Link>
-          <div className={styles.tpMeta}>
-            <span className={styles.tpSource}>{t("thirdParty.sourceModrinth")}</span>
-            {item.author && (
-              <span className={styles.tpMetaItem}>
+          {item.summary && (
+            <p className={styles.urSummary}>{item.summary}</p>
+          )}
+          <div className={styles.urMeta}>
+            <span className={styles.urMetaItem}>
+              <Download size={12} strokeWidth={1.8} />
+              {t("thirdParty.downloadCount", { count: item.downloads })}
+            </span>
+            {item.author.name && (
+              <span className={`${styles.urMetaItem} ${styles.urMetaAuthor}`}>
                 <User size={12} strokeWidth={1.8} />
-                {item.author}
+                {item.author.name}
               </span>
             )}
-            <span className={styles.tpMetaItem}>
-              <Download size={12} strokeWidth={1.8} />
-              {item.downloads === null
-                ? t("thirdParty.unspecified")
-                : t("thirdParty.downloadCount", { count: item.downloads })}
-            </span>
           </div>
         </div>
-
-        <span className={styles.tpType}>{iGM_ThirdPartyTypeLabel(t, item.type)}</span>
       </article>
     );
   }
@@ -335,7 +235,6 @@ export function iGM_MinecraftPage() {
             onChange={(event) => setKeywordInput(event.target.value)}
           />
         </form>
-        {/* 模块十七：本体版本资料库入口 */}
         <Link href="/G_MinecraftVersions" className={m10.ghostButton}>
           <Blocks size={15} strokeWidth={1.8} />
           {t("minecraft.gameVersions")}
@@ -346,77 +245,38 @@ export function iGM_MinecraftPage() {
         </Link>
       </div>
 
-      {/* 来源切换标签 */}
-      <div className={styles.sourceTabs}>
-        <button
-          type="button"
-          className={`${styles.sourceTab} ${source === "site" ? styles.sourceTabActive : ""}`}
-          onClick={() => iGM_SwitchSource("site")}
-        >
-          {t("minecraft.sourceSite")}
-        </button>
-        <button
-          type="button"
-          className={`${styles.sourceTab} ${source === "thirdparty" ? styles.sourceTabActive : ""}`}
-          onClick={() => iGM_SwitchSource("thirdparty")}
-        >
-          {t("minecraft.sourceThirdParty")}
-        </button>
+      {/* 统一类型胶囊（全类型 + 模组/光影/资源包/地图/数据包） */}
+      <div className={m10.sectionCard}>
+        <div className={styles.urTypeRow}>
+          <button
+            type="button"
+            className={`${styles.urTypeChip} ${
+              type === "all" ? styles.urTypeChipActive : ""
+            }`}
+            onClick={() => iGM_HandleTypeChange("all")}
+          >
+            {t("minecraft.all")}
+          </button>
+          {iGM_UnifiedResourceTypes.map((value) => (
+            <button
+              key={value}
+              type="button"
+              className={`${styles.urTypeChip} ${
+                type === value ? styles.urTypeChipActive : ""
+              }`}
+              onClick={() => iGM_HandleTypeChange(value)}
+            >
+              {t(`thirdParty.resourceTypes.${value}`)}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* 筛选区（随来源切换） */}
-      {source === "thirdparty" ? (
-        <div className={m10.sectionCard}>
-          <div className={styles.filterGroup}>
-            <span className={styles.filterLabel}>{t("thirdParty.filterType")}</span>
-            <div className={styles.filterChips}>
-              <button
-                type="button"
-                className={`${styles.mcChip} ${type === "" ? styles.mcChipActive : ""}`}
-                onClick={() => iGM_ToggleThirdPartyType("")}
-              >
-                {t("thirdParty.all")}
-              </button>
-              {iGM_ThirdPartyTypes.map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  className={`${styles.mcChip} ${type === value ? styles.mcChipActive : ""}`}
-                  onClick={() => iGM_ToggleThirdPartyType(value)}
-                >
-                  {iGM_ThirdPartyTypeLabel(t, value)}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className={m10.sectionCard}>
-          {iGM_RenderFilterGroup(
-            t("minecraft.filterType"),
-            options?.resourceTypes ?? [],
-            type,
-            "type",
-            true,
-          )}
-          {iGM_RenderFilterGroup(
-            t("minecraft.filterVersion"),
-            options?.versionOptions ?? [],
-            version,
-            "version",
-          )}
-          {iGM_RenderFilterGroup(
-            t("minecraft.filterLoader"),
-            options?.loaders ?? [],
-            loader,
-            "loader",
-          )}
-          {iGM_RenderFilterGroup(
-            t("minecraft.filterPlatform"),
-            options?.platforms ?? [],
-            platform,
-            "platform",
-          )}
+      {/* 来源降级提示：任一来源不可用时低调展示，列表仍可用 */}
+      {degraded && !loading && !errorText && (
+        <div className={styles.urDegraded} role="status">
+          <AlertTriangle size={14} strokeWidth={1.9} />
+          {t("minecraft.unified.degradedHint")}
         </div>
       )}
 
@@ -424,110 +284,31 @@ export function iGM_MinecraftPage() {
       {loading ? (
         <div className={m10.stateBox}>
           <LoaderCircle size={16} className="igm-spin" />
-          {source === "thirdparty" ? t("thirdParty.stateLoading") : t("minecraft.stateLoading")}
+          {t("minecraft.stateLoading")}
         </div>
       ) : errorText ? (
         <div className={m10.sectionCard}>
           <div className={`${m10.alert} ${m10.alertError}`}>{errorText}</div>
           <div>
-            <button type="button" className={m10.ghostButton} onClick={() => void iGM_Load()}>
+            <button
+              type="button"
+              className={m10.ghostButton}
+              onClick={() => void iGM_Load()}
+            >
               {t("community.state.retry")}
             </button>
           </div>
         </div>
-      ) : source === "thirdparty" ? (
-        tpData && tpData.items.length > 0 ? (
-          <>
-            <div className={styles.mcGrid}>
-              {tpData.items.map((item) => iGM_RenderThirdPartyCard(item))}
-            </div>
-            {tpData.totalPages > 1 && (
-              <IGM_Pagination
-                page={tpData.page}
-                totalPages={tpData.totalPages}
-                onChange={(next) => {
-                  setPage(next);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-              />
-            )}
-          </>
-        ) : (
-          <IGM_EmptyState
-            icon={Package}
-            title={t("thirdParty.empty")}
-            description={t("thirdParty.emptyDescription")}
-          />
-        )
-      ) : data && data.items.length > 0 ? (
+      ) : data && data.length > 0 ? (
         <>
-          <div className={styles.mcGrid}>
-            {data.items.map((item) => (
-              <article key={item.id} className={styles.mcCard}>
-                {/* 封面 */}
-                <div className={styles.mcCardCover}>
-                  {item.cover ? (
-                    <img
-                      src={iGM_FilePreviewUrl(item.cover.id)}
-                      alt={item.title}
-                      crossOrigin="anonymous"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className={styles.mcCardCoverFallback}>
-                      <Blocks size={18} strokeWidth={1.5} />
-                    </div>
-                  )}
-                </div>
-
-                {/* 标题 / 统计 / 兼容信息 */}
-                <div className={styles.mcCardBody}>
-                  <Link
-                    href={`/G_MinecraftDetail?resourceId=${encodeURIComponent(item.id)}`}
-                    className={styles.mcCardTitle}
-                  >
-                    {item.title}
-                  </Link>
-                  <div className={styles.mcCardMeta}>
-                    <span className={styles.mcCardMetaItem}>
-                      <Download size={12} strokeWidth={1.8} />
-                      {t("minecraft.downloadCount", { count: item.downloadCount })}
-                    </span>
-                  </div>
-                  <div className={styles.mcCardChips}>
-                    {item.platforms.map((value) => (
-                      <span key={value} className={styles.mcCardChip}>{value}</span>
-                    ))}
-                    {item.loaders.map((value) => (
-                      <span key={value} className={styles.mcCardChip}>{value}</span>
-                    ))}
-                    {item.mcVersions.slice(0, 3).map((value) => (
-                      <span key={value} className={styles.mcCardChip}>{value}</span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 类型标记 */}
-                {item.resourceType && (
-                  <span className={`${styles.mcCardType} ${styles.mcCardTypeStatic}`}>
-                    {iGM_TypeLabel(t, item.resourceType)}
-                  </span>
-                )}
-              </article>
-            ))}
-          </div>
-          <IGM_Pagination
-            page={data.page}
-            totalPages={data.totalPages}
-            onChange={(next) => {
-              setPage(next);
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-          />
+          <div className={styles.urGrid}>{data.map(iGM_RenderUnifiedCard)}</div>
+          {totalPages > 1 && (
+            <IGM_Pagination page={page} totalPages={totalPages} onChange={iGM_HandlePageChange} />
+          )}
         </>
       ) : (
         <IGM_EmptyState
-          icon={Blocks}
+          icon={Package}
           title={t("minecraft.empty")}
           description={t("minecraft.emptyDescription")}
         />

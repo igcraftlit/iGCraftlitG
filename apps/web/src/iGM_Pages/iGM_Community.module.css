@@ -248,6 +248,12 @@
   font-weight: 500;
 }
 
+.detailAuthorActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .detailTitle {
   font-size: 24px;
   font-weight: 700;

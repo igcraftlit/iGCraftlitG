@@ -46,21 +46,21 @@ import {
   iGM_ApiFollow,
   iGM_ApiGetRelationState,
   iGM_ApiListFollowing,
-  iGM_ApiSendFriendRequest,
   iGM_ApiUnblock,
   iGM_ApiUnfollow,
   type iGM_RelationState,
 } from "../../iGM_Services/iGM_SocialClient";
 import { iGM_UseAuth } from "../../iGM_Providers/iGM_AuthProvider";
 import { iGM_UseLocale } from "../../iGM_Providers/iGM_LocaleProvider";
+import { iGM_UseLocaleRouter } from "../../iGM_i18n/iGM_UseLocaleRouter";
 import { iGM_ResolveErrorText } from "../../iGM_Components/iGM_AuthUI/iGM_AuthUI";
 import { iGM_Avatar as IGM_Avatar } from "../../iGM_Components/iGM_Avatar/iGM_Avatar";
 import { iGM_VerifiedBadge as IGM_VerifiedBadge } from "../../iGM_Components/iGM_VerifiedBadge/iGM_VerifiedBadge";
+import { iGM_FriendButton as IGM_FriendButton } from "../../iGM_Components/iGM_FriendButton/iGM_FriendButton";
 import { iGM_PostCard as IGM_PostCard } from "../../iGM_Components/iGM_PostCard/iGM_PostCard";
 import { iGM_Pagination as IGM_Pagination } from "../../iGM_Components/iGM_Pagination/iGM_Pagination";
 import { iGM_EmptyState as IGM_EmptyState } from "../../iGM_Components/iGM_EmptyState/iGM_EmptyState";
 import { iGM_FormatDate } from "../../iGM_Components/iGM_Format/iGM_Format";
-import pageStyles from "../iGM_Page.module.css";
 import styles from "../iGM_Community.module.css";
 
 // 类型定义 //
@@ -72,6 +72,7 @@ type iGM_ProfileTab = "posts" | "comments";
 export function iGM_UserProfilePage() {
   const t = useTranslations();
   const locale = iGM_UseLocale().locale;
+  const localeRouter = iGM_UseLocaleRouter();
   const { user, status } = iGM_UseAuth();
   const searchParams = useSearchParams();
   const queryUserId = searchParams.get("userId");
@@ -206,23 +207,6 @@ export function iGM_UserProfilePage() {
         ? iGM_ApiUnfollow(targetUserId)
         : iGM_ApiFollow(targetUserId),
     );
-  }
-
-  /** 发起好友申请 */
-  async function iGM_HandleFriendRequest(): Promise<void> {
-    if (!targetUserId || relationBusy) return;
-    setRelationBusy(true);
-    setRelationError(null);
-    try {
-      await iGM_ApiSendFriendRequest(targetUserId);
-      const response = await iGM_ApiGetRelationState(targetUserId);
-      setRelation(response.data?.state ?? null);
-      await iGM_RefreshCounts();
-    } catch (error) {
-      setRelationError(iGM_ResolveErrorText(t, error));
-    } finally {
-      setRelationBusy(false);
-    }
   }
 
   /** 拉黑/取消拉黑 */
@@ -470,41 +454,21 @@ export function iGM_UserProfilePage() {
                     : t("social.follow")}
                 </button>
 
-                {/* 好友状态按钮 */}
-                {relation.friendState === "accepted" ? (
-                  <span className={styles.badge}>
-                    <Users size={12} strokeWidth={1.8} />
-                    {t("social.friendsBadge")}
-                  </span>
-                ) : relation.friendState === "pending_outgoing" ? (
-                  <button
-                    type="button"
-                    className={styles.ghostButton}
-                    disabled
-                  >
-                    <LoaderCircle size={14} className="igm-spin" />
-                    {t("social.requestSent")}
-                  </button>
-                ) : relation.friendState === "pending_incoming" ? (
-                  <Link href="/G_Friends" className={styles.ghostButton}>
-                    <UserPlus size={14} strokeWidth={1.8} />
-                    {t("social.respondRequest")}
-                  </Link>
-                ) : (
-                  <button
-                    type="button"
-                    className={styles.ghostButton}
-                    disabled={relationBusy}
-                    onClick={() => void iGM_HandleFriendRequest()}
-                  >
-                    <UserPlus size={14} strokeWidth={1.8} />
-                    {t("social.addFriend")}
-                  </button>
-                )}
+                {/* 好友状态统一按钮：发起/撤回/回应/已好友徽标 */}
+                <IGM_FriendButton
+                  targetId={targetUserId}
+                  initialState={relation.friendState ?? null}
+                  onRespond={() =>
+                    localeRouter.push(
+                      "/G_Community?tab=friends&subtab=incoming",
+                    )
+                  }
+                  onError={setRelationError}
+                />
 
                 {/* 私信 */}
                 <Link
-                  href={`/G_MessageDetail?peerId=${encodeURIComponent(targetUserId)}`}
+                  href={`/G_Community?tab=messages&peerId=${encodeURIComponent(targetUserId)}`}
                   className={styles.ghostButton}
                 >
                   <MessageCircle size={14} strokeWidth={1.8} />

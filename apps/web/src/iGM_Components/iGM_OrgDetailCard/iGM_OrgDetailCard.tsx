@@ -12,7 +12,7 @@
 // 导入依赖 //
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   BadgeCheck,
@@ -22,13 +22,19 @@ import {
   LoaderCircle,
   LogOut,
   Pencil,
+  Users,
 } from "lucide-react";
 import {
   iGM_ApiOrgLeave,
+  iGM_ApiOrgMembers,
   iGM_ApiUpdateOrgAbout,
+  type iGM_OrgMember,
   type iGM_Organization,
 } from "../../iGM_Services/iGM_OrgVerifyClient";
 import { iGM_UseAuth } from "../../iGM_Providers/iGM_AuthProvider";
+import { iGM_UseLocale } from "../../iGM_Providers/iGM_LocaleProvider";
+import { iGM_FormatDateTime } from "../iGM_Format/iGM_Format";
+import { iGM_Avatar as IGM_Avatar } from "../iGM_Avatar/iGM_Avatar";
 import { iGM_ResolveErrorText } from "../iGM_AuthUI/iGM_AuthUI";
 import uiStyles from "../../iGM_Pages/iGM_Module4.module.css";
 import styles from "./iGM_OrgDetailCard.module.css";
@@ -83,6 +89,22 @@ export function iGM_OrgDetailCard({
   const [leaving, setLeaving] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [successText, setSuccessText] = useState<string | null>(null);
+  /** 公开成员列表：加载失败时静默不展示该区，不影响组织主体内容 */
+  const [members, setMembers] = useState<iGM_OrgMember[] | null>(null);
+  const { locale } = iGM_UseLocale();
+
+  /** 加载组织公开成员（头像/用户名/iGMUid/加入时间/负责人标识，后端已排序） */
+  useEffect(() => {
+    let cancelled = false;
+    iGM_ApiOrgMembers({ orgId: initialOrg.id })
+      .then((response) => {
+        if (!cancelled && response.data) setMembers(response.data.items);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [initialOrg.id]);
 
   /** 进入编辑态 */
   function iGM_StartEdit(): void {
@@ -221,6 +243,63 @@ export function iGM_OrgDetailCard({
         <div className={`${uiStyles.alert} ${uiStyles.alertSuccess}`}>
           <CircleCheck size={15} strokeWidth={1.8} className={uiStyles.alertIcon} />
           {successText}
+        </div>
+      )}
+
+      {/* 公开成员列表：负责人置顶；无成员时空态克制，不喧宾夺主 */}
+      {members !== null && members.length > 0 && (
+        <div className={styles.membersBlock}>
+          <span className={styles.membersTitle}>
+            <Users size={13} strokeWidth={1.8} />
+            {t("orgVerify.details.members")}
+            <span className={styles.membersCount}>{members.length}</span>
+          </span>
+          <ul className={styles.memberList}>
+            {members.map((member) => (
+              <li key={member.id} className={styles.memberRow}>
+                <IGM_Avatar
+                  src={member.avatar}
+                  name={member.displayName ?? member.username}
+                  size="sm"
+                />
+                <span className={styles.memberInfo}>
+                  <span className={styles.memberNameRow}>
+                    <span className={styles.memberName}>
+                      {member.displayName ?? member.username}
+                    </span>
+                    {member.isOwner && (
+                      <span className={styles.ownerChip}>
+                        <Crown
+                          size={11}
+                          strokeWidth={2}
+                          className={styles.ownerChipIcon}
+                        />
+                        {t("orgVerify.details.ownerTag")}
+                      </span>
+                    )}
+                  </span>
+                  <span className={styles.memberMeta}>
+                    @{member.username} ·{" "}
+                    {t("orgVerify.details.memberUid", { uid: member.uid })}
+                    {member.joinedAt
+                      ? ` · ${t("orgVerify.details.memberJoined", {
+                          time: iGM_FormatDateTime(locale, member.joinedAt),
+                        })}`
+                      : ""}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {members !== null && members.length === 0 && (
+        <div className={styles.membersBlock}>
+          <span className={styles.membersTitle}>
+            <Users size={13} strokeWidth={1.8} />
+            {t("orgVerify.details.members")}
+          </span>
+          <p className={styles.membersEmpty}>{t("orgVerify.details.membersEmpty")}</p>
         </div>
       )}
 

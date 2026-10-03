@@ -11,6 +11,10 @@
 import type { iGM_UserRole, iGM_UserStatus } from "./iGM_Auth";
 import type { iGM_OrgBadgeDto } from "./iGM_OrgVerify";
 
+// 举报数据行的唯一真源迁移至 iGM_Report（社交生态优化：用户侧举报提交）
+export type { iGM_ReportRow } from "./iGM_Report";
+import type { iGM_ReportRow } from "./iGM_Report";
+
 // 类型定义 //
 /** iGM_AdminLogs 表数据行 */
 export interface iGM_AdminLogRow {
@@ -21,19 +25,6 @@ export interface iGM_AdminLogRow {
   iGM_TargetId: string | null;
   iGM_Detail: string | null;
   iGM_CreatedAt: string;
-}
-
-/** iGM_Reports 表数据行 */
-export interface iGM_ReportRow {
-  iGM_Id: string;
-  iGM_ReporterId: string;
-  iGM_TargetType: string;
-  iGM_TargetId: string;
-  iGM_Reason: string;
-  iGM_Status: "pending" | "resolved" | "dismissed";
-  iGM_HandlerId: string | null;
-  iGM_CreatedAt: string;
-  iGM_HandledAt: string | null;
 }
 
 /* ---------- 对外 DTO ---------- */
@@ -96,7 +87,10 @@ export interface iGM_AdminReportDto {
   targetSummary: string | null;
   /** 目标当前状态（可能已被删除） */
   targetStatus: string | null;
+  /** 原因分类码（spam/abuse/porn/illegal/plagiarism/other；历史数据可能为自由文本） */
   reason: string;
+  /** 用户填写的原因描述（社交生态优化新增，历史行空串） */
+  reasonDetail: string;
   status: "pending" | "resolved" | "dismissed";
   handlerId: string | null;
   handlerName: string | null;

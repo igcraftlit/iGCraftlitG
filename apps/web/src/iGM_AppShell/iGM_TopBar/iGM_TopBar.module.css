@@ -107,6 +107,26 @@
   background: var(--igm-accent-hover);
 }
 
+/* 下载中心入口（社交生态优化后由侧边栏迁至顶栏右侧，登录可见） */
+.downloadLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  margin-right: 4px;
+  border-radius: var(--igm-radius);
+  color: var(--igm-text-muted);
+  font-size: 13px;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.downloadLink:hover {
+  background: var(--igm-surface-subtle);
+  color: var(--igm-text);
+}
+
 /* 已登录用户区：头像 + 用户名 + 认证标识 + 下拉箭头（按钮形态） */
 .userMenu {
   position: relative;
@@ -236,6 +256,17 @@
   /* 移动端用户区按钮加高，便于点按 */
   .userChip {
     height: 40px;
+  }
+}
+
+@media (max-width: 640px) {
+  /* 窄屏仅保留下载中心图标，避免右侧操作区拥挤 */
+  .downloadLabel {
+    display: none;
+  }
+
+  .downloadLink {
+    padding: 0 8px;
   }
 }
 

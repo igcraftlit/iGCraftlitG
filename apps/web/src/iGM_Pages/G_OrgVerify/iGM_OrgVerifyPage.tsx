@@ -21,6 +21,7 @@ import {
   CircleCheck,
   FileUp,
   LoaderCircle,
+  Mail,
   Send,
   X,
 } from "lucide-react";
@@ -213,23 +214,44 @@ function iGM_OrgVerifyInner() {
           <div className={uiStyles.formRow}>
             <span className={uiStyles.label}>{t("orgVerify.apply.chooseOrg")}</span>
             <div className={styles.orgGrid}>
-              {orgs.map((org) => (
-                <button
-                  key={org.id}
-                  type="button"
-                  className={`${styles.orgCard} ${
-                    selectedOrgId === org.id ? styles.orgCardActive : ""
-                  }`}
-                  aria-pressed={selectedOrgId === org.id}
-                  onClick={() => setSelectedOrgId(org.id)}
-                >
-                  <span className={styles.orgName}>
-                    <Building2 size={15} strokeWidth={1.8} />
-                    {org.name}
-                  </span>
-                  <span className={styles.orgDesc}>{org.description}</span>
-                </button>
-              ))}
+              {orgs.map((org) =>
+                /* 无负责人入驻的组织：不可选中，提示申请将长期挂起与官方联系方式 */
+                org.hasOwner === false ? (
+                  <div
+                    key={org.id}
+                    className={`${styles.orgCard} ${styles.orgCardPending}`}
+                    aria-disabled="true"
+                  >
+                    <span className={styles.orgName}>
+                      <Building2 size={15} strokeWidth={1.8} />
+                      {org.name}
+                    </span>
+                    <span className={styles.orgDesc}>{org.description}</span>
+                    <span className={styles.orgPendingTip}>
+                      <Mail size={12} strokeWidth={1.8} />
+                      {t("orgVerify.apply.ownerPending", {
+                        email: "igcraftlit@outlook.com",
+                      })}
+                    </span>
+                  </div>
+                ) : (
+                  <button
+                    key={org.id}
+                    type="button"
+                    className={`${styles.orgCard} ${
+                      selectedOrgId === org.id ? styles.orgCardActive : ""
+                    }`}
+                    aria-pressed={selectedOrgId === org.id}
+                    onClick={() => setSelectedOrgId(org.id)}
+                  >
+                    <span className={styles.orgName}>
+                      <Building2 size={15} strokeWidth={1.8} />
+                      {org.name}
+                    </span>
+                    <span className={styles.orgDesc}>{org.description}</span>
+                  </button>
+                ),
+              )}
             </div>
           </div>
 

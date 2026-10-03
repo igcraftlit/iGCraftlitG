@@ -1,157 +1,122 @@
 /**
  * 文件路径：apps/web/src/iGM_Pages/G_Community/iGM_CommunityPage.tsx
  * 所属层：前端 / 页面层
- * 路由：/G_Community（静态壳，查询参数驱动分类/标签/搜索/分页）
+ * 路由：/G_Community?tab=square|friends|messages（静态壳，查询参数驱动）
  * 模块：G_Community
- * 作用：社区广场——帖子列表、分类筛选、标签筛选、搜索、分页与发帖入口
- * 内容：搜索框、分类胶囊条、当前筛选条件、帖子卡片列表、分页、加载/错误/空状态
+ * 作用：社区广场整合页——广场（帖子/用户搜索）、好友、私信三标签统一入口
+ * 内容：顶层标签条（含好友申请/私信未读计数）、三标签面板；
+ *       未登录标签显示登录引导，面板保持挂载以保留各自查询状态
  * 说明：纯静态 SSG，数据全部在客户端经 iGM_Request 调用本地后端
  */
 
 // 导入依赖 //
 "use client";
 
-import { iGM_UseLocaleRouter } from "../../iGM_i18n/iGM_UseLocaleRouter";
-import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { iGM_Link as Link } from "../../iGM_Components/iGM_Link/iGM_Link";
-
-import { useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
-  Inbox,
   LoaderCircle,
-  PenSquare,
-  Search,
+  LogIn,
+  MessageSquare,
+  MessagesSquare,
   Users,
-  X,
 } from "lucide-react";
-import {
-  iGM_ApiListCategories,
-  iGM_ApiListPosts,
-  type iGM_Category,
-  type iGM_PostListData,
-} from "../../iGM_Services/iGM_CommunityClient";
-import { iGM_ResolveErrorText } from "../../iGM_Components/iGM_AuthUI/iGM_AuthUI";
-import { iGM_PostCard as IGM_PostCard } from "../../iGM_Components/iGM_PostCard/iGM_PostCard";
-import { iGM_Pagination as IGM_Pagination } from "../../iGM_Components/iGM_Pagination/iGM_Pagination";
-import { iGM_EmptyState as IGM_EmptyState } from "../../iGM_Components/iGM_EmptyState/iGM_EmptyState";
+import { iGM_Link as Link } from "../../iGM_Components/iGM_Link/iGM_Link";
+import { iGM_UseAuth } from "../../iGM_Providers/iGM_AuthProvider";
+import { iGM_UseWebSocket } from "../../iGM_Providers/iGM_WebSocketProvider";
+import { iGM_UseLocaleRouter } from "../../iGM_i18n/iGM_UseLocaleRouter";
 import pageStyles from "../iGM_Page.module.css";
-import styles from "../iGM_Community.module.css";
+import hubStyles from "./iGM_CommunityHub.module.css";
+import { iGM_CommunitySquarePanel as IGM_CommunitySquarePanel } from "./iGM_CommunitySquarePanel";
+import { iGM_CommunityFriendsPanel as IGM_CommunityFriendsPanel } from "./iGM_CommunityFriendsPanel";
+import { iGM_CommunityMessagesPanel as IGM_CommunityMessagesPanel } from "./iGM_CommunityMessagesPanel";
 
 // 类型定义 //
-// （页面状态均为基础类型，帖子数据类型来自 iGM_CommunityClient）
+/** 社区广场顶层标签 */
+type iGM_CommunityTab = "square" | "friends" | "messages";
+
+/** 解析合法标签，缺省/非法均回到广场 */
+function iGM_ResolveTab(raw: string | null): iGM_CommunityTab {
+  if (raw === "friends" || raw === "messages") return raw;
+  return "square";
+}
 
 // 核心逻辑 //
-/** 社区广场页主体（在 Suspense 内使用 useSearchParams） */
+/** 社区广场整合页主体（在 Suspense 内使用 useSearchParams） */
 export function iGM_CommunityPage() {
   const t = useTranslations();
   const router = iGM_UseLocaleRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const { status } = iGM_UseAuth();
+  const { messageUnreadCount } = iGM_UseWebSocket();
 
-  // 筛选与分页状态：首屏从查询参数读取，保证静态壳可分享链接
-  const [categories, setCategories] = useState<iGM_Category[]>([]);
-  const [category, setCategory] = useState(searchParams.get("category") ?? "");
-  const [tag, setTag] = useState(searchParams.get("tag") ?? "");
-  const [keywordInput, setKeywordInput] = useState(
-    searchParams.get("q") ?? "",
-  );
-  const [search, setSearch] = useState(searchParams.get("q") ?? "");
-  const [page, setPage] = useState(1);
-  const [data, setData] = useState<iGM_PostListData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [errorText, setErrorText] = useState<string | null>(null);
+  const tab = iGM_ResolveTab(searchParams.get("tab"));
+  const authenticated = status === "authenticated";
+  const [incomingCount, setIncomingCount] = useState(0);
 
-  /** 拉取分类列表（仅一次） */
-  useEffect(() => {
-    let cancelled = false;
-    iGM_ApiListCategories()
-      .then((response) => {
-        if (!cancelled) setCategories(response.data?.items ?? []);
-      })
-      .catch(() => {
-        // 分类加载失败不阻塞列表，筛选条退化为仅“全部”
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  /** 按当前筛选条件拉取帖子列表 */
-  const iGM_LoadPosts = useCallback(async () => {
-    setLoading(true);
-    setErrorText(null);
-    try {
-      const response = await iGM_ApiListPosts({
-        category: category || undefined,
-        tag: tag || undefined,
-        q: search || undefined,
-        page,
-        pageSize: 10,
-      });
-      setData(response.data);
-    } catch (error) {
-      setErrorText(iGM_ResolveErrorText(t, error));
-    } finally {
-      setLoading(false);
-    }
-  }, [category, tag, search, page, t]);
-
-  useEffect(() => {
-    void iGM_LoadPosts();
-  }, [iGM_LoadPosts]);
-
-  /** 将当前筛选条件同步到地址栏，便于分享与浏览器前进后退 */
-  function iGM_SyncUrl(next: {
-    category?: string;
-    tag?: string;
-    q?: string;
-  }): void {
-    const params = new URLSearchParams();
-    if (next.category) params.set("category", next.category);
-    if (next.tag) params.set("tag", next.tag);
-    if (next.q) params.set("q", next.q);
+  /** 切换顶层标签：保留 q/category 等其他查询参数 */
+  function iGM_HandleTabChange(next: iGM_CommunityTab): void {
+    const params = new URLSearchParams(searchParams.toString());
+    if (next === "square") params.delete("tab");
+    else params.set("tab", next);
     const query = params.toString();
     router.replace(query ? `/G_Community?${query}` : "/G_Community");
   }
 
-  /** 切换分类：回到第一页并同步地址栏 */
-  function iGM_HandleCategoryChange(slug: string): void {
-    setCategory(slug);
-    setPage(1);
-    iGM_SyncUrl({ category: slug, tag, q: search });
+  /** 未登录引导卡片（登录后回跳当前标签） */
+  function iGM_RenderLoginGuide(kind: "friends" | "messages") {
+    const redirect = encodeURIComponent(`${pathname}?${searchParams.toString()}`);
+    return (
+      <div className={hubStyles.loginCard}>
+        <h2 className={hubStyles.loginTitle}>
+          {kind === "friends"
+            ? t("community.communityPage.loginFriendsTitle")
+            : t("community.communityPage.loginMessagesTitle")}
+        </h2>
+        <p className={hubStyles.loginDescription}>
+          {kind === "friends"
+            ? t("community.communityPage.loginFriendsDesc")
+            : t("community.communityPage.loginMessagesDesc")}
+        </p>
+        <Link
+          href={`/G_Auth/login?redirect=${redirect}`}
+          className={hubStyles.loginButton}
+        >
+          <LogIn size={15} strokeWidth={1.8} />
+          {t("community.comments.goLogin")}
+        </Link>
+      </div>
+    );
   }
 
-  /** 清除标签筛选 */
-  function iGM_ClearTag(): void {
-    setTag("");
-    setPage(1);
-    iGM_SyncUrl({ category, q: search });
-  }
-
-  /** 提交搜索 */
-  function iGM_HandleSearch(event: FormEvent<HTMLFormElement>): void {
-    event.preventDefault();
-    const keyword = keywordInput.trim();
-    setSearch(keyword);
-    setPage(1);
-    iGM_SyncUrl({ category, tag, q: keyword });
-  }
-
-  /** 清除搜索词 */
-  function iGM_ClearSearch(): void {
-    setKeywordInput("");
-    setSearch("");
-    setPage(1);
-    iGM_SyncUrl({ category, tag });
-  }
-
-  /** 翻页后回到列表顶部 */
-  function iGM_HandlePageChange(nextPage: number): void {
-    setPage(nextPage);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  const activeCategory = categories.find((item) => item.slug === category);
+  /** 顶层标签定义（计数徽标仅在有值时出现） */
+  const tabs: Array<{
+    key: iGM_CommunityTab;
+    label: string;
+    icon: typeof Users;
+    count: number;
+  }> = [
+    {
+      key: "square",
+      label: t("community.communityPage.tabSquare"),
+      icon: MessagesSquare,
+      count: 0,
+    },
+    {
+      key: "friends",
+      label: t("community.communityPage.tabFriends"),
+      icon: Users,
+      count: authenticated ? incomingCount : 0,
+    },
+    {
+      key: "messages",
+      label: t("community.communityPage.tabMessages"),
+      icon: MessageSquare,
+      count: authenticated ? messageUnreadCount : 0,
+    },
+  ];
 
   return (
     <div className={pageStyles.page}>
@@ -168,129 +133,54 @@ export function iGM_CommunityPage() {
         </p>
       </header>
 
-      {/* 搜索与发帖入口 */}
-      <div className={styles.toolbar}>
-        <form className={styles.searchBox} onSubmit={iGM_HandleSearch}>
-          <span className={styles.searchIcon}>
-            <Search size={15} strokeWidth={2} />
-          </span>
-          <input
-            className={styles.searchInput}
-            type="search"
-            value={keywordInput}
-            placeholder={t("community.communityPage.searchPlaceholder")}
-            onChange={(event) => setKeywordInput(event.target.value)}
-          />
-        </form>
-        <Link href="/G_PostEdit" className={styles.primaryButton}>
-          <PenSquare size={15} strokeWidth={1.8} />
-          {t("community.communityPage.newPost")}
-        </Link>
-      </div>
-
-      {/* 分类筛选条 */}
-      <div className={styles.chips}>
-        <button
-          type="button"
-          className={`${styles.chip} ${category === "" ? styles.chipActive : ""}`}
-          onClick={() => iGM_HandleCategoryChange("")}
-        >
-          {t("community.filters.allCategories")}
-        </button>
-        {categories.map((item) => {
-          const labelKey = `community.categories.${item.slug}`;
-          const label = t.has(labelKey) ? t(labelKey) : item.name;
+      {/* 顶层标签条 */}
+      <nav className={hubStyles.topTabs} aria-label={t("community.communityPage.title")}>
+        {tabs.map((item) => {
+          const Icon = item.icon;
           return (
             <button
-              key={item.id}
+              key={item.key}
               type="button"
-              className={`${styles.chip} ${
-                category === item.slug ? styles.chipActive : ""
+              className={`${hubStyles.topTab} ${
+                tab === item.key ? hubStyles.topTabActive : ""
               }`}
-              onClick={() => iGM_HandleCategoryChange(item.slug)}
+              aria-current={tab === item.key ? "page" : undefined}
+              onClick={() => iGM_HandleTabChange(item.key)}
             >
-              {label}
+              <Icon size={15} strokeWidth={1.8} />
+              {item.label}
+              {item.count > 0 && <span className={hubStyles.tabCount}>{item.count}</span>}
             </button>
           );
         })}
-      </div>
+      </nav>
 
-      {/* 当前标签/搜索条件提示 */}
-      {(tag || search) && (
-        <div className={styles.activeFilterRow}>
-          <span>{t("community.filters.activeFilters")}</span>
-          {activeCategory && (
-            <span className={styles.filterTag}>
-              {t.has(`community.categories.${activeCategory.slug}`)
-                ? t(`community.categories.${activeCategory.slug}`)
-                : activeCategory.name}
-            </span>
-          )}
-          {tag && <span className={styles.filterTag}>{tag}</span>}
-          {search && <span className={styles.filterTag}>{search}</span>}
-          {tag && (
-            <button type="button" className={styles.clearFilter} onClick={iGM_ClearTag}>
-              <X size={12} strokeWidth={2} />
-              {t("community.filters.clearTag")}
-            </button>
-          )}
-          {search && (
-            <button
-              type="button"
-              className={styles.clearFilter}
-              onClick={iGM_ClearSearch}
-            >
-              <X size={12} strokeWidth={2} />
-              {t("community.filters.clearSearch")}
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* 列表主体 */}
-      {loading ? (
-        <div className={styles.stateBox}>
+      {/* 面板区：会话恢复中显示极简占位；三面板保持挂载以保留切换前状态 */}
+      {status === "loading" ? (
+        <div className={hubStyles.panelLoading}>
           <LoaderCircle size={16} className="igm-spin" />
-          {t("community.state.loading")}
+          {t("auth.state.checking")}
         </div>
-      ) : errorText ? (
-        <div className={styles.sectionCard}>
-          <div className={`${styles.alert} ${styles.alertError}`}>{errorText}</div>
-          <div>
-            <button
-              type="button"
-              className={styles.ghostButton}
-              onClick={() => void iGM_LoadPosts()}
-            >
-              {t("community.state.retry")}
-            </button>
-          </div>
-        </div>
-      ) : data && data.items.length > 0 ? (
-        <>
-          <div className={styles.list}>
-            {data.items.map((post) => (
-              <IGM_PostCard key={post.id} post={post} />
-            ))}
-          </div>
-          <IGM_Pagination
-            page={data.page}
-            totalPages={data.totalPages}
-            onChange={iGM_HandlePageChange}
-          />
-        </>
       ) : (
-        <IGM_EmptyState
-          icon={Inbox}
-          title={t("community.state.noPostsTitle")}
-          description={t("community.state.noPostsDesc")}
-          action={
-            <Link href="/G_PostEdit" className={styles.primaryButton}>
-              <PenSquare size={15} strokeWidth={1.8} />
-              {t("community.communityPage.newPost")}
-            </Link>
-          }
-        />
+        <>
+          <div hidden={tab !== "square"}>
+            <IGM_CommunitySquarePanel authenticated={authenticated} />
+          </div>
+          <div hidden={tab !== "friends"}>
+            {authenticated ? (
+              <IGM_CommunityFriendsPanel onIncomingCount={setIncomingCount} />
+            ) : (
+              iGM_RenderLoginGuide("friends")
+            )}
+          </div>
+          <div hidden={tab !== "messages"}>
+            {authenticated ? (
+              <IGM_CommunityMessagesPanel />
+            ) : (
+              iGM_RenderLoginGuide("messages")
+            )}
+          </div>
+        </>
       )}
     </div>
   );

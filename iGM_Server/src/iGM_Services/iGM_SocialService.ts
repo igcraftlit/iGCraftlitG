@@ -34,14 +34,22 @@ import {
 } from "../iGM_Repositories/iGM_SocialRepository";
 import {
   iGM_CreateBlock,
+  iGM_CountSearchUsers,
   iGM_DeleteBlock,
   iGM_FindBlock,
   iGM_ListBlocks,
+  iGM_SearchUsers,
 } from "../iGM_Repositories/iGM_SocialRepository";
 import { iGM_FindUserById, iGM_FindUsersByIds } from "../iGM_Repositories/iGM_UserRepository";
 import { iGM_ResolveUserOrgBadge } from "../iGM_Repositories/iGM_OrgVerifyRepository";
 import { iGM_Notify } from "./iGM_NotificationService";
 import type { iGM_UserRow } from "../iGM_Types/iGM_Auth";
+import {
+  iGM_UserSearchDefaultPageSize,
+  iGM_UserSearchKeywordMax,
+  iGM_UserSearchKeywordMin,
+  iGM_UserSearchMaxPageSize,
+} from "../iGM_Types/iGM_Social";
 import type {
   iGM_FeedData,
   iGM_FeedItemDto,
@@ -50,6 +58,8 @@ import type {
   iGM_FriendState,
   iGM_RelationStateDto,
   iGM_RelationUserDto,
+  iGM_UserSearchData,
+  iGM_UserSearchResultDto,
 } from "../iGM_Types/iGM_Social";
 import type { iGM_AuthorDto } from "../iGM_Types/iGM_Community";
 
@@ -192,8 +202,8 @@ export async function iGM_GetRelationStateService(
   };
 }
 
-/** 计算当前用户视角的好友状态 */
-async function iGM_ResolveFriendState(
+/** 计算当前用户视角的好友状态（用户搜索等场景复用） */
+export async function iGM_ResolveFriendState(
   meId: string,
   targetId: string,
 ): Promise<iGM_FriendState> {
@@ -575,6 +585,92 @@ export async function iGM_ListBlocksService(
   };
 }
 
+/* ---------- 社区广场用户搜索 ---------- */
+
+/**
+ * 转义 LIKE/ILIKE 通配符（%、_、\），避免用户输入被当作模式符。
+ * PostgreSQL 反斜杠为默认 ESCAPE 字符。
+ */
+function iGM_EscapeLikePattern(keyword: string): string {
+  return `%${keyword.replace(/[\\%_]/g, "\\$&")}%`;
+}
+
+/**
+ * 社区广场用户搜索：支持 iGMUid 精确命中与用户名模糊命中（混合排序，UID 优先），
+ * 双向黑名单互不可见；每条结果附带当前用户视角的好友状态与本人标记。
+ */
+export async function iGM_SearchUsersService(
+  viewer: iGM_UserRow,
+  keywordRaw: string,
+  pageRaw?: number,
+  pageSizeRaw?: number,
+): Promise<iGM_UserSearchData> {
+  const keyword = keywordRaw.trim();
+  if (
+    keyword.length < iGM_UserSearchKeywordMin ||
+    keyword.length > iGM_UserSearchKeywordMax
+  ) {
+    throw new iGM_SocialError("social.errors.searchKeywordInvalid", 422);
+  }
+
+  const page =
+    Number.isFinite(pageRaw) && (pageRaw as number) >= 1
+      ? Math.floor(pageRaw as number)
+      : 1;
+  const pageSize =
+    Number.isFinite(pageSizeRaw) &&
+    (pageSizeRaw as number) >= 1 &&
+    (pageSizeRaw as number) <= iGM_UserSearchMaxPageSize
+      ? Math.floor(pageSizeRaw as number)
+      : iGM_UserSearchDefaultPageSize;
+
+  const baseParams = {
+    viewerId: viewer.iGM_Id,
+    keyword,
+    usernamePattern: iGM_EscapeLikePattern(keyword),
+  };
+  const [rows, total] = await Promise.all([
+    iGM_SearchUsers({
+      ...baseParams,
+      limit: pageSize,
+      offset: (page - 1) * pageSize,
+    }),
+    iGM_CountSearchUsers(baseParams),
+  ]);
+
+  const items: iGM_UserSearchResultDto[] = [];
+  for (const row of rows) {
+    const isSelf = row.iGM_Id === viewer.iGM_Id;
+    items.push({
+      user: {
+        id: row.iGM_Id,
+        uid: row.iGM_Uid,
+        username: row.iGM_Username,
+        displayName: row.iGM_DisplayName,
+        avatar: row.iGM_Avatar,
+        bio: row.iGM_Bio,
+        role: row.iGM_Role,
+        verifiedOrg: await iGM_ResolveUserOrgBadge(
+          row.iGM_VerifiedOrgId ?? null,
+          row.iGM_Email,
+        ),
+      },
+      friendState: isSelf
+        ? null
+        : await iGM_ResolveFriendState(viewer.iGM_Id, row.iGM_Id),
+      isSelf,
+    });
+  }
+
+  return {
+    items,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+  };
+}
+
 /* ---------- 动态流 ---------- */
 
 /**
@@ -729,5 +825,6 @@ export default {
   iGM_ListFriendsService,
   iGM_ListFriendRequestsService,
   iGM_ListBlocksService,
+  iGM_SearchUsersService,
   iGM_GetFeedService,
 };

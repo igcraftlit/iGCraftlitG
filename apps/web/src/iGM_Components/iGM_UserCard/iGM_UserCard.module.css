@@ -1,0 +1,67 @@
+/*
+ * 文件路径：apps/web/src/iGM_Components/iGM_UserCard/iGM_UserCard.module.css
+ * 所属层：前端 / 通用组件样式
+ * 路由：G_Community、G_AdminOrgVerify 等用户列表场景
+ * 模块：iGM_UserCard
+ * 作用：统一用户行卡片样式（行式布局、名称行、副标题、操作区）
+ * 内容：卡片本体、头像间隙、名称与组织徽标同行、右侧操作按钮组
+ */
+
+.userCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 4px;
+  min-width: 0;
+}
+
+.userMain {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.userName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--igm-text);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userName:hover {
+  color: var(--igm-accent);
+}
+
+.userSub {
+  font-size: 12.5px;
+  color: var(--igm-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .userCard {
+    flex-wrap: wrap;
+  }
+}

@@ -6,7 +6,8 @@
  * 作用：活动创建与编辑表单
  * 内容：标题、描述（字数计数）、地点、状态、起止时间、人数上限、封面上传、
  *       前端校验、创建/编辑提交、编辑数据回填、错误提示
- * 说明：需要登录（iGM_RequireAuth 守卫）；纯静态 SSG，数据全部在客户端经
+ * 说明：需要协管员/管理员身份（iGM_RequireAuth 登录守卫 + 角色闸门，
+ *       非 staff 显示无权限卡片）；纯静态 SSG，数据全部在客户端经
  *       iGM_Request 调用本地后端
  */
 
@@ -23,7 +24,7 @@ import {
 import { iGM_Link as Link } from "../../iGM_Components/iGM_Link/iGM_Link";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { ArrowLeft, CalendarPlus, LoaderCircle } from "lucide-react";
+import { ArrowLeft, CalendarPlus, LoaderCircle, ShieldOff } from "lucide-react";
 import {
   iGM_ApiCreateActivity,
   iGM_ApiGetActivity,
@@ -35,6 +36,7 @@ import { iGM_ResolveErrorText } from "../../iGM_Components/iGM_AuthUI/iGM_AuthUI
 import { iGM_ImageUploader as IGM_ImageUploader } from "../../iGM_Components/iGM_ImageUploader/iGM_ImageUploader";
 // JSX 要求组件标识符首字母大写，iGM_ 前缀组件在使用处统一别名为 IGM_
 import { iGM_RequireAuth as IGM_RequireAuth } from "../../iGM_Components/iGM_RequireAuth/iGM_RequireAuth";
+import { iGM_UseAuth } from "../../iGM_Providers/iGM_AuthProvider";
 import pageStyles from "../iGM_Page.module.css";
 import styles from "../iGM_Module4.module.css";
 
@@ -370,13 +372,50 @@ function iGM_ActivityEditInner() {
   );
 }
 
-/** 活动创建/编辑页（登录守卫包裹） */
-export function iGM_ActivityEditPage() {
+/**
+ * 社交生态优化：活动发布权收回至协管员/管理员。
+ * 已登录但非协管员/管理员访问本页（含直接输入地址）时展示无权限卡片，
+ * 不挂载编辑表单、不发起创建/详情请求；真正边界仍由后端强制。
+ */
+function iGM_ActivityEditGate() {
+  const t = useTranslations();
   // JSX 要求组件标识符首字母大写，本地 iGM_ 组件以大写别名渲染
   const IGM_ActivityEditInner = iGM_ActivityEditInner;
+  const { hasRole } = iGM_UseAuth();
+
+  if (!hasRole("moderator")) {
+    return (
+      <div className={pageStyles.page}>
+        <div className={pageStyles.notFound}>
+          <ShieldOff
+            size={36}
+            strokeWidth={1.5}
+            color="var(--igm-text-subtle)"
+          />
+          <h2 className={pageStyles.notFoundTitle}>
+            {t("auth.state.forbiddenTitle")}
+          </h2>
+          <p className={pageStyles.notFoundDescription}>
+            {t("auth.state.forbiddenDescription")}
+          </p>
+          <Link href="/G_Activity" className={pageStyles.primaryLink}>
+            {t("activity.backToList")}
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return <IGM_ActivityEditInner />;
+}
+
+/** 活动创建/编辑页（登录守卫包裹，角色闸门在内） */
+export function iGM_ActivityEditPage() {
+  // JSX 要求组件标识符首字母大写，本地 iGM_ 组件以大写别名渲染
+  const IGM_ActivityEditGate = iGM_ActivityEditGate;
   return (
     <IGM_RequireAuth>
-      <IGM_ActivityEditInner />
+      <IGM_ActivityEditGate />
     </IGM_RequireAuth>
   );
 }

@@ -5,7 +5,8 @@
  * 模块：G_Post
  * 作用：单篇帖子与评论的操作接口集合
  * 内容：帖子详情、编辑、删除、隐藏/恢复；评论列表、发表评论/回复、
- *       编辑评论、删除评论、隐藏/恢复评论；帖子与评论点赞、帖子收藏
+ *       编辑评论、删除评论、隐藏/恢复评论；帖子与评论点赞、帖子收藏；
+ *       社交生态优化：帖子举报（原因分类 + 描述，登录限流防重）
  * 约束：统一响应 { success, code, message, data }；
  *       写接口要求登录、基础限流；编辑限作者、删除/隐藏作者或协管员及以上
  */
@@ -16,6 +17,7 @@ import { iGM_Ok } from "../iGM_Types/iGM_Response";
 import { iGM_RequireUser } from "../iGM_Middleware/iGM_AuthGuard";
 import {
   iGM_BoolField,
+  iGM_ClientIp,
   iGM_CurrentUser,
   iGM_EnforceRateLimit,
   iGM_Field,
@@ -24,7 +26,9 @@ import {
   type iGM_RouteContext,
 } from "./iGM_RouteSupport";
 import { iGM_ContentError } from "../iGM_Services/iGM_ContentService";
+import { iGM_SubmitPostReportService } from "../iGM_Services/iGM_ReportService";
 import { iGM_IsLikeTargetType } from "../iGM_Types/iGM_Community";
+import { iGM_IsReportReason } from "../iGM_Types/iGM_Report";
 import {
   iGM_CreateCommentService,
   iGM_DeleteCommentService,
@@ -193,6 +197,28 @@ async function iGM_HandleLike(ctx: iGM_RouteContext) {
   return iGM_Ok(await iGM_ToggleLikeService(user, targetType, targetId, liked));
 }
 
+/* ---------- 举报帖子（社交生态优化：原因分类 + 描述） ---------- */
+async function iGM_HandleReportPost(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
+  iGM_EnforceRateLimit(ctx, "reportSubmit", `user:${user.iGM_Id}:${iGM_ClientIp(ctx)}`);
+
+  const postId = iGM_Field(ctx.body, "postId").trim();
+  const reasonRaw = iGM_Field(ctx.body, "reason");
+  const detailRaw = iGM_Field(ctx.body, "detail");
+  // 路由层粗校验，枚举白名单/长度/防重由服务层强制
+  if (!iGM_IsReportReason(reasonRaw)) {
+    throw new iGM_ContentError("report.errors.reasonInvalid", 422);
+  }
+  const result = await iGM_SubmitPostReportService(user, {
+    targetType: "post",
+    targetId: postId,
+    reason: reasonRaw,
+    detail: detailRaw,
+  });
+  ctx.set.status = 201;
+  return iGM_Ok(result, "report.messages.submitted");
+}
+
 /* ---------- 收藏/取消收藏帖子 ---------- */
 async function iGM_HandleFavorite(ctx: iGM_RouteContext) {
   const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
@@ -222,7 +248,8 @@ export const G_Post = new Elysia({ name: "G_Post" })
   .delete("/G_Post/comments/delete", iGM_HandleDeleteComment as never)
   .post("/G_Post/comments/status", iGM_HandleSetCommentStatus as never)
   .post("/G_Post/like", iGM_HandleLike as never)
-  .post("/G_Post/favorite", iGM_HandleFavorite as never);
+  .post("/G_Post/favorite", iGM_HandleFavorite as never)
+  .post("/G_Post/report", iGM_HandleReportPost as never);
 
 // 导出 //
 export default G_Post;

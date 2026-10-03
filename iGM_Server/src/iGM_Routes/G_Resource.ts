@@ -6,7 +6,8 @@
  * 作用：资源库列表、详情、创建、编辑、删除、上下架与下载接口集合
  * 内容：资源分页列表（分类/标签筛选与关键词搜索）、分类字典、资源详情、
  *       创建资源、编辑资源、删除资源、上架下架、下载资源附件（二进制流）、
- *       模块二十六：资源关系图（资源中心树状视图，返回 nodes + edges）
+ *       模块二十六：资源关系图（资源中心树状视图，返回 nodes + edges）、
+ *       社交生态优化：本站 + Modrinth 融合搜索（GET /G_Resource/unified-search）
  * 约束：统一响应 { success, code, message, data }；
  *       写入要求登录并做基础限流；下载直接返回文件流并单独限流
  */
@@ -16,6 +17,7 @@ import { Elysia } from "elysia";
 import { iGM_Ok } from "../iGM_Types/iGM_Response";
 import { iGM_RequireUser } from "../iGM_Middleware/iGM_AuthGuard";
 import {
+  iGM_ClientIp,
   iGM_CurrentUser,
   iGM_EnforceRateLimit,
   iGM_Field,
@@ -43,6 +45,9 @@ import {
 } from "../iGM_Types/iGM_Resource";
 // 模块二十六：资源中心树状关系图
 import { iGM_GetResourceGraph } from "../iGM_Services/iGM_ResourceRelationService";
+// 社交生态优化：本站 + Modrinth 融合搜索
+import { iGM_SearchUnifiedResourcesService } from "../iGM_Services/iGM_UnifiedResourceService";
+import { iGM_NormalizeUnifiedResourceType } from "../iGM_Types/iGM_UnifiedResource";
 
 // 类型定义 //
 // （路由层无额外类型，统一响应类型见 iGM_Types/iGM_Response.ts）
@@ -83,6 +88,21 @@ async function iGM_HandleList(ctx: iGM_RouteContext) {
 /* ---------- 资源分类字典 ---------- */
 async function iGM_HandleCategories() {
   return iGM_Ok({ items: await iGM_ListResourceCategoriesService() });
+}
+
+/* ---------- 本站 + Modrinth 融合搜索（公开只读，按 IP 限流） ---------- */
+async function iGM_HandleUnifiedSearch(ctx: iGM_RouteContext) {
+  iGM_EnforceRateLimit(ctx, "thirdPartySearch", `ip:${iGM_ClientIp(ctx)}`);
+  const { page, pageSize } = iGM_PageQuery(ctx);
+  return iGM_Ok(
+    await iGM_SearchUnifiedResourcesService({
+      q: iGM_Query(ctx.query, "q") || "",
+      // 非法类型在服务内归一化为 all，不返回 4xx
+      type: iGM_NormalizeUnifiedResourceType(iGM_Query(ctx.query, "type")),
+      page,
+      pageSize,
+    }),
+  );
 }
 
 /* ---------- 资源详情 ---------- */
@@ -193,6 +213,7 @@ async function iGM_HandleGraph(ctx: iGM_RouteContext) {
  */
 export const G_Resource = new Elysia({ name: "G_Resource" })
   .get("/G_Resource/list", iGM_HandleList as never)
+  .get("/G_Resource/unified-search", iGM_HandleUnifiedSearch as never)
   .get("/G_Resource/categories", iGM_HandleCategories as never)
   .get("/G_Resource/graph", iGM_HandleGraph as never)
   .get("/G_Resource/detail", iGM_HandleDetail as never)

@@ -69,6 +69,11 @@ export interface iGM_OrganizationDto {
   /** 模块七增强：关于组织内容（组织详情页展示） */
   aboutContent: string;
   logo: string | null;
+  /**
+   * 社交生态优化：组织登记的负责人账号是否已入驻（邮箱匹配的站内用户存在）。
+   * 仅受信任组织列表填充；无负责人组织的认证申请将长期挂起，申请页据此提示。
+   */
+  hasOwner?: boolean;
 }
 
 /** 我的组织详情 DTO：组织信息 + 当前用户是否为该组织负责人 */
@@ -99,6 +104,11 @@ export interface iGM_AdminOrgVerificationDto extends iGM_OrgVerificationDto {
   userDisplayName: string | null;
   userAvatar: string | null;
   userEmail: string;
+  /**
+   * 当前查看者是否有权审核该条申请。
+   * 社交生态优化后仅对应组织负责人为 true；admin/moderator 只读恒为 false。
+   */
+  canReview: boolean;
 }
 
 /** 管理端申请分页数据 */
@@ -108,6 +118,28 @@ export interface iGM_AdminOrgVerificationListData {
   page: number;
   pageSize: number;
   totalPages: number;
+  /** 当前查看者视角：true=负责人可操作视图；false=管理只读视图 */
+  canReview: boolean;
+}
+
+/** 组织成员条目 DTO（组织详情页成员列表） */
+export interface iGM_OrgMemberDto {
+  id: string;
+  username: string;
+  displayName: string | null;
+  avatar: string | null;
+  /** 11 位全局唯一 UID */
+  uid: string;
+  /** 加入组织时间（approved 申请的 UpdatedAt）；历史数据缺失时为 null */
+  joinedAt: string | null;
+  /** 是否为该组织负责人（按组织登记负责人邮箱比对） */
+  isOwner: boolean;
+}
+
+/** 组织成员列表数据（公开只读） */
+export interface iGM_OrgMemberListData {
+  organization: iGM_OrgBadgeDto;
+  items: iGM_OrgMemberDto[];
 }
 
 // 核心逻辑 //

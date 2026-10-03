@@ -19,11 +19,24 @@ import type {
   iGM_FriendRow,
   iGM_FriendStatus,
 } from "../iGM_Types/iGM_Social";
+import type { iGM_UserRow } from "../iGM_Types/iGM_Auth";
 
 // 类型定义 //
 /** 名单分页参数 */
 export interface iGM_RelationListParams {
   userId: string;
+  limit: number;
+  offset: number;
+}
+
+/** 用户搜索查询参数 */
+export interface iGM_UserSearchParams {
+  /** 当前登录用户（用于双向黑名单过滤） */
+  viewerId: string;
+  /** 关键词原值（用于 iGM_Uid 精确匹配） */
+  keyword: string;
+  /** 已转义的用户名 ILIKE 模糊串，如 %abc% */
+  usernamePattern: string;
   limit: number;
   offset: number;
 }
@@ -262,16 +275,20 @@ export async function iGM_CountIncomingRequests(userId: string): Promise<number>
 }
 
 /**
- * 删除好友：删除两人之间任意方向的 accepted 行。
- * pending/rejected 行不由此接口处理。
+ * 删除好友关系：删除两人之间任意方向的 accepted 行；
+ * 同时允许撤回当前用户主动发起（iGM_UserId 为本人）的 pending 申请。
+ * 对方发来的 pending 申请必须经 respond/reject 流程处理，不在此删除；
+ * rejected 行保留以支撑再次申请逻辑。
  */
 export async function iGM_DeleteFriendship(userId: string, friendId: string): Promise<boolean> {
   const result = await iGM_Db.run(
     `DELETE FROM iGM_Friends
-      WHERE iGM_Status = 'accepted'
+      WHERE (iGM_Status = 'accepted'
         AND ((iGM_UserId = ? AND iGM_FriendId = ?)
-          OR (iGM_UserId = ? AND iGM_FriendId = ?))`,
-    [userId, friendId, friendId, userId],
+          OR (iGM_UserId = ? AND iGM_FriendId = ?)))
+         OR (iGM_Status = 'pending'
+          AND iGM_UserId = ? AND iGM_FriendId = ?)`,
+    [userId, friendId, friendId, userId, userId, friendId],
   );
   return result.changes > 0;
 }
@@ -332,6 +349,64 @@ export async function iGM_ListBlocks(params: iGM_RelationListParams): Promise<iG
     .all(params.userId, params.limit, params.offset)) as iGM_BlockRow[];
 }
 
+/* ---------- 社区广场用户搜索 ---------- */
+
+/**
+ * 用户搜索的公共过滤条件：active 账号、UID 精确或用户名模糊命中、
+ * 双向黑名单互不可见（我拉黑的人不出结果，拉黑我的人也不出结果）。
+ * 返回的 SQL 片段含 4 个顺序参数：keyword、usernamePattern、viewerId、viewerId。
+ */
+const iGM_UserSearchWhere = `
+    u.iGM_Status = 'active'
+    AND (u.iGM_Uid = ? OR u.iGM_Username ILIKE ?)
+    AND NOT EXISTS (
+      SELECT 1 FROM iGM_Blocks b
+       WHERE b.iGM_UserId = ? AND b.iGM_BlockedUserId = u.iGM_Id
+    )
+    AND NOT EXISTS (
+      SELECT 1 FROM iGM_Blocks b
+       WHERE b.iGM_UserId = u.iGM_Id AND b.iGM_BlockedUserId = ?
+    )`;
+
+/** 搜索用户（UID 精确命中优先，其次按用户名排序） */
+export async function iGM_SearchUsers(
+  params: iGM_UserSearchParams,
+): Promise<iGM_UserRow[]> {
+  return (await iGM_Db
+    .query(
+      `SELECT u.* FROM iGM_Users u
+        WHERE ${iGM_UserSearchWhere}
+        ORDER BY CASE WHEN u.iGM_Uid = ? THEN 0 ELSE 1 END,
+                 u.iGM_Username ASC, u.iGM_Id ASC
+        LIMIT ? OFFSET ?`,
+    )
+    .all(
+      params.keyword,
+      params.usernamePattern,
+      params.viewerId,
+      params.viewerId,
+      params.keyword,
+      params.limit,
+      params.offset,
+    )) as iGM_UserRow[];
+}
+
+/** 统计搜索命中用户数（过滤口径与 iGM_SearchUsers 一致） */
+export async function iGM_CountSearchUsers(
+  params: Omit<iGM_UserSearchParams, "limit" | "offset">,
+): Promise<number> {
+  return (
+    (await iGM_Db
+      .query(
+        `SELECT COUNT(*) AS iGM_Count FROM iGM_Users u
+          WHERE ${iGM_UserSearchWhere}`,
+      )
+      .get(params.keyword, params.usernamePattern, params.viewerId, params.viewerId)) as {
+      iGM_Count: number;
+    }
+  ).iGM_Count;
+}
+
 // 导出 //
 export default {
   iGM_CreateFollow,
@@ -354,4 +429,6 @@ export default {
   iGM_DeleteBlock,
   iGM_FindBlock,
   iGM_ListBlocks,
+  iGM_SearchUsers,
+  iGM_CountSearchUsers,
 };

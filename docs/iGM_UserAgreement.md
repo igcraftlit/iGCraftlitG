@@ -1,7 +1,7 @@
 ---
-version: 1.0.0
+version: 1.1.0
 title: iGCraftLit 用户管理规定
-effective: 自用户注册之日起生效
+effective: 新版本发布后用户须重新阅读并同意（1.1.0 为社交生态增补版）
 ---
 
 # iGCraftLit 用户管理规定

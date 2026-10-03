@@ -51,6 +51,8 @@ export function iGM_PostEditPage() {
   const searchParams = useSearchParams();
   const postId = searchParams.get("postId");
   const isEdit = postId !== null;
+  /** 编辑模式目标帖 ID（isEdit 为 true 时非空，替代非空断言） */
+  const editPostId = postId ?? "";
 
   const [categories, setCategories] = useState<iGM_Category[]>([]);
   const [title, setTitle] = useState("");
@@ -72,9 +74,9 @@ export function iGM_PostEditPage() {
 
   /** 编辑模式：拉取原帖并回填（后端同时校验作者身份） */
   const iGM_LoadForEdit = useCallback(async () => {
-    if (!postId) return;
+    if (!editPostId) return;
     try {
-      const response = await iGM_ApiGetPost(postId);
+      const response = await iGM_ApiGetPost(editPostId);
       const post = response.data?.post;
       if (!post) return;
       setTitle(post.title);
@@ -87,7 +89,7 @@ export function iGM_PostEditPage() {
     } finally {
       setLoading(false);
     }
-  }, [postId, t]);
+  }, [editPostId, t]);
 
   useEffect(() => {
     if (isEdit) void iGM_LoadForEdit();
@@ -121,7 +123,7 @@ export function iGM_PostEditPage() {
         images,
       };
       const response = isEdit
-        ? await iGM_ApiUpdatePost({ postId: postId as string, ...payload })
+        ? await iGM_ApiUpdatePost({ postId: editPostId, ...payload })
         : await iGM_ApiCreatePost(payload);
       const newPostId = response.data?.post.id;
       if (newPostId) {
@@ -159,7 +161,7 @@ export function iGM_PostEditPage() {
         </p>
       </header>
 
-      <Link href={isEdit ? `/G_Post?postId=${postId}` : "/G_Community"} className={styles.backLink}>
+      <Link href={isEdit ? `/G_Post?postId=${editPostId}` : "/G_Community"} className={styles.backLink}>
         <ArrowLeft size={14} strokeWidth={1.8} />
         {t("community.editor.back")}
       </Link>
@@ -274,7 +276,7 @@ export function iGM_PostEditPage() {
             {isEdit ? t("community.editor.save") : t("community.editor.publish")}
           </button>
           <Link
-            href={isEdit ? `/G_Post?postId=${postId}` : "/G_Community"}
+            href={isEdit ? `/G_Post?postId=${editPostId}` : "/G_Community"}
             className={styles.ghostButton}
           >
             {t("community.editor.cancel")}

@@ -1,0 +1,227 @@
+/*
+ * 文件路径：apps/web/src/iGM_Components/iGM_ReportDialog/iGM_ReportDialog.module.css
+ * 所属层：前端 / 通用组件样式
+ * 路由：G_Post 帖子详情
+ * 模块：iGM_ReportDialog
+ * 作用：帖子举报弹窗的玻璃态遮罩、卡片、原因单选项与操作区样式
+ * 内容：半透明模糊遮罩、原因卡片单选、描述文本域与计数、错误条、
+ *       提交/取消按钮；明暗模式自动跟随设计令牌
+ */
+
+/* 遮罩层 // */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.55);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+/* 弹窗卡片 // */
+.card {
+  width: min(460px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  border-radius: var(--igm-radius-lg);
+  border: 1px solid var(--igm-border);
+  background: color-mix(in srgb, var(--igm-surface) 90%, transparent);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
+  padding: 22px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 17px;
+  font-weight: 650;
+  color: var(--igm-text);
+}
+
+.closeButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--igm-text-muted);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.closeButton:hover {
+  background: var(--igm-surface-subtle);
+  color: var(--igm-text);
+}
+
+.description {
+  margin: 8px 0 18px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--igm-text-muted);
+}
+
+.fieldLabel {
+  display: block;
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.reasonList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.reasonCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-surface);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.reasonCard:hover {
+  border-color: var(--igm-border-strong);
+}
+
+.reasonCardActive {
+  border-color: var(--igm-accent);
+  background: var(--igm-accent-soft);
+}
+
+.reasonInput {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  accent-color: var(--igm-accent);
+  margin: 0;
+  cursor: pointer;
+}
+
+.reasonText {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--igm-text);
+}
+
+.textarea {
+  width: 100%;
+  min-height: 96px;
+  resize: vertical;
+  padding: 10px 12px;
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-border-strong);
+  background: var(--igm-surface);
+  color: var(--igm-text);
+  font: inherit;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--igm-accent);
+}
+
+.textarea::placeholder {
+  color: var(--igm-text-subtle);
+}
+
+.textareaMeta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+.counterInvalid {
+  color: var(--igm-danger);
+}
+
+.errorBox {
+  margin-top: 12px;
+  padding: 9px 12px;
+  border-radius: var(--igm-radius);
+  background: var(--igm-danger-soft);
+  color: var(--igm-danger);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.secondaryButton,
+.primaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--igm-radius);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.secondaryButton {
+  border: 1px solid var(--igm-border-strong);
+  background: transparent;
+  color: var(--igm-text-muted);
+}
+
+.secondaryButton:hover:not(:disabled) {
+  border-color: var(--igm-accent);
+  color: var(--igm-accent);
+}
+
+.primaryButton {
+  border: none;
+  background: var(--igm-accent);
+  color: var(--igm-accent-contrast);
+}
+
+.primaryButton:hover:not(:disabled) {
+  background: var(--igm-accent-hover);
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

@@ -7,10 +7,11 @@
  * 内容：内容 XSS 净化与长度校验、时间与名额校验、权限判定（创建者/协管员/管理员）、
  *       活动 DTO 组装（创建者、封面、报名数、当前用户状态）、报名与取消、
  *       报名成功创建通知
+ * 权限：社交生态优化后活动发布权收回——仅协管员及以上可创建活动，
+ *       普通用户仅可浏览与报名；编辑/删除沿用创建者本人或协管员及以上
  */
 
 // 导入依赖 //
-import { iGM_Db } from "../iGM_Database/iGM_Database";
 import {
   iGM_CountRegistrations,
   iGM_CountRegistrationsBatch,
@@ -247,14 +248,20 @@ async function iGM_AssembleActivityList(
 
 /* ---------- 创建 / 编辑 / 删除 ---------- */
 
-/** 创建活动：登录用户；协管员及以上可创建并存位任意状态 */
+/**
+ * 创建活动：社交生态优化后发布权完全收回，仅协管员及以上可创建；
+ * 普通用户一律 403（前端入口同步隐藏，后端为最终拦截关口）
+ */
 export async function iGM_CreateActivityService(
   user: iGM_UserRow,
   input: iGM_ActivityInput,
 ): Promise<iGM_ActivityDetailDto> {
+  if (!iGM_CanModerate(user)) {
+    throw new iGM_ContentError("auth.errors.forbidden", 403);
+  }
   const validated = iGM_ValidateActivityInput(input);
-  // 普通用户创建的活动默认报名中，草稿状态仅协管员及以上可用
-  const status = iGM_CanModerate(user) ? validated.status : "open";
+  // 发布权限仅限协管员及以上，状态可在入参允许范围内任意设置
+  const status = validated.status;
 
   const activity = await iGM_CreateActivity({
     creatorId: user.iGM_Id,

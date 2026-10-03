@@ -3,9 +3,10 @@
  * 所属层：前端 / 页面层
  * 路由：/G_Post?postId=xxx（静态壳 + 客户端按查询参数加载，避免动态路由预生成）
  * 模块：G_Post
- * 作用：帖子详情——正文、作者、点赞、收藏、评论楼中楼、发表回复、
+ * 作用：帖子详情——正文、作者、加好友/私信、点赞、收藏、评论楼中楼、发表回复、
  *       作者编辑/删除/隐藏、协管员管理内容
- * 内容：详情卡片、互动操作条、评论撰写框、评论列表、加载/错误/缺参空状态
+ * 内容：详情卡片、互动操作条、帖子举报弹窗、评论撰写框、评论列表、
+ *       加载/错误/缺参空状态
  * 安全：正文按纯文本渲染（React 默认转义 + 后端 XSS 过滤双重保障）
  */
 
@@ -24,7 +25,9 @@ import {
   ChevronRight,
   EyeOff,
   FileText,
+  Flag,
   LoaderCircle,
+  MessageCircle,
   MessageSquare,
   Pencil,
   ThumbsUp,
@@ -48,21 +51,69 @@ import type {
   iGM_Comment,
   iGM_PostDetail,
 } from "../../iGM_Services/iGM_CommunityClient";
+import { iGM_ApiGetRelationState, type iGM_RelationState } from "../../iGM_Services/iGM_SocialClient";
 import { iGM_UseAuth } from "../../iGM_Providers/iGM_AuthProvider";
 import { iGM_UseLocale } from "../../iGM_Providers/iGM_LocaleProvider";
 import { iGM_ResolveErrorText } from "../../iGM_Components/iGM_AuthUI/iGM_AuthUI";
 import { iGM_Avatar as IGM_Avatar } from "../../iGM_Components/iGM_Avatar/iGM_Avatar";
 import { iGM_VerifiedBadge as IGM_VerifiedBadge } from "../../iGM_Components/iGM_VerifiedBadge/iGM_VerifiedBadge";
+import { iGM_FriendButton as IGM_FriendButton } from "../../iGM_Components/iGM_FriendButton/iGM_FriendButton";
+import { iGM_ReportDialog as IGM_ReportDialog } from "../../iGM_Components/iGM_ReportDialog/iGM_ReportDialog";
 import { iGM_CommentList as IGM_CommentList } from "../../iGM_Components/iGM_CommentList/iGM_CommentList";
 import { iGM_EmptyState as IGM_EmptyState } from "../../iGM_Components/iGM_EmptyState/iGM_EmptyState";
 import { iGM_FormatDateTime } from "../../iGM_Components/iGM_Format/iGM_Format";
-import pageStyles from "../iGM_Page.module.css";
 import styles from "../iGM_Community.module.css";
 
 // 类型定义 //
 // （本页状态类型来自 iGM_CommunityClient / iGM_PostClient）
 
 // 核心逻辑 //
+/** 帖子作者区社交操作：非本人登录用户的加好友/私信入口，拉黑态与读取失败时不渲染 */
+function iGM_PostAuthorSocial({ authorId }: { authorId: string }) {
+  const t = useTranslations();
+  const router = iGM_UseLocaleRouter();
+  const [relation, setRelation] = useState<iGM_RelationState | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    iGM_ApiGetRelationState(authorId)
+      .then((response) => {
+        if (!cancelled) setRelation(response.data?.state ?? null);
+      })
+      .catch(() => {
+        // 关系读取失败时不渲染操作入口
+        if (!cancelled) setRelation(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [authorId]);
+
+  if (!relation || relation.blocked) return null;
+
+  return (
+    <span className={styles.detailAuthorActions}>
+      <IGM_FriendButton
+        targetId={authorId}
+        initialState={relation.friendState ?? null}
+        onRespond={() =>
+          router.push("/G_Community?tab=friends&subtab=incoming")
+        }
+      />
+      <Link
+        href={`/G_Community?tab=messages&peerId=${encodeURIComponent(authorId)}`}
+        className={styles.ghostButton}
+      >
+        <MessageCircle size={14} strokeWidth={1.8} />
+        {t("social.sendMessage")}
+      </Link>
+    </span>
+  );
+}
+
+// JSX 要求组件标识符首字母大写
+const IGM_PostAuthorSocial = iGM_PostAuthorSocial;
+
 /** 帖子详情页主体（在 Suspense 内使用 useSearchParams） */
 export function iGM_PostDetailPage() {
   const t = useTranslations();
@@ -79,6 +130,9 @@ export function iGM_PostDetailPage() {
   const [actionBusy, setActionBusy] = useState(false);
   /** 灯箱当前图片下标，null 表示关闭 */
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  /** 举报弹窗展开与提交成功反馈 */
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportSuccess, setReportSuccess] = useState(false);
 
   // 评论撰写框状态
   const [composerText, setComposerText] = useState("");
@@ -115,6 +169,7 @@ export function iGM_PostDetailPage() {
     let cancelled = false;
     setLoading(true);
     setErrorText(null);
+    setReportSuccess(false);
     Promise.all([iGM_LoadPost(), iGM_LoadComments()]).finally(() => {
       if (!cancelled) setLoading(false);
     });
@@ -393,6 +448,13 @@ export function iGM_PostDetailPage() {
         <div className={`${styles.alert} ${styles.alertError}`}>{errorText}</div>
       )}
 
+      {/* 举报提交成功反馈 */}
+      {reportSuccess && (
+        <div className={`${styles.alert} ${styles.alertSuccess}`}>
+          {t("report.dialog.success")}
+        </div>
+      )}
+
       {/* 帖子正文卡片 */}
       <article className={styles.sectionCard}>
         <header className={styles.detailHeader}>
@@ -406,6 +468,10 @@ export function iGM_PostDetailPage() {
             </Link>
             {/* 模块七：认证组织徽标 */}
             <IGM_VerifiedBadge org={post.author.verifiedOrg} />
+            {/* 社交生态：作者区加好友/私信（本人与拉黑态不渲染） */}
+            {authStatus === "authenticated" && !isOwner && (
+              <IGM_PostAuthorSocial authorId={post.author.id} />
+            )}
             <span>{iGM_FormatDateTime(locale, post.createdAt)}</span>
             {categoryLabel && <span className={styles.hiddenBadge} style={{ background: "var(--igm-accent-soft)", color: "var(--igm-accent)" }}>{categoryLabel}</span>}
             {post.status === "hidden" && (
@@ -494,6 +560,24 @@ export function iGM_PostDetailPage() {
             <MessageSquare size={15} strokeWidth={1.8} />
             {post.commentCount}
           </span>
+
+          {/* 举报入口：仅登录用户可见，无作者/管理员操作时右对齐 */}
+          {authStatus === "authenticated" && (
+            <button
+              type="button"
+              className={styles.ghostButton}
+              style={{
+                marginLeft: isOwner || canModerate ? undefined : "auto",
+              }}
+              onClick={() => {
+                setReportSuccess(false);
+                setReportOpen(true);
+              }}
+            >
+              <Flag size={14} strokeWidth={1.8} />
+              {t("report.button")}
+            </button>
+          )}
 
           {/* 作者与管理员操作 */}
           {(isOwner || canModerate) && (
@@ -665,6 +749,14 @@ export function iGM_PostDetailPage() {
           </span>
         </div>
       )}
+
+      {/* 举报弹窗：Portal 挂载，ESC/遮罩关闭与焦点陷阱由组件内部处理 */}
+      <IGM_ReportDialog
+        postId={post.id}
+        open={reportOpen}
+        onClose={() => setReportOpen(false)}
+        onSubmitted={() => setReportSuccess(true)}
+      />
     </div>
   );
 }

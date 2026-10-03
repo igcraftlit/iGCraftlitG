@@ -718,7 +718,26 @@
       "title": "Community Square",
       "description": "Browse and search posts, join discussions and share your work",
       "searchPlaceholder": "Search post titles or content…",
-      "newPost": "New post"
+      "newPost": "New post",
+      "tabSquare": "Square",
+      "tabFriends": "Friends",
+      "tabMessages": "Messages",
+      "scopeLabel": "Search scope",
+      "scopePosts": "Posts",
+      "scopeUsers": "Users",
+      "searchUsersPlaceholder": "Search by iGMUid or username…",
+      "userUid": "iGMUid: {uid}",
+      "userSelf": "This is you",
+      "usersIdleTitle": "Find community members",
+      "usersIdleDesc": "Enter an iGMUid or username to find members and send a friend request",
+      "usersLoginTitle": "Sign in to search users",
+      "usersLoginDesc": "Sign in to find community members by iGMUid or username and send friend requests",
+      "usersEmptyTitle": "No users found",
+      "usersEmptyDesc": "Try another keyword or iGMUid",
+      "loginFriendsTitle": "Sign in to view friends",
+      "loginFriendsDesc": "Sign in to manage friends, handle requests, and find members by iGMUid or username",
+      "loginMessagesTitle": "Sign in to view messages",
+      "loginMessagesDesc": "Sign in to view conversations and exchange messages with friends"
     },
     "post": {
       "backToCommunity": "Back to community",
@@ -1609,6 +1628,7 @@
       "submit": "Submit application",
       "submitting": "Submitting…",
       "pendingTip": "You already have a pending application. View it in My Applications, or cancel it to apply again.",
+      "ownerPending": "The owner account for this organization has not joined yet, so applications may remain pending for a long time. For questions, contact us: {email}",
       "viewStatus": "View my applications"
     },
     "status": {
@@ -1642,6 +1662,7 @@
       "reject": "Reject",
       "commentPlaceholder": "Review comment (optional, up to 500 characters)",
       "selfTip": "You cannot review your own application",
+      "readonlyNotice": "Organization verification is handled by the corresponding organization owner. Staff accounts have read-only access to all applications.",
       "filterOrg": "Filter by organization",
       "filterOrgAll": "All organizations"
     },
@@ -1686,7 +1707,11 @@
       "leaveReason": "Reason for leaving (optional)",
       "leaveReasonPlaceholder": "You may briefly explain why you are leaving…",
       "viewDetails": "View organization page",
-      "ownerCannotLeave": "You are the owner of this organization and cannot leave it."
+      "ownerCannotLeave": "You are the owner of this organization and cannot leave it.",
+      "members": "Members",
+      "membersEmpty": "This organization has no public members yet.",
+      "memberUid": "iGMUid: {uid}",
+      "memberJoined": "Joined {time}"
     },
     "ownerBadge": "Owner",
     "badgeOwner": "{name} organization owner"
@@ -1717,10 +1742,11 @@
         "id": "chapter-3",
         "title": "Chapter 3 Account Management",
         "items": [
-          "Users must provide a genuine, working email address when registering.",
+          "Users must provide a genuine, working email address when registering; email verification, password recovery and security alerts are delivered by email, and accounts without verified email may have limited access to some features.",
           "Accounts are owned by iGCraftLit; users hold the right to use them. Transferring, renting out or selling accounts is prohibited.",
-          "Users shall keep their passwords secure. Losses caused by password disclosure are borne by the users themselves.",
-          "After successful registration the system automatically assigns an 11-digit iGMUid as the user's unique identifier in the community."
+          "Users shall keep their passwords secure. Losses caused by password disclosure are borne by the users themselves; if you notice suspicious activity or account takeover, reset your password by email immediately and contact an administrator.",
+          "After successful registration the system automatically assigns an 11-digit iGMUid as the user's unique identifier in the community.",
+          "When abnormal sign-ins are detected, the system may send email alerts or apply temporary protection measures. Users can review sign-in records and manage sessions in account settings."
         ]
       },
       {
@@ -1783,11 +1809,86 @@
       },
       {
         "id": "chapter-7",
-        "title": "Chapter 7 Supplementary Provisions",
+        "title": "Chapter 7 Organization Verification",
         "items": [
-          "The right of interpretation of these Rules belongs to iGCraftLit Community.",
-          "These Rules take effect on the date of registration. Continued use of community services constitutes agreement to these Rules.",
-          "These Rules may be updated in line with legal requirements or community development. Updates will be published in community announcements, and continued use constitutes acceptance of the updated Rules."
+          "Users can choose a trusted organization on the organization verification page and submit an application with a reason and optional supporting materials; an account may have only one pending application at a time.",
+          "Verification applications are reviewed by the owner of the target organization. Once approved, the applicant receives that organization's verified badge. Administrators and moderators may view application records but do not review on the owner's behalf.",
+          "An owner cannot review their own application; while an application is pending, the applicant may withdraw it and resubmit.",
+          "If the target organization's owner account has not yet joined the community, applications for that organization cannot be processed for the time being; contact igcraftlit@outlook.com for assistance.",
+          "Verified members can request to leave an organization from its detail page. After leaving, the badge and related permissions are removed and the member may reapply later; an owner cannot leave the organization they own.",
+          "Verification badges are bound to the account and must not be forged, transferred, rented out or used to mislead others. Members who commit serious violations may have their badges revoked by an administrator."
+        ]
+      },
+      {
+        "id": "chapter-8",
+        "title": "Chapter 8 Points, Levels, Tasks and Badges",
+        "items": [
+          "The points system records user activity and contributions. Points can be earned through compliant behavior such as posting, commenting, publishing resources and joining events; the exact rules are published on the points page.",
+          "User levels advance automatically based on points. They represent community activity only and do not imply any official position or moderation privilege.",
+          "Daily and growth tasks help users explore community features; task rewards are granted as actually issued by the system. Farming points or rewards with scripts or multiple accounts is prohibited.",
+          "Achievement badges are granted automatically when their conditions are met and cannot be sold or transferred. Points, levels or badges obtained improperly may be reclaimed by administrators and handled under these Rules."
+        ]
+      },
+      {
+        "id": "chapter-9",
+        "title": "Chapter 9 Developer Platform and OAuth Integration",
+        "items": [
+          "Developers can create OAuth applications in account settings to integrate community login and open APIs; the application name, homepage and redirect URI must be filled in truthfully at creation.",
+          "Credentials such as client_secret are shown in full only once at creation. Developers must safeguard them and reset them immediately if leaked; losses caused by credential leakage are borne by the developer.",
+          "Integrated applications may request only the permission scopes necessary for their functionality and must not collect, store or re-grant user data beyond that scope. Before authorizing, users can see the application name and the permissions it requests.",
+          "Applications built for traffic farming, harassment, scraping non-public data, bypassing permission controls or misleading users are prohibited. Violating applications will be disabled and developer access may be revoked.",
+          "Calls to open APIs must respect rate limits and the terms of use; for abusive calls that threaten service stability, the community may restrict or terminate access at any time."
+        ]
+      },
+      {
+        "id": "chapter-10",
+        "title": "Chapter 10 Resource Publishing Rules",
+        "items": [
+          "Site resources fall into five categories: mods, shaders, resource packs, maps and data packs. Publishers must choose the correct category and truthfully provide the name, description, compatible versions and a compliant file.",
+          "Publishers must hold the legal rights to or proper authorization for uploaded content and correctly credit the original authors and licenses. Cracked, pirated, malicious or license-bypassing resources are prohibited.",
+          "The resource page combines results from this site and from the third-party platform Modrinth. Third-party resources are marked with a source badge and open a third-party detail page; the community is not responsible for third-party content.",
+          "Copyright, compatibility and safety of third-party resources are governed by the original platform and authors' pages. Infringing or violating resources can be reported; site resources confirmed as violating will be taken down.",
+          "Download-count farming, duplicate listings, false descriptions and malicious traffic diversion are prohibited. Violating resources will be taken down and their publishers handled under these Rules."
+        ]
+      },
+      {
+        "id": "chapter-11",
+        "title": "Chapter 11 Community Events",
+        "items": [
+          "Community events (online and offline) are officially initiated by moderators and administrators. Regular users can browse the event list and sign up, but cannot create events for now.",
+          "Before signing up, confirm the event time, location and capacity limit. Registrations can be self-cancelled before the event starts; when spots are limited, please leave them for users who can actually attend.",
+          "Event comments, registration information and behavior at offline events are all subject to these Rules. Illegal, harassing or dangerous conduct at events is strictly prohibited.",
+          "Participants in offline events shall assess their own travel and safety risks and comply with local laws and venue requirements. Except as otherwise provided by law, the community is not liable for personal conduct at events."
+        ]
+      },
+      {
+        "id": "chapter-12",
+        "title": "Chapter 12 Social Relations, Direct Messages and Privacy",
+        "items": [
+          "Users can follow others and send friend requests; friendship requires mutual consent and either party may end it at any time. Using follows or friend requests to harass others or send marketing messages is prohibited.",
+          "Direct messages are visible only to the two participants. Users can restrict messages from strangers in privacy settings or add others to a blocklist; blocked users cannot send messages, friend requests or follows.",
+          "Sending illegal, harassing, advertising or bulk repeated messages through direct messages or comments is prohibited; withdrawing or deleting a message does not affect the community's handling of violations that already occurred.",
+          "Users shall respect others' privacy and must not collect or spread others' personal information or chat records. Profile visibility, searchability and who may send messages can all be adjusted in account settings."
+        ]
+      },
+      {
+        "id": "chapter-13",
+        "title": "Chapter 13 Reporting",
+        "items": [
+          "Users can submit reports from post details, comments, user profiles and other entry points. A report requires a reason and may include supplementary details of 5 to 500 characters.",
+          "Please do not report the same content repeatedly. Progress and outcomes are delivered through in-site notifications, and the reporter's identity is hidden from the reported user.",
+          "Reviewers verify against these Rules and the evidence: violating content is hidden or deleted, and violating accounts are handled under the quantified penalties in Chapter 6.",
+          "Malicious or false reports and reports meant to disrupt others' normal use are strictly prohibited; confirmed malicious reporters are handled under these Rules."
+        ]
+      },
+      {
+        "id": "chapter-14",
+        "title": "Chapter 14 Supplementary Provisions",
+        "items": [
+          "The right of interpretation of these Rules belongs to iGCraftLit Community. Other language versions are provided for convenience; in case of divergence, the Chinese version prevails.",
+          "These Rules apply to a user from the date of registration and acceptance. When a new version is released, users must read and accept it again, and some features may be restricted until they do.",
+          "These Rules may be updated in line with legal requirements or community development; updates will be published in community announcements.",
+          "Official contact email: igcraftlit@outlook.com."
         ]
       }
     ],
@@ -1812,7 +1913,27 @@
         {
           "id": "faq-q4",
           "q": "Q4: How do Rule updates take effect?",
-          "a": "Updates will be published in community announcements. Your continued use of community services means you accept the updated Rules."
+          "a": "Updated Rules are published in community announcements. When the version is upgraded, all users must read and accept the new version again; some features may be restricted until they do."
+        },
+        {
+          "id": "faq-q5",
+          "q": "Q5: How do I apply for organization verification, and who reviews it?",
+          "a": "Choose a trusted organization on the verification page and fill in your reason to apply; only one pending application is allowed at a time. Reviews are done by that organization's owner — administrators do not review on their behalf, and owners cannot review their own applications. If the owner has not joined yet, contact igcraftlit@outlook.com."
+        },
+        {
+          "id": "faq-q6",
+          "q": "Q6: Are Modrinth resources on the resource page trustworthy?",
+          "a": "The page combines results from this site and Modrinth. Third-party resources carry a source badge and, when clicked, open the third-party detail and download pages. Their copyright, compatibility and safety are governed by the original platform and authors' pages. Report any issues via the report entry point."
+        },
+        {
+          "id": "faq-q7",
+          "q": "Q7: Can regular users create community events?",
+          "a": "Currently events are officially initiated only by moderators and administrators. Regular users can browse and sign up, and can self-cancel a registration before the event starts."
+        },
+        {
+          "id": "faq-q8",
+          "q": "Q8: What should I do if I am harassed or receive violating content?",
+          "a": "You can restrict messages from strangers or block the user in privacy settings, and submit a report from posts, comments or user profiles. Malicious reports are penalized as well."
         }
       ]
     },
@@ -1916,6 +2037,7 @@
     "requestSent": "Request sent",
     "respondRequest": "Respond",
     "addFriend": "Add friend",
+    "findUsers": "Find users",
     "backToProfile": "Back to profile",
     "sendMessage": "Message",
     "followedAt": "Followed on {date}",
@@ -1952,7 +2074,8 @@
       "alreadyFriend": "You are already friends",
       "alreadyRequested": "A friend request already exists; do not send it again",
       "requestNotFound": "The friend request does not exist or has already been handled",
-      "friendNotFound": "The friendship does not exist"
+      "friendNotFound": "The friendship does not exist",
+      "searchKeywordInvalid": "Search keyword must be 1-32 characters"
     }
   },
   "message": {
@@ -2015,6 +2138,9 @@
     "filterPlatform": "Platform",
     "sourceSite": "Local resources",
     "sourceThirdParty": "Third-party resources",
+    "unified": {
+      "degradedHint": "Some resource sources are temporarily unavailable. Results may be incomplete."
+    },
     "searchPlaceholder": "Search resource names or tags…",
     "stateLoading": "Loading…",
     "downloadCount": "{count} downloads",
@@ -2461,6 +2587,38 @@
       "goLogin": "Sign in to continue",
       "redirecting": "Returning to the third-party application…",
       "flowExpired": "This authorization request is invalid or has expired. Please start the sign-in again from the third-party application."
+    }
+  },
+  "report": {
+    "button": "Report",
+    "dialog": {
+      "title": "Report post",
+      "description": "Select a reason and briefly describe what happened. We will review it as soon as possible.",
+      "reasonLabel": "Reason",
+      "detailLabel": "Description",
+      "detailPlaceholder": "Describe the issue (5-500 characters), such as where and how the violating content appears",
+      "detailHint": "5-500 characters; a specific description is required to submit",
+      "submit": "Submit report",
+      "submitting": "Submitting…",
+      "cancel": "Cancel",
+      "success": "Report submitted. We will review it as soon as possible"
+    },
+    "reasons": {
+      "spam": "Spam or advertising",
+      "abuse": "Harassment or abuse",
+      "porn": "Sexual or explicit content",
+      "illegal": "Illegal activity",
+      "plagiarism": "Plagiarism or infringement",
+      "other": "Other"
+    },
+    "errors": {
+      "badRequest": "Invalid report request. Please check and try again",
+      "reasonInvalid": "Please select a reason",
+      "detailLength": "Description must be 5-500 characters",
+      "duplicatePending": "You already have a pending report for this post"
+    },
+    "messages": {
+      "submitted": "Report submitted successfully"
     }
   }
 }
