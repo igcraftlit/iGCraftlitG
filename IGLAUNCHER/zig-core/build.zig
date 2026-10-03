@@ -21,8 +21,8 @@ const iGM_Launcher_Header_Text =
     \\ * 模块：iGM_Launcher_Core
     \\ * 作用：声明原生核心对外暴露的 C ABI 结构与函数，供 C / C++ / Zig / bun:ffi 调用
     \\ * 内容：初始化与版本函数、进度结构 iGM_Launcher_Progress、进度回调类型、
-    \\ *       下载任务生命周期函数（create / set_progress_callback / start / pause /
-    \\ *       resume / retry / cancel / free）、哈希与 Java 检测函数；
+    \\ *       下载任务生命周期函数（create / set_progress_callback / get_progress / start /
+    \\ *       pause / resume / retry / cancel / free）、哈希与 Java 检测函数；
     \\ *       字符串均为 C 字符串指针，生命周期由 SDK 内部保证，仅在回调调用期间有效。
     \\ */
     \\
@@ -85,6 +85,9 @@ const iGM_Launcher_Header_Text =
     \\    void* user_data
     \\);
     \\
+    \\/* 读取任务最新进度快照：返回任务内常驻结构体指针，任务释放前始终有效；参数非法返回 NULL */
+    \\const iGM_Launcher_Progress* iGM_Launcher_Download_GetProgress(iGM_Launcher_Download_Task task);
+    \\
     \\/* 启动任务：在独立线程执行，立即返回；0 成功，负值为错误码 */
     \\int iGM_Launcher_Download_StartTask(iGM_Launcher_Download_Task task);
     \\
@@ -118,7 +121,13 @@ const iGM_Launcher_Header_Text =
 ;
 
 pub fn build(b: *std.Build) void {
-    const target = b.standardTargetOptions(.{});
+    // 发布产物必须在任意 x86_64 机器上可运行：不带 -Dtarget 时 Zig 默认按「构建机」
+    // 自身 CPU 特性编译（GitHub 运行器带 AVX-512），产物落到仅支持 AVX-2 的机器上
+    // 会以 Illegal instruction 直接终止宿主进程（表现为启动器点下载即整体闪退）。
+    // 故把默认 CPU 固定为 baseline，保证 CI 与本机产出一致且可移植。
+    const target = b.standardTargetOptions(.{
+        .default_target = .{ .cpu_model = .baseline },
+    });
     // Zig 0.16 已移除内置 -Doptimize，此处自行登记同名选项以保持脚本命令稳定，
     // 缺省即为 ReleaseFast（发布产物使用），可用 -Doptimize=Debug 等覆盖。
     const optimize = b.option(

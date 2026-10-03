@@ -4,11 +4,19 @@
  * 路由：全局（不对外暴露 URL，仅被 iGM_Launcher_Bridge 调用）
  * 模块：iGM_Launcher_SDK
  * 作用：以性能最优方式接入下载器 SDK——用 bun:ffi 的 dlopen 直接加载 igm_downloader 动态库，
- *       下载任务在 SDK 内部线程执行，进度经 threadSafe JSCallback 直接回调到主进程，
+ *       下载任务在 SDK 内部线程执行，进度由 JS 侧按 200ms 节拍轮询任务内常驻快照获取，
  *       无额外进程、无 HTTP/WebSocket 网络层、内存占用最小，适合长时间运行的启动器
  * 内容：按平台解析动态库文件名与候选路径、dlopen 符号规格、进度结构体解析、
- *       任务登记表与 create / set_progress_cb / start / pause / resume / retry / cancel / free 封装；
+ *       任务登记表与 create / start / pause / resume / retry / cancel / free 封装、
+ *       进度轮询定时器（有任务时启动，任务清空后停止）；
  *       动态库缺失时静默降级（IsAvailable 返回 false），由调用方回退到后端 API 下载
+ *
+ * 进度获取（关键设计）：
+ *   不注册原生进度回调。原生下载线程经 bun:ffi 的 threadsafe JSCallback 跨线程回调 JS
+ *   会触发 Windows 上的偶发进程级崩溃（0xC0000409 fastfail，整进程静默消失，
+ *   表现为「点击下载后启动器所有窗口与任务栏图标一起消失」），且崩溃无任何日志。
+ *   改为调用 iGM_Launcher_Download_GetProgress 轮询任务内常驻的 64 字节快照：
+ *   进度、终态、等待者唤醒均由轮询驱动，行为与回调路径完全一致，但不再有跨线程 JS 入口。
  *
  * 架构分层（模块二十三）：
  *   后端 API（HTTP/WebSocket）——服务网页端、第三方工具，并作为 SDK 不可用时的兜底；
@@ -21,7 +29,6 @@ import {
   CString,
   dlopen,
   FFIType,
-  JSCallback,
   toArrayBuffer,
   type FFIFunction,
   type Library,
@@ -121,15 +128,10 @@ const iGM_Launcher_SDK_FfiSpec = {
     returns: FFIType.ptr,
   },
   /*
-   * user_data 在 Zig 侧类型为 ?*anyopaque，此处必须声明为 i64 而非 ptr：
-   * bun:ffi 不接受 BigInt 形式的 ptr（会抛 "Unable to convert 1 to a pointer"），
-   * 而 64 位平台上指针与 i64 同为 8 字节、传参 ABI 完全一致，
-   * 故统一按 i64 传递小整数序号，回调侧再 Number() 还原。
+   * 进度读取：SDK 侧不再注册跨线程进度回调（见文件头「进度获取」说明），
+   * 改为按固定节拍调用本函数读取任务内常驻的进度快照，返回 64 字节结构体指针。
    */
-  iGM_Launcher_Download_SetProgressCallback: {
-    args: [FFIType.ptr, FFIType.function, FFIType.i64],
-    returns: FFIType.void,
-  },
+  iGM_Launcher_Download_GetProgress: { args: [FFIType.ptr], returns: FFIType.ptr },
   iGM_Launcher_Download_StartTask: { args: [FFIType.ptr], returns: FFIType.i32 },
   iGM_Launcher_Download_PauseTask: { args: [FFIType.ptr], returns: FFIType.i32 },
   iGM_Launcher_Download_ResumeTask: { args: [FFIType.ptr], returns: FFIType.i32 },
@@ -146,8 +148,6 @@ const IGM_LAUNCHER_SDK_PROGRESS_BYTES = 64;
 interface iGM_Launcher_SDK_TaskRecord {
   /** SDK 任务句柄（指针） */
   handle: Pointer;
-  /** 进度回调（须保持引用，避免被 GC 回收导致回调失效） */
-  callback: JSCallback;
   /** 最新快照 */
   snapshot: iGM_Launcher_SDK_TaskSnapshot;
   /** 终态等待者：任务进入完成 / 失败 / 取消时统一唤醒（供逐文件顺序编排使用） */
@@ -173,8 +173,7 @@ const iGM_Launcher_SDK_Listeners = new Set<iGM_Launcher_SDK_ProgressListener>();
 
 /**
  * 订阅任务进度：返回取消订阅函数。
- * 回调在 JS 主线程执行（threadsafe JSCallback 会把回调排队到主线程），
- * 因此可直接向 webview 推送消息。
+ * 广播由 JS 主线程的进度轮询定时器驱动，因此订阅回调内可直接向 webview 推送消息。
  */
 export function iGM_Launcher_SDK_Subscribe(
   listener: iGM_Launcher_SDK_ProgressListener,
@@ -369,7 +368,88 @@ function iGM_Launcher_SDK_FlushWaiters(record: iGM_Launcher_SDK_TaskRecord): voi
 }
 
 /**
- * 内部：登记任务、注册进度回调、启动线程并广播初始快照。
+ * 进度轮询节拍（毫秒）。
+ *
+ * 为什么不注册原生进度回调：原生下载线程通过 bun:ffi 的 threadsafe JSCallback
+ * 跨线程回调 JS 时，在 Windows 上会出现偶发的进程级崩溃（0xC0000409 fastfail），
+ * 表现为「点击下载后启动器所有窗口连同任务栏图标一起消失」，且崩溃静默无日志。
+ * 改为 JS 侧按节拍读取任务内常驻的进度快照，彻底移除这条跨线程 JS 入口。
+ */
+const IGM_LAUNCHER_SDK_POLL_MS = 200;
+
+/** 进度轮询定时器（有任务时启动，任务清空后自动停止） */
+let iGM_Launcher_SDK_PollTimer: ReturnType<typeof setInterval> | null = null;
+
+/** 按需启动进度轮询 */
+function iGM_Launcher_SDK_EnsurePolling(): void {
+  if (iGM_Launcher_SDK_PollTimer) return;
+  iGM_Launcher_SDK_PollTimer = setInterval(
+    iGM_Launcher_SDK_PollTick,
+    IGM_LAUNCHER_SDK_POLL_MS,
+  );
+}
+
+/** 停止进度轮询（无任务时） */
+function iGM_Launcher_SDK_StopPolling(): void {
+  if (!iGM_Launcher_SDK_PollTimer) return;
+  clearInterval(iGM_Launcher_SDK_PollTimer);
+  iGM_Launcher_SDK_PollTimer = null;
+}
+
+/**
+ * 刷新单个任务快照：从 native 侧读取最新进度并写入登记项。
+ * 返回是否发生变化（无变化时不广播，避免无意义的消息推送）。
+ */
+function iGM_Launcher_SDK_Refresh(record: iGM_Launcher_SDK_TaskRecord): boolean {
+  const symbols = iGM_Launcher_SDK_Handle?.symbols;
+  if (!symbols) return false;
+  let pointer: unknown;
+  try {
+    pointer = symbols.iGM_Launcher_Download_GetProgress(record.handle);
+  } catch (error) {
+    console.warn("[iGM_Launcher_SDK] 读取任务进度异常：", error);
+    return false;
+  }
+  if (!pointer || Number(pointer) === 0) return false;
+  const parsed = iGM_Launcher_SDK_ParseProgress(pointer);
+  const previous = record.snapshot;
+  const changed =
+    parsed.status !== previous.status ||
+    parsed.downloaded !== previous.downloaded ||
+    parsed.total !== previous.total ||
+    parsed.error !== previous.error;
+  if (!changed) return false;
+  record.snapshot = {
+    ...previous,
+    sdkTaskId: parsed.sdkTaskId || previous.sdkTaskId,
+    status: parsed.status,
+    downloaded: parsed.downloaded,
+    total: parsed.total,
+    percent: parsed.percent,
+    speed: parsed.speed,
+    eta: parsed.eta < 0 ? 0 : parsed.eta,
+    error: parsed.error,
+  };
+  return true;
+}
+
+/** 轮询一次：把每个任务的最新快照同步到登记项，变化时广播并唤醒终态等待者 */
+function iGM_Launcher_SDK_PollTick(): void {
+  if (iGM_Launcher_SDK_Tasks.size === 0) {
+    iGM_Launcher_SDK_StopPolling();
+    return;
+  }
+  for (const record of iGM_Launcher_SDK_Tasks.values()) {
+    if (!iGM_Launcher_SDK_Refresh(record)) continue;
+    // 实时广播：独立下载进度窗口据此刷新，而不是只靠任务列表轮询
+    iGM_Launcher_SDK_Notify(record.snapshot);
+    // 终态唤醒：逐文件编排在等待单个文件完成时依赖此回调
+    iGM_Launcher_SDK_FlushWaiters(record);
+  }
+}
+
+/**
+ * 内部：登记任务、启动线程、开启进度轮询并广播初始快照。
  * createHandle 由调用方提供（Modrinth 解析模式用 CreateTask，直链模式用 CreateFileTask），
  * 其余流程完全一致，避免两条路径出现行为分叉。
  */
@@ -417,58 +497,8 @@ function iGM_Launcher_SDK_Launch(
     createdAt: new Date().toISOString(),
   };
 
-  /*
-   * 进度回调：threadSafe 允许 SDK 内部线程回调（Bun 会把回调排队到 JS 主线程执行）。
-   * user_data 传的是启动器侧任务序号（小整数），登记表键为 `sdk-<序号>`，
-   * 故此处必须还原成同一形态的键，否则查不到登记项、进度会被静默丢弃
-   * （这是「点击下载无反应、进度条不动」的直接原因）。
-   */
-  const callback = new JSCallback(
-    (progressPointer: unknown, userPointer: unknown) => {
-      const key = `sdk-${Number(userPointer)}`;
-      const record = iGM_Launcher_SDK_Tasks.get(key);
-      if (!record) return;
-      const parsed = iGM_Launcher_SDK_ParseProgress(progressPointer);
-      record.snapshot = {
-        ...record.snapshot,
-        sdkTaskId: parsed.sdkTaskId || record.snapshot.sdkTaskId,
-        status: parsed.status,
-        downloaded: parsed.downloaded,
-        total: parsed.total,
-        percent: parsed.percent,
-        speed: parsed.speed,
-        eta: parsed.eta < 0 ? 0 : parsed.eta,
-        error: parsed.error,
-      };
-      // 实时广播：独立下载进度窗口据此刷新，而不是只靠任务列表轮询
-      iGM_Launcher_SDK_Notify(record.snapshot);
-      // 终态唤醒：逐文件编排在等待单个文件完成时依赖此回调
-      iGM_Launcher_SDK_FlushWaiters(record);
-    },
-    // 第二个参数是 user_data（任务序号），按 i64 读取为 BigInt 后再 Number() 还原，
-    // 与 SetProgressCallback 的 i64 传参保持一致（见 iGM_Launcher_SDK_FfiSpec 注释）
-    { args: [FFIType.ptr, FFIType.i64], returns: FFIType.void, threadsafe: true },
-  );
-
-  iGM_Launcher_SDK_Tasks.set(taskId, { handle, callback, snapshot, waiters: [] });
+  iGM_Launcher_SDK_Tasks.set(taskId, { handle, snapshot, waiters: [] });
   iGM_Launcher_SDK_LastTaskId = taskId;
-
-  // 注册回调：threadsafe 回调须传 JSCallback 本体（Bun 需据此建立线程安全引用），
-  // user_data 传启动器侧任务序号（小整数），回调据此定位登记项
-  try {
-    symbols.iGM_Launcher_Download_SetProgressCallback(
-      handle,
-      callback,
-      BigInt(iGM_Launcher_SDK_TaskSeq),
-    );
-  } catch (error) {
-    // bun:ffi 参数编组失败时（如把 BigInt 当指针传）必须显式清理已建句柄与回调，
-    // 否则登记项与 native 句柄会泄漏，且异常会穿透到调用方造成静默失败
-    const detail = error instanceof Error ? error.message : String(error);
-    console.error(`[SDK] 注册进度回调异常：${detail}`);
-    iGM_Launcher_SDK_Release(taskId);
-    throw new Error(`注册进度回调异常：${detail}`);
-  }
 
   let started = 0;
   try {
@@ -485,6 +515,9 @@ function iGM_Launcher_SDK_Launch(
     throw new Error(`调用 StartTask 返回错误码 ${started}`);
   }
 
+  // 启动进度轮询（有任务时才运行，任务清空后自动停止）
+  iGM_Launcher_SDK_EnsurePolling();
+
   // 通知订阅者任务已创建，便于进度窗口立即拿到初始快照
   iGM_Launcher_SDK_Notify(snapshot);
   return { ...snapshot };
@@ -492,7 +525,7 @@ function iGM_Launcher_SDK_Launch(
 
 /**
  * 创建并启动「Modrinth 解析」下载任务（资源 id + 版本 + 加载器）。
- * 通过 user_data 传入启动器侧任务序号，回调据此定位登记项（SDK 只透传该指针，不解引用）。
+ * 进度由 JS 侧轮询 iGM_Launcher_Download_GetProgress 获取，native 侧不再回调 JS。
  */
 export function iGM_Launcher_SDK_Start(
   request: iGM_Launcher_SDK_DownloadRequest,
@@ -603,7 +636,9 @@ function iGM_Launcher_SDK_Control(
       symbols.iGM_Launcher_Download_CancelTask(record.handle);
       break;
   }
-  // 控制动作（暂停 / 恢复 / 重试 / 取消）也广播一次，保证进度窗口状态即时同步
+  // 控制动作（暂停 / 恢复 / 重试 / 取消）会在 native 侧同步写入快照，
+  // 这里立即拉取一次并广播，保证进度窗口状态即时同步（无需等下一个轮询节拍）
+  iGM_Launcher_SDK_Refresh(record);
   iGM_Launcher_SDK_Notify(record.snapshot);
   return { ...record.snapshot };
 }
@@ -639,7 +674,6 @@ export function iGM_Launcher_SDK_Release(taskId: string): void {
     iGM_Launcher_SDK_Handle.symbols.iGM_Launcher_Download_CancelTask(record.handle);
     iGM_Launcher_SDK_Handle.symbols.iGM_Launcher_Download_FreeTask(record.handle);
   }
-  record.callback.close();
   iGM_Launcher_SDK_Tasks.delete(taskId);
   if (iGM_Launcher_SDK_LastTaskId === taskId) iGM_Launcher_SDK_LastTaskId = null;
 }

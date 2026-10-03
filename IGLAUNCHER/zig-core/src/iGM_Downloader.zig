@@ -209,10 +209,15 @@ fn iGM_Downloader_Log(comptime fmt: []const u8, args: anytype) void {
     std.debug.print("[SDK] " ++ fmt ++ "\n", args);
 }
 
-/// 触发一次进度回调。
+/// 更新一次进度快照，并在注册了回调时推送。
 /// 进度快照与错误缓冲常驻任务句柄内（progress_slot / error_slot）：
 /// bun:ffi 的 threadsafe JSCallback 会把回调排队到 JS 主线程后再执行，
 /// 若在栈上构造，回调真正读取时栈帧已失效，消费端会读到垃圾指针。
+///
+/// 快照先行更新、回调可选：JS 侧默认不注册回调，改为按固定节拍调用
+/// iGM_Launcher_Download_GetProgress 轮询该快照。原因是「原生工作线程跨线程回调 JS」
+/// 在 Windows 上存在偶发进程级崩溃（0xC0000409 fastfail，整进程静默消失），
+/// 轮询可彻底消除这条跨线程 JS 入口，行为完全等价（进度、终态、等待者唤醒均由轮询驱动）。
 fn iGM_Downloader_Emit(
     task: *iGM_Launcher_Download_Task,
     status: c_int,
@@ -222,8 +227,6 @@ fn iGM_Downloader_Emit(
     eta: i64,
     err: ?[]const u8,
 ) void {
-    const callback = task.cb orelse return;
-
     if (err) |message| {
         const length = @min(message.len, task.error_slot.len - 1);
         @memcpy(task.error_slot[0..length], message[0..length]);
@@ -247,6 +250,9 @@ fn iGM_Downloader_Emit(
         .eta = eta,
         .error_text = @ptrCast(&task.error_slot),
     };
+
+    // 回调可选：未注册时仅保留快照，由 JS 侧轮询 GetProgress 读取
+    const callback = task.cb orelse return;
     callback(&task.progress_slot, task.user_data);
 }
 
@@ -1275,6 +1281,8 @@ export fn iGM_Launcher_Download_CreateTask(
         .loader = loader_owned,
         .target_dir = target_owned,
     };
+    // 进度快照的 task_id 在创建即写入，保证首次轮询（工作线程尚未产出进度时）也能读到任务编号
+    task.progress_slot.task_id = task_id.ptr;
     iGM_Downloader_Log(
         "创建下载任务 {s}: resource={s} version={s} loader={s} target={s}",
         .{ task_id, resource_owned, version_owned, loader_owned, target_owned },
@@ -1331,6 +1339,8 @@ export fn iGM_Launcher_Download_CreateFileTask(
         .direct_sha1 = sha1_owned,
         .direct_size = expected_size,
     };
+    // 进度快照的 task_id 在创建即写入，保证首次轮询（工作线程尚未产出进度时）也能读到任务编号
+    task.progress_slot.task_id = task_id.ptr;
     iGM_Downloader_Log("创建直链下载任务 {s}: dest={s}", .{ task_id, dest_owned });
     return @ptrCast(task);
 }
@@ -1344,6 +1354,14 @@ export fn iGM_Launcher_Download_SetProgressCallback(
     const handle = iGM_Launcher_Download_TaskCast(task) orelse return;
     handle.cb = cb;
     handle.user_data = user_data;
+}
+
+/// 读取任务最新进度快照：返回任务内常驻的 64 字节结构体指针，参数非法返回 null。
+/// 供 JS 侧按固定节拍轮询，避免「原生线程跨线程回调 JS」带来的进程级崩溃风险。
+/// 指针生命周期与任务句柄一致，任务未释放前始终有效；字符串字段均为任务内常驻缓冲。
+export fn iGM_Launcher_Download_GetProgress(task: ?*anyopaque) ?*const iGM_Launcher_Progress {
+    const handle = iGM_Launcher_Download_TaskCast(task) orelse return null;
+    return &handle.progress_slot;
 }
 
 /// 启动任务：立即返回，下载在独立线程执行
