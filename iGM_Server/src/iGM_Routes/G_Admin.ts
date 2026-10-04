@@ -62,6 +62,8 @@ import {
   iGM_ListDeveloperAccountsService,
   iGM_ReviewDeveloperService,
 } from "../iGM_Services/iGM_DeveloperService";
+// AI 赋能系统模块三：UPR / SPR 双通道调用统计
+import { iGM_GetAICallStatsService } from "../iGM_Services/iGM_QuotaService";
 
 // 类型定义 //
 // （路由层无额外类型，统一响应类型见 iGM_Types/iGM_Response.ts）
@@ -335,6 +337,12 @@ async function iGM_HandleDeveloperCallStats(ctx: iGM_RouteContext) {
   return iGM_Ok(await iGM_GetDeveloperCallStatsService(days));
 }
 
+/* ---------- AI 赋能系统模块三：双通道调用统计（开发者分区 - 调用量） ---------- */
+async function iGM_HandleAICallStats(ctx: iGM_RouteContext) {
+  iGM_RequireStaff(await iGM_CurrentUser(ctx));
+  return iGM_Ok(await iGM_GetAICallStatsService(iGM_Query(ctx.query, "range", "day")));
+}
+
 /**
  * G_Admin 管理后台路由集合
  * 业务错误统一抛 iGM_AdminError / iGM_AuthError，
@@ -364,7 +372,9 @@ export const G_Admin = new Elysia({ name: "G_Admin" })
   .post("/G_Admin/developers/review", iGM_HandleDeveloperReview as never)
   // 模块二十五：开发者分区——账号列表与调用量监测
   .get("/G_Admin/developers/accounts", iGM_HandleDeveloperAccounts as never)
-  .get("/G_Admin/developers/call-stats", iGM_HandleDeveloperCallStats as never);
+  .get("/G_Admin/developers/call-stats", iGM_HandleDeveloperCallStats as never)
+  // AI 赋能系统模块三：UPR / SPR 双通道调用统计
+  .get("/G_Admin/ai-usage-stats", iGM_HandleAICallStats as never);
 
 // 导出 //
 export default G_Admin;

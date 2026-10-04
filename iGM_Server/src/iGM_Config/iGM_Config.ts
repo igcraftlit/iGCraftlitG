@@ -7,7 +7,9 @@
  * 内容：服务端口、PostgreSQL 连接串、CORS 白名单、认证会话参数、
  *       邮箱验证码与重置令牌时效、基础限流参数、163 邮箱 SMTP 邮件配置、
  *       模块四本地文件上传存储配置、模块十七 Minecraft 本体下载配置、
- *       模块二十第三方资源（Modrinth）接入配置
+ *       模块二十第三方资源（Modrinth）接入配置、
+ *       AI 赋能系统模块一 DeepSeek 对话配置、
+ *       AI 赋能系统模块三双通道（本地 Qwen / DeepSeek）+ UPR / SPR 双额度配置
  */
 
 // 导入依赖 //
@@ -157,6 +159,61 @@ export interface iGM_OAuthConfig {
   allowHttpRedirect: boolean;
 }
 
+/** Free 通道（UPR）：本地 Ollama / Qwen 模型，无需 API Key */
+export interface iGM_AIFreeChannelConfig {
+  /** OpenAI 兼容基础地址（含 /v1，不含结尾斜杠） */
+  apiBase: string;
+  /** 对话模型名（如 qwen2.5:7b） */
+  model: string;
+  /** 单次上游请求超时（毫秒），本地模型冷启动较慢，默认 120 秒 */
+  timeoutMs: number;
+}
+
+/** Premium 通道（SPR）：DeepSeek 云端模型 */
+export interface iGM_AIPremiumChannelConfig {
+  /** DeepSeek API Key（从环境变量读取，缺省为空表示未配置） */
+  apiKey: string;
+  /** DeepSeek API 基础地址（不含结尾斜杠） */
+  apiBase: string;
+  /** 对话模型名 */
+  model: string;
+  /** 单次上游请求超时（毫秒），默认 60 秒 */
+  timeoutMs: number;
+}
+
+/**
+ * AI 赋能系统模块三：双通道对话与 UPR / SPR 双额度配置
+ * 说明：Free 通道调用本地 Qwen（UPR 计费）、Premium 通道调用 DeepSeek（SPR 计费）；
+ *       DeepSeek API Key 仅后端读取，前端与 Git 仓库严禁出现；
+ *       本模块不含 RAG 与向量数据库，通过 System Prompt 限定回答范围
+ */
+export interface iGM_AIConfig {
+  /** Free 通道（UPR）：本地 Ollama / Qwen */
+  free: iGM_AIFreeChannelConfig;
+  /** Premium 通道（SPR）：DeepSeek 云端 */
+  premium: iGM_AIPremiumChannelConfig;
+  /** 拼接上下文时携带的历史消息条数上限（控制 token 成本） */
+  maxHistoryMessages: number;
+  /** 单条用户消息长度上限（字符数） */
+  maxMessageLength: number;
+  /** 单次 AI 回答最大字数上限（超出后端自动截断并按已生成内容扣费） */
+  maxAnswerLength: number;
+  /** 上游单次生成上限（max_tokens），略低于字数上限以留出余量 */
+  maxAnswerTokens: number;
+  /** UPR：单次提问固定扣费（余额不足即拦截） */
+  uprQuestionCost: number;
+  /** UPR：AI 回答按 completion_tokens 的单价（UPR / token，允许扣成负数） */
+  uprTokenCost: number;
+  /** UPR：新用户注册免费赠送额度（用户表 uprBalance 列默认值与此一致） */
+  uprRegisterGift: number;
+  /** SPR：输入 token 单价（元 / 百万 token） */
+  sprInputCostPerMillion: number;
+  /** SPR：输出 token 单价（元 / 百万 token） */
+  sprOutputCostPerMillion: number;
+  /** SPR：定价利润率（0.15 表示在实际 token 成本上加 15%） */
+  sprMarginRate: number;
+}
+
 export interface iGM_AppConfig {
   /** 后端监听端口 */
   port: number;
@@ -180,6 +237,8 @@ export interface iGM_AppConfig {
   thirdParty: iGM_ThirdPartyConfig;
   /** 模块二十一：OAuth 2.0 + OIDC 身份提供方配置 */
   oauth: iGM_OAuthConfig;
+  /** AI 赋能系统模块一：DeepSeek 基础对话配置 */
+  ai: iGM_AIConfig;
 }
 
 // 核心逻辑 //
@@ -293,6 +352,8 @@ export const iGM_Config: iGM_AppConfig = {
     oauthAppWrite: { windowMs: 10 * 60 * 1000, max: 5 },
     // 模块二十一：用户信息 / 撤销端点——1 分钟内最多 60 次
     oauthUserinfo: { windowMs: 60 * 1000, max: 60 },
+    // AI 赋能系统模块一：AI 对话提问——1 分钟内最多 20 次（保护上游 API 配额与成本）
+    aiChat: { windowMs: 60 * 1000, max: 20 },
   },
   mail: {
     // 163 邮箱 SMTP：465 端口隐式 SSL；密码使用客户端授权码（非登录密码），
@@ -404,6 +465,45 @@ export const iGM_Config: iGM_AppConfig = {
     // 仅本地开发允许 http 回调（限 localhost / 127.0.0.1）
     allowHttpRedirect:
       (process.env.IGM_OAUTH_ALLOW_HTTP ?? "true") === "true",
+  },
+  ai: {
+    // Free 通道：本地 Ollama 部署的 Qwen（OpenAI 兼容端点，无需 API Key）
+    free: {
+      apiBase: (
+        process.env.OLLAMA_API_BASE ?? "http://localhost:11434/v1"
+      ).replace(/\/$/, ""),
+      model: process.env.OLLAMA_MODEL ?? "qwen2.5:7b",
+      // 流式输出最长 90 秒：超时强制中断，并按已生成内容扣费
+      timeoutMs: Number(process.env.OLLAMA_TIMEOUT_MS ?? 90000),
+    },
+    // Premium 通道：DeepSeek 云端；API Key 仅从环境变量读取（.env 已被
+    // .gitignore 排除），严禁写入代码、前端产物或提交到仓库；为空表示未配置
+    premium: {
+      apiKey: process.env.DEEPSEEK_API_KEY ?? "",
+      apiBase: (
+        process.env.DEEPSEEK_API_BASE ?? "https://api.deepseek.com/v1"
+      ).replace(/\/$/, ""),
+      // 上游仅支持 deepseek-flash 与 deepseek-v4-pro，默认取 flash
+      model: process.env.DEEPSEEK_MODEL ?? "deepseek-flash",
+      // 流式输出最长 90 秒：超时强制中断，并按已生成内容扣费
+      timeoutMs: Number(process.env.DEEPSEEK_TIMEOUT_MS ?? 90000),
+    },
+    // 上下文携带最近 20 条消息（10 轮对话）
+    maxHistoryMessages: Number(process.env.DEEPSEEK_MAX_HISTORY ?? 20),
+    // 单条提问上限 2000 字符，防止超长输入耗尽 token 配额
+    maxMessageLength: Number(process.env.DEEPSEEK_MAX_MESSAGE_LENGTH ?? 2000),
+    // 单次回答最大 5000 字：超出自动截断并追加提示、按已生成内容扣费
+    maxAnswerLength: Number(process.env.IGM_AI_MAX_ANSWER_LENGTH ?? 5000),
+    // 上游 max_tokens 4500：略低于字数上限，避免一次生成过多
+    maxAnswerTokens: Number(process.env.IGM_AI_MAX_ANSWER_TOKENS ?? 4500),
+    // 模块三 UPR 计价规则：提问 0.02 UPR / 次、回答 0.003 UPR / token、注册赠送 10 UPR
+    uprQuestionCost: Number(process.env.IGM_AI_UPR_QUESTION_COST ?? 0.02),
+    uprTokenCost: Number(process.env.IGM_AI_UPR_TOKEN_COST ?? 0.003),
+    uprRegisterGift: Number(process.env.IGM_AI_UPR_REGISTER_GIFT ?? 10),
+    // 模块三 SPR 计价规则：按 DeepSeek 实际 token 消耗 + 15% 利润（1 SPR = 1 元）
+    sprInputCostPerMillion: Number(process.env.IGM_AI_SPR_INPUT_PER_MILLION ?? 2),
+    sprOutputCostPerMillion: Number(process.env.IGM_AI_SPR_OUTPUT_PER_MILLION ?? 8),
+    sprMarginRate: Number(process.env.IGM_AI_SPR_MARGIN_RATE ?? 0.15),
   },
 };
 

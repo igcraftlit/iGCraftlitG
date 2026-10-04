@@ -3,6 +3,67 @@
     "name": "iGCraftLit Community",
     "tagline": "クリエイターのためのミニマルなコミュニティ"
   },
+  "ai": {
+    "widget": {
+      "title": "iGM StarWhisper",
+      "open": "iGM StarWhisper を開く",
+      "close": "閉じる",
+      "send": "送信",
+      "stopGenerating": "生成を停止",
+      "copyCode": "コピー",
+      "copiedCode": "コピーしました",
+      "placeholder": "質問を入力してください…",
+      "empty": "こんにちは、iGCraftLit コミュニティ公式アシスタントの iGM StarWhisper です。ご質問をどうぞ。",
+      "loadingHistory": "会話履歴を読み込み中…",
+      "thinking": "AI 考え中...",
+      "loginRequired": "AI アシスタントを利用するには、先にログインしてください",
+      "goLogin": "ログイン",
+      "modelInfo": "Model Info",
+      "rechargeSpr": "SPR をチャージ",
+      "modelLocal": "Local",
+      "modelCloud": "Cloud",
+      "sessions": "会話履歴",
+      "newConversation": "新しい会話",
+      "sessionsEmpty": "会話履歴はまだありません",
+      "sessionUntitled": "新しい会話",
+      "viewUPRDetail": "UPR 消費明細を表示",
+      "capability": "サイト内の質問と一般知識に回答 · 外部サイトへのアクセス不可 · センシティブな話題には回答しません",
+      "accountIsolation": "この会話は現在のアカウントにのみ表示されます"
+    },
+    "notice": {
+      "timeout": "AI の応答がタイムアウトしました。生成された内容に応じて課金され、今回の回答は不完全です。",
+      "truncated": "内容が最大 5000 文字の制限を超えたため、自動的に切り詰められ課金されました。"
+    },
+    "errors": {
+      "network": "サービスに接続できません。ネットワークを確認して再試行してください",
+      "timeout": "AI の応答がタイムアウトしました。生成された内容に応じて課金され、今回の回答は不完全です",
+      "authError": "AI サービスの設定エラー",
+      "busy": "リクエストが多すぎます。しばらくしてから再試行してください",
+      "upstream": "AI が一時的に応答できません。しばらくしてから再試行してください",
+      "generic": "不明な問題が発生しました。しばらくしてから再試行してください",
+      "emptyMessage": "内容を入力してから送信してください",
+      "messageTooLong": "内容が長すぎます。短くしてから再送信してください",
+      "conversationNotFound": "会話履歴が存在しないか、無効になりました",
+      "uprInsufficient": "UPR 残高が不足しています。毎日チェックインやイベントで獲得できます。",
+      "sprInsufficient": "SPR 残高が不足しています。チャージしてください。",
+      "quotaUserNotFound": "アカウントが存在しないか削除されました。再度ログインしてください"
+    },
+    "upr": {
+      "title": "UPR 消費明細",
+      "empty": "消費記録はありません",
+      "loadingMore": "読み込み中…",
+      "allLoaded": "すべての記録を読み込みました",
+      "retry": "再試行",
+      "balanceAfter": "変動後の残高",
+      "type": {
+        "register": "登録ボーナス",
+        "chat_question": "質問の課金",
+        "chat_answer": "回答の課金",
+        "recharge": "チャージ",
+        "reward": "報酬"
+      }
+    }
+  },
   "nav": {
     "groupMain": "メイン",
     "groupCommunity": "コミュニティ",
@@ -246,6 +307,12 @@
     "checkin": {
       "title": "毎日チェックイン",
       "description": "連続チェックインでボーナスポイントを獲得"
+    },
+    "accountRecharge": {
+      "title": "SPR をチャージ",
+      "description": "SPR（Stellar Premium Reserve）は iGM StarWhisper Premium チャネル（DeepSeek Flash）の有料クォータです。1 SPR = 1 元",
+      "badge": "準備中",
+      "comingSoon": "チャージ機能は準備中です。公開後はこちらで SPR を購入できます"
     },
     "levels": {
       "title": "レベルと審査",
@@ -1498,6 +1565,24 @@
           "sdk": "SDK 呼び出し数",
           "app": "アプリ呼び出し数"
         }
+      },
+      "aiStats": {
+        "title": "AI 呼び出し・クォータ統計",
+        "uprChannel": "UPR チャンネル",
+        "sprChannel": "SPR チャンネル",
+        "totalCalls": "総呼び出し回数",
+        "totalConsumedUpr": "総消費 UPR",
+        "totalConsumedSpr": "総消費 SPR",
+        "todayConsumedUpr": "当日消費 UPR",
+        "todayConsumedSpr": "当日消費 SPR",
+        "totalRevenue": "総収入（元）",
+        "topUprUsers": "UPR 消費ユーザー Top 10",
+        "topSprUsers": "SPR 消費ユーザー Top 10",
+        "topUsersEmpty": "選択した期間に AI 呼び出し記録はありません",
+        "calls": "呼び出し回数",
+        "rangeDay": "日",
+        "rangeWeek": "週",
+        "rangeMonth": "月"
       }
     },
     "overview": {

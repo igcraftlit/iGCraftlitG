@@ -3,6 +3,67 @@
     "name": "iGCraftLit Community",
     "tagline": "A minimal community space for creators"
   },
+  "ai": {
+    "widget": {
+      "title": "iGM StarWhisper",
+      "open": "Open iGM StarWhisper",
+      "close": "Close",
+      "send": "Send",
+      "stopGenerating": "Stop generating",
+      "copyCode": "Copy",
+      "copiedCode": "Copied",
+      "placeholder": "Type your question…",
+      "empty": "Hi, I am iGM StarWhisper, the official iGCraftLit Community assistant. How can I help you?",
+      "loadingHistory": "Loading conversation history…",
+      "thinking": "AI is thinking...",
+      "loginRequired": "Please sign in to use the AI assistant",
+      "goLogin": "Sign in",
+      "modelInfo": "Model Info",
+      "rechargeSpr": "Top up SPR",
+      "modelLocal": "Local",
+      "modelCloud": "Cloud",
+      "sessions": "Conversations",
+      "newConversation": "New chat",
+      "sessionsEmpty": "No conversation history yet",
+      "sessionUntitled": "New conversation",
+      "viewUPRDetail": "View UPR usage details",
+      "capability": "Answers site and general questions · No external web access · No sensitive topics",
+      "accountIsolation": "This conversation is visible only to your account"
+    },
+    "notice": {
+      "timeout": "The AI response timed out. You were charged for the content generated, and this answer is incomplete.",
+      "truncated": "The content exceeded the 5000-character limit. It was truncated automatically and you were charged."
+    },
+    "errors": {
+      "network": "Cannot reach the service. Check your network and try again",
+      "timeout": "The AI response timed out. You were charged for the content generated, and this answer is incomplete",
+      "authError": "AI service configuration error",
+      "busy": "Too many requests. Please try again later",
+      "upstream": "The AI is temporarily unavailable. Please try again later",
+      "generic": "Something went wrong. Please try again later",
+      "emptyMessage": "Please enter a message first",
+      "messageTooLong": "Your message is too long. Please shorten it and try again",
+      "conversationNotFound": "This conversation no longer exists",
+      "uprInsufficient": "Insufficient UPR. Get more via daily check-ins or events.",
+      "sprInsufficient": "Insufficient SPR. Please top up first.",
+      "quotaUserNotFound": "Account not found or deleted. Please sign in again"
+    },
+    "upr": {
+      "title": "UPR Usage Details",
+      "empty": "No usage records yet",
+      "loadingMore": "Loading…",
+      "allLoaded": "All records loaded",
+      "retry": "Retry",
+      "balanceAfter": "Balance after",
+      "type": {
+        "register": "Sign-up bonus",
+        "chat_question": "Question charge",
+        "chat_answer": "Answer charge",
+        "recharge": "Top-up",
+        "reward": "Reward"
+      }
+    }
+  },
   "nav": {
     "groupMain": "Main",
     "groupCommunity": "Community",
@@ -246,6 +307,12 @@
     "checkin": {
       "title": "Daily Check-in",
       "description": "Check in consecutively for bonus points"
+    },
+    "accountRecharge": {
+      "title": "Top up SPR",
+      "description": "SPR (Stellar Premium Reserve) is the paid quota of the iGM StarWhisper Premium channel (DeepSeek Flash). 1 SPR = 1 CNY",
+      "badge": "Coming soon",
+      "comingSoon": "The top-up channel is under construction. Once it launches, you will be able to purchase SPR here"
     },
     "levels": {
       "title": "Levels & Exams",
@@ -1498,6 +1565,24 @@
           "sdk": "SDK calls",
           "app": "App calls"
         }
+      },
+      "aiStats": {
+        "title": "AI Usage & Quota",
+        "uprChannel": "UPR channel",
+        "sprChannel": "SPR channel",
+        "totalCalls": "Total calls",
+        "totalConsumedUpr": "Total UPR consumed",
+        "totalConsumedSpr": "Total SPR consumed",
+        "todayConsumedUpr": "UPR consumed today",
+        "todayConsumedSpr": "SPR consumed today",
+        "totalRevenue": "Total revenue (CNY)",
+        "topUprUsers": "Top 10 users by UPR consumed",
+        "topSprUsers": "Top 10 users by SPR consumed",
+        "topUsersEmpty": "No AI call records in the selected range",
+        "calls": "Calls",
+        "rangeDay": "Day",
+        "rangeWeek": "Week",
+        "rangeMonth": "Month"
       }
     },
     "overview": {

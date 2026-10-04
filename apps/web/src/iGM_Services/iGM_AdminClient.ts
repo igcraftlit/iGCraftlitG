@@ -92,6 +92,45 @@ export interface iGM_DeveloperCallStats {
   topClients: Array<{ clientId: string; count: number }>;
 }
 
+/** AI 赋能系统模块三：AI 调用统计时间范围（日 / 周 / 月） */
+export type iGM_AICallStatsRange = "day" | "week" | "month";
+
+/** AI 赋能系统模块三：单通道额度统计（UPR 聚合自 iGM_UPRTransactions，SPR 聚合自 iGM_SPRTransactions） */
+export interface iGM_AICallStatsChannel {
+  /** 时间范围内总调用次数 */
+  totalCalls: number;
+  /** 时间范围内总消耗额度 */
+  totalConsumed: number;
+  /** 当日消耗额度（不随时间范围变化） */
+  todayConsumed: number;
+}
+
+/** SPR 通道统计：较 UPR 多收入口径（1 SPR = 1 元） */
+export interface iGM_AICallStatsSprChannel extends iGM_AICallStatsChannel {
+  /** 时间范围内总收入（元） */
+  totalRevenue: number;
+}
+
+/** 消耗排行 Top 10 条目 */
+export interface iGM_AICallStatsUser {
+  userId: string;
+  username: string;
+  displayName: string | null;
+  consumed: number;
+  calls: number;
+}
+
+/** AI 赋能系统模块三：AI 双通道调用统计（UPR / SPR） */
+export interface iGM_AICallStats {
+  range: iGM_AICallStatsRange;
+  upr: iGM_AICallStatsChannel;
+  spr: iGM_AICallStatsSprChannel;
+  /** UPR 消耗排行 Top 10 用户 */
+  topUprUsers: iGM_AICallStatsUser[];
+  /** SPR 消耗排行 Top 10 用户 */
+  topSprUsers: iGM_AICallStatsUser[];
+}
+
 /** 后台内容条目（帖子或评论统一形态） */
 export interface iGM_AdminContent {
   type: "post" | "comment";
@@ -284,6 +323,13 @@ export function iGM_ApiAdminDeveloperCallStats(
   return iGM_Get(`/G_Admin/developers/call-stats?days=${days}`);
 }
 
+/** AI 赋能系统模块二：AI 调用额度统计（开发者分区 - 调用量） */
+export function iGM_ApiAdminAICallStats(
+  range: iGM_AICallStatsRange,
+): Promise<iGM_ApiResponse<iGM_AICallStats>> {
+  return iGM_Get(`/G_Admin/ai-usage-stats?range=${range}`);
+}
+
 // 导出 //
 export default {
   iGM_ApiAdminOverview,
@@ -300,4 +346,5 @@ export default {
   iGM_ApiAdminSettings,
   iGM_ApiAdminDeveloperAccounts,
   iGM_ApiAdminDeveloperCallStats,
+  iGM_ApiAdminAICallStats,
 };

@@ -4,7 +4,8 @@
  * 路由：G_Community、G_Post、G_User 等
  * 模块：iGM_Format
  * 作用：社区模块共享的展示格式化工具
- * 内容：ISO 时间按当前界面语言格式化、相对时间（刚刚/分钟前等）
+ * 内容：ISO 时间按当前界面语言格式化、相对时间（刚刚/分钟前等）、
+ *       UPR / SPR 额度格式化（最少 2 位、最多 4 位小数）
  */
 
 // 导入依赖 //
@@ -61,5 +62,13 @@ export function iGM_FormatRelative(locale: string, iso: string): string {
   return iGM_FormatDate(locale, iso);
 }
 
+/** 格式化额度（最少保留 2 位、最多保留 4 位小数，如 10 → 10.00 / 4.861 → 4.861） */
+export function iGM_FormatQuota(value: number): string {
+  if (!Number.isFinite(value)) return "0.00";
+  const rounded = Math.round(value * 10000) / 10000;
+  const decimals = (String(rounded).split(".")[1] ?? "").length;
+  return rounded.toFixed(Math.min(4, Math.max(2, decimals)));
+}
+
 // 导出 //
-export default { iGM_FormatDate, iGM_FormatDateTime, iGM_FormatRelative };
+export default { iGM_FormatDate, iGM_FormatDateTime, iGM_FormatRelative, iGM_FormatQuota };

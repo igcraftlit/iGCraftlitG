@@ -57,6 +57,7 @@ import {
 } from "./iGM_MailService";
 import { iGM_ResetRateLimit } from "./iGM_RateLimitService";
 import { iGM_InsertAgreement } from "../iGM_Repositories/iGM_AgreementRepository";
+import { iGM_GrantRegisterUPRService } from "./iGM_QuotaService";
 import { iGM_UserAgreementVersion } from "../iGM_Types/iGM_Agreement";
 import {
   iGM_ToUserDto,
@@ -234,6 +235,9 @@ export async function iGM_Register(
     acceptedIp: context.ip,
     now,
   });
+
+  // AI 赋能系统模块三：注册免费赠送 10 UPR（余额由用户表列默认值携带，此处补记流水）
+  await iGM_GrantRegisterUPRService(user.iGM_Id, now);
 
   // 邮件发送失败不阻断注册：用户可稍后在账户设置页重新发送
   let mailSent = true;

@@ -104,3 +104,19 @@
   color: var(--igm-text);
   font-variant-numeric: tabular-nums;
 }
+
+/* AI 调用统计：通道分组标题（UPR / SPR） */
+.aiChannelTitle {
+  margin: 18px 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+/* AI 调用统计：Top 10 排行小标题 */
+.aiTopTitle {
+  margin: 16px 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+}

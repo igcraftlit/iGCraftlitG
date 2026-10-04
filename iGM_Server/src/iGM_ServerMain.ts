@@ -57,6 +57,11 @@ import { G_OAuth } from "./iGM_Routes/G_OAuth";
 import { iGM_OAuthError } from "./iGM_Services/iGM_OAuthService";
 // 模块二十六（启动器 26.3.2）：启动器发布历史
 import { G_LauncherRelease } from "./iGM_Routes/G_LauncherRelease";
+// AI 赋能系统模块一：AI 助手基础对话（DeepSeek 代理）
+import { G_AI } from "./iGM_Routes/G_AI";
+import { iGM_AIError } from "./iGM_Services/iGM_AIService";
+// AI 赋能系统模块三：UPR / SPR 额度业务错误（余额不足 402 / 账户不存在）
+import { iGM_QuotaError } from "./iGM_Services/iGM_QuotaService";
 
 // 类型定义 //
 // （本入口无额外类型，统一响应类型见 iGM_Types/iGM_Response.ts）
@@ -144,6 +149,16 @@ const iGM_Server = new Elysia()
       set.status = error.status;
       return iGM_Fail(error.status, error.message);
     }
+    // AI 赋能系统模块一：AI 对话业务错误（未配置/超时/上游异常/会话越权等）
+    if (error instanceof iGM_AIError) {
+      set.status = error.status;
+      return iGM_Fail(error.status, error.message);
+    }
+    // AI 赋能系统模块三：UPR / SPR 额度业务错误（余额不足 402 / 账户不存在）
+    if (error instanceof iGM_QuotaError) {
+      set.status = error.status;
+      return iGM_Fail(error.status, error.message);
+    }
     // 请求体解析失败等客户端错误（沿用模块二通用文案键）
     if (code === "PARSE" || code === "VALIDATION") {
       set.status = 400;
@@ -191,6 +206,8 @@ const iGM_Server = new Elysia()
   .use(G_OAuth)
   // 模块二十六（启动器 26.3.2）：启动器发布历史（官网下载页与启动器共用）
   .use(G_LauncherRelease)
+  // AI 赋能系统模块一：AI 助手基础对话（DeepSeek 代理）
+  .use(G_AI)
   // 根路径占位
   .get("/", () => ({
     success: true,
@@ -207,7 +224,10 @@ await iGM_RunMigrations();
 
 // 仅在本地直接运行时监听端口（被导入时不占用端口）
 if (import.meta.main) {
-  iGM_Server.listen(iGM_Config.port);
+  // idleTimeout：本地模型冷启动期间（可达 60 秒以上）后端向客户端零输出，
+  // Bun 默认 idleTimeout 会在此期间切断连接（前端表现为「无法连接服务」）；
+  // 显式设为允许的最大值 255 秒，覆盖 Free 通道 120 秒上游超时 + 推理耗时
+  iGM_Server.listen({ port: iGM_Config.port, idleTimeout: 255 });
   console.log(
     `[iGM_Server] 后端已启动：http://localhost:${iGM_Config.port}（健康检查 /G_Api_Health）`,
   );

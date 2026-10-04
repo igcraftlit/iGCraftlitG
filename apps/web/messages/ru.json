@@ -3,6 +3,67 @@
     "name": "iGCraftLit Community",
     "tagline": "Минималистичное сообщество для авторов"
   },
+  "ai": {
+    "widget": {
+      "title": "iGM StarWhisper",
+      "open": "Открыть iGM StarWhisper",
+      "close": "Закрыть",
+      "send": "Отправить",
+      "stopGenerating": "Остановить генерацию",
+      "copyCode": "Копировать",
+      "copiedCode": "Скопировано",
+      "placeholder": "Введите ваш вопрос…",
+      "empty": "Здравствуйте! Я iGM StarWhisper — официальный помощник сообщества iGCraftLit. Чем могу помочь?",
+      "loadingHistory": "Загрузка истории диалога…",
+      "thinking": "AI думает...",
+      "loginRequired": "Сначала войдите в аккаунт, чтобы использовать ИИ-помощника",
+      "goLogin": "Войти",
+      "modelInfo": "Model Info",
+      "rechargeSpr": "Пополнить SPR",
+      "modelLocal": "Local",
+      "modelCloud": "Cloud",
+      "sessions": "Диалоги",
+      "newConversation": "Новый диалог",
+      "sessionsEmpty": "Истории диалогов пока нет",
+      "sessionUntitled": "Новый диалог",
+      "viewUPRDetail": "Показать детали расхода UPR",
+      "capability": "Отвечает на вопросы о сайте и общие знания · Нет доступа к внешним сайтам · Не отвечает на чувствительные темы",
+      "accountIsolation": "Этот диалог виден только с вашего аккаунта"
+    },
+    "notice": {
+      "timeout": "AI не ответил вовремя. Списание произведено за сгенерированный текст, ответ неполный.",
+      "truncated": "Текст превысил лимит в 5000 символов: он был автоматически обрезан, списание произведено."
+    },
+    "errors": {
+      "network": "Не удаётся подключиться к сервису. Проверьте сеть и повторите попытку",
+      "timeout": "AI не ответил вовремя. Списание произведено за сгенерированный текст, ответ неполный",
+      "authError": "Ошибка конфигурации AI-сервиса",
+      "busy": "Слишком много запросов. Повторите попытку позже",
+      "upstream": "AI временно недоступен. Повторите попытку позже",
+      "generic": "Произошла неизвестная ошибка. Повторите попытку позже",
+      "emptyMessage": "Сначала введите сообщение",
+      "messageTooLong": "Сообщение слишком длинное. Сократите его и повторите попытку",
+      "conversationNotFound": "Диалог не существует или больше недоступен",
+      "uprInsufficient": "Недостаточно UPR. Получить можно за ежедневную отметку или события.",
+      "sprInsufficient": "Недостаточно SPR. Пополните баланс.",
+      "quotaUserNotFound": "Аккаунт не найден или удалён. Войдите снова"
+    },
+    "upr": {
+      "title": "Детали расхода UPR",
+      "empty": "Записей о расходе пока нет",
+      "loadingMore": "Загрузка…",
+      "allLoaded": "Все записи загружены",
+      "retry": "Повторить",
+      "balanceAfter": "Баланс после",
+      "type": {
+        "register": "Бонус за регистрацию",
+        "chat_question": "Списание за вопрос",
+        "chat_answer": "Списание за ответ",
+        "recharge": "Пополнение",
+        "reward": "Награда"
+      }
+    }
+  },
   "nav": {
     "groupMain": "Главное",
     "groupCommunity": "Сообщество",
@@ -246,6 +307,12 @@
     "checkin": {
       "title": "Ежедневная отметка",
       "description": "Отмечайтесь подряд и получайте бонусные баллы"
+    },
+    "accountRecharge": {
+      "title": "Пополнить SPR",
+      "description": "SPR (Stellar Premium Reserve) — платный лимит канала iGM StarWhisper Premium (DeepSeek Flash). 1 SPR = 1 юань",
+      "badge": "Скоро",
+      "comingSoon": "Канал пополнения находится в разработке. После запуска здесь можно будет приобрести SPR"
     },
     "levels": {
       "title": "Уровни и экзамены",
@@ -1498,6 +1565,24 @@
           "sdk": "Вызовы SDK",
           "app": "Вызовы приложений"
         }
+      },
+      "aiStats": {
+        "title": "Статистика вызовов AI",
+        "uprChannel": "Канал UPR",
+        "sprChannel": "Канал SPR",
+        "totalCalls": "Всего вызовов",
+        "totalConsumedUpr": "Всего потрачено UPR",
+        "totalConsumedSpr": "Всего потрачено SPR",
+        "todayConsumedUpr": "Потрачено UPR сегодня",
+        "todayConsumedSpr": "Потрачено SPR сегодня",
+        "totalRevenue": "Общий доход (CNY)",
+        "topUprUsers": "Топ-10 по UPR",
+        "topSprUsers": "Топ-10 по SPR",
+        "topUsersEmpty": "За выбранный период нет записей о вызовах AI",
+        "calls": "Вызовов",
+        "rangeDay": "День",
+        "rangeWeek": "Неделя",
+        "rangeMonth": "Месяц"
       }
     },
     "overview": {

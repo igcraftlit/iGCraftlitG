@@ -3,6 +3,67 @@
     "name": "iGCraftLit Community",
     "tagline": "面向創作者的極簡社群空間"
   },
+  "ai": {
+    "widget": {
+      "title": "iGM StarWhisper",
+      "open": "開啟 iGM StarWhisper",
+      "close": "關閉",
+      "send": "發送",
+      "stopGenerating": "停止生成",
+      "copyCode": "複製",
+      "copiedCode": "已複製",
+      "placeholder": "輸入你的問題…",
+      "empty": "你好，我是 iGM StarWhisper（iGCraftLit 社群官方助理），有什麼可以幫你？",
+      "loadingHistory": "正在載入歷史對話…",
+      "thinking": "AI 思考中...",
+      "loginRequired": "請先登入帳號後使用 AI 助手",
+      "goLogin": "去登入",
+      "modelInfo": "Model Info",
+      "rechargeSpr": "儲值 SPR",
+      "modelLocal": "Local",
+      "modelCloud": "Cloud",
+      "sessions": "對話記錄",
+      "newConversation": "新增對話",
+      "sessionsEmpty": "暫無歷史對話",
+      "sessionUntitled": "新對話",
+      "viewUPRDetail": "查看 UPR 消耗詳情",
+      "capability": "可回答站內問題與通用知識 · 無法訪問外部網站 · 不回答敏感話題",
+      "accountIsolation": "當前對話僅對當前帳號可見"
+    },
+    "notice": {
+      "timeout": "AI 回應逾時，已依生成內容扣費，本次回答未完整輸出。",
+      "truncated": "內容超過最大字數 5000 字限制，已自動截斷並扣費。"
+    },
+    "errors": {
+      "network": "無法連接服務，請檢查網路後重試",
+      "timeout": "AI 回應逾時，已依生成內容扣費，本次回答未完整輸出",
+      "authError": "AI 服務設定錯誤",
+      "busy": "提問過於頻繁，請稍後再試",
+      "upstream": "AI 暫時無法回應，請稍後重試",
+      "generic": "出現未知問題，請稍後重試",
+      "emptyMessage": "請輸入內容後再發送",
+      "messageTooLong": "內容過長，請精簡後再發送",
+      "conversationNotFound": "對話紀錄不存在或已失效",
+      "uprInsufficient": "UPR 餘額不足，可透過簽到或活動獲取。",
+      "sprInsufficient": "SPR 餘額不足，請前往儲值。",
+      "quotaUserNotFound": "帳戶不存在或已被刪除，請重新登入"
+    },
+    "upr": {
+      "title": "UPR 消耗詳情",
+      "empty": "暫無消耗記錄",
+      "loadingMore": "正在載入…",
+      "allLoaded": "已載入全部記錄",
+      "retry": "重試",
+      "balanceAfter": "變動後餘額",
+      "type": {
+        "register": "註冊贈送",
+        "chat_question": "提問扣費",
+        "chat_answer": "回答扣費",
+        "recharge": "儲值",
+        "reward": "獎勵"
+      }
+    }
+  },
   "nav": {
     "groupMain": "主頁",
     "groupCommunity": "社群",
@@ -246,6 +307,12 @@
     "checkin": {
       "title": "每日簽到",
       "description": "連續簽到贏取額外積分"
+    },
+    "accountRecharge": {
+      "title": "儲值 SPR",
+      "description": "SPR（Stellar Premium Reserve）為 iGM StarWhisper Premium 通道（DeepSeek Flash）的付費額度，1 SPR = 1 元",
+      "badge": "即將開放",
+      "comingSoon": "儲值通道正在建設中，開放後即可在此購買 SPR，敬請期待"
     },
     "levels": {
       "title": "等級與考核",
@@ -1498,6 +1565,24 @@
           "sdk": "SDK 呼叫量",
           "app": "應用呼叫量"
         }
+      },
+      "aiStats": {
+        "title": "AI 呼叫額度統計",
+        "uprChannel": "UPR 通道",
+        "sprChannel": "SPR 通道",
+        "totalCalls": "總呼叫次數",
+        "totalConsumedUpr": "總消耗 UPR",
+        "totalConsumedSpr": "總消耗 SPR",
+        "todayConsumedUpr": "當日消耗 UPR",
+        "todayConsumedSpr": "當日消耗 SPR",
+        "totalRevenue": "總收入（元）",
+        "topUprUsers": "UPR 消耗排行 Top 10",
+        "topSprUsers": "SPR 消耗排行 Top 10",
+        "topUsersEmpty": "所選時間範圍內暫無 AI 呼叫記錄",
+        "calls": "呼叫次數",
+        "rangeDay": "日",
+        "rangeWeek": "週",
+        "rangeMonth": "月"
       }
     },
     "overview": {
