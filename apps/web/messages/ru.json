@@ -57,6 +57,7 @@
     "posts": "Записи",
     "activities": "Мероприятия",
     "resources": "Ресурсы",
+    "exam": "Экзамен",
     "notificationSettings": "Настройки уведомлений",
     "myFiles": "Мои файлы",
     "createActivity": "Создать мероприятие",
@@ -142,7 +143,9 @@
     "cardLauncherTitle": "iGM Launcher",
     "cardLauncherDesc": "Скачайте iGM CraftCeon Launcher для управления инстансами, Java и игровыми ресурсами",
     "cardDeveloperTitle": "Стать разработчиком",
-    "cardDeveloperDesc": "Подайте заявку на интеграцию аккаунтов iGCraftLit и создавайте сторонние приложения"
+    "cardDeveloperDesc": "Подайте заявку на интеграцию аккаунтов iGCraftLit и создавайте сторонние приложения",
+    "cardExamTitle": "iG&M Exam",
+    "cardExamDesc": "Academic · Innovation · Science"
   },
   "landing": {
     "brand": "iGCraftLit",

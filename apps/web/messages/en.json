@@ -57,6 +57,7 @@
     "posts": "Posts",
     "activities": "Activities",
     "resources": "Resources",
+    "exam": "Exam",
     "notificationSettings": "Notification preferences",
     "myFiles": "My files",
     "createActivity": "Create activity",
@@ -142,7 +143,9 @@
     "cardLauncherTitle": "iGM Launcher",
     "cardLauncherDesc": "Download iGM CraftCeon Launcher to manage instances, Java and game resources",
     "cardDeveloperTitle": "Become a Developer",
-    "cardDeveloperDesc": "Apply to integrate iGCraftLit accounts and build your third-party apps"
+    "cardDeveloperDesc": "Apply to integrate iGCraftLit accounts and build your third-party apps",
+    "cardExamTitle": "iG&M Exam",
+    "cardExamDesc": "Academic · Innovation · Science"
   },
   "landing": {
     "brand": "iGCraftLit",

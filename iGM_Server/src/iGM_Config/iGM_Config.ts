@@ -240,7 +240,11 @@ export const iGM_Config: iGM_AppConfig = {
     "https://www.igcraftlit.com",
     // 模块二十一：开发者平台（iGM CLI / OAuth 接入）独立站点，需携带会话 Cookie 调用本站接口
     "https://cli.igcraftlit.com",
+    // iG&M 教育考试系统独立子站点
+    "https://exam.igcraftlit.com",
     "http://localhost:3000",
+    // iG&M 教育考试系统本地开发端口
+    "http://localhost:3002",
   ],
   version: "0.5.0",
   auth: {
@@ -337,6 +341,12 @@ export const iGM_Config: iGM_AppConfig = {
     oauthUserinfo: { windowMs: 60 * 1000, max: 60 },
     // AI 赋能系统模块一：AI 对话提问——1 分钟内最多 20 次（保护上游 API 配额与成本）
     aiChat: { windowMs: 60 * 1000, max: 20 },
+    // iG&M 教育考试系统：列表与详情读取——1 分钟内最多 120 次
+    examRead: { windowMs: 60 * 1000, max: 120 },
+    // iG&M 教育考试系统：试卷上传/替换——10 分钟内最多 20 次
+    examUpload: { windowMs: 10 * 60 * 1000, max: 20 },
+    // iG&M 教育考试系统：交卷——1 分钟内最多 30 次
+    examSubmit: { windowMs: 60 * 1000, max: 30 },
   },
   mail: {
     // 163 邮箱 SMTP：465 端口隐式 SSL；密码使用客户端授权码（非登录密码），

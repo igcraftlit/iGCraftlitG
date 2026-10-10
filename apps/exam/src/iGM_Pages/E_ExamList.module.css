@@ -1,0 +1,225 @@
+/**
+ * 文件路径：apps/exam/src/iGM_Pages/E_ExamList.module.css
+ * 所属层：前端 / 页面样式层
+ * 路由：E_ExamList（/）
+ * 模块：iGM_ExamList
+ * 作用：试卷索引页样式（引言、统计带、档案卡网格、加载/失败/空状态）
+ * 内容：页面容器、引言区、统计带、索引头、三列响应式网格、状态区块
+ * 说明：桌面 3 列 / 平板 2 列 / 移动 1 列
+ */
+
+/* ============================= 页面容器 ============================= */
+.page {
+  max-width: var(--igm-maxw);
+  margin: 0 auto;
+  padding: 40px 28px 72px;
+}
+
+/* ============================= 引言 ============================= */
+.intro {
+  max-width: 720px;
+  margin-bottom: 26px;
+  animation: igm-ink-in 0.5s ease both;
+}
+
+.introEyebrow {
+  margin: 0 0 10px;
+}
+
+.introTitle {
+  margin: 0 0 12px;
+  font-size: clamp(28px, 4.4vw, 42px);
+  font-weight: 700;
+  line-height: 1.14;
+  color: var(--igm-ink);
+}
+
+.introLead {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--igm-text-muted);
+}
+
+/* ============================= 统计带 ============================= */
+.statBand {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  margin: 30px 0 38px;
+  padding: 14px 0;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 20px;
+  border-left: 1px solid var(--igm-line-soft);
+}
+
+.stat:first-child {
+  border-left: none;
+}
+
+.statValue {
+  font-size: clamp(20px, 3vw, 28px);
+  font-weight: 700;
+  color: var(--igm-ink);
+}
+
+.statLabel {
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  color: var(--igm-text-muted);
+}
+
+/* ============================= 索引头 ============================= */
+.index {
+  position: relative;
+}
+
+.indexHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 14px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid var(--igm-line);
+}
+
+.indexNum {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--igm-cinnabar);
+}
+
+.indexTitle {
+  margin: 0;
+  flex: 1;
+  font-size: 21px;
+  font-weight: 600;
+  color: var(--igm-ink);
+}
+
+.refresh {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+  color: var(--igm-text-muted);
+  transition: color 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+.refresh:hover {
+  color: var(--igm-ink);
+  border-color: var(--igm-copper);
+  background: color-mix(in srgb, var(--igm-gold) 12%, transparent);
+}
+
+/* ============================= 网格 ============================= */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+/* ============================= 状态区块 ============================= */
+.state {
+  padding: 40px 0;
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: var(--igm-text-muted);
+}
+
+.errorBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 40px 0;
+}
+
+.errorText {
+  margin: 0;
+  color: var(--igm-cinnabar);
+  font-size: 12px;
+}
+
+.retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  background: transparent;
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+  color: var(--igm-ink);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.retry:hover {
+  border-color: var(--igm-copper);
+  background: color-mix(in srgb, var(--igm-gold) 12%, transparent);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 64px 0;
+  border: 1px dashed var(--igm-line-soft);
+  border-radius: var(--igm-radius);
+  background: color-mix(in srgb, var(--igm-paper-raised) 60%, transparent);
+}
+
+.emptyIcon {
+  color: var(--igm-copper);
+}
+
+.emptyText {
+  margin: 0;
+  font-size: 17px;
+  color: var(--igm-text-muted);
+}
+
+/* ============================= 响应式 ============================= */
+@media (max-width: 960px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 26px 16px 56px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .statBand {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 0;
+  }
+
+  .stat {
+    padding: 12px 0;
+    border-left: none;
+    border-top: 1px solid var(--igm-line-soft);
+  }
+
+  .stat:first-child {
+    border-top: none;
+  }
+}

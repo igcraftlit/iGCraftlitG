@@ -1,0 +1,65 @@
+/**
+ * 文件路径：apps/exam/src/iGM_Components/iGM_ExamThemeToggle/iGM_ExamThemeToggle.module.css
+ * 所属层：前端 / 通用组件层
+ * 路由：全局
+ * 模块：iGM_ExamThemeToggle
+ * 作用：明暗模式摇杆开关样式（金属刻度 + 分段拨档）
+ */
+
+.rocker {
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--igm-line);
+  background: var(--igm-paper-sink);
+  padding: 2px;
+  gap: 2px;
+}
+
+.ticks {
+  position: absolute;
+  inset: -7px 4px auto 4px;
+  height: 4px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--igm-line-soft) 0 1px,
+    transparent 1px 7px
+  );
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.stop {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--igm-text-muted);
+  padding: 3px 8px;
+  line-height: 1;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.stopLabel {
+  font-family: var(--igm-font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+}
+
+.active {
+  background: var(--igm-ink);
+  color: var(--igm-paper);
+  border-color: var(--igm-ink);
+}
+
+[data-theme="dark"] .active {
+  background: var(--igm-gold);
+  color: #17140c;
+  border-color: var(--igm-gold);
+}
+
+.stop:hover:not(.active) {
+  color: var(--igm-text);
+  border-color: var(--igm-line-soft);
+}

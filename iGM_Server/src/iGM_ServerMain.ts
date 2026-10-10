@@ -62,6 +62,10 @@ import { G_AI } from "./iGM_Routes/G_AI";
 import { iGM_AIError } from "./iGM_Services/iGM_AIService";
 // AI 赋能系统模块三：UPR / SPR 额度业务错误（余额不足 402 / 账户不存在）
 import { iGM_QuotaError } from "./iGM_Services/iGM_QuotaService";
+// iG&M 教育考试系统：试卷业务错误（上传/识别/发布等）
+import { G_Exam } from "./iGM_Routes/G_Exam";
+import { iGM_ExamError } from "./iGM_Services/iGM_ExamService";
+import { iGM_EnsureExamStorageRoot } from "./iGM_Services/iGM_ExamIngestService";
 
 // 类型定义 //
 // （本入口无额外类型，统一响应类型见 iGM_Types/iGM_Response.ts）
@@ -159,6 +163,11 @@ const iGM_Server = new Elysia()
       set.status = error.status;
       return iGM_Fail(error.status, error.message);
     }
+    // iG&M 教育考试系统：试卷业务错误（上传/识别/发布/删除等）
+    if (error instanceof iGM_ExamError) {
+      set.status = error.status;
+      return iGM_Fail(error.status, error.message);
+    }
     // 请求体解析失败等客户端错误（沿用模块二通用文案键）
     if (code === "PARSE" || code === "VALIDATION") {
       set.status = 400;
@@ -208,6 +217,8 @@ const iGM_Server = new Elysia()
   .use(G_LauncherRelease)
   // AI 赋能系统模块一：AI 助手基础对话（DeepSeek 代理）
   .use(G_AI)
+  // iG&M 教育考试系统：试卷列表 / 详情 / 上传识别 / 校对 / 发布（/api/exam/*）
+  .use(G_Exam)
   // 根路径占位
   .get("/", () => ({
     success: true,
@@ -218,6 +229,9 @@ const iGM_Server = new Elysia()
 
 // 启动前确保上传根目录存在（建目录不幂等、空实现即可安全重复调用）
 await iGM_EnsureUploadRoot();
+
+// iG&M 教育考试系统：确保试卷存储目录存在（D:/IGWEB/uploads/exams）
+await iGM_EnsureExamStorageRoot();
 
 // 启动时自动执行数据库迁移
 await iGM_RunMigrations();

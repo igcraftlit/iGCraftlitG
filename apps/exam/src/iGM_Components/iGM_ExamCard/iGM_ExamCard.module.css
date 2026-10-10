@@ -1,0 +1,146 @@
+/**
+ * 文件路径：apps/exam/src/iGM_Components/iGM_ExamCard/iGM_ExamCard.module.css
+ * 所属层：前端 / 组件样式层
+ * 路由：E_ExamList（/）
+ * 模块：iGM_ExamCard
+ * 作用：试卷档案卡片样式（细边框、等宽编号、刻度表、印章位、抽出淡入）
+ * 内容：卡片容器、编号条、标题、科目、元数据刻度网格、页脚印章
+ * 说明：模拟纸质档案卡，使用 2px 小圆角，不使用主站大圆角与玻璃态
+ */
+
+/* ============================= 卡片容器 ============================= */
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px 20px 16px;
+  background: var(--igm-paper-raised);
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+  box-shadow: var(--igm-shadow-tight);
+  animation: igm-card-draw 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+  /* 左上角折角装饰：模拟档案卡切口 */
+  background-image: linear-gradient(
+    135deg,
+    transparent 0,
+    transparent 15px,
+    color-mix(in srgb, var(--igm-line-soft) 55%, transparent) 15px,
+    color-mix(in srgb, var(--igm-line-soft) 55%, transparent) 16px,
+    transparent 16px
+  );
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  border-color: var(--igm-copper);
+  box-shadow: var(--igm-shadow);
+}
+
+/* ============================= 编号条 ============================= */
+.codeRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--igm-line-soft);
+}
+
+.code {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--igm-cinnabar);
+}
+
+.arrow {
+  color: var(--igm-text-muted);
+  transition: color 0.18s ease, transform 0.18s ease;
+}
+
+.card:hover .arrow {
+  color: var(--igm-copper);
+  transform: translate(1px, -1px);
+}
+
+/* ============================= 标题与科目 ============================= */
+.title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--igm-ink);
+  /* 最多两行，超出省略 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.subject {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--igm-ink-soft);
+}
+
+/* ============================= 元数据刻度表 ============================= */
+.metaGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  margin: 4px 0 0;
+  background: var(--igm-line-soft);
+  border: 1px solid var(--igm-line-soft);
+}
+
+.metaCell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
+  background: var(--igm-paper-raised);
+}
+
+.metaLabel {
+  margin: 0;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--igm-text-muted);
+}
+
+.metaValue {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--igm-ink);
+}
+
+/* ============================= 页脚 ============================= */
+.footRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--igm-line-soft);
+}
+
+.issuer {
+  font-size: 12px;
+  color: var(--igm-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stamp {
+  flex-shrink: 0;
+  font-size: 9px;
+  padding: 3px 7px;
+  transform: rotate(-5deg);
+}

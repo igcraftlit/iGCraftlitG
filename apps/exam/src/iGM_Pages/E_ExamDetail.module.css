@@ -1,0 +1,278 @@
+/**
+ * 文件路径：apps/exam/src/iGM_Pages/E_ExamDetail.module.css
+ * 所属层：前端 / 页面样式层
+ * 路由：E_ExamDetail（/detail?id=xxx）
+ * 模块：iGM_ExamDetail
+ * 作用：试卷详情页样式（实验记录表、计时器侧栏、阅读器区、交卷区）
+ * 内容：页面容器、返回条、标题块、元数据布局、记录表、通知、阅读器、交卷
+ * 说明：桌面左右分栏，平板起上下堆叠
+ */
+
+/* ============================= 页面容器 ============================= */
+.page {
+  max-width: var(--igm-maxw);
+  margin: 0 auto;
+  padding: 32px 28px 80px;
+}
+
+/* ============================= 返回条 ============================= */
+.backRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid var(--igm-line-soft);
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--igm-text-muted);
+  transition: color 0.16s ease;
+}
+
+.back:hover {
+  color: var(--igm-ink);
+}
+
+.backLabel {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+}
+
+.recordCode {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--igm-cinnabar);
+}
+
+/* ============================= 标题 ============================= */
+.titleBlock {
+  max-width: 820px;
+  margin-bottom: 32px;
+  animation: igm-ink-in 0.5s ease both;
+}
+
+.titleEyebrow {
+  margin: 0 0 10px;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(26px, 4vw, 40px);
+  font-weight: 700;
+  line-height: 1.18;
+  color: var(--igm-ink);
+}
+
+/* ============================= 元数据布局 ============================= */
+.metaLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 24px;
+  align-items: start;
+  margin-bottom: 40px;
+}
+
+.recordTable {
+  padding: 18px 0 20px;
+}
+
+.recordHead {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.recordHeadNum {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--igm-cinnabar);
+}
+
+.recordHeadTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--igm-ink);
+}
+
+.recordGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--igm-line-soft);
+  border: 1px solid var(--igm-line-soft);
+}
+
+.recordCell {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px 16px;
+  background: var(--igm-paper-raised);
+}
+
+.recordLabel {
+  margin: 0;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--igm-text-muted);
+}
+
+.recordValue {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--igm-ink);
+}
+
+.notice {
+  display: flex;
+  gap: 12px;
+  margin: 16px 0 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+.noticeTag {
+  flex-shrink: 0;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--igm-cinnabar);
+  padding-top: 3px;
+}
+
+.timerAside {
+  position: sticky;
+  top: 140px;
+}
+
+/* ============================= 阅读器 ============================= */
+.readerSection,
+.submitSection {
+  margin-bottom: 40px;
+}
+
+.readerHead,
+.submitHead {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding-bottom: 12px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--igm-line);
+}
+
+.readerNum,
+.submitNum {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--igm-cinnabar);
+}
+
+.readerTitle,
+.submitTitle {
+  margin: 0;
+  flex: 1;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--igm-ink);
+}
+
+.readerFile {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--igm-text-muted);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ============================= 交卷 ============================= */
+.submitLead {
+  max-width: 620px;
+  margin: 0 0 20px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+/* ============================= 状态 ============================= */
+.state {
+  padding: 80px 0;
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: var(--igm-text-muted);
+}
+
+.errorBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 80px 0;
+}
+
+.errorText {
+  margin: 0;
+  color: var(--igm-cinnabar);
+  font-size: 13px;
+}
+
+.errorActions {
+  display: flex;
+  gap: 12px;
+}
+
+.action {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+  color: var(--igm-ink);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  background: transparent;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.action:hover {
+  border-color: var(--igm-copper);
+  background: color-mix(in srgb, var(--igm-gold) 12%, transparent);
+}
+
+/* ============================= 响应式 ============================= */
+@media (max-width: 900px) {
+  .metaLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .timerAside {
+    position: static;
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 22px 16px 60px;
+  }
+
+  .recordGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .readerFile {
+    display: none;
+  }
+}

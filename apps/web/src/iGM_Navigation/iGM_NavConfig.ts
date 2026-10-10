@@ -171,6 +171,13 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
         ],
       },
       {
+        // 教育考试系统：跳转独立子站点 exam.igcraftlit.com（外链，新标签页打开）
+        href: "https://exam.igcraftlit.com",
+        icon: GraduationCap,
+        labelKey: "nav.exam",
+        external: true,
+      },
+      {
         // 模块十：动态流（登录用户）
         href: "/G_Feed",
         icon: Newspaper,

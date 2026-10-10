@@ -21,3 +21,7 @@ RUN.txt
 docs/*.jar
 # AI 本地模型缓存：运行时下载产物，不入库
 iGM_Server/.models/
+# 教育考试子站点：PDF.js Worker 为构建期复制产物，不入库
+apps/exam/public/pdf.worker.min.mjs
+# Next.js 自动生成的类型声明
+next-env.d.ts

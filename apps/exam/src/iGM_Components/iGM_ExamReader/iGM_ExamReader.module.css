@@ -1,0 +1,208 @@
+/**
+ * 文件路径：apps/exam/src/iGM_Components/iGM_ExamReader/iGM_ExamReader.module.css
+ * 所属层：前端 / 组件样式层
+ * 路由：E_ExamDetail（/detail）、E_Admin_Exam（/admin）
+ * 模块：iGM_ExamReader
+ * 作用：PDF 阅读器样式（仪器框架、纸张质感舞台、放大镜刻度工具条、页码转盘）
+ * 内容：外壳、工具条、画布舞台、页码转盘、全屏态
+ * 说明：模拟老式仪器框架，深色内衬衬托纸张，不使用玻璃态
+ */
+
+/* ============================= 外壳 ============================= */
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 320px;
+  height: 72vh;
+  background: var(--igm-paper-sink);
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+  overflow: hidden;
+}
+
+.compact {
+  height: 420px;
+  min-height: 260px;
+}
+
+.fs {
+  height: 100vh;
+  border-radius: 0;
+}
+
+/* ============================= 工具条 ============================= */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--igm-paper);
+  border-bottom: 1px solid var(--igm-line);
+}
+
+.toolLabel {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--igm-copper);
+}
+
+.tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: transparent;
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+  color: var(--igm-text-muted);
+  transition: color 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+.tool:hover:not(:disabled) {
+  color: var(--igm-ink);
+  border-color: var(--igm-copper);
+  background: color-mix(in srgb, var(--igm-gold) 12%, transparent);
+}
+
+.tool:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.zoomReadout {
+  min-width: 46px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--igm-ink);
+}
+
+/* ============================= 画布舞台 ============================= */
+.stage {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 20px;
+  overflow: auto;
+  /* 纸张质感底衬：微凹槽与纤维 */
+  background-color: var(--igm-paper-sink);
+  background-image:
+    radial-gradient(
+      circle at 50% 0%,
+      color-mix(in srgb, var(--igm-line-soft) 45%, transparent) 0,
+      transparent 60%
+    ),
+    repeating-linear-gradient(
+      45deg,
+      transparent 0,
+      transparent 6px,
+      color-mix(in srgb, var(--igm-line-soft) 22%, transparent) 6px,
+      color-mix(in srgb, var(--igm-line-soft) 22%, transparent) 7px
+    );
+}
+
+.canvas {
+  max-width: 100%;
+  background: #ffffff;
+  box-shadow: 0 2px 0 rgba(20, 33, 61, 0.08), 0 26px 48px -30px rgba(20, 33, 61, 0.75);
+  border: 1px solid var(--igm-line-soft);
+}
+
+.state,
+.stateError {
+  align-self: center;
+  margin: auto;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: var(--igm-text-muted);
+}
+
+.stateError {
+  color: var(--igm-cinnabar);
+  letter-spacing: 0.06em;
+}
+
+/* ============================= 页码转盘 ============================= */
+.dial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 10px 12px;
+  background: var(--igm-paper);
+  border-top: 1px solid var(--igm-line);
+}
+
+.dialBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background: transparent;
+  border: 1px solid var(--igm-line);
+  border-radius: 999px;
+  color: var(--igm-text-muted);
+  transition: color 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+.dialBtn:hover:not(:disabled) {
+  color: var(--igm-ink);
+  border-color: var(--igm-copper);
+  background: color-mix(in srgb, var(--igm-gold) 14%, transparent);
+}
+
+.dialBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.dialReadout {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 2px 14px;
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+  background: var(--igm-paper-raised);
+}
+
+.dialCurrent {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--igm-ink);
+}
+
+.dialSlash {
+  font-size: 13px;
+  color: var(--igm-copper);
+}
+
+.dialTotal {
+  font-size: 13px;
+  color: var(--igm-text-muted);
+}
+
+/* ============================= 响应式 ============================= */
+@media (max-width: 640px) {
+  .shell {
+    height: 58vh;
+  }
+
+  .compact {
+    height: 320px;
+  }
+
+  .stage {
+    padding: 12px;
+  }
+}

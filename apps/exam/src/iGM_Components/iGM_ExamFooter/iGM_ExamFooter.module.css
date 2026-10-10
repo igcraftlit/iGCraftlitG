@@ -1,0 +1,76 @@
+/**
+ * 文件路径：apps/exam/src/iGM_Components/iGM_ExamFooter/iGM_ExamFooter.module.css
+ * 所属层：前端 / 组件样式层
+ * 路由：全局
+ * 模块：iGM_ExamFooter
+ * 作用：页脚样式（学术期刊版权栏、双线分隔、等宽元信息）
+ * 内容：页脚容器、机构名、元信息行、返回主站链接
+ * 说明：使用顶部分隔线与居中对齐，保持期刊版式
+ */
+
+/* ============================= 页脚 ============================= */
+.footer {
+  margin-top: 40px;
+  border-top: 1px solid var(--igm-line);
+  box-shadow: inset 0 4px 0 -3px var(--igm-line);
+  background: var(--igm-paper-sink);
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  max-width: var(--igm-maxw);
+  margin: 0 auto;
+  padding: 22px 28px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.mark {
+  color: var(--igm-copper);
+}
+
+.name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--igm-ink);
+}
+
+.metaRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.meta {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--igm-text-muted);
+}
+
+.link {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--igm-copper);
+  transition: color 0.16s ease;
+}
+
+.link:hover {
+  color: var(--igm-ink);
+}
+
+/* ============================= 响应式 ============================= */
+@media (max-width: 720px) {
+  .inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 20px 16px;
+  }
+}

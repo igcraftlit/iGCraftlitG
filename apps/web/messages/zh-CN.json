@@ -57,6 +57,7 @@
     "posts": "帖子",
     "activities": "活动",
     "resources": "资源库",
+    "exam": "考试",
     "notificationSettings": "通知偏好",
     "myFiles": "我的文件",
     "createActivity": "创建活动",
@@ -142,7 +143,9 @@
     "cardLauncherTitle": "iGM Launcher",
     "cardLauncherDesc": "下载 iGM CraftCeon Launcher，管理实例、Java 与游戏资源",
     "cardDeveloperTitle": "成为开发者",
-    "cardDeveloperDesc": "申请接入 iGCraftLit 账号体系，构建你的第三方应用"
+    "cardDeveloperDesc": "申请接入 iGCraftLit 账号体系，构建你的第三方应用",
+    "cardExamTitle": "iG&M Exam",
+    "cardExamDesc": "Academic · Innovation · Science"
   },
   "landing": {
     "brand": "iGCraftLit",

@@ -57,6 +57,7 @@
     "posts": "投稿",
     "activities": "イベント",
     "resources": "リソース",
+    "exam": "試験",
     "notificationSettings": "通知設定",
     "myFiles": "マイファイル",
     "createActivity": "イベントを作成",
@@ -142,7 +143,9 @@
     "cardLauncherTitle": "iGM Launcher",
     "cardLauncherDesc": "iGM CraftCeon Launcher をダウンロードし、インスタンス・Java・ゲームリソースを管理",
     "cardDeveloperTitle": "デベロッパーになる",
-    "cardDeveloperDesc": "iGCraftLit アカウント連携を申請し、サードパーティアプリを開発しましょう"
+    "cardDeveloperDesc": "iGCraftLit アカウント連携を申請し、サードパーティアプリを開発しましょう",
+    "cardExamTitle": "iG&M Exam",
+    "cardExamDesc": "Academic · Innovation · Science"
   },
   "landing": {
     "brand": "iGCraftLit",

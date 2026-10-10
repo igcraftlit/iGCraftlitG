@@ -1,0 +1,508 @@
+/**
+ * 文件路径：apps/exam/src/iGM_Pages/E_Admin_Exam.module.css
+ * 所属层：前端 / 页面样式层
+ * 路由：E_Admin_Exam（/admin）
+ * 模块：iGM_ExamAdmin
+ * 作用：管理端样式（上传区、校对分栏、表单、台账表格、状态标签）
+ * 内容：页头、上传区、提示、校对布局、表单字段、操作按钮、台账表格
+ * 说明：桌面左右分栏校对，平板起上下堆叠；台账表格在窄屏隐藏次要列
+ */
+
+/* ============================= 页面容器 ============================= */
+.page {
+  max-width: var(--igm-maxw);
+  margin: 0 auto;
+  padding: 36px 28px 80px;
+}
+
+/* ============================= 页头 ============================= */
+.head {
+  max-width: 760px;
+  margin-bottom: 30px;
+  animation: igm-ink-in 0.5s ease both;
+}
+
+.headEyebrow {
+  margin: 0 0 10px;
+}
+
+.headTitle {
+  margin: 0 0 12px;
+  font-size: clamp(26px, 4vw, 38px);
+  font-weight: 700;
+  line-height: 1.16;
+  color: var(--igm-ink);
+}
+
+.headLead {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--igm-text-muted);
+}
+
+/* ============================= 通用小节标题 ============================= */
+.sectionNum {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--igm-cinnabar);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--igm-ink);
+}
+
+.sectionLead {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--igm-text-muted);
+}
+
+/* ============================= 上传区 ============================= */
+.uploadSection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 0 20px;
+  margin-bottom: 22px;
+}
+
+.uploadText {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.uploadBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 24px;
+  background: var(--igm-ink);
+  color: var(--igm-paper);
+  border: 1px solid var(--igm-ink);
+  border-radius: var(--igm-radius);
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.uploadBtn:hover:not(:disabled) {
+  background: var(--igm-ink-soft);
+  border-color: var(--igm-ink-soft);
+}
+
+.uploadBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.uploadLabel {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.spin {
+  animation: igm-admin-spin 1s linear infinite;
+}
+
+@keyframes igm-admin-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.hiddenInput {
+  display: none;
+}
+
+/* ============================= 提示 ============================= */
+.alertError,
+.alertOk {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 22px;
+  padding: 10px 14px;
+  font-size: 12px;
+  border-radius: var(--igm-radius);
+}
+
+.alertError {
+  color: var(--igm-cinnabar);
+  border: 1px solid var(--igm-cinnabar);
+  background: color-mix(in srgb, var(--igm-cinnabar) 8%, transparent);
+}
+
+.alertOk {
+  color: var(--igm-ink-soft);
+  border: 1px solid var(--igm-line);
+  background: color-mix(in srgb, var(--igm-gold) 12%, transparent);
+}
+
+/* ============================= 校对区 ============================= */
+.reviewSection {
+  margin-bottom: 44px;
+}
+
+.reviewHead {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding-bottom: 12px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--igm-line);
+}
+
+.reviewLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.pdfPane,
+.formPane {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.paneLabel {
+  margin: 0;
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  color: var(--igm-copper);
+}
+
+.replaceBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  align-self: flex-start;
+  padding: 7px 16px;
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+  background: transparent;
+  color: var(--igm-text-muted);
+  font-size: 12px;
+  transition: color 0.16s ease, border-color 0.16s ease;
+}
+
+.replaceBtn:hover:not(:disabled) {
+  color: var(--igm-ink);
+  border-color: var(--igm-copper);
+}
+
+.replaceBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================= 表单 ============================= */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.fieldLabel {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--igm-text-muted);
+}
+
+.input,
+.textarea {
+  width: 100%;
+  padding: 9px 12px;
+  background: var(--igm-paper-raised);
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+  color: var(--igm-text);
+  font-family: var(--igm-font-sans), system-ui, sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: var(--igm-copper);
+  box-shadow: inset 0 0 0 1px var(--igm-copper);
+}
+
+.textarea {
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.fieldRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.fieldRowThree {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+/* ============================= 操作按钮 ============================= */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+  padding-top: 16px;
+  border-top: 1px solid var(--igm-line-soft);
+}
+
+.primary,
+.publish,
+.close,
+.delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: var(--igm-radius);
+  font-size: 12px;
+  border: 1px solid var(--igm-line);
+  background: transparent;
+  color: var(--igm-ink);
+  transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
+.primary {
+  background: var(--igm-ink);
+  border-color: var(--igm-ink);
+  color: var(--igm-paper);
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--igm-ink-soft);
+  border-color: var(--igm-ink-soft);
+}
+
+.publish:hover:not(:disabled) {
+  border-color: var(--igm-ink-soft);
+  background: color-mix(in srgb, var(--igm-ink-soft) 14%, transparent);
+}
+
+.close:hover:not(:disabled) {
+  border-color: var(--igm-copper);
+  background: color-mix(in srgb, var(--igm-gold) 14%, transparent);
+}
+
+.delete {
+  color: var(--igm-cinnabar);
+  border-color: color-mix(in srgb, var(--igm-cinnabar) 45%, transparent);
+}
+
+.delete:hover:not(:disabled) {
+  border-color: var(--igm-cinnabar);
+  background: color-mix(in srgb, var(--igm-cinnabar) 10%, transparent);
+}
+
+.primary:disabled,
+.publish:disabled,
+.close:disabled,
+.delete:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ============================= 状态标签 ============================= */
+.statusTag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+  color: var(--igm-text-muted);
+}
+
+.st_draft {
+  color: var(--igm-copper);
+  border-color: color-mix(in srgb, var(--igm-copper) 60%, transparent);
+}
+
+.st_published {
+  color: var(--igm-ink-soft);
+  border-color: var(--igm-ink-soft);
+}
+
+.st_closed {
+  color: var(--igm-cinnabar);
+  border-color: color-mix(in srgb, var(--igm-cinnabar) 60%, transparent);
+}
+
+/* ============================= 台账 ============================= */
+.ledgerHead {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--igm-line);
+}
+
+.ledgerCount {
+  margin-left: auto;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--igm-text-muted);
+}
+
+.table {
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+  overflow: hidden;
+}
+
+.tableHeadRow,
+.tableRow {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 2.2fr) minmax(0, 1.2fr) 70px 100px 90px 76px;
+  gap: 12px;
+  align-items: center;
+  padding: 11px 16px;
+}
+
+.tableHeadRow {
+  background: var(--igm-paper-sink);
+  border-bottom: 1px solid var(--igm-line);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--igm-text-muted);
+}
+
+.tableRow {
+  background: var(--igm-paper-raised);
+  border-bottom: 1px solid var(--igm-line-soft);
+  font-size: 13px;
+}
+
+.tableRow:last-child {
+  border-bottom: none;
+}
+
+.cellCode {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--igm-cinnabar);
+}
+
+.cellTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--igm-ink);
+}
+
+.cellSoft {
+  color: var(--igm-text-muted);
+}
+
+.editBtn {
+  padding: 5px 12px;
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+  background: transparent;
+  color: var(--igm-ink);
+  font-size: 12px;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.editBtn:hover:not(:disabled) {
+  border-color: var(--igm-copper);
+  background: color-mix(in srgb, var(--igm-gold) 12%, transparent);
+}
+
+.editBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================= 状态提示 ============================= */
+.state,
+.stateError {
+  padding: 32px 0;
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  color: var(--igm-text-muted);
+}
+
+.stateError {
+  color: var(--igm-cinnabar);
+}
+
+/* ============================= 响应式 ============================= */
+@media (max-width: 960px) {
+  .reviewLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .tableHeadRow,
+  .tableRow {
+    grid-template-columns: 96px minmax(0, 2fr) 80px 90px 70px;
+  }
+
+  /* 平板隐藏 学科 / 总分 两列 */
+  .tableHeadRow > span:nth-child(3),
+  .tableHeadRow > span:nth-child(4),
+  .tableRow > span:nth-child(3),
+  .tableRow > span:nth-child(4) {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 24px 16px 60px;
+  }
+
+  .uploadSection {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .uploadBtn {
+    justify-content: center;
+  }
+
+  .fieldRow,
+  .fieldRowThree {
+    grid-template-columns: 1fr;
+  }
+
+  .tableHeadRow,
+  .tableRow {
+    grid-template-columns: 84px minmax(0, 1fr) 74px;
+  }
+
+  /* 移动端仅保留 编号 / 标题 / 操作 */
+  .tableHeadRow > span:nth-child(5),
+  .tableHeadRow > span:nth-child(6),
+  .tableRow > span:nth-child(5),
+  .tableRow > span:nth-child(6) {
+    display: none;
+  }
+}
