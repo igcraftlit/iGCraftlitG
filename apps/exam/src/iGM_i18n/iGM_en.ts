@@ -4,7 +4,7 @@
  * 路由：全局
  * 模块：iGM_ExamI18n
  * 作用：英文语言包
- * 内容：机构刊头、导航、索引页、详情页、计时器、阅读器、管理端全部文案
+ * 内容：机构刊头、导航、索引页、详情页、计时器、解析与确认、管理端全部文案
  * 说明：扁平 camelCase 键，与 iGM_zhCN 结构严格一致；{token} 为运行时占位符
  */
 
@@ -55,7 +55,9 @@ export const iGM_en: iGM_I18nDict = {
   detailCatalogue: "CATALOGUE",
   detailEyebrow: "EXAMINATION RECORD",
   detailSpecTitle: "Record of Specifications",
-  detailViewerTitle: "Paper Viewer",
+  detailPaperTitle: "Examination Paper",
+  detailTocTitle: "Contents",
+  detailNoContent: "No parsed content is available for this paper.",
   detailSubmitTitle: "Declaration of Submission",
   detailSubmitLead:
     "By submitting, you confirm that this session has been completed. The record is stored for institutional review.",
@@ -79,43 +81,43 @@ export const iGM_en: iGM_I18nDict = {
   stampSubmitted: "SUBMITTED",
   stampError: "Submission failed. Please try again.",
   stampNote: "Submission recorded. The paper remains available for review.",
-  // 阅读器
-  readerLabel: "VIEWER",
-  readerZoomIn: "Zoom in",
-  readerZoomOut: "Zoom out",
-  readerFullscreen: "Fullscreen",
-  readerExitFullscreen: "Exit fullscreen",
-  readerLoading: "LOADING PAPER…",
-  readerError: "Unable to load the examination paper.",
-  readerPrev: "Previous page",
-  readerNext: "Next page",
   // 管理端
   adminEyebrow: "INSTITUTIONAL CONSOLE",
   adminTitle: "Exam Management",
   adminLead:
-    "Ingest a paper as PDF, verify the automatically recognised specifications, then publish it to the public catalogue.",
+    "Ingest a paper document; the full text is parsed automatically. Once verified, confirm and delete the source file to publish it to the public catalogue.",
   adminIngestTitle: "Ingest Paper",
   adminIngestLead:
-    "PDF only, up to 30 MB. Metadata is extracted from the first three pages.",
-  adminSelectPdf: "SELECT PDF",
+    "PDF / DOC / DOCX / TXT / MD, up to 50 MB. The full text is parsed on upload; the source file is retained until confirmation.",
+  adminUpload: "UPLOAD PAPER",
   adminProofTitle: "Proofreading",
-  adminPreviewLabel: "PAPER PREVIEW · 3 PAGES",
-  adminReplacePdf: "Replace PDF",
-  adminRecognizedLabel: "RECOGNISED SPECIFICATIONS",
+  adminPreviewLabel: "SOURCE FILE PREVIEW",
+  adminPreviewDeleted:
+    "The source file has been deleted; only the parsed text content is retained.",
+  adminDownloadOriginal: "Download original",
+  adminRecognizedLabel: "SPECIFICATIONS",
+  adminParseLabel: "PARSED CONTENT · MARKDOWN",
   adminFieldTitle: "TITLE",
   adminFieldDuration: "DURATION (MIN)",
   adminFieldTotal: "TOTAL (PTS)",
   adminFieldItems: "ITEMS",
   adminFieldNotice: "NOTICE",
+  adminFieldContent: "PARSED CONTENT (MARKDOWN)",
   adminPlaceholderTitle: "e.g. 2026 Provincial Examination",
   adminPlaceholderSubject: "Subject",
   adminPlaceholderIssuer: "Issuer",
   adminPlaceholderReviewer: "Reviewer",
   adminPlaceholderNotice: "Instructions shown to candidates (optional)",
-  adminSave: "SAVE",
-  adminPublish: "PUBLISH",
-  adminClose: "CLOSE",
-  adminDelete: "DELETE",
+  adminPlaceholderContent: "Revise the parsed content here…",
+  adminSave: "SAVE CHANGES",
+  adminConfirm: "CONFIRM & DELETE SOURCE",
+  adminReparse: "REPARSE",
+  adminDelete: "DELETE PAPER",
+  adminConfirmTitle: "Delete the original file?",
+  adminConfirmBody:
+    "Once deleted the original file cannot be recovered; only the parsed text content will be retained.",
+  adminConfirmYes: "CONFIRM",
+  adminConfirmNo: "CANCEL",
   adminLedgerTitle: "Paper Ledger",
   adminLedgerEntries: "ENTRIES",
   adminLedgerLoading: "LOADING LEDGER…",
@@ -130,20 +132,24 @@ export const iGM_en: iGM_I18nDict = {
   adminReview: "Review",
   adminUploadFailed: "Upload failed.",
   adminSaveFailed: "Save failed.",
-  adminReplaceFailed: "Replace failed.",
-  adminPublishFailed: "Publish failed.",
-  adminCloseFailed: "Close failed.",
+  adminConfirmFailed: "Confirmation failed.",
+  adminReparseFailed: "Reparse failed.",
   adminDeleteFailed: "Delete failed.",
-  adminIngested: "PDF ingested. Review the recognized fields, then publish.",
+  adminIngested:
+    "Paper ingested and parsed. Verify the recognised fields, then confirm and delete the source file.",
   adminSaved: "Changes saved.",
-  adminPublished: "Paper published to the public catalogue.",
-  adminClosed: "Paper closed.",
+  adminConfirmed:
+    "Source file deleted and the paper is published to the public catalogue.",
+  adminReparsed: "Reparsed from the original file.",
   adminDeleted: "Paper deleted.",
-  adminReplaced: "Paper file replaced.",
   // 状态标签
   statusDraft: "DRAFT",
   statusPublished: "PUBLISHED",
   statusClosed: "CLOSED",
+  parseStatusPending: "PENDING",
+  parseStatusParsed: "PARSED",
+  parseStatusConfirmed: "CONFIRMED",
+  parseStatusFailed: "FAILED",
 };
 
 // 导出 //

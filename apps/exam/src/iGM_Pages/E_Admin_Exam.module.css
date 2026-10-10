@@ -3,8 +3,8 @@
  * 所属层：前端 / 页面样式层
  * 路由：E_Admin_Exam（/admin）
  * 模块：iGM_ExamAdmin
- * 作用：管理端样式（上传区、校对分栏、表单、台账表格、状态标签）
- * 内容：页头、上传区、提示、校对布局、表单字段、操作按钮、台账表格
+ * 作用：管理端样式（上传区、校对分栏、规格表单、解析全文与预览、确认弹窗、台账表格）
+ * 内容：页头、上传区、提示、校对布局、原始文件预览、表单字段、操作按钮、弹窗、台账表格
  * 说明：桌面左右分栏校对，平板起上下堆叠；台账表格在窄屏隐藏次要列
  */
 
@@ -178,28 +178,58 @@
   color: var(--igm-copper);
 }
 
-.replaceBtn {
+/* ============================= 原始文件预览 ============================= */
+.pdfFrame {
+  width: 100%;
+  height: 560px;
+  border: 1px solid var(--igm-line-soft);
+  border-radius: var(--igm-radius);
+  background: var(--igm-paper-sink);
+}
+
+.fileBox {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 22px 18px;
+  border: 1px solid var(--igm-line-soft);
+  border-radius: var(--igm-radius);
+  background: var(--igm-paper-raised);
+}
+
+.fileName {
+  margin: 0;
+  font-size: 12px;
+  color: var(--igm-text-muted);
+  word-break: break-all;
+}
+
+.downloadBtn {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  align-self: flex-start;
-  padding: 7px 16px;
+  padding: 8px 16px;
   border: 1px solid var(--igm-line);
   border-radius: var(--igm-radius);
-  background: transparent;
-  color: var(--igm-text-muted);
+  color: var(--igm-ink);
   font-size: 12px;
   transition: color 0.16s ease, border-color 0.16s ease;
 }
 
-.replaceBtn:hover:not(:disabled) {
+.downloadBtn:hover {
   color: var(--igm-ink);
   border-color: var(--igm-copper);
 }
 
-.replaceBtn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.previewDeleted {
+  margin: 0;
+  padding: 26px 18px;
+  border: 1px dashed var(--igm-line-soft);
+  border-radius: var(--igm-radius);
+  font-size: 11px;
+  line-height: 1.8;
+  color: var(--igm-text-muted);
 }
 
 /* ============================= 表单 ============================= */
@@ -269,8 +299,8 @@
 }
 
 .primary,
-.publish,
-.close,
+.confirm,
+.reparse,
 .delete {
   display: inline-flex;
   align-items: center;
@@ -295,12 +325,12 @@
   border-color: var(--igm-ink-soft);
 }
 
-.publish:hover:not(:disabled) {
+.confirm:hover:not(:disabled) {
   border-color: var(--igm-ink-soft);
   background: color-mix(in srgb, var(--igm-ink-soft) 14%, transparent);
 }
 
-.close:hover:not(:disabled) {
+.reparse:hover:not(:disabled) {
   border-color: var(--igm-copper);
   background: color-mix(in srgb, var(--igm-gold) 14%, transparent);
 }
@@ -316,11 +346,36 @@
 }
 
 .primary:disabled,
-.publish:disabled,
-.close:disabled,
+.confirm:disabled,
+.reparse:disabled,
 .delete:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+/* ============================= 解析全文与预览 ============================= */
+.contentArea {
+  font-family: var(--igm-font-mono), ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.previewBox {
+  max-height: 460px;
+  overflow-y: auto;
+  padding: 4px;
+  border: 1px solid var(--igm-line-soft);
+  border-radius: var(--igm-radius);
+  background: var(--igm-paper-sink);
+}
+
+.previewEmpty {
+  margin: 0;
+  padding: 18px 0;
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--igm-text-muted);
 }
 
 /* ============================= 状态标签 ============================= */
@@ -349,6 +404,33 @@
 .st_closed {
   color: var(--igm-cinnabar);
   border-color: color-mix(in srgb, var(--igm-cinnabar) 60%, transparent);
+}
+
+.ps_pending {
+  color: var(--igm-text-muted);
+}
+
+.ps_parsed {
+  color: var(--igm-copper);
+  border-color: color-mix(in srgb, var(--igm-copper) 55%, transparent);
+}
+
+.ps_confirmed {
+  color: var(--igm-ink-soft);
+  border-color: color-mix(in srgb, var(--igm-ink-soft) 55%, transparent);
+}
+
+.ps_failed {
+  color: var(--igm-cinnabar);
+  border-color: color-mix(in srgb, var(--igm-cinnabar) 60%, transparent);
+}
+
+.recordCode {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--igm-cinnabar);
 }
 
 /* ============================= 台账 ============================= */
@@ -451,6 +533,83 @@
 
 .stateError {
   color: var(--igm-cinnabar);
+}
+
+/* ============================= 二次确认弹窗 ============================= */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: color-mix(in srgb, var(--igm-ink) 55%, transparent);
+}
+
+.modal {
+  width: min(460px, 100%);
+  padding: 26px 26px 22px;
+  background: var(--igm-paper-raised);
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+  box-shadow: var(--igm-shadow);
+}
+
+.modalTitle {
+  margin: 0 0 12px;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--igm-ink);
+}
+
+.modalBody {
+  margin: 0 0 22px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--igm-text-muted);
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.modalCancel,
+.modalConfirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: var(--igm-radius);
+  font-size: 12px;
+  border: 1px solid var(--igm-line);
+  background: transparent;
+  color: var(--igm-ink);
+  transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
+.modalCancel:hover:not(:disabled) {
+  border-color: var(--igm-copper);
+  background: color-mix(in srgb, var(--igm-gold) 12%, transparent);
+}
+
+.modalConfirm {
+  background: var(--igm-cinnabar);
+  border-color: var(--igm-cinnabar);
+  color: var(--igm-paper);
+}
+
+.modalConfirm:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--igm-cinnabar) 82%, var(--igm-ink));
+  border-color: color-mix(in srgb, var(--igm-cinnabar) 82%, var(--igm-ink));
+}
+
+.modalCancel:disabled,
+.modalConfirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* ============================= 响应式 ============================= */

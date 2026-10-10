@@ -3,9 +3,10 @@
  * 所属层：前端 / 页面层
  * 路由：E_Admin_Exam（/admin）
  * 模块：iGM_ExamAdmin
- * 作用：试卷管理端，上传 PDF、校对识别结果、发布 / 关闭 / 删除试卷
- * 内容：上传区、左右分栏校对区（左 PDF 前 3 页预览、右识别结果表单）、试卷台账
- * 说明：本模块暂不做权限校验；静态导出下数据由客户端在挂载后获取；文案取自当前语言包
+ * 作用：试卷管理端，上传文档并解析建档、左右分栏校对、确认并删除原文件、重新解析、删除
+ * 内容：上传区、左右分栏校对区（左原始文件预览、右规格表单 + 解析全文与预览）、
+ *       二次确认弹窗、试卷台账
+ * 说明：本模块暂不做权限校验；原始文件先保留，管理员二次确认后才删除；文案取自当前语言包
  */
 
 // 导入依赖 //
@@ -15,29 +16,31 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlertCircle,
   CheckCircle2,
+  Download,
   FileUp,
   Loader2,
-  Lock,
   RotateCcw,
   Save,
-  Send,
+  ShieldCheck,
   Trash2,
 } from "lucide-react";
 import {
-  iGM_Exam_BuildFileUrl,
-  iGM_Exam_Close,
+  iGM_Exam_AbsoluteUrl,
+  iGM_Exam_Confirm,
   iGM_Exam_Delete,
+  iGM_Exam_FetchAdminDetail,
   iGM_Exam_FetchAdminList,
-  iGM_Exam_Publish,
-  iGM_Exam_ReplaceFile,
+  iGM_Exam_Reparse,
   iGM_Exam_Update,
   iGM_Exam_Upload,
   iGM_ExamRequestError,
   type iGM_ExamAdminListItem,
+  type iGM_ExamDetail,
+  type iGM_ExamParseStatus,
   type iGM_ExamStatus,
   type iGM_ExamUpdateInput,
 } from "../iGM_Services/iGM_ExamClient";
-import { iGM_ExamReader as IGM_ExamReader } from "../iGM_Components/iGM_ExamReader/iGM_ExamReader";
+import { iGM_ExamPaperView as IGM_ExamPaperView } from "../iGM_Components/iGM_ExamPaperView/iGM_ExamPaperView";
 import { useI18n } from "../iGM_i18n/iGM_I18nContext";
 import type { iGM_I18nKey } from "../iGM_i18n/iGM_I18nTypes";
 import styles from "./E_Admin_Exam.module.css";
@@ -48,6 +51,7 @@ type iGM_Exam_AdminState = "loading" | "ready" | "error";
 /** 校对表单草稿 */
 interface iGM_Exam_EditorDraft {
   examId: string;
+  code: string;
   title: string;
   subject: string;
   issuer: string;
@@ -56,15 +60,29 @@ interface iGM_Exam_EditorDraft {
   totalScore: string;
   questionCount: string;
   notice: string;
+  contentMarkdown: string;
   status: iGM_ExamStatus;
+  parseStatus: iGM_ExamParseStatus;
+  hasOriginalFile: boolean;
+  fileApiPath: string;
+  fileType: string;
+  fileName: string;
 }
 
 // 核心逻辑 //
-/** 状态 → 语言包键 */
+/** 试卷状态 → 语言包键 */
 const iGM_Exam_StatusKeys: Record<iGM_ExamStatus, iGM_I18nKey> = {
   draft: "statusDraft",
   published: "statusPublished",
   closed: "statusClosed",
+};
+
+/** 解析状态 → 语言包键 */
+const iGM_Exam_ParseKeys: Record<iGM_ExamParseStatus, iGM_I18nKey> = {
+  pending: "parseStatusPending",
+  parsed: "parseStatusParsed",
+  confirmed: "parseStatusConfirmed",
+  failed: "parseStatusFailed",
 };
 
 /** 数字字符串 → 可空整数（空串或非数字返回 null） */
@@ -75,11 +93,33 @@ function iGM_Exam_ParseInt(value: string): number | null {
   return Number.isNaN(n) ? null : n;
 }
 
+/** 详情 DTO → 表单草稿 */
+function iGM_Exam_ToDraft(exam: iGM_ExamDetail): iGM_Exam_EditorDraft {
+  return {
+    examId: exam.id,
+    code: exam.code,
+    title: exam.title,
+    subject: exam.subject,
+    issuer: exam.issuer,
+    reviewer: exam.reviewer,
+    duration: exam.duration === null ? "" : String(exam.duration),
+    totalScore: exam.totalScore === null ? "" : String(exam.totalScore),
+    questionCount: exam.questionCount === null ? "" : String(exam.questionCount),
+    notice: exam.notice,
+    contentMarkdown: exam.contentMarkdown,
+    status: exam.status,
+    parseStatus: exam.parseStatus,
+    hasOriginalFile: exam.hasOriginalFile,
+    fileApiPath: exam.fileApiPath,
+    fileType: exam.fileType,
+    fileName: exam.fileName,
+  };
+}
+
 /** 管理端 */
 export function iGM_ExamAdmin() {
   const { t } = useI18n();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const replaceInputRef = useRef<HTMLInputElement | null>(null);
 
   const [exams, setExams] = useState<iGM_ExamAdminListItem[]>([]);
   const [state, setState] = useState<iGM_Exam_AdminState>("loading");
@@ -88,6 +128,7 @@ export function iGM_ExamAdmin() {
   const [notice, setNotice] = useState("");
   const [draft, setDraft] = useState<iGM_Exam_EditorDraft | null>(null);
   const [previewKey, setPreviewKey] = useState(0);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const load = useCallback(async () => {
     setState("loading");
@@ -111,28 +152,14 @@ export function iGM_ExamAdmin() {
     return err instanceof iGM_ExamRequestError ? err.message : fallback;
   }
 
-  /** 上传 PDF：建档并进入校对 */
+  /** 上传文档：解析建档并进入校对 */
   async function handleUpload(file: File): Promise<void> {
     setBusy(true);
     setNotice("");
     setMessage("");
     try {
-      const result = await iGM_Exam_Upload(file);
-      const recognized = result.recognized;
-      setDraft({
-        examId: result.examId,
-        title: recognized.title,
-        subject: recognized.subject,
-        issuer: recognized.issuer,
-        reviewer: recognized.reviewer,
-        duration: recognized.duration === null ? "" : String(recognized.duration),
-        totalScore:
-          recognized.totalScore === null ? "" : String(recognized.totalScore),
-        questionCount:
-          recognized.questionCount === null ? "" : String(recognized.questionCount),
-        notice: "",
-        status: "draft",
-      });
+      const exam = await iGM_Exam_Upload(file);
+      setDraft(iGM_Exam_ToDraft(exam));
       setPreviewKey((k) => k + 1);
       setNotice(t("adminIngested"));
       await load();
@@ -146,25 +173,21 @@ export function iGM_ExamAdmin() {
 
   /** 从台账打开某试卷进行校对 */
   async function openEditor(item: iGM_ExamAdminListItem): Promise<void> {
+    setBusy(true);
     setNotice("");
     setMessage("");
-    setDraft({
-      examId: item.id,
-      title: item.title,
-      subject: item.subject,
-      issuer: item.issuer,
-      reviewer: "",
-      duration: item.duration === null ? "" : String(item.duration),
-      totalScore: item.totalScore === null ? "" : String(item.totalScore),
-      questionCount:
-        item.questionCount === null ? "" : String(item.questionCount),
-      notice: "",
-      status: item.status,
-    });
-    setPreviewKey((k) => k + 1);
+    try {
+      const exam = await iGM_Exam_FetchAdminDetail(item.id);
+      setDraft(iGM_Exam_ToDraft(exam));
+      setPreviewKey((k) => k + 1);
+    } catch (err) {
+      setMessage(iGM_Exam_ReadError(err, t("adminLedgerError")));
+    } finally {
+      setBusy(false);
+    }
   }
 
-  /** 保存校对字段 */
+  /** 保存校对字段（仅更新数据库，不删除原始文件） */
   async function saveDraft(): Promise<void> {
     if (!draft) return;
     setBusy(true);
@@ -180,6 +203,7 @@ export function iGM_ExamAdmin() {
       totalScore: iGM_Exam_ParseInt(draft.totalScore),
       questionCount: iGM_Exam_ParseInt(draft.questionCount),
       notice: draft.notice.trim(),
+      contentMarkdown: draft.contentMarkdown,
     };
     try {
       await iGM_Exam_Update(payload);
@@ -192,59 +216,47 @@ export function iGM_ExamAdmin() {
     }
   }
 
-  /** 替换 PDF 文件 */
-  async function replaceFile(file: File): Promise<void> {
+  /** 二次确认后：删除原始文件并发布试卷 */
+  async function confirmAndDelete(): Promise<void> {
     if (!draft) return;
     setBusy(true);
     setNotice("");
     setMessage("");
     try {
-      await iGM_Exam_ReplaceFile(draft.examId, file);
+      await iGM_Exam_Confirm(draft.examId);
+      const exam = await iGM_Exam_FetchAdminDetail(draft.examId);
+      setDraft(iGM_Exam_ToDraft(exam));
+      setConfirmOpen(false);
+      setNotice(t("adminConfirmed"));
+      await load();
+    } catch (err) {
+      setMessage(iGM_Exam_ReadError(err, t("adminConfirmFailed")));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** 使用原始文件重新解析 */
+  async function reparse(): Promise<void> {
+    if (!draft) return;
+    setBusy(true);
+    setNotice("");
+    setMessage("");
+    try {
+      await iGM_Exam_Reparse(draft.examId);
+      const exam = await iGM_Exam_FetchAdminDetail(draft.examId);
+      setDraft(iGM_Exam_ToDraft(exam));
       setPreviewKey((k) => k + 1);
-      setNotice(t("adminReplaced"));
-    } catch (err) {
-      setMessage(iGM_Exam_ReadError(err, t("adminReplaceFailed")));
-    } finally {
-      setBusy(false);
-      if (replaceInputRef.current) replaceInputRef.current.value = "";
-    }
-  }
-
-  /** 发布 */
-  async function publish(examId: string): Promise<void> {
-    setBusy(true);
-    setNotice("");
-    setMessage("");
-    try {
-      await iGM_Exam_Publish(examId);
-      setDraft((d) => (d && d.examId === examId ? { ...d, status: "published" } : d));
-      setNotice(t("adminPublished"));
+      setNotice(t("adminReparsed"));
       await load();
     } catch (err) {
-      setMessage(iGM_Exam_ReadError(err, t("adminPublishFailed")));
+      setMessage(iGM_Exam_ReadError(err, t("adminReparseFailed")));
     } finally {
       setBusy(false);
     }
   }
 
-  /** 关闭 */
-  async function close(examId: string): Promise<void> {
-    setBusy(true);
-    setNotice("");
-    setMessage("");
-    try {
-      await iGM_Exam_Close(examId);
-      setDraft((d) => (d && d.examId === examId ? { ...d, status: "closed" } : d));
-      setNotice(t("adminClosed"));
-      await load();
-    } catch (err) {
-      setMessage(iGM_Exam_ReadError(err, t("adminCloseFailed")));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  /** 删除 */
+  /** 删除试卷及关联文件 */
   async function remove(examId: string): Promise<void> {
     setBusy(true);
     setNotice("");
@@ -295,12 +307,12 @@ export function iGM_ExamAdmin() {
           ) : (
             <FileUp size={15} strokeWidth={1.8} />
           )}
-          <span className={`igm-mono ${styles.uploadLabel}`}>{t("adminSelectPdf")}</span>
+          <span className={`igm-mono ${styles.uploadLabel}`}>{t("adminUpload")}</span>
         </button>
         <input
           ref={fileInputRef}
           type="file"
-          accept="application/pdf,.pdf"
+          accept=".pdf,.doc,.docx,.txt,.md,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown"
           className={styles.hiddenInput}
           onChange={(e) => {
             const file = e.target.files?.[0];
@@ -329,49 +341,55 @@ export function iGM_ExamAdmin() {
           <div className={styles.reviewHead}>
             <span className={`igm-mono ${styles.sectionNum}`}>§ 2</span>
             <h2 className={`igm-serif ${styles.sectionTitle}`}>{t("adminProofTitle")}</h2>
-            <span
-              className={`igm-mono ${styles.statusTag} ${styles[`st_${draft.status}`]}`}
-            >
+            <span className={`igm-mono ${styles.recordCode}`}>{draft.code}</span>
+            <span className={`igm-mono ${styles.statusTag} ${styles[`st_${draft.status}`]}`}>
               {t(iGM_Exam_StatusKeys[draft.status])}
+            </span>
+            <span
+              className={`igm-mono ${styles.statusTag} ${styles[`ps_${draft.parseStatus}`]}`}
+            >
+              {t(iGM_Exam_ParseKeys[draft.parseStatus])}
             </span>
           </div>
 
           <div className={styles.reviewLayout}>
-            {/* 左：PDF 前 3 页预览 */}
+            {/* 左：原始文件预览 */}
             <div className={styles.pdfPane}>
               <p className={`igm-mono ${styles.paneLabel}`}>{t("adminPreviewLabel")}</p>
-              <IGM_ExamReader
-                key={previewKey}
-                fileUrl={iGM_Exam_BuildFileUrl(draft.examId)}
-                compact
-                maxPages={3}
-              />
-              <button
-                type="button"
-                className={styles.replaceBtn}
-                onClick={() => replaceInputRef.current?.click()}
-                disabled={busy}
-              >
-                <RotateCcw size={13} strokeWidth={1.8} />
-                {t("adminReplacePdf")}
-              </button>
-              <input
-                ref={replaceInputRef}
-                type="file"
-                accept="application/pdf,.pdf"
-                className={styles.hiddenInput}
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) void replaceFile(file);
-                }}
-              />
+              {draft.hasOriginalFile ? (
+                draft.fileType === "pdf" ? (
+                  <iframe
+                    key={previewKey}
+                    className={styles.pdfFrame}
+                    src={iGM_Exam_AbsoluteUrl(draft.fileApiPath)}
+                    title={draft.fileName}
+                  />
+                ) : (
+                  <div className={styles.fileBox}>
+                    <p className={`igm-mono ${styles.fileName}`} title={draft.fileName}>
+                      {draft.fileName}
+                    </p>
+                    <a
+                      className={styles.downloadBtn}
+                      href={iGM_Exam_AbsoluteUrl(draft.fileApiPath)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <Download size={13} strokeWidth={1.8} />
+                      <span className="igm-mono">{t("adminDownloadOriginal")}</span>
+                    </a>
+                  </div>
+                )
+              ) : (
+                <p className={`igm-mono ${styles.previewDeleted}`}>
+                  {t("adminPreviewDeleted")}
+                </p>
+              )}
             </div>
 
-            {/* 右：识别结果表单 */}
+            {/* 右：规格表单 + 解析全文与预览 */}
             <div className={styles.formPane}>
-              <p className={`igm-mono ${styles.paneLabel}`}>
-                {t("adminRecognizedLabel")}
-              </p>
+              <p className={`igm-mono ${styles.paneLabel}`}>{t("adminRecognizedLabel")}</p>
               <form
                 className={styles.form}
                 onSubmit={(e) => {
@@ -475,12 +493,40 @@ export function iGM_ExamAdmin() {
                   </span>
                   <textarea
                     className={styles.textarea}
-                    rows={3}
+                    rows={2}
                     value={draft.notice}
                     onChange={(e) => setDraft({ ...draft, notice: e.target.value })}
                     placeholder={t("adminPlaceholderNotice")}
                   />
                 </label>
+
+                {/* 解析全文（可手动修订） */}
+                <label className={styles.field}>
+                  <span className={`igm-mono ${styles.fieldLabel}`}>
+                    {t("adminFieldContent")}
+                  </span>
+                  <textarea
+                    className={`${styles.textarea} ${styles.contentArea}`}
+                    rows={12}
+                    value={draft.contentMarkdown}
+                    onChange={(e) =>
+                      setDraft({ ...draft, contentMarkdown: e.target.value })
+                    }
+                    placeholder={t("adminPlaceholderContent")}
+                    spellCheck={false}
+                  />
+                </label>
+
+                <p className={`igm-mono ${styles.paneLabel}`}>{t("adminParseLabel")}</p>
+                <div className={styles.previewBox}>
+                  {draft.contentMarkdown.trim().length > 0 ? (
+                    <IGM_ExamPaperView markdown={draft.contentMarkdown} showToc={false} />
+                  ) : (
+                    <p className={`igm-mono ${styles.previewEmpty}`}>
+                      {t("detailNoContent")}
+                    </p>
+                  )}
+                </div>
 
                 {/* 操作组 */}
                 <div className={styles.actions}>
@@ -490,21 +536,21 @@ export function iGM_ExamAdmin() {
                   </button>
                   <button
                     type="button"
-                    className={styles.publish}
-                    onClick={() => void publish(draft.examId)}
-                    disabled={busy || draft.status === "published"}
+                    className={styles.confirm}
+                    onClick={() => setConfirmOpen(true)}
+                    disabled={busy || !draft.hasOriginalFile}
                   >
-                    <Send size={14} strokeWidth={1.8} />
-                    <span className="igm-mono">{t("adminPublish")}</span>
+                    <ShieldCheck size={14} strokeWidth={1.8} />
+                    <span className="igm-mono">{t("adminConfirm")}</span>
                   </button>
                   <button
                     type="button"
-                    className={styles.close}
-                    onClick={() => void close(draft.examId)}
-                    disabled={busy || draft.status === "closed"}
+                    className={styles.reparse}
+                    onClick={() => void reparse()}
+                    disabled={busy || !draft.hasOriginalFile}
                   >
-                    <Lock size={14} strokeWidth={1.8} />
-                    <span className="igm-mono">{t("adminClose")}</span>
+                    <RotateCcw size={14} strokeWidth={1.8} />
+                    <span className="igm-mono">{t("adminReparse")}</span>
                   </button>
                   <button
                     type="button"
@@ -588,6 +634,46 @@ export function iGM_ExamAdmin() {
           </div>
         )}
       </section>
+
+      {/* 二次确认弹窗：删除原始文件不可恢复 */}
+      {confirmOpen && draft && (
+        <div className={styles.modalOverlay} role="presentation">
+          <div
+            className={styles.modal}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t("adminConfirmTitle")}
+          >
+            <h3 className={`igm-serif ${styles.modalTitle}`}>
+              {t("adminConfirmTitle")}
+            </h3>
+            <p className={styles.modalBody}>{t("adminConfirmBody")}</p>
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.modalCancel}
+                onClick={() => setConfirmOpen(false)}
+                disabled={busy}
+              >
+                <span className="igm-mono">{t("adminConfirmNo")}</span>
+              </button>
+              <button
+                type="button"
+                className={styles.modalConfirm}
+                onClick={() => void confirmAndDelete()}
+                disabled={busy}
+              >
+                {busy ? (
+                  <Loader2 size={14} strokeWidth={1.8} className={styles.spin} />
+                ) : (
+                  <ShieldCheck size={14} strokeWidth={1.8} />
+                )}
+                <span className="igm-mono">{t("adminConfirmYes")}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

@@ -3,18 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "copy:pdfworker": "bun run scripts/iGM_CopyPdfWorker.ts",
-    "dev": "bun run copy:pdfworker && next dev -p 3002",
-    "build": "bun run copy:pdfworker && next build && bun run scripts/iGM_FixExportSegments.ts",
+    "dev": "next dev -p 3002",
+    "build": "next build && bun run scripts/iGM_FixExportSegments.ts",
     "build:next": "next build",
     "start": "next start"
   },
   "dependencies": {
+    "katex": "^0.19.0",
     "lucide-react": "1.47.0",
     "next": "16.3.5",
-    "pdfjs-dist": "5.4.296",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "react-markdown": "^10.1.0",
+    "rehype-katex": "^7.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0"
   },
   "devDependencies": {
     "@types/node": "24.6.0",

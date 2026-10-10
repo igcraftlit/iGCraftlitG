@@ -3,8 +3,8 @@
  * 所属层：前端 / 页面样式层
  * 路由：E_ExamDetail（/detail?id=xxx）
  * 模块：iGM_ExamDetail
- * 作用：试卷详情页样式（实验记录表、计时器侧栏、阅读器区、交卷区）
- * 内容：页面容器、返回条、标题块、元数据布局、记录表、通知、阅读器、交卷
+ * 作用：试卷详情页样式（实验记录表、计时器侧栏、解析正文区、交卷区）
+ * 内容：页面容器、返回条、标题块、元数据布局、记录表、通知、正文区、交卷
  * 说明：桌面左右分栏，平板起上下堆叠
  */
 
@@ -154,13 +154,13 @@
   top: 140px;
 }
 
-/* ============================= 阅读器 ============================= */
-.readerSection,
+/* ============================= 解析正文 ============================= */
+.paperSection,
 .submitSection {
   margin-bottom: 40px;
 }
 
-.readerHead,
+.paperHead,
 .submitHead {
   display: flex;
   align-items: baseline;
@@ -170,14 +170,14 @@
   border-bottom: 1px solid var(--igm-line);
 }
 
-.readerNum,
+.paperNum,
 .submitNum {
   font-size: 13px;
   font-weight: 700;
   color: var(--igm-cinnabar);
 }
 
-.readerTitle,
+.paperTitle,
 .submitTitle {
   margin: 0;
   flex: 1;
@@ -186,14 +186,12 @@
   color: var(--igm-ink);
 }
 
-.readerFile {
-  font-size: 11px;
-  letter-spacing: 0.06em;
+.paperEmpty {
+  padding: 40px 0;
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 0.14em;
   color: var(--igm-text-muted);
-  max-width: 220px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* ============================= 交卷 ============================= */
@@ -270,9 +268,5 @@
 
   .recordGrid {
     grid-template-columns: 1fr;
-  }
-
-  .readerFile {
-    display: none;
   }
 }

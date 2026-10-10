@@ -3,8 +3,8 @@
  * 所属层：前端 / 页面层
  * 路由：E_ExamDetail（/detail?id=xxx）
  * 模块：iGM_ExamDetail
- * 作用：试卷详情页，实验记录表式元数据 + 实验计时器 + PDF.js 阅读器 + 盖章交卷
- * 内容：元数据记录表、右上固定计时器、阅读器主体、交卷区、加载/失败/缺失状态
+ * 作用：试卷详情页，信息栏 + 解析全文（Markdown + 目录导航）+ 实验计时器 + 盖章交卷
+ * 内容：规格信息表、右上固定计时器、解析正文与目录、交卷区、加载/失败/缺失状态
  * 说明：静态导出下通过 useSearchParams 读取 id；由路由壳提供 Suspense 边界；文案取自当前语言包
  */
 
@@ -16,12 +16,11 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import {
-  iGM_Exam_BuildFileUrl,
   iGM_Exam_FetchDetail,
   iGM_ExamRequestError,
   type iGM_ExamDetail,
 } from "../iGM_Services/iGM_ExamClient";
-import { iGM_ExamReader as IGM_ExamReader } from "../iGM_Components/iGM_ExamReader/iGM_ExamReader";
+import { iGM_ExamPaperView as IGM_ExamPaperView } from "../iGM_Components/iGM_ExamPaperView/iGM_ExamPaperView";
 import { iGM_ExamTimer as IGM_ExamTimer } from "../iGM_Components/iGM_ExamTimer/iGM_ExamTimer";
 import { iGM_StampButton as IGM_StampButton } from "../iGM_Components/iGM_StampButton/iGM_StampButton";
 import { useI18n } from "../iGM_i18n/iGM_I18nContext";
@@ -30,7 +29,7 @@ import styles from "./E_ExamDetail.module.css";
 // 类型定义 //
 type iGM_Exam_DetailState = "loading" | "ready" | "error" | "missing";
 
-/** 实验记录表字段 */
+/** 规格记录表字段 */
 interface iGM_Exam_RecordField {
   label: string;
   value: string;
@@ -133,7 +132,7 @@ export function E_ExamDetail() {
         <h1 className={`igm-serif ${styles.title}`}>{exam.title}</h1>
       </header>
 
-      {/* 实验记录表 + 计时器 */}
+      {/* 规格记录表 + 计时器 */}
       <div className={styles.metaLayout}>
         <section
           className={`igm-double-rule ${styles.recordTable}`}
@@ -166,19 +165,17 @@ export function E_ExamDetail() {
         </aside>
       </div>
 
-      {/* 阅读器 */}
-      <section
-        className={styles.readerSection}
-        aria-label={t("detailViewerTitle")}
-      >
-        <div className={styles.readerHead}>
-          <span className={`igm-mono ${styles.readerNum}`}>§ 2</span>
-          <h2 className={`igm-serif ${styles.readerTitle}`}>{t("detailViewerTitle")}</h2>
-          <span className={`igm-mono ${styles.readerFile}`} title={exam.fileName}>
-            {exam.fileName || "paper.pdf"}
-          </span>
+      {/* 试卷正文（解析文本） */}
+      <section className={styles.paperSection} aria-label={t("detailPaperTitle")}>
+        <div className={styles.paperHead}>
+          <span className={`igm-mono ${styles.paperNum}`}>§ 2</span>
+          <h2 className={`igm-serif ${styles.paperTitle}`}>{t("detailPaperTitle")}</h2>
         </div>
-        <IGM_ExamReader fileUrl={iGM_Exam_BuildFileUrl(exam.id)} />
+        {exam.contentMarkdown.trim().length > 0 ? (
+          <IGM_ExamPaperView markdown={exam.contentMarkdown} />
+        ) : (
+          <p className={`igm-mono ${styles.paperEmpty}`}>{t("detailNoContent")}</p>
+        )}
       </section>
 
       {/* 交卷 */}

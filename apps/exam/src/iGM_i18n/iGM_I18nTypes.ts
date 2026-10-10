@@ -60,7 +60,9 @@ export interface iGM_I18nDict {
   detailCatalogue: string;
   detailEyebrow: string;
   detailSpecTitle: string;
-  detailViewerTitle: string;
+  detailPaperTitle: string;
+  detailTocTitle: string;
+  detailNoContent: string;
   detailSubmitTitle: string;
   detailSubmitLead: string;
   fieldSubject: string;
@@ -83,41 +85,39 @@ export interface iGM_I18nDict {
   stampSubmitted: string;
   stampError: string;
   stampNote: string;
-  // 阅读器
-  readerLabel: string;
-  readerZoomIn: string;
-  readerZoomOut: string;
-  readerFullscreen: string;
-  readerExitFullscreen: string;
-  readerLoading: string;
-  readerError: string;
-  readerPrev: string;
-  readerNext: string;
   // 管理端
   adminEyebrow: string;
   adminTitle: string;
   adminLead: string;
   adminIngestTitle: string;
   adminIngestLead: string;
-  adminSelectPdf: string;
+  adminUpload: string;
   adminProofTitle: string;
   adminPreviewLabel: string;
-  adminReplacePdf: string;
+  adminPreviewDeleted: string;
+  adminDownloadOriginal: string;
   adminRecognizedLabel: string;
+  adminParseLabel: string;
   adminFieldTitle: string;
   adminFieldDuration: string;
   adminFieldTotal: string;
   adminFieldItems: string;
   adminFieldNotice: string;
+  adminFieldContent: string;
   adminPlaceholderTitle: string;
   adminPlaceholderSubject: string;
   adminPlaceholderIssuer: string;
   adminPlaceholderReviewer: string;
   adminPlaceholderNotice: string;
+  adminPlaceholderContent: string;
   adminSave: string;
-  adminPublish: string;
-  adminClose: string;
+  adminConfirm: string;
+  adminReparse: string;
   adminDelete: string;
+  adminConfirmTitle: string;
+  adminConfirmBody: string;
+  adminConfirmYes: string;
+  adminConfirmNo: string;
   adminLedgerTitle: string;
   adminLedgerEntries: string;
   adminLedgerLoading: string;
@@ -132,20 +132,22 @@ export interface iGM_I18nDict {
   adminReview: string;
   adminUploadFailed: string;
   adminSaveFailed: string;
-  adminReplaceFailed: string;
-  adminPublishFailed: string;
-  adminCloseFailed: string;
+  adminConfirmFailed: string;
+  adminReparseFailed: string;
   adminDeleteFailed: string;
   adminIngested: string;
   adminSaved: string;
-  adminPublished: string;
-  adminClosed: string;
+  adminConfirmed: string;
+  adminReparsed: string;
   adminDeleted: string;
-  adminReplaced: string;
   // 状态标签
   statusDraft: string;
   statusPublished: string;
   statusClosed: string;
+  parseStatusPending: string;
+  parseStatusParsed: string;
+  parseStatusConfirmed: string;
+  parseStatusFailed: string;
 }
 
 /** 语言包键联合类型 */

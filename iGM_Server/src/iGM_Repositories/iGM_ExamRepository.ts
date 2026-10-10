@@ -4,8 +4,8 @@
  * 路由：G_Exam（/api/exam/*）
  * 模块：iGM_ExamRepository
  * 作用：iGM_Exams / iGM_ExamFiles / iGM_ExamSubmissions 三张表的唯一数据访问出口
- * 内容：试卷增删改查、按状态筛选、文件行读写、交卷记录写入与计数、
- *       编号序号计算所需的 id 与创建时间序列
+ * 内容：试卷增删改查、按状态筛选、解析全文与解析状态写入、文件行读写与确认删除、
+ *       交卷记录写入与计数、编号序号计算所需的 id 与创建时间序列
  */
 
 // 导入依赖 //
@@ -29,6 +29,15 @@ export interface iGM_ExamWriteFields {
   totalScore: number | null;
   questionCount: number | null;
   notice: string;
+}
+
+/** 试卷文件可写字段集合 */
+export interface iGM_ExamFileWriteFields {
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  tempPath: string;
+  parseStatus: string;
 }
 
 // 核心逻辑 //
@@ -81,7 +90,8 @@ export async function iGM_ListExamIdCreatedPairs(): Promise<
 /** 新建试卷（草稿），返回新试卷 ID */
 export async function iGM_InsertExam(
   fields: iGM_ExamWriteFields,
-  fileUrl: string,
+  contentMarkdown: string,
+  parseStatus: string,
   createdBy: string | null,
 ): Promise<string> {
   const id = iGM_RandomUuid();
@@ -90,8 +100,9 @@ export async function iGM_InsertExam(
     `INSERT INTO iGM_Exams
        (iGM_Id, iGM_Title, iGM_Subject, iGM_Issuer, iGM_Reviewer,
         iGM_Duration, iGM_TotalScore, iGM_QuestionCount, iGM_Notice,
-        iGM_FileUrl, iGM_Status, iGM_CreatedBy, iGM_CreatedAt, iGM_UpdatedAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?)`,
+        iGM_ContentMarkdown, iGM_ParseStatus, iGM_OriginalFileDeleted,
+        iGM_Status, iGM_CreatedBy, iGM_CreatedAt, iGM_UpdatedAt)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?)`,
     [
       id,
       fields.title,
@@ -102,7 +113,9 @@ export async function iGM_InsertExam(
       fields.totalScore,
       fields.questionCount,
       fields.notice,
-      fileUrl,
+      contentMarkdown,
+      parseStatus,
+      false,
       createdBy,
       now,
       now,
@@ -111,16 +124,23 @@ export async function iGM_InsertExam(
   return id;
 }
 
-/** 校对更新试卷元数据（不改状态） */
+/**
+ * 校对更新试卷元数据与解析全文（不改状态）
+ * @param parseStatus 为空时不改动解析状态
+ */
 export async function iGM_UpdateExamFields(
   examId: string,
   fields: iGM_ExamWriteFields,
+  contentMarkdown: string,
+  parseStatus: string | null,
 ): Promise<void> {
   await iGM_Db.run(
     `UPDATE iGM_Exams SET
        iGM_Title = ?, iGM_Subject = ?, iGM_Issuer = ?, iGM_Reviewer = ?,
        iGM_Duration = ?, iGM_TotalScore = ?, iGM_QuestionCount = ?,
-       iGM_Notice = ?, iGM_UpdatedAt = ?
+       iGM_Notice = ?, iGM_ContentMarkdown = ?,
+       iGM_ParseStatus = COALESCE(?, iGM_ParseStatus),
+       iGM_UpdatedAt = ?
      WHERE iGM_Id = ?`,
     [
       fields.title,
@@ -131,20 +151,36 @@ export async function iGM_UpdateExamFields(
       fields.totalScore,
       fields.questionCount,
       fields.notice,
+      contentMarkdown,
+      parseStatus,
       new Date().toISOString(),
       examId,
     ],
   );
 }
 
-/** 更新试卷状态 */
-export async function iGM_UpdateExamStatus(
+/** 管理员确认：标记解析已确认、原始文件已删除，并发布试卷 */
+export async function iGM_ConfirmExam(
   examId: string,
   status: string,
 ): Promise<void> {
   await iGM_Db.run(
-    `UPDATE iGM_Exams SET iGM_Status = ?, iGM_UpdatedAt = ? WHERE iGM_Id = ?`,
-    [status, new Date().toISOString(), examId],
+    `UPDATE iGM_Exams SET
+       iGM_ParseStatus = 'confirmed',
+       iGM_OriginalFileDeleted = ?,
+       iGM_Status = ?,
+       iGM_UpdatedAt = ?
+     WHERE iGM_Id = ?`,
+    [true, status, new Date().toISOString(), examId],
+  );
+}
+
+/** 标记试卷原始文件已在磁盘上删除（定时清理使用，不改状态） */
+export async function iGM_MarkExamOriginalDeleted(examId: string): Promise<void> {
+  await iGM_Db.run(
+    `UPDATE iGM_Exams SET iGM_OriginalFileDeleted = ?, iGM_UpdatedAt = ?
+      WHERE iGM_Id = ?`,
+    [true, new Date().toISOString(), examId],
   );
 }
 
@@ -153,31 +189,81 @@ export async function iGM_DeleteExam(examId: string): Promise<void> {
   await iGM_Db.run(`DELETE FROM iGM_Exams WHERE iGM_Id = ?`, [examId]);
 }
 
-/** 写入试卷文件行（文件名与前 3 页原始文本） */
+/** 写入试卷文件行（临时路径与解析状态） */
 export async function iGM_InsertExamFile(
   examId: string,
-  fileName: string,
-  rawText: string,
+  file: iGM_ExamFileWriteFields,
 ): Promise<void> {
   await iGM_Db.run(
     `INSERT INTO iGM_ExamFiles
-       (iGM_Id, iGM_ExamId, iGM_FileName, iGM_RawText, iGM_CreatedAt)
-     VALUES (?, ?, ?, ?, ?)`,
-    [iGM_RandomUuid(), examId, fileName, rawText, new Date().toISOString()],
+       (iGM_Id, iGM_ExamId, iGM_FileName, iGM_FileType, iGM_FileSize,
+        iGM_TempPath, iGM_ParseStatus, iGM_UploadedAt)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      iGM_RandomUuid(),
+      examId,
+      file.fileName,
+      file.fileType,
+      file.fileSize,
+      file.tempPath,
+      file.parseStatus,
+      new Date().toISOString(),
+    ],
   );
 }
 
-/** 读取试卷文件行（用于展示原始文件名） */
+/** 读取试卷最新文件行 */
 export async function iGM_FindExamFileByExamId(
   examId: string,
 ): Promise<iGM_ExamFileRow | null> {
   return (
     ((await iGM_Db
       .query(
-        `SELECT * FROM iGM_ExamFiles WHERE iGM_ExamId = ? ORDER BY iGM_CreatedAt DESC LIMIT 1`,
+        `SELECT * FROM iGM_ExamFiles WHERE iGM_ExamId = ? ORDER BY iGM_UploadedAt DESC LIMIT 1`,
       )
       .get(examId)) as iGM_ExamFileRow | undefined) ?? null
   );
+}
+
+/** 管理员确认后清空临时路径并标记文件已删除 */
+export async function iGM_ConfirmExamFile(
+  examId: string,
+  now: string,
+): Promise<void> {
+  await iGM_Db.run(
+    `UPDATE iGM_ExamFiles SET
+       iGM_TempPath = NULL,
+       iGM_ParseStatus = 'confirmed',
+       iGM_ConfirmedAt = ?,
+       iGM_DeletedAt = ?
+     WHERE iGM_ExamId = ?`,
+    [now, now, examId],
+  );
+}
+
+/** 定时清理：清空临时路径并标记删除时间（保留原解析状态） */
+export async function iGM_ClearExamFileTempPath(
+  examId: string,
+  now: string,
+): Promise<void> {
+  await iGM_Db.run(
+    `UPDATE iGM_ExamFiles SET
+       iGM_TempPath = NULL,
+       iGM_DeletedAt = ?
+     WHERE iGM_ExamId = ?`,
+    [now, examId],
+  );
+}
+
+/** 列出仍保留原始文件（临时路径非空）的全部文件行，供清理任务扫描 */
+export async function iGM_ListExamFilesWithTempPath(): Promise<
+  iGM_ExamFileRow[]
+> {
+  return (await iGM_Db
+    .query(
+      `SELECT * FROM iGM_ExamFiles WHERE iGM_TempPath IS NOT NULL`,
+    )
+    .all()) as iGM_ExamFileRow[];
 }
 
 /** 写入交卷记录 */
@@ -210,17 +296,6 @@ export async function iGM_CountSubmissions(examId: string): Promise<number> {
   return row?.iGM_Count ?? 0;
 }
 
-/** 更新试卷的 PDF 存储路径（重新上传替换时使用） */
-export async function iGM_UpdateExamFileUrl(
-  examId: string,
-  fileUrl: string,
-): Promise<void> {
-  await iGM_Db.run(
-    `UPDATE iGM_Exams SET iGM_FileUrl = ?, iGM_UpdatedAt = ? WHERE iGM_Id = ?`,
-    [fileUrl, new Date().toISOString(), examId],
-  );
-}
-
 // 导出 //
 export type { iGM_ExamRecognized };
 export default {
@@ -230,11 +305,14 @@ export default {
   iGM_ListExamIdCreatedPairs,
   iGM_InsertExam,
   iGM_UpdateExamFields,
-  iGM_UpdateExamStatus,
+  iGM_ConfirmExam,
+  iGM_MarkExamOriginalDeleted,
   iGM_DeleteExam,
   iGM_InsertExamFile,
   iGM_FindExamFileByExamId,
+  iGM_ConfirmExamFile,
+  iGM_ClearExamFileTempPath,
+  iGM_ListExamFilesWithTempPath,
   iGM_InsertSubmission,
   iGM_CountSubmissions,
-  iGM_UpdateExamFileUrl,
 };

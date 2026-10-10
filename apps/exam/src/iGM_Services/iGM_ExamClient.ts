@@ -4,8 +4,8 @@
  * 路由：全局（调用后端 /api/exam/*）
  * 模块：iGM_ExamClient
  * 作用：iG&M 教育考试系统唯一的后端访问出口
- * 内容：统一响应解包、列表 / 详情 / 管理端列表、PDF 上传与替换、
- *       校对更新、发布 / 关闭 / 删除、交卷记录、PDF 预览地址构造
+ * 内容：统一响应解包、列表 / 详情 / 管理端列表与详情、上传解析建档、
+ *       校对更新、确认删除原文件、重新解析、删除、交卷记录、原始文件地址构造
  * 说明：统一响应结构 { success, code, message, data }；错误归一化后抛出可读信息
  */
 
@@ -13,7 +13,11 @@
 import { iGM_ExamConfig } from "./iGM_ExamConfig";
 
 // 类型定义 //
+/** 试卷状态：草稿 / 已发布 / 已关闭 */
 export type iGM_ExamStatus = "draft" | "published" | "closed";
+
+/** 解析状态：待解析 / 已解析 / 已确认 / 解析失败 */
+export type iGM_ExamParseStatus = "pending" | "parsed" | "confirmed" | "failed";
 
 /** 统一响应结构 */
 interface iGM_ExamEnvelope<T> {
@@ -34,6 +38,7 @@ export interface iGM_ExamListItem {
   totalScore: number | null;
   questionCount: number | null;
   status: iGM_ExamStatus;
+  parseStatus: iGM_ExamParseStatus;
   createdAt: string;
 }
 
@@ -42,29 +47,20 @@ export interface iGM_ExamAdminListItem extends iGM_ExamListItem {
   submissionCount: number;
 }
 
-/** 试卷详情 */
+/** 试卷详情（含解析全文与原始文件信息） */
 export interface iGM_ExamDetail extends iGM_ExamListItem {
   reviewer: string;
   notice: string;
+  /** 解析后的试卷全文（Markdown） */
+  contentMarkdown: string;
+  /** 原始文件是否仍在服务器上（管理员确认后为 false） */
+  hasOriginalFile: boolean;
+  /** 原始文件预览 / 下载接口地址；无原始文件时为空串 */
   fileApiPath: string;
+  /** 原始文件名（仅用于展示） */
   fileName: string;
-}
-
-/** PDF 自动识别结果 */
-export interface iGM_ExamRecognized {
-  title: string;
-  subject: string;
-  issuer: string;
-  reviewer: string;
-  duration: number | null;
-  totalScore: number | null;
-  questionCount: number | null;
-}
-
-/** 上传建档结果 */
-export interface iGM_ExamUploadResult {
-  examId: string;
-  recognized: iGM_ExamRecognized;
+  /** 原始文件格式：pdf 可内联预览，其余仅下载 */
+  fileType: string;
 }
 
 /** 校对更新入参 */
@@ -78,6 +74,8 @@ export interface iGM_ExamUpdateInput {
   totalScore: number | null;
   questionCount: number | null;
   notice: string;
+  /** 解析全文（Markdown），可手动修改 */
+  contentMarkdown: string;
 }
 
 /** 交卷结果 */
@@ -168,6 +166,14 @@ async function iGM_Exam_PostForm<T>(path: string, form: FormData): Promise<T> {
   }
 }
 
+/* ---------- 通用 ---------- */
+
+/** 将后端返回的相对接口地址补全为可访问的绝对地址 */
+export function iGM_Exam_AbsoluteUrl(path: string): string {
+  if (!path) return "";
+  return `${iGM_ExamConfig.apiBase}${path}`;
+}
+
 /* ---------- 公开接口 ---------- */
 
 /** 已发布试卷列表 */
@@ -176,7 +182,7 @@ export async function iGM_Exam_FetchList(): Promise<iGM_ExamListItem[]> {
   return data.exams;
 }
 
-/** 试卷详情 */
+/** 试卷详情（公开） */
 export async function iGM_Exam_FetchDetail(
   examId: string,
 ): Promise<iGM_ExamDetail> {
@@ -184,11 +190,6 @@ export async function iGM_Exam_FetchDetail(
     `/api/exam/detail?examId=${encodeURIComponent(examId)}`,
   );
   return data.exam;
-}
-
-/** 构造试卷 PDF 预览地址（仅站内展示，禁止下载导出） */
-export function iGM_Exam_BuildFileUrl(examId: string): string {
-  return `${iGM_ExamConfig.apiBase}/api/exam/file?examId=${encodeURIComponent(examId)}`;
 }
 
 /** 交卷 */
@@ -212,59 +213,60 @@ export async function iGM_Exam_FetchAdminList(): Promise<iGM_ExamAdminListItem[]
   return data.exams;
 }
 
-/** 上传 PDF 并自动识别建档 */
-export async function iGM_Exam_Upload(
-  file: File,
-): Promise<iGM_ExamUploadResult> {
-  const form = new FormData();
-  form.append("file", file);
-  return await iGM_Exam_PostForm<iGM_ExamUploadResult>("/api/exam/upload", form);
-}
-
-/** 替换试卷 PDF 文件 */
-export async function iGM_Exam_ReplaceFile(
+/** 单个试卷详情（管理端，允许草稿） */
+export async function iGM_Exam_FetchAdminDetail(
   examId: string,
-  file: File,
-): Promise<void> {
-  const form = new FormData();
-  form.append("examId", examId);
-  form.append("file", file);
-  await iGM_Exam_PostForm<{ replaced: boolean }>("/api/exam/replace", form);
+): Promise<iGM_ExamDetail> {
+  const data = await iGM_Exam_Get<{ exam: iGM_ExamDetail }>(
+    `/api/exam/admin/detail?examId=${encodeURIComponent(examId)}`,
+  );
+  return data.exam;
 }
 
-/** 校对更新 */
+/** 上传试卷文档：解析全文并建档为草稿 */
+export async function iGM_Exam_Upload(file: File): Promise<iGM_ExamDetail> {
+  const form = new FormData();
+  form.append("file", file);
+  const data = await iGM_Exam_PostForm<{ exam: iGM_ExamDetail }>(
+    "/api/exam/upload",
+    form,
+  );
+  return data.exam;
+}
+
+/** 校对更新（元数据 + 解析全文，不删除原始文件） */
 export async function iGM_Exam_Update(
   input: iGM_ExamUpdateInput,
 ): Promise<void> {
   await iGM_Exam_Post<{ updated: boolean }>("/api/exam/update", input);
 }
 
-/** 发布 */
-export async function iGM_Exam_Publish(examId: string): Promise<void> {
-  await iGM_Exam_Post<{ published: boolean }>("/api/exam/publish", { examId });
+/** 确认并删除原始文件，同时发布试卷 */
+export async function iGM_Exam_Confirm(examId: string): Promise<void> {
+  await iGM_Exam_Post<{ confirmed: boolean }>("/api/exam/confirm", { examId });
 }
 
-/** 关闭 */
-export async function iGM_Exam_Close(examId: string): Promise<void> {
-  await iGM_Exam_Post<{ closed: boolean }>("/api/exam/close", { examId });
+/** 使用原始文件重新解析 */
+export async function iGM_Exam_Reparse(examId: string): Promise<void> {
+  await iGM_Exam_Post<{ reparsed: boolean }>("/api/exam/reparse", { examId });
 }
 
-/** 删除 */
+/** 删除试卷及关联文件 */
 export async function iGM_Exam_Delete(examId: string): Promise<void> {
   await iGM_Exam_Post<{ deleted: boolean }>("/api/exam/delete", { examId });
 }
 
 // 导出 //
 export default {
+  iGM_Exam_AbsoluteUrl,
   iGM_Exam_FetchList,
   iGM_Exam_FetchDetail,
-  iGM_Exam_FetchAdminList,
-  iGM_Exam_BuildFileUrl,
-  iGM_Exam_Upload,
-  iGM_Exam_ReplaceFile,
-  iGM_Exam_Update,
-  iGM_Exam_Publish,
-  iGM_Exam_Close,
-  iGM_Exam_Delete,
   iGM_Exam_Submit,
+  iGM_Exam_FetchAdminList,
+  iGM_Exam_FetchAdminDetail,
+  iGM_Exam_Upload,
+  iGM_Exam_Update,
+  iGM_Exam_Confirm,
+  iGM_Exam_Reparse,
+  iGM_Exam_Delete,
 };
