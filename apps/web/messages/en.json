@@ -116,7 +116,34 @@
     "menu": "Menu",
     "theme": "Theme",
     "language": "Language",
-    "login": "Log in"
+    "login": "Log in",
+    "search": "Search"
+  },
+  "search": {
+    "title": "Site Search",
+    "placeholder": "Search posts, resources, users or organizations",
+    "submit": "Search",
+    "summary": "{count} results found",
+    "type": {
+      "label": "Result type",
+      "all": "All",
+      "post": "Posts",
+      "resource": "Resources",
+      "user": "Users",
+      "org": "Organizations"
+    },
+    "state": {
+      "loading": "Searching…",
+      "retry": "Retry"
+    },
+    "initial": {
+      "title": "Type a keyword to start searching",
+      "description": "Search posts, resources, users and organizations"
+    },
+    "empty": {
+      "title": "No results found",
+      "description": "Try another keyword or adjust the filter type"
+    }
   },
   "theme": {
     "light": "Light",
@@ -241,6 +268,10 @@
     }
   },
   "pages": {
+    "search": {
+      "title": "Site Search",
+      "description": "Search posts, resources, users and organizations across the community"
+    },
     "notification": {
       "title": "Notifications",
       "description": "Site messages and reminders will appear here"

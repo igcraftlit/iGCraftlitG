@@ -1,0 +1,15 @@
+/*
+ * 文件路径：apps/web/src/iGM_Components/iGM_Highlight/iGM_Highlight.module.css
+ * 所属层：前端 / 通用组件样式
+ * 路由：G_Search
+ * 模块：iGM_Highlight
+ * 作用：关键词高亮样式——不改变正文排版，仅以柔和底色标记命中
+ */
+
+.mark {
+  padding: 0 2px;
+  border-radius: 3px;
+  background: var(--igm-accent-soft);
+  color: var(--igm-accent);
+  font-weight: 600;
+}

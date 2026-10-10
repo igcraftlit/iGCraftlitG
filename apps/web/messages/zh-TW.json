@@ -116,7 +116,34 @@
     "menu": "選單",
     "theme": "主題",
     "language": "語言",
-    "login": "登入"
+    "login": "登入",
+    "search": "搜尋"
+  },
+  "search": {
+    "title": "全站搜尋",
+    "placeholder": "搜尋貼文、資源、使用者或組織",
+    "submit": "搜尋",
+    "summary": "共找到 {count} 條結果",
+    "type": {
+      "label": "結果類型",
+      "all": "全部",
+      "post": "貼文",
+      "resource": "資源",
+      "user": "使用者",
+      "org": "組織"
+    },
+    "state": {
+      "loading": "正在搜尋…",
+      "retry": "重試"
+    },
+    "initial": {
+      "title": "輸入關鍵字開始搜尋",
+      "description": "支援搜尋貼文、資源、使用者與組織"
+    },
+    "empty": {
+      "title": "沒有找到相關內容",
+      "description": "換一個關鍵字試試，或調整篩選類型"
+    }
   },
   "theme": {
     "light": "淺色",
@@ -241,6 +268,10 @@
     }
   },
   "pages": {
+    "search": {
+      "title": "全站搜尋",
+      "description": "搜尋社群中的貼文、資源、使用者與組織"
+    },
     "notification": {
       "title": "通知",
       "description": "站內訊息與提醒將在此處呈現"

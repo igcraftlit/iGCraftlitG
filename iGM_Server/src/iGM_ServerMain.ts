@@ -62,6 +62,8 @@ import { G_AI } from "./iGM_Routes/G_AI";
 import { iGM_AIError } from "./iGM_Services/iGM_AIService";
 // AI 赋能系统模块三：UPR / SPR 额度业务错误（余额不足 402 / 账户不存在）
 import { iGM_QuotaError } from "./iGM_Services/iGM_QuotaService";
+// 全站搜索：帖子 / 资源 / 用户 / 组织聚合搜索
+import { G_Search } from "./iGM_Routes/G_Search";
 // iG&M 教育考试系统：试卷业务错误（上传/识别/发布等）
 import { G_Exam } from "./iGM_Routes/G_Exam";
 import { iGM_ExamError } from "./iGM_Services/iGM_ExamService";
@@ -218,6 +220,8 @@ const iGM_Server = new Elysia()
   .use(G_LauncherRelease)
   // AI 赋能系统模块一：AI 助手基础对话（DeepSeek 代理）
   .use(G_AI)
+  // 全站搜索：帖子 / 资源 / 用户 / 组织聚合搜索（公开只读，按 IP 限流）
+  .use(G_Search)
   // iG&M 教育考试系统：试卷列表 / 详情 / 上传识别 / 校对 / 发布（/api/exam/*）
   .use(G_Exam)
   // 根路径占位

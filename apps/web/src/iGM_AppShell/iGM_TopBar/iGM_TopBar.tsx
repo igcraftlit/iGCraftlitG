@@ -4,8 +4,8 @@
  * 路由：全局
  * 模块：iGM_TopBar
  * 作用：顶部栏，左侧菜单按钮与网站名称，右侧用户区、主题与语言切换
- * 内容：移动端菜单按钮、Cinzel 艺术字网站名、登录按钮、
- *       已登录用户区（头像 + 用户名 + 组织认证标识，点击展开下拉菜单：
+ * 内容：移动端菜单按钮、Cinzel 艺术字网站名、全站搜索入口（Ctrl/Cmd + K）、
+ *       登录按钮、已登录用户区（头像 + 用户名 + 组织认证标识，点击展开下拉菜单：
  *       个人主页 / 账户设置 / 组织认证 / 退出登录）、
  *       iGM_ThemeToggle、iGM_LanguageSwitcher
  */
@@ -20,6 +20,7 @@ import {
   HardDriveDownload,
   LogOut,
   Menu,
+  Search,
   Settings,
   UserRound,
 } from "lucide-react";
@@ -70,6 +71,20 @@ export function iGM_TopBar({ onOpenMenu, drawerOpen = false }: iGM_TopBarProps) 
       document.removeEventListener("keydown", iGM_HandleKeyDown);
     };
   }, [menuOpen]);
+
+  /** 全站搜索快捷键：Ctrl/Cmd + K 跳转搜索页 */
+  useEffect(() => {
+    function iGM_HandleSearchShortcut(event: KeyboardEvent): void {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        router.push("/G_Search");
+      }
+    }
+    document.addEventListener("keydown", iGM_HandleSearchShortcut);
+    return () => {
+      document.removeEventListener("keydown", iGM_HandleSearchShortcut);
+    };
+  }, [router]);
 
   /** 退出登录后回到登录页 */
   async function iGM_HandleLogout(): Promise<void> {
@@ -131,6 +146,15 @@ export function iGM_TopBar({ onOpenMenu, drawerOpen = false }: iGM_TopBarProps) 
       </div>
 
       <div className={styles.actions}>
+        {/* 全站搜索入口（点击跳转搜索页，快捷键 Ctrl/Cmd + K） */}
+        <Link
+          href="/G_Search"
+          className={styles.searchLink}
+          aria-label={t("topbar.search")}
+          title={t("topbar.search")}
+        >
+          <Search size={17} strokeWidth={1.8} />
+        </Link>
         {/* 未登录：登录按钮 */}
         {status === "anonymous" && (
           <Link href="/G_Auth/login" className={styles.loginLink}>

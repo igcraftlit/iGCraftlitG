@@ -116,7 +116,34 @@
     "menu": "菜单",
     "theme": "主题",
     "language": "语言",
-    "login": "登录"
+    "login": "登录",
+    "search": "搜索"
+  },
+  "search": {
+    "title": "全站搜索",
+    "placeholder": "搜索帖子、资源、用户或组织",
+    "submit": "搜索",
+    "summary": "共找到 {count} 条结果",
+    "type": {
+      "label": "结果类型",
+      "all": "全部",
+      "post": "帖子",
+      "resource": "资源",
+      "user": "用户",
+      "org": "组织"
+    },
+    "state": {
+      "loading": "正在搜索…",
+      "retry": "重试"
+    },
+    "initial": {
+      "title": "输入关键词开始搜索",
+      "description": "支持搜索帖子、资源、用户与组织"
+    },
+    "empty": {
+      "title": "没有找到相关内容",
+      "description": "换一个关键词试试，或调整筛选类型"
+    }
   },
   "theme": {
     "light": "浅色",
@@ -241,6 +268,10 @@
     }
   },
   "pages": {
+    "search": {
+      "title": "全站搜索",
+      "description": "搜索社区内的帖子、资源、用户与组织"
+    },
     "notification": {
       "title": "通知",
       "description": "站内消息与提醒将在此处展示"

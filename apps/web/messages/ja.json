@@ -116,7 +116,34 @@
     "menu": "メニュー",
     "theme": "テーマ",
     "language": "言語",
-    "login": "ログイン"
+    "login": "ログイン",
+    "search": "検索"
+  },
+  "search": {
+    "title": "サイト内検索",
+    "placeholder": "投稿・リソース・ユーザー・組織を検索",
+    "submit": "検索",
+    "summary": "{count} 件の結果",
+    "type": {
+      "label": "結果の種類",
+      "all": "すべて",
+      "post": "投稿",
+      "resource": "リソース",
+      "user": "ユーザー",
+      "org": "組織"
+    },
+    "state": {
+      "loading": "検索中…",
+      "retry": "再試行"
+    },
+    "initial": {
+      "title": "キーワードを入力して検索を開始",
+      "description": "投稿・リソース・ユーザー・組織を検索できます"
+    },
+    "empty": {
+      "title": "該当する内容が見つかりません",
+      "description": "別のキーワードを試すか、絞り込みの種類を変更してください"
+    }
   },
   "theme": {
     "light": "ライト",
@@ -241,6 +268,10 @@
     }
   },
   "pages": {
+    "search": {
+      "title": "サイト内検索",
+      "description": "コミュニティ内の投稿・リソース・ユーザー・組織を検索"
+    },
     "notification": {
       "title": "通知",
       "description": "サイト内のメッセージとお知らせがここに表示されます"

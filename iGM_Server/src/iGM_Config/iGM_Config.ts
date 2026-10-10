@@ -347,6 +347,8 @@ export const iGM_Config: iGM_AppConfig = {
     examUpload: { windowMs: 10 * 60 * 1000, max: 20 },
     // iG&M 教育考试系统：交卷——1 分钟内最多 30 次
     examSubmit: { windowMs: 60 * 1000, max: 30 },
+    // 全站搜索：聚合搜索公开读取——1 分钟内最多 60 次（按客户端 IP）
+    search: { windowMs: 60 * 1000, max: 60 },
   },
   mail: {
     // 163 邮箱 SMTP：465 端口隐式 SSL；密码使用客户端授权码（非登录密码），

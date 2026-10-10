@@ -87,6 +87,24 @@
   flex-shrink: 0;
 }
 
+/* 全站搜索入口（图标按钮，点击跳转搜索页） */
+.searchLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-right: 4px;
+  border-radius: var(--igm-radius);
+  color: var(--igm-text-muted);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.searchLink:hover {
+  background: var(--igm-surface-subtle);
+  color: var(--igm-text);
+}
+
 /* 未登录时的登录入口 */
 .loginLink {
   display: inline-flex;

@@ -29,6 +29,8 @@ export const iGM_SeoPublicPaths = [
   "/G_Post",
   "/G_Activity",
   "/G_Resource",
+  // 全站搜索页（公开、可收录）
+  "/G_Search",
   "/G_User",
   "/G_Points",
   "/G_Leaderboard",
