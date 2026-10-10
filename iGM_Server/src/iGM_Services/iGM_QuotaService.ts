@@ -121,67 +121,67 @@ export async function iGM_Charge(params: iGM_ChargeParams): Promise<iGM_ChargeRe
     uqCost = 0;
   }
 
-  // 2. 在事务内扣余额 + 写流水
-  const trx = await iGM_Db.transaction();
-  const bal = await iGM_LockUserQuotaBalances(params.userId);
-  if (!bal) {
-    throw new iGM_QuotaError(404, "auth.errors.accountNotFound");
-  }
+  // 2. 回调式事务：自动 BEGIN/COMMIT/ROLLBACK
+  return await iGM_Db.transaction(async () => {
+    const bal = await iGM_LockUserQuotaBalances(params.userId);
+    if (!bal) {
+      throw new iGM_QuotaError(404, "auth.errors.accountNotFound");
+    }
 
-  let result: iGM_ChargeResult;
-  const periodLabel = period === "peak" ? "高峰" : "非高峰";
-  const reasonLabel: Record<iGM_AIChargeReason, string> = {
-    normal: "正常扣费",
-    timeout: "超时中断，按已生成内容扣费",
-    truncated: "超字数截断，按已生成内容扣费",
-    stopped: "用户手动停止，按已生成内容扣费",
-  };
-
-  if (bal.uq >= uqCost && uqCost > 0) {
-    // 优先扣 UQ
-    const newUq = iGM_Round3(bal.uq - uqCost);
-    await iGM_UpdateUserQuotaBalance("uq", params.userId, newUq, nowIso);
-    await iGM_InsertQuotaTransaction("uq", {
-      userId: params.userId,
-      type: isQuestion ? "chat_question" : "chat_answer",
-      amount: -uqCost,
-      balanceAfter: newUq,
-      detail: `${reasonLabel[params.reason]}（${periodLabel}）`,
-      createdAt: nowIso,
-    });
-    result = {
-      channel: "uq",
-      amount: uqCost,
-      balanceAfter: newUq,
-      period,
-      detail: `${reasonLabel[params.reason]}（UQ ${periodLabel}）`,
+    let result: iGM_ChargeResult;
+    const periodLabel = period === "peak" ? "高峰" : "非高峰";
+    const reasonLabel: Record<iGM_AIChargeReason, string> = {
+      normal: "正常扣费",
+      timeout: "超时中断，按已生成内容扣费",
+      truncated: "超字数截断，按已生成内容扣费",
+      stopped: "用户手动停止，按已生成内容扣费",
     };
-  } else if (bal.coin >= coinCost) {
-    // UQ 不足，扣 Coin
-    const newCoin = iGM_Round3(bal.coin - coinCost);
-    await iGM_UpdateUserQuotaBalance("coin", params.userId, newCoin, nowIso);
-    await iGM_InsertQuotaTransaction("coin", {
-      userId: params.userId,
-      type: isQuestion ? "chat_question" : "chat_answer",
-      amount: -coinCost,
-      balanceAfter: newCoin,
-      detail: `${reasonLabel[params.reason]}（${periodLabel}）`,
-      createdAt: nowIso,
-    });
-    result = {
-      channel: "coin",
-      amount: coinCost,
-      balanceAfter: newCoin,
-      period,
-      detail: `${reasonLabel[params.reason]}（Coin ${periodLabel}）`,
-    };
-  } else {
-    await trx.rollback();
-    throw new iGM_QuotaError(402, "ai.errors.quotaInsufficient");
-  }
 
-  await trx.commit();
-  return result;
+    if (bal.uq >= uqCost && uqCost > 0) {
+      // 优先扣 UQ
+      const newUq = iGM_Round3(bal.uq - uqCost);
+      await iGM_UpdateUserQuotaBalance("uq", params.userId, newUq, nowIso);
+      await iGM_InsertQuotaTransaction("uq", {
+        userId: params.userId,
+        type: isQuestion ? "chat_question" : "chat_answer",
+        amount: -uqCost,
+        balanceAfter: newUq,
+        detail: `${reasonLabel[params.reason]}（${periodLabel}）`,
+        createdAt: nowIso,
+      });
+      result = {
+        channel: "uq",
+        amount: uqCost,
+        balanceAfter: newUq,
+        period,
+        detail: `${reasonLabel[params.reason]}（UQ ${periodLabel}）`,
+      };
+    } else if (bal.coin >= coinCost) {
+      // UQ 不足，扣 Coin
+      const newCoin = iGM_Round3(bal.coin - coinCost);
+      await iGM_UpdateUserQuotaBalance("coin", params.userId, newCoin, nowIso);
+      await iGM_InsertQuotaTransaction("coin", {
+        userId: params.userId,
+        type: isQuestion ? "chat_question" : "chat_answer",
+        amount: -coinCost,
+        balanceAfter: newCoin,
+        detail: `${reasonLabel[params.reason]}（${periodLabel}）`,
+        createdAt: nowIso,
+      });
+      result = {
+        channel: "coin",
+        amount: coinCost,
+        balanceAfter: newCoin,
+        period,
+        detail: `${reasonLabel[params.reason]}（Coin ${periodLabel}）`,
+      };
+    } else {
+      // 余额不足：抛出错误 → transaction 自动 ROLLBACK
+      throw new iGM_QuotaError(402, "ai.errors.quotaInsufficient");
+    }
+
+    return result;
+  });
 }
 
 /** 为新用户写入注册赠送流水（10 UQ + 5 Coin） */
