@@ -152,6 +152,12 @@ export const iGM_en: iGM_I18nDict = {
   adminDiscardTitle: "Discard this paper?",
   adminDiscardBody:
     "The source file and converted content will be deleted and cannot be recovered.",
+  // 部署状态
+  deployTitle: "Deploying, please wait a few minutes.",
+  deployBody:
+    "The paper has been submitted. Cloudflare Pages is building — it will appear in the list in about 1–3 minutes.",
+  deployBack: "Back to list",
+  deployDone: "Deployment complete — the paper is now live.",
   // 转换进度
   adminProgressTitle: "CONVERSION PROGRESS",
   adminProgressConverting: "CONVERTING VIA pdf2htmlEX…",
@@ -180,6 +186,7 @@ export const iGM_en: iGM_I18nDict = {
   // 状态标签
   statusDraft: "DRAFT",
   statusPublished: "PUBLISHED",
+  statusDeploying: "DEPLOYING",
   statusClosed: "CLOSED",
   convertStatusPending: "PENDING",
   convertStatusConverting: "CONVERTING",

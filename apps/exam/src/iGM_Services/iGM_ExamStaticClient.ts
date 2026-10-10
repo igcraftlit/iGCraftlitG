@@ -48,6 +48,10 @@ interface iGM_ExamStaticIndex {
 /** 静态数据根路径（随前端部署，dev 与生产一致） */
 const iGM_ExamStaticBase = "/exams";
 
+/** 线上静态数据根路径（部署状态轮询用，指向生产站点） */
+const iGM_ExamStaticOnlineBase =
+  process.env.NEXT_PUBLIC_IGM_EXAM_STATIC_BASE ?? "https://exam.igcraftlit.com/exams";
+
 /** 拉取并解析 JSON，失败时抛出归一化错误 */
 async function iGM_Exam_FetchStaticJson<T>(path: string): Promise<T> {
   let response: Response;
@@ -92,8 +96,26 @@ export async function iGM_Exam_FetchStaticDetail(
   );
 }
 
+/**
+ * 读取线上（生产站点）已部署试卷的 id 集合
+ * 用于管理端判断"部署中 / 已发布"：带上时间戳绕过 CDN 缓存
+ */
+export async function iGM_Exam_FetchOnlineIndexIds(): Promise<Set<string>> {
+  const response = await fetch(
+    `${iGM_ExamStaticOnlineBase}/index.json?t=${Date.now()}`,
+    { headers: { Accept: "application/json" }, cache: "no-store" },
+  );
+  if (!response.ok) {
+    throw new iGM_ExamRequestError(`HTTP ${response.status}`, response.status);
+  }
+  const data = (await response.json()) as iGM_ExamStaticIndex;
+  const list = Array.isArray(data.exams) ? data.exams : [];
+  return new Set(list.map((item) => item.id));
+}
+
 // 导出 //
 export default {
   iGM_Exam_FetchStaticIndex,
   iGM_Exam_FetchStaticDetail,
+  iGM_Exam_FetchOnlineIndexIds,
 };

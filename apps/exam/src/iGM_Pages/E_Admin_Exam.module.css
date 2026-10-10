@@ -447,6 +447,11 @@
   border-color: var(--igm-ink-soft);
 }
 
+.st_deploying {
+  color: var(--igm-copper);
+  border-color: color-mix(in srgb, var(--igm-copper) 60%, transparent);
+}
+
 .st_closed {
   color: var(--igm-cinnabar);
   border-color: color-mix(in srgb, var(--igm-cinnabar) 60%, transparent);

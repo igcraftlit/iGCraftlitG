@@ -148,6 +148,12 @@ export const iGM_zhCN: iGM_I18nDict = {
   adminDiscarded: "已放弃本次校对。",
   adminDiscardTitle: "确认放弃本次试卷？",
   adminDiscardBody: "放弃后将删除原始文件与已转换内容，且无法恢复。",
+  // 部署状态
+  deployTitle: "正在部署，请稍等几分钟",
+  deployBody:
+    "试卷已提交，Cloudflare Pages 正在构建，约 1-3 分钟后可在试卷列表中查看。",
+  deployBack: "返回列表",
+  deployDone: "部署完成，试卷已上线。",
   // 转换进度
   adminProgressTitle: "转换进度",
   adminProgressConverting: "正在调用 pdf2htmlEX 转换…",
@@ -175,6 +181,7 @@ export const iGM_zhCN: iGM_I18nDict = {
   // 状态标签
   statusDraft: "草稿",
   statusPublished: "已发布",
+  statusDeploying: "部署中",
   statusClosed: "已关闭",
   convertStatusPending: "待转换",
   convertStatusConverting: "转换中",

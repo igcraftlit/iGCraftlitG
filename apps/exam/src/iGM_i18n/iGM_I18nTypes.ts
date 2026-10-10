@@ -154,6 +154,11 @@ export interface iGM_I18nDict {
   adminDiscarded: string;
   adminDiscardTitle: string;
   adminDiscardBody: string;
+  // 部署状态
+  deployTitle: string;
+  deployBody: string;
+  deployBack: string;
+  deployDone: string;
   // 转换进度
   adminProgressTitle: string;
   adminProgressConverting: string;
@@ -180,6 +185,7 @@ export interface iGM_I18nDict {
   // 状态标签
   statusDraft: string;
   statusPublished: string;
+  statusDeploying: string;
   statusClosed: string;
   convertStatusPending: string;
   convertStatusConverting: string;

@@ -42,6 +42,7 @@ import {
 import {
   iGM_CommitExamStaticFiles,
   iGM_GenerateExamStaticFile,
+  iGM_RebuildExamStaticIndex,
 } from "../iGM_Services/iGM_ExamStaticService";
 
 // 类型定义 //
@@ -198,16 +199,20 @@ async function iGM_HandleConfirm(ctx: iGM_RouteContext) {
   iGM_EnforceRateLimit(ctx, "examUpload", `ip:${ip}`);
   const examId = iGM_RequireExamIdBody(ctx);
   await iGM_PublishExamService(examId);
-  // 发布后导出静态数据并推送，触发 Cloudflare Pages 重新构建（失败不阻断发布）
+  // 发布后导出静态数据、重建索引并推送，触发 Cloudflare Pages 重新构建（失败不阻断发布）
+  let deploying = false;
   try {
-    await iGM_GenerateExamStaticFile(examId);
-    await iGM_CommitExamStaticFiles();
+    deploying = await iGM_GenerateExamStaticFile(examId);
+    if (deploying) {
+      await iGM_RebuildExamStaticIndex();
+      await iGM_CommitExamStaticFiles();
+    }
   } catch (error) {
     console.warn(
       `[G_Exam] 生成试卷静态数据失败：${examId}：${String(error)}`,
     );
   }
-  return iGM_Ok({ confirmed: true }, "试卷已发布");
+  return iGM_Ok({ confirmed: true, deploying }, "试卷已发布");
 }
 
 /* ---------- 管理端：使用原始 PDF 重新转换 ---------- */

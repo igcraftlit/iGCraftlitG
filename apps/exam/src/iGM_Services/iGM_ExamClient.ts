@@ -264,9 +264,13 @@ export async function iGM_Exam_Update(
   await iGM_Exam_Post<{ updated: boolean }>("/api/exam/update", input);
 }
 
-/** 确认并发布试卷（原始 PDF 已在转换成功时删除） */
-export async function iGM_Exam_Confirm(examId: string): Promise<void> {
-  await iGM_Exam_Post<{ confirmed: boolean }>("/api/exam/confirm", { examId });
+/** 确认并发布试卷（原始 PDF 已在转换成功时删除）；返回后端是否已生成静态数据并触发部署 */
+export async function iGM_Exam_Confirm(examId: string): Promise<boolean> {
+  const data = await iGM_Exam_Post<{ confirmed: boolean; deploying: boolean }>(
+    "/api/exam/confirm",
+    { examId },
+  );
+  return Boolean(data.deploying);
 }
 
 /** 使用保留期内的原始 PDF 重新转换 */

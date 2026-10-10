@@ -14,11 +14,12 @@
 // 导入依赖 //
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   AlertCircle,
   CheckCircle2,
+  Clock,
   Download,
   FileUp,
   Loader2,
@@ -46,6 +47,7 @@ import {
   type iGM_ExamStatus,
   type iGM_ExamUpdateInput,
 } from "../iGM_Services/iGM_ExamClient";
+import { iGM_Exam_FetchOnlineIndexIds } from "../iGM_Services/iGM_ExamStaticClient";
 import { useI18n } from "../iGM_i18n/iGM_I18nContext";
 import type { iGM_I18nKey } from "../iGM_i18n/iGM_I18nTypes";
 import styles from "./E_Admin_Exam.module.css";
@@ -95,6 +97,9 @@ const iGM_Exam_ConvertKeys: Record<iGM_ExamConvertStatus, iGM_I18nKey> = {
 
 /** 轮询间隔（毫秒） */
 const iGM_ExamPollIntervalMs = 1000;
+
+/** 线上部署状态轮询间隔（毫秒） */
+const iGM_ExamDeployPollMs = 30000;
 
 /** 数字字符串 → 可空整数（空串或非数字返回 null） */
 function iGM_Exam_ParseInt(value: string): number | null {
@@ -180,6 +185,20 @@ export function iGM_ExamAdmin() {
   const [draft, setDraft] = useState<iGM_Exam_EditorDraft | null>(null);
   const [previewKey, setPreviewKey] = useState(0);
   const [modal, setModal] = useState<iGM_Exam_ModalMode>("none");
+  /** 线上已部署试卷 id 集合；null 表示尚未取得（取得失败时降级为不判定"部署中"） */
+  const [onlineIds, setOnlineIds] = useState<Set<string> | null>(null);
+  /** 发布后触发的部署提示所对应的试卷 id；null 表示不显示提示框 */
+  const [deployBannerId, setDeployBannerId] = useState<string | null>(null);
+
+  /** 已发布但尚未出现在线上索引中的试卷：状态显示为"部署中" */
+  const deployingIds = useMemo(() => {
+    const set = new Set<string>();
+    if (!onlineIds) return set;
+    for (const exam of exams) {
+      if (exam.status === "published" && !onlineIds.has(exam.id)) set.add(exam.id);
+    }
+    return set;
+  }, [exams, onlineIds]);
 
   const load = useCallback(async () => {
     setState("loading");
@@ -197,6 +216,49 @@ export function iGM_ExamAdmin() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // 拉取线上索引：判断哪些已发布试卷仍在部署中（失败时降级，不影响台账）
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const ids = await iGM_Exam_FetchOnlineIndexIds();
+        if (!cancelled) setOnlineIds(ids);
+      } catch {
+        // 线上索引不可用（如跨域 / 未部署）：保持 null，不显示"部署中"
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // 发布后每 30 秒轮询线上索引，检测到试卷已上线即停止并提示部署完成
+  useEffect(() => {
+    if (!deployBannerId) return;
+    if (onlineIds && onlineIds.has(deployBannerId)) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const tick = async (): Promise<void> => {
+      try {
+        const ids = await iGM_Exam_FetchOnlineIndexIds();
+        if (cancelled) return;
+        setOnlineIds(ids);
+      } catch {
+        // 单次轮询失败不中断，继续下一轮
+      }
+      if (!cancelled) {
+        timer = setTimeout(() => void tick(), iGM_ExamDeployPollMs);
+      }
+    };
+
+    timer = setTimeout(() => void tick(), iGM_ExamDeployPollMs);
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [deployBannerId, onlineIds]);
 
   /** 统一错误信息提取 */
   function iGM_Exam_ReadError(err: unknown, fallback: string): string {
@@ -316,10 +378,16 @@ export function iGM_ExamAdmin() {
         questionCount: iGM_Exam_ParseInt(draft.questionCount),
         notice: draft.notice.trim(),
       });
-      await iGM_Exam_Confirm(draft.examId);
+      const deploying = await iGM_Exam_Confirm(draft.examId);
       await refreshDraft(draft.examId);
       setModal("none");
-      setNotice(t("adminConfirmed"));
+      if (deploying) {
+        // 已生成静态数据并推送：提示正在部署，并开始轮询线上索引
+        setNotice("");
+        setDeployBannerId(draft.examId);
+      } else {
+        setNotice(t("adminConfirmed"));
+      }
       await load();
     } catch (err) {
       setMessage(iGM_Exam_ReadError(err, t("adminConfirmFailed")));
@@ -391,6 +459,33 @@ export function iGM_ExamAdmin() {
   const isConverting =
     draft?.convertStatus === "converting" || draft?.convertStatus === "pending";
   const canConfirm = Boolean(draft) && draft!.convertStatus === "completed";
+  /** 部署提示所对应的试卷已出现在线上索引中 */
+  const deployBannerDone = deployBannerId !== null && Boolean(onlineIds?.has(deployBannerId));
+
+  /** 关闭部署提示并返回台账列表 */
+  function closeDeployBanner(): void {
+    setDeployBannerId(null);
+    setDraft(null);
+    setNotice("");
+    void load();
+  }
+
+  /** 台账状态列：转换未完成显示转换状态，否则显示发布状态（部署中 / 已发布 / 草稿 / 已关闭） */
+  function iGM_Exam_LedgerStatus(item: iGM_ExamAdminListItem): {
+    key: iGM_I18nKey;
+    cls: string;
+  } {
+    if (item.convertStatus !== "completed") {
+      return {
+        key: iGM_Exam_ConvertKeys[item.convertStatus],
+        cls: `cv_${item.convertStatus}`,
+      };
+    }
+    if (item.status === "published" && deployingIds.has(item.id)) {
+      return { key: "statusDeploying", cls: "st_deploying" };
+    }
+    return { key: iGM_Exam_StatusKeys[item.status], cls: `st_${item.status}` };
+  }
 
   return (
     <main className={styles.page}>
@@ -692,37 +787,73 @@ export function iGM_ExamAdmin() {
               <span>{t("adminColStatus")}</span>
               <span />
             </div>
-            {exams.map((item) => (
-              <div key={item.id} className={styles.tableRow}>
-                <span className={`igm-mono ${styles.cellCode}`}>{item.code}</span>
-                <span className={styles.cellTitle} title={item.title}>
-                  {item.title || "—"}
-                </span>
-                <span className={styles.cellSoft}>{item.subject || "—"}</span>
-                <span className={`igm-mono ${styles.cellSoft}`}>
-                  {item.totalScore === null ? "—" : `${item.totalScore}`}
-                </span>
-                <span className={`igm-mono ${styles.cellSoft}`}>
-                  {String(item.submissionCount).padStart(3, "0")}
-                </span>
-                <span
-                  className={`igm-mono ${styles.statusTag} ${styles[`cv_${item.convertStatus}`]}`}
-                >
-                  {t(iGM_Exam_ConvertKeys[item.convertStatus])}
-                </span>
-                <button
-                  type="button"
-                  className={styles.editBtn}
-                  onClick={() => void openEditor(item)}
-                  disabled={busy}
-                >
-                  {t("adminReview")}
-                </button>
-              </div>
-            ))}
+            {exams.map((item) => {
+              const status = iGM_Exam_LedgerStatus(item);
+              return (
+                <div key={item.id} className={styles.tableRow}>
+                  <span className={`igm-mono ${styles.cellCode}`}>{item.code}</span>
+                  <span className={styles.cellTitle} title={item.title}>
+                    {item.title || "—"}
+                  </span>
+                  <span className={styles.cellSoft}>{item.subject || "—"}</span>
+                  <span className={`igm-mono ${styles.cellSoft}`}>
+                    {item.totalScore === null ? "—" : `${item.totalScore}`}
+                  </span>
+                  <span className={`igm-mono ${styles.cellSoft}`}>
+                    {String(item.submissionCount).padStart(3, "0")}
+                  </span>
+                  <span
+                    className={`igm-mono ${styles.statusTag} ${styles[status.cls]}`}
+                  >
+                    {t(status.key)}
+                  </span>
+                  <button
+                    type="button"
+                    className={styles.editBtn}
+                    onClick={() => void openEditor(item)}
+                    disabled={busy}
+                  >
+                    {t("adminReview")}
+                  </button>
+                </div>
+              );
+            })}
           </div>
         )}
       </section>
+
+      {/* 部署状态提示：发布后弹出，构建完成后自动切换为已上线 */}
+      {deployBannerId && (
+        <div className={styles.modalOverlay} role="presentation">
+          <div
+            className={styles.modal}
+            role="dialog"
+            aria-modal="true"
+            aria-label={deployBannerDone ? t("deployDone") : t("deployTitle")}
+          >
+            <h3 className={`igm-serif ${styles.modalTitle}`}>
+              {deployBannerDone ? t("deployDone") : t("deployTitle")}
+            </h3>
+            {!deployBannerDone && (
+              <p className={styles.modalBody}>{t("deployBody")}</p>
+            )}
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.modalConfirm}
+                onClick={closeDeployBanner}
+              >
+                {deployBannerDone ? (
+                  <CheckCircle2 size={14} strokeWidth={1.8} />
+                ) : (
+                  <Clock size={14} strokeWidth={1.8} />
+                )}
+                <span className="igm-mono">{t("deployBack")}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 二次确认弹窗：发布 / 放弃 */}
       {modal !== "none" && draft && (

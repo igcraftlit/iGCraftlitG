@@ -131,11 +131,12 @@ async function iGM_WriteJson(path: string, value: unknown): Promise<void> {
 /**
  * 导出单份试卷的静态 JSON 与静态 HTML 目录
  * 前置：试卷已完成转换（存在 HTML 产物）；调用方保证已发布
+ * 返回：是否实际写出静态文件（未完成转换时为 false）
  */
-export async function iGM_GenerateExamStaticFile(examId: string): Promise<void> {
-  if (!iGM_ExamIdPattern.test(examId)) return;
+export async function iGM_GenerateExamStaticFile(examId: string): Promise<boolean> {
+  if (!iGM_ExamIdPattern.test(examId)) return false;
   const row: iGM_ExamRow | null = await iGM_FindExamById(examId);
-  if (!row || row.iGM_ParseStatus !== "completed" || !row.iGM_HtmlPath) return;
+  if (!row || row.iGM_ParseStatus !== "completed" || !row.iGM_HtmlPath) return false;
 
   const root = iGM_ExamStaticRoot();
   const examDir = join(root, examId);
@@ -173,6 +174,7 @@ export async function iGM_GenerateExamStaticFile(examId: string): Promise<void> 
     images,
   };
   await iGM_WriteJson(join(root, `${examId}.json`), detail);
+  return true;
 }
 
 /** 由已发布试卷列表重建索引 JSON（index.json） */
