@@ -1,10 +1,10 @@
 /**
  * 文件路径：apps/cli-download/src/components/iGM_CLI_OAuthShell/iGM_CLI_OAuthShell.tsx
  * 所属层：前端 / 组件层
- * 路由：/oauth/apply、/oauth/apps、/oauth/docs
+ * 路由：/oauth/apply、/oauth/apps、/oauth/docs、/oauth/publicity
  * 模块：iGM_CLI_OAuthShell
  * 作用：OAuth 分区统一外壳——页头、分区页签导航、会话过期提示挂载点
- * 内容：三页面互相跳转的 tab 链接（申请接入 / 我的应用 / 接入文档）、
+ * 内容：四页面互相跳转的 tab 链接（申请接入 / 我的应用 / 接入文档 / 开发者公示）、
  *       统一内容容器，并挂载 iGM_CLI_SessionExpired 处理 401 提示
  */
 
@@ -22,7 +22,7 @@ import styles from "./iGM_CLI_OAuth.module.css";
 
 // 类型定义 //
 /** 当前激活的分区页签 */
-export type iGM_CLI_OAuthSection = "apply" | "apps" | "docs";
+export type iGM_CLI_OAuthSection = "apply" | "apps" | "docs" | "publicity";
 
 interface iGM_CLI_OAuthShellProps {
   /** 当前分区 */
@@ -41,6 +41,11 @@ const iGM_CLI_OAuthSections: {
   { key: "apply", href: "/oauth/apply", labelKey: "pages.oauthApply.title" },
   { key: "apps", href: "/oauth/apps", labelKey: "pages.oauthApps.title" },
   { key: "docs", href: "/oauth/docs", labelKey: "pages.oauthDocs.title" },
+  {
+    key: "publicity",
+    href: "/oauth/publicity",
+    labelKey: "pages.oauthPublicity.title",
+  },
 ];
 
 /** OAuth 分区外壳：页签 + 正文 + 会话过期提示 */

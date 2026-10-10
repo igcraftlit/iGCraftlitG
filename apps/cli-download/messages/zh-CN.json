@@ -109,6 +109,10 @@
     "oauthDocs": {
       "title": "OAuth 接入文档",
       "description": "OAuth 2.0 + OpenID Connect 接入指南：流程、端点、scope、示例代码、错误码与安全建议"
+    },
+    "oauthPublicity": {
+      "title": "开发者公示",
+      "description": "查看各批次通过审核的开发者名单：开发者名称、社区 iGMUid、项目名称与通过时间"
     }
   },
   "common": {
@@ -521,6 +525,23 @@
     }
   },
   "oauth": {
+    "publicity": {
+      "intro": "以下为各批次通过审核的开发者名单，最新批次置顶。",
+      "empty": "暂无已公示的开发者批次。",
+      "loadFailed": "开发者公示加载失败，请稍后重试",
+      "retry": "重新加载",
+      "latest": "最新批次",
+      "quota": "名额 {quota}",
+      "count": "已公示 {count} 人",
+      "publishedAt": "公示时间",
+      "developerName": "开发者名称",
+      "uid": "社区 iGMUid",
+      "projectName": "项目名称",
+      "approvedAt": "通过时间",
+      "note1": "每批次名额以审核前公示为准。",
+      "note2": "除联合开发者（iGCraftLit、MuoCeon 负责人）外，每月名额上限 30 名。",
+      "note3": "公示期 7 天，期间可通过官方邮箱进行举报或申诉。"
+    },
     "session": {
       "loginExpired": "登录已过期，请重新登录",
       "tokenExpired": "授权已失效，请重新登录",

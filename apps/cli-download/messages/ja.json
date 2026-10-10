@@ -109,6 +109,10 @@
     "oauthDocs": {
       "title": "OAuth 連携ドキュメント",
       "description": "OAuth 2.0 + OpenID Connect 連携ガイド：フロー、エンドポイント、スコープ、サンプルコード、エラーコード、セキュリティ推奨事項"
+    },
+    "oauthPublicity": {
+      "title": "開発者公示",
+      "description": "各バッチで承認された開発者のリスト：開発者名、コミュニティ iGMUid、プロジェクト名、承認日時"
     }
   },
   "common": {
@@ -521,6 +525,23 @@
     }
   },
   "oauth": {
+    "publicity": {
+      "intro": "以下は各バッチで承認された開発者のリストです。最新のバッチが上部に表示されます。",
+      "empty": "公示された開発者バッチはまだありません。",
+      "loadFailed": "開発者公示の読み込みに失敗しました。しばらくしてから再試行してください。",
+      "retry": "再読み込み",
+      "latest": "最新バッチ",
+      "quota": "枠 {quota}",
+      "count": "公示 {count} 名",
+      "publishedAt": "公示日時",
+      "developerName": "開発者名",
+      "uid": "コミュニティ iGMUid",
+      "projectName": "プロジェクト名",
+      "approvedAt": "承認日時",
+      "note1": "各バッチの枠は審査前の公示に準じます。",
+      "note2": "共同開発者（iGCraftLit、MuoCeon の責任者）を除き、毎月の枠は最大 30 名です。",
+      "note3": "公示期間は 7 日間で、その間に公式メールで通報または異議申し立てができます。"
+    },
     "session": {
       "loginExpired": "ログインの有効期限が切れました。再度ログインしてください",
       "tokenExpired": "認可の有効期限が切れました。再度ログインしてください",

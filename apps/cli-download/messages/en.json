@@ -109,6 +109,10 @@
     "oauthDocs": {
       "title": "OAuth Documentation",
       "description": "OAuth 2.0 + OpenID Connect integration guide: flow, endpoints, scopes, sample code, error codes and security advice"
+    },
+    "oauthPublicity": {
+      "title": "Developer Publicity",
+      "description": "View the developers approved in each batch: developer name, community iGMUid, project name, and approval time"
     }
   },
   "common": {
@@ -521,6 +525,23 @@
     }
   },
   "oauth": {
+    "publicity": {
+      "intro": "The list below shows developers approved in each batch, with the latest batch on top.",
+      "empty": "No developer batches have been publicized yet.",
+      "loadFailed": "Failed to load developer publicity. Please try again later.",
+      "retry": "Reload",
+      "latest": "Latest batch",
+      "quota": "Quota {quota}",
+      "count": "{count} publicized",
+      "publishedAt": "Published at",
+      "developerName": "Developer name",
+      "uid": "Community iGMUid",
+      "projectName": "Project name",
+      "approvedAt": "Approved at",
+      "note1": "Each batch's quota is subject to the publicity before review.",
+      "note2": "Excluding joint developers (the leads of iGCraftLit and MuoCeon), the monthly quota is capped at 30.",
+      "note3": "The publicity period is 7 days, during which reports or appeals can be made via the official email."
+    },
     "session": {
       "loginExpired": "Your session has expired, please sign in again",
       "tokenExpired": "Your authorization has expired, please sign in again",

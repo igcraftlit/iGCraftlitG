@@ -5,7 +5,7 @@
  * 模块：iGM_CLI_OAuthClient
  * 作用：CLI 站 OAuth 应用接入相关接口的唯一前端调用出口
  * 内容：应用申请 / 撤回 / 一次性领取密钥 / 重置密钥 / 接入日志、
- *       当前登录用户探测、后端错误键归一化
+ *       开发者公示查询、当前登录用户探测、后端错误键归一化
  * 约束：只经 iGM_CLI_Request 发请求；client_secret 仅在发放当下返回一次，前端不落任何持久化存储
  */
 
@@ -106,6 +106,32 @@ export interface iGM_CLI_AuthUser {
   uid: string;
   username: string;
   displayName: string | null;
+}
+
+/** 开发者公示条目 */
+export interface iGM_CLI_DeveloperPublicityItem {
+  id: string;
+  developerName: string;
+  /** 社区 iGMUid */
+  uid: string | null;
+  projectName: string;
+  approvedAt: string;
+}
+
+/** 开发者公示批次（含本批次公示条目） */
+export interface iGM_CLI_DeveloperPublicityBatch {
+  id: string;
+  batchName: string;
+  /** 本批次名额（默认 30） */
+  quota: number;
+  publishedAt: string | null;
+  status: string;
+  items: iGM_CLI_DeveloperPublicityItem[];
+}
+
+/** 开发者公示数据：按批次分组，最新批次置顶 */
+export interface iGM_CLI_DeveloperPublicityData {
+  batches: iGM_CLI_DeveloperPublicityBatch[];
 }
 
 /** 应用申请入参 */
@@ -215,6 +241,16 @@ export function iGM_CLI_ApiListMyOAuthLogs(params: {
 }
 
 /**
+ * 开发者公示（公开）：按批次分组返回已通过审核的开发者名单，最新批次置顶。
+ * 未登录亦可浏览，无需鉴权。
+ */
+export function iGM_CLI_ApiGetDeveloperPublicity(): Promise<
+  iGM_CLI_ApiResponse<iGM_CLI_DeveloperPublicityData>
+> {
+  return iGM_CLI_Get("/G_Developer/publicity");
+}
+
+/**
  * 读取当前登录用户。
  * 未登录时后端返回 401（属正常状态），使用 skipAuthNotice 跳过过期提示。
  */
@@ -261,6 +297,7 @@ export default {
   iGM_CLI_ApiResetOAuthSecret,
   iGM_CLI_ApiDeleteOAuthApp,
   iGM_CLI_ApiListMyOAuthLogs,
+  iGM_CLI_ApiGetDeveloperPublicity,
   iGM_CLI_ApiGetMe,
   iGM_CLI_ResolveErrorText,
 };

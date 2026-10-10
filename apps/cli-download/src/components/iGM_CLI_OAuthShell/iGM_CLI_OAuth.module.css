@@ -512,6 +512,103 @@
   color: var(--igm-text-subtle);
 }
 
+/* ===== 开发者公示 ===== */
+.pubBatch {
+  padding: 18px;
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  background: var(--igm-surface);
+}
+
+.pubBatch + .pubBatch {
+  margin-top: 16px;
+}
+
+.pubBatchHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.pubBatchTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--igm-text);
+  word-break: break-word;
+}
+
+.pubMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 2px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--igm-text-subtle);
+}
+
+.pubTableWrap {
+  overflow-x: auto;
+  border-top: 1px solid var(--igm-border);
+}
+
+.pubTable {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.pubTable th,
+.pubTable td {
+  padding: 9px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--igm-border);
+  vertical-align: top;
+}
+
+.pubTable th {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--igm-text-muted);
+  white-space: nowrap;
+}
+
+.pubTable td {
+  line-height: 1.6;
+  color: var(--igm-text);
+  word-break: break-word;
+}
+
+.pubName {
+  font-weight: 500;
+}
+
+.pubUid {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  color: var(--igm-text-muted);
+}
+
+.pubNoteList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 22px;
+  padding-left: 20px;
+  list-style: disc;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+.pubNoteList li::marker {
+  color: var(--igm-text-subtle);
+}
+
 /* ===== 文档排版 ===== */
 .docLayout {
   display: flex;
