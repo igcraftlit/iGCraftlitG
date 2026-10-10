@@ -1,0 +1,28 @@
+{
+  "id": "2d22cb84-97c5-45d3-a55e-a3ea9af43c01",
+  "code": "E-2026-002",
+  "title": "2026 年山东省普通高中学业水平考试",
+  "subject": "Minecraft科目·Ⅰ卷",
+  "issuer": "iGC&M 教育考试研究院",
+  "reviewer": "iGCraftLit 审核委员会",
+  "duration": 60,
+  "totalScore": 100,
+  "questionCount": 23,
+  "notice": "",
+  "status": "published",
+  "convertStatus": "completed",
+  "fileSize": 24969880,
+  "createdAt": "2026-10-10T23:18:23.404Z",
+  "fileName": "2026年山东省普通高中学业水平考试(Minecraft科目Ⅰ卷).pdf",
+  "pageWidth": 1547,
+  "pageHeight": 2187.9,
+  "htmlPath": "/exams/2d22cb84-97c5-45d3-a55e-a3ea9af43c01/index.html",
+  "images": [
+    "bg1.png",
+    "bg2.png",
+    "bg3.png",
+    "bg4.png",
+    "bg5.png",
+    "pdf2htmlEX-64x64.png"
+  ]
+}
