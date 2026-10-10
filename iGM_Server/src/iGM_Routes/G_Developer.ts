@@ -30,11 +30,13 @@ import {
   iGM_GetMyDeveloperService,
   iGM_IsApprovedDeveloper,
   iGM_IsDeveloperReviewer,
+  iGM_ListDeveloperPublicityService,
   iGM_ListMyDevelopersService,
   iGM_ReviewDeveloperService,
   iGM_SubmitDeveloperApplyService,
   iGM_WithdrawDeveloperApplyService,
 } from "../iGM_Services/iGM_DeveloperService";
+import type { iGM_DeveloperApplyInput } from "../iGM_Types/iGM_Developer";
 
 // 类型定义 //
 // （路由层无额外类型，统一响应类型见 iGM_Types/iGM_Response.ts）
@@ -49,17 +51,36 @@ async function iGM_RequireReviewer(ctx: iGM_RouteContext) {
   return user;
 }
 
-/** 从请求体读取申请表单字段 */
-function iGM_ReadApplyInput(ctx: iGM_RouteContext) {
+/** 读取请求体中的数字字段（兼容 JSON 数字与字符串），非法一律返回 NaN 交由校验拒绝 */
+function iGM_NumberField(body: unknown, key: string): number {
+  const source = (body ?? {}) as Record<string, unknown>;
+  const value = source[key];
+  if (typeof value === "number") return value;
+  if (typeof value === "string" && value.trim().length > 0) return Number(value);
+  return Number.NaN;
+}
+
+/** 从请求体读取规范化后的申请表单字段 */
+function iGM_ReadApplyInput(ctx: iGM_RouteContext): iGM_DeveloperApplyInput {
+  const body = ctx.body;
   return {
-    projectName: iGM_Field(ctx.body, "projectName"),
-    projectType: iGM_Field(ctx.body, "projectType"),
-    projectDesc: iGM_Field(ctx.body, "projectDesc"),
-    projectUrl: iGM_Field(ctx.body, "projectUrl") || null,
-    contact: iGM_Field(ctx.body, "contact"),
-    expectedQuota: iGM_Field(ctx.body, "expectedQuota") || null,
-    reason: iGM_Field(ctx.body, "reason"),
-    agreeRules: iGM_BoolField(ctx.body, "agreeRules"),
+    developerName: iGM_Field(body, "developerName"),
+    age: iGM_NumberField(body, "age"),
+    birthMonth: iGM_NumberField(body, "birthMonth"),
+    birthDay: iGM_NumberField(body, "birthDay"),
+    contactEmail: iGM_Field(body, "contactEmail") || null,
+    contactPhone: iGM_Field(body, "contactPhone") || null,
+    country: iGM_Field(body, "country"),
+    province: iGM_Field(body, "province"),
+    city: iGM_Field(body, "city"),
+    address: iGM_Field(body, "address"),
+    postalCode: iGM_Field(body, "postalCode"),
+    projectName: iGM_Field(body, "projectName"),
+    projectIntro: iGM_Field(body, "projectIntro"),
+    domain: iGM_Field(body, "domain") || null,
+    reason: iGM_Field(body, "reason"),
+    additional: iGM_Field(body, "additional") || null,
+    agreeRules: iGM_BoolField(body, "agreeRules"),
   };
 }
 
@@ -173,6 +194,16 @@ async function iGM_HandleDeveloperStatus(ctx: iGM_RouteContext) {
   });
 }
 
+/* ---------- 模块二十六：开发者公示（公开） ---------- */
+
+/**
+ * GET /G_Developer/publicity：开发者公示列表。
+ * 公开接口，未登录亦可浏览；按批次分组，最新批次置顶，仅返回已有公示条目的批次。
+ */
+async function iGM_HandlePublicity(_ctx: iGM_RouteContext) {
+  return iGM_Ok(await iGM_ListDeveloperPublicityService());
+}
+
 /**
  * G_Developer 开发者申请路由集合
  * 业务错误统一抛 iGM_DeveloperError / iGM_AuthError，
@@ -186,6 +217,8 @@ export const G_Developer = new Elysia({ name: "G_Developer" })
   .post("/G_Developer/withdraw", iGM_HandleWithdraw as never)
   .get("/G_Developer/applications", iGM_HandleApplications as never)
   .post("/G_Developer/review", iGM_HandleReview as never)
+  // 模块二十六：开发者公示（公开，未登录可浏览）
+  .get("/G_Developer/publicity", iGM_HandlePublicity as never)
   // 模块二十二：开发者平台准入状态（登录即可进入，无需密钥）
   .get("/api/developer/status", iGM_HandleDeveloperStatus as never);
 

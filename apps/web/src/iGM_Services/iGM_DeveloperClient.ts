@@ -40,13 +40,13 @@ export type iGM_DeveloperQuota = "low" | "medium" | "high";
 /** 模块十六：开发者接入界面（CLI / API）外部地址 */
 export const iGM_DeveloperConsoleUrl = "https://cli.igcraftlit.com";
 
-/** 开发者入口目标：apply 申请页 / status 状态页 / console 接入界面（外链） */
-export type iGM_DeveloperEntryTarget = "apply" | "status" | "console";
+/** 开发者入口目标：intro 申请初始界面 / status 状态页 / console 接入界面（外链） */
+export type iGM_DeveloperEntryTarget = "intro" | "status" | "console";
 
 /**
  * 解析「成为开发者」入口的目标页：
  * 组织所有者免申请、直接接入；审核通过进入接入界面；
- * 待审核进入状态页；无申请、已拒绝或已撤回进入申请页。
+ * 待审核进入状态页；无申请、已拒绝或已撤回进入初始界面（申请 / 文档 / 公示）。
  */
 export function iGM_ResolveDeveloperEntry(
   isOrgOwner: boolean,
@@ -54,7 +54,7 @@ export function iGM_ResolveDeveloperEntry(
 ): iGM_DeveloperEntryTarget {
   if (isOrgOwner || status === "approved") return "console";
   if (status === "pending") return "status";
-  return "apply";
+  return "intro";
 }
 
 /** 开发者申请 */
@@ -72,19 +72,47 @@ export interface iGM_DeveloperApplication {
   reviewerId: string | null;
   reviewerName: string | null;
   reviewComment: string | null;
+  /* ---------- 模块二十六：规范化新增字段 ---------- */
+  developerName: string | null;
+  age: number | null;
+  birthMonth: number | null;
+  birthDay: number | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  country: string | null;
+  province: string | null;
+  city: string | null;
+  address: string | null;
+  postalCode: string | null;
+  domain: string | null;
+  additional: string | null;
+  batchId: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
-/** 提交 / 重新申请入参 */
+/** 提交 / 重新申请入参（模块二十六规范化表单） */
 export interface iGM_DeveloperApplyPayload {
+  developerName: string;
+  age: number;
+  birthMonth: number;
+  birthDay: number;
+  contactEmail?: string;
+  contactPhone?: string;
+  country: string;
+  province: string;
+  city: string;
+  address: string;
+  postalCode: string;
   projectName: string;
-  projectType: string;
-  projectDesc: string;
-  projectUrl?: string;
-  contact: string;
-  expectedQuota?: string;
+  /** 项目介绍（> 100 字） */
+  projectIntro: string;
+  /** 申请人域名（可选） */
+  domain?: string;
+  /** 申请理由（> 200 字） */
   reason: string;
+  /** 附加说明（可选） */
+  additional?: string;
   agreeRules: boolean;
 }
 
@@ -125,6 +153,34 @@ export interface iGM_DeveloperApplicationList {
   page: number;
   pageSize: number;
   totalPages: number;
+}
+
+/* ---------- 模块二十六：开发者公示 ---------- */
+
+/** 公示条目：一名通过审核的开发者 */
+export interface iGM_DeveloperPublicityItem {
+  id: string;
+  developerName: string;
+  /** 社区 iGMUid */
+  uid: string | null;
+  projectName: string;
+  approvedAt: string;
+}
+
+/** 公示批次（含本批次公示条目） */
+export interface iGM_DeveloperPublicityBatch {
+  id: string;
+  batchName: string;
+  /** 本批次名额（默认 30） */
+  quota: number;
+  publishedAt: string | null;
+  status: string;
+  items: iGM_DeveloperPublicityItem[];
+}
+
+/** 开发者公示数据：按批次分组，最新批次置顶 */
+export interface iGM_DeveloperPublicityData {
+  batches: iGM_DeveloperPublicityBatch[];
 }
 
 // 核心逻辑 //
@@ -198,6 +254,15 @@ export function iGM_ApiGetDeveloperStatus(): Promise<
   return iGM_Get("/api/developer/status");
 }
 
+/* ---------- 模块二十六：开发者公示（公开） ---------- */
+
+/** 开发者公示列表（公开，未登录可浏览）：按批次分组，最新批次置顶 */
+export function iGM_ApiGetDeveloperPublicity(): Promise<
+  iGM_ApiResponse<iGM_DeveloperPublicityData>
+> {
+  return iGM_Get("/G_Developer/publicity");
+}
+
 // 导出 //
 export default {
   iGM_ApiGetDeveloperIntro,
@@ -208,4 +273,5 @@ export default {
   iGM_ApiListDeveloperApplications,
   iGM_ApiReviewDeveloper,
   iGM_ApiGetDeveloperStatus,
+  iGM_ApiGetDeveloperPublicity,
 };

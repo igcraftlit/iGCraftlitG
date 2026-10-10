@@ -308,9 +308,9 @@
       "title": "Developers",
       "description": "Integrate with iGCraftLit Community via SDK and adapter protocol"
     },
-    "developerApply": {
-      "title": "Developer Application",
-      "description": "Fill in purpose, project name, contact and expected quota; an organization owner reviews it after submission"
+    "developerIntro": {
+      "title": "Become a Developer",
+      "description": "Learn about developer benefits and the application process, submit an application, and view approved developers"
     },
     "developerStatus": {
       "title": "Application Status",
@@ -1326,6 +1326,129 @@
     }
   },
   "developer": {
+    "intro": {
+      "title": "Become a Developer",
+      "description": "Learn about developer benefits and the application process, submit an application, and view approved developers.",
+      "tabs": {
+        "apply": "Application",
+        "docs": "Documentation",
+        "publicity": "Publicity"
+      },
+      "apply": {
+        "needLogin": "Please sign in before submitting a developer application.",
+        "login": "Sign in",
+        "orgOwnerNotice": "As an organization owner, you already have developer access. No application is required — you can enter the developer console directly.",
+        "enterConsole": "Enter developer console",
+        "approvedNotice": "Your developer application has been approved. You can enter the developer console directly.",
+        "pendingNotice": "You already have an application under review. Please wait for the result.",
+        "viewStatus": "View application status",
+        "formDesc": "Please fill in the information truthfully. The project introduction must exceed 100 characters and the reason must exceed 200 characters.",
+        "step_identity": "Identity",
+        "step_contact": "Contact & Address",
+        "step_project": "Project & Notes",
+        "developerName": "Developer name",
+        "developerNameHint": "Defaults to your community username. You may change it, but keeping it consistent with your community identity is recommended.",
+        "age": "Age",
+        "agePlaceholder": "1 - 120",
+        "birthMonth": "Birth month",
+        "birthDay": "Birth day",
+        "email": "Contact email",
+        "emailPlaceholder": "you@example.com",
+        "phone": "Contact phone",
+        "phonePlaceholder": "+1 5550000000",
+        "contactHint": "Provide at least one of email or phone; both may be filled in.",
+        "country": "Country",
+        "province": "State / Province",
+        "city": "City",
+        "address": "Address",
+        "postalCode": "Postal code",
+        "projectName": "Project name",
+        "projectNamePlaceholder": "Enter your project or tool name",
+        "projectIntro": "Project introduction",
+        "projectIntroPlaceholder": "Describe the project's features, target users, and integration plan (at least 100 characters)",
+        "projectIntroHint": "At least 100 characters",
+        "domain": "Applicant domain",
+        "domainPlaceholder": "example.com",
+        "reason": "Reason for applying",
+        "reasonPlaceholder": "Explain why you want to become a team developer (at least 200 characters)",
+        "reasonHint": "At least 200 characters",
+        "additional": "Additional notes",
+        "additionalPlaceholder": "Anything else you would like to add (optional)",
+        "agreeRules": "I have read and agree to the developer rules",
+        "counter": "{count} / {min} characters",
+        "prev": "Previous",
+        "next": "Next",
+        "submit": "Submit application",
+        "submitting": "Submitting…",
+        "submittedTitle": "Application submitted",
+        "submittedNotice": "Your application has been submitted and is awaiting review. Developer slots are limited; the final quota is subject to the batch published before review.",
+        "close": "Close",
+        "failed": "Failed to submit the application. Please try again later."
+      },
+      "docs": {
+        "toc": "ON THIS PAGE",
+        "lead": "This document explains developer benefits, the application process, quota allocation, review criteria, and application rules. Please read it in full before applying.",
+        "benefits": {
+          "title": "Developer benefits",
+          "intro": "Approved developers receive the following benefits:",
+          "api": "API access: call iGCraftLit's open interfaces to integrate community capabilities into your project.",
+          "sdk": "SDK access: use the official SDK and adapter protocol to simplify authentication and requests.",
+          "quota": "Call quota: API call quota allocated per batch to support regular development and operations.",
+          "publicity": "Publicity: approved developers are listed in the official developer publicity list."
+        },
+        "process": {
+          "title": "Application process",
+          "intro": "Developer qualification is application-based. The standard process is:",
+          "submit": "Submit: fill in and submit the developer application form.",
+          "review": "Review: reviewed by an organization owner or administrator.",
+          "publicity": "Publicity: approved developers enter a publicity batch with a 7-day publicity period.",
+          "result": "Approved / Rejected: if there are no objections during publicity, you are approved and can enter the developer platform; otherwise you will be given a reason and may reapply."
+        },
+        "quota": {
+          "title": "Quota",
+          "line1": "Excluding joint developers (the leads of iGCraftLit and MuoCeon), the monthly developer quota is 30.",
+          "line2": "The average quota is 30 per month; the final quota is subject to the batch published before review."
+        },
+        "criteria": {
+          "title": "Review criteria",
+          "intro": "Reviews evaluate the following dimensions:",
+          "authenticity": "Project authenticity: project information is real, verifiable, and backed by an actual development plan.",
+          "compliance": "Content compliance: project content complies with laws, regulations, and community rules.",
+          "contribution": "Community contribution: positive contribution to the community's usage, feedback, or building.",
+          "activity": "Activity: an active account with timely communication and the ability to sustain operation."
+        },
+        "norms": {
+          "title": "Application rules",
+          "intro": "Please follow these rules when applying:",
+          "length": "The project introduction must be at least 100 characters and the reason at least 200 characters.",
+          "truth": "All information must be true and valid; false information will be rejected outright.",
+          "agree": "You must check the agreement to the developer rules before submitting.",
+          "batch": "Only one valid application is kept per user; duplicate submissions will be rejected."
+        },
+        "contact": {
+          "title": "Contact",
+          "intro": "For questions about developer applications, contact us via:",
+          "email": "Official email: igcraftlit@outlook.com",
+          "owner": "Owner contact: reach the official account via community direct messages."
+        }
+      },
+      "publicity": {
+        "lead": "The list below shows developers approved in each batch, with the latest batch on top.",
+        "empty": "No developer batches have been publicized yet.",
+        "loadFailed": "Failed to load developer publicity. Please try again later.",
+        "latest": "Latest batch",
+        "quota": "Quota {quota}",
+        "count": "{count} publicized",
+        "publishedAt": "Published at",
+        "developerName": "Developer name",
+        "uid": "Community iGMUid",
+        "projectName": "Project name",
+        "approvedAt": "Approved at",
+        "note1": "Each batch's quota is subject to the publicity before review.",
+        "note2": "Excluding joint developers (the leads of iGCraftLit and MuoCeon), the monthly quota is capped at 30.",
+        "note3": "The publicity period is 7 days, during which reports or appeals can be made via the official email."
+      }
+    },
     "openAccess": "Developer access is fully open at this stage. The application entry is used for later qualification registration and quota management.",
     "restricted": "Developer access is now review-based. Please submit an application and wait for approval.",
     "applyEntry": "Submit developer application",
@@ -1466,6 +1589,17 @@
       "projectUrlInvalid": "The project link must start with http:// or https:// and be at most 200 characters",
       "contactInvalid": "Contact is required and must be at most 120 characters",
       "quotaInvalid": "Invalid expected call volume",
+      "developerNameInvalid": "Developer name is required and must be at most 60 characters",
+      "ageInvalid": "Age must be an integer between 1 and 120",
+      "birthInvalid": "Birth month or day is invalid",
+      "contactRequired": "Provide at least one of email or phone",
+      "emailInvalid": "Invalid email format",
+      "phoneInvalid": "Invalid phone number format",
+      "addressInvalid": "Country, state/province, city, and address are required, and the address must be at most 200 characters",
+      "postalInvalid": "Postal code is required and must be at most 20 characters",
+      "projectIntroInvalid": "The project introduction must be more than 100 and at most 1000 characters",
+      "domainInvalid": "Invalid applicant domain format",
+      "additionalInvalid": "Additional notes must be at most 500 characters",
       "reasonInvalid": "The reason is required and must be at most 500 characters",
       "rulesRequired": "Please read and accept the developer guidelines",
       "applyPending": "You already have an application pending review. Please wait for the result",

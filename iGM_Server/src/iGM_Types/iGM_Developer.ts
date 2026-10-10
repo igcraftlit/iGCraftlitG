@@ -37,10 +37,13 @@ export interface iGM_DeveloperApplicationRow {
   iGM_UserId: string;
   iGM_ProjectName: string;
   iGM_ProjectType: string;
+  /** 项目介绍（规范要求 > 100 字） */
   iGM_ProjectDesc: string;
   iGM_ProjectUrl: string | null;
+  /** 联系方式展示文本（由邮箱 / 手机合并写入） */
   iGM_Contact: string;
   iGM_ExpectedQuota: string | null;
+  /** 申请理由（规范要求 > 200 字） */
   iGM_Reason: string;
   /** pending 待审核 / approved 已通过 / rejected 已拒绝 / withdrawn 已撤回 */
   iGM_Status: string;
@@ -50,6 +53,28 @@ export interface iGM_DeveloperApplicationRow {
   iGM_ReviewComment: string | null;
   /** 模块十六起不发放，恒为 null，暂保留以对应数据库列 */
   iGM_ApiKey: string | null;
+  /* ---------- 模块二十六：开发者申请规范化新增字段 ---------- */
+  /** 开发者名称（默认社区用户名，可修改） */
+  iGM_DeveloperName: string | null;
+  /** 年龄（1-120） */
+  iGM_Age: number | null;
+  /** 生日-月（1-12） */
+  iGM_BirthMonth: number | null;
+  /** 生日-日（1-31） */
+  iGM_BirthDay: number | null;
+  iGM_ContactEmail: string | null;
+  iGM_ContactPhone: string | null;
+  iGM_Country: string | null;
+  iGM_Province: string | null;
+  iGM_City: string | null;
+  iGM_Address: string | null;
+  iGM_PostalCode: string | null;
+  /** 申请人域名（可选） */
+  iGM_Domain: string | null;
+  /** 附加说明（可选） */
+  iGM_Additional: string | null;
+  /** 所属公示批次 id */
+  iGM_BatchId: string | null;
   iGM_CreatedAt: string;
   iGM_UpdatedAt: string;
 }
@@ -70,21 +95,79 @@ export interface iGM_DeveloperApplicationDto {
   /** 审核人显示名（用户名或昵称），未审核时为 null */
   reviewerName: string | null;
   reviewComment: string | null;
+  /* ---------- 模块二十六：规范化新增字段 ---------- */
+  developerName: string | null;
+  age: number | null;
+  birthMonth: number | null;
+  birthDay: number | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  country: string | null;
+  province: string | null;
+  city: string | null;
+  address: string | null;
+  postalCode: string | null;
+  domain: string | null;
+  additional: string | null;
+  batchId: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
-/** 开发者申请入参（来自 G_Developer/apply 请求体） */
+/** 开发者申请入参（来自 G_Developer/apply 请求体，规范化后结构） */
 export interface iGM_DeveloperApplyInput {
+  /** 开发者名称（默认社区用户名） */
+  developerName: string;
+  /** 年龄（1-120） */
+  age: number;
+  /** 生日-月（1-12） */
+  birthMonth: number;
+  /** 生日-日（1-31） */
+  birthDay: number;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  country: string;
+  province: string;
+  city: string;
+  address: string;
+  postalCode: string;
+  /** 项目名称 */
   projectName: string;
-  projectType: string;
-  projectDesc: string;
-  projectUrl: string | null;
-  contact: string;
-  expectedQuota: string | null;
+  /** 项目介绍（> 100 字） */
+  projectIntro: string;
+  /** 申请人域名（可选） */
+  domain: string | null;
+  /** 申请理由（> 200 字） */
   reason: string;
+  /** 附加说明（可选） */
+  additional: string | null;
   /** 是否同意开发者规范（必须勾选） */
   agreeRules: boolean;
+}
+
+/** iGM_DeveloperBatches 表数据行（公示批次） */
+export interface iGM_DeveloperBatchRow {
+  iGM_Id: string;
+  iGM_BatchName: string;
+  /** 本批次名额（默认 30） */
+  iGM_Quota: number;
+  iGM_PublishedAt: string | null;
+  /** pending 待公示 / active 公示中 / closed 已结束 */
+  iGM_Status: string;
+  iGM_CreatedAt: string;
+}
+
+/** iGM_DeveloperPublicity 表数据行（公示条目，连表带出社区 iGMUid） */
+export interface iGM_DeveloperPublicityRow {
+  iGM_Id: string;
+  iGM_BatchId: string;
+  iGM_ApplicationId: string;
+  iGM_UserId: string;
+  iGM_DeveloperName: string;
+  iGM_ProjectName: string;
+  iGM_ApprovedAt: string;
+  /** 连表带出的社区 iGMUid */
+  iGM_Uid: string | null;
 }
 
 /** 管理端申请列表行（连申请人用户名与昵称） */

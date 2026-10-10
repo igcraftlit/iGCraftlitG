@@ -97,11 +97,11 @@ export function iGM_Sidebar({ open, onNavigate }: iGM_SidebarProps) {
   const { user } = iGM_UseAuth();
 
   // 模块十六：开发者入口目标——组织所有者免申请、直接进入接入界面；
-  // 其余用户按最新申请状态解析：已通过进接入界面，待审进状态页，其余进申请页
+  // 其余用户按最新申请状态解析：已通过进接入界面，待审进状态页，其余进初始界面
   const [developerTarget, setDeveloperTarget] = useState<{
     href: string;
     external: boolean;
-  }>({ href: "/G_DeveloperApply", external: false });
+  }>({ href: "/G_DeveloperIntro", external: false });
   const iGM_IsOrgOwner = user?.verifiedOrg?.isOwner === true;
   useEffect(() => {
     /** 按身份与申请状态写入入口目标 */
@@ -112,11 +112,11 @@ export function iGM_Sidebar({ open, onNavigate }: iGM_SidebarProps) {
           ? { href: iGM_DeveloperConsoleUrl, external: true }
           : target === "status"
             ? { href: "/G_DeveloperStatus", external: false }
-            : { href: "/G_DeveloperApply", external: false },
+            : { href: "/G_DeveloperIntro", external: false },
       );
     }
     if (!user) {
-      setDeveloperTarget({ href: "/G_DeveloperApply", external: false });
+      setDeveloperTarget({ href: "/G_DeveloperIntro", external: false });
       return;
     }
     // 组织所有者不依赖申请记录，先按身份给出目标，再按最新申请状态校正

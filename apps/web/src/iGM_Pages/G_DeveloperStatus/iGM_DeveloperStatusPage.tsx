@@ -143,7 +143,7 @@ export function iGM_DeveloperStatusInner() {
               <button
                 type="button"
                 className={styles.primaryButton}
-                onClick={() => router.push("/G_DeveloperApply")}
+                onClick={() => router.push("/G_DeveloperIntro")}
               >
                 {t("developer.applyEntry")}
               </button>
@@ -292,7 +292,7 @@ export function iGM_DeveloperStatusInner() {
                 <button
                   type="button"
                   className={styles.primaryButton}
-                  onClick={() => router.push("/G_DeveloperApply")}
+                  onClick={() => router.push("/G_DeveloperIntro")}
                 >
                   <RotateCcw size={15} strokeWidth={1.8} />
                   {t("developer.status.reapply")}

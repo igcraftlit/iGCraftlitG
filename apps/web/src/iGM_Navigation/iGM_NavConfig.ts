@@ -74,7 +74,7 @@ export interface iGM_NavItem {
   /**
    * 模块十六：开发者入口。目标页随身份与申请状态变化——
    * 组织所有者与已通过者进入开发者接入界面（外链），待审核者进入
-   * /G_DeveloperStatus，其余进入 /G_DeveloperApply
+   * /G_DeveloperStatus，其余进入 /G_DeveloperIntro
    * （与账户设置页「成为开发者」按钮行为一致）。
    */
   developerEntry?: boolean;
@@ -348,7 +348,7 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
     titleKey: "nav.developer",
     items: [
       {
-        href: "/G_DeveloperApply",
+        href: "/G_DeveloperIntro",
         icon: Code2,
         labelKey: "nav.becomeDeveloper",
         roles: ["user", "moderator", "admin"],

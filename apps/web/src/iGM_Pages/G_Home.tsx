@@ -60,9 +60,9 @@ export function G_Home() {
           title={t("home.cardLauncherTitle")}
           description={t("home.cardLauncherDesc")}
         />
-        {/* 成为开发者：跳转开发者申请页 G_DeveloperApply */}
+        {/* 成为开发者：跳转开发者初始界面 G_DeveloperIntro */}
         <IGM_NavCard
-          href="/G_DeveloperApply"
+          href="/G_DeveloperIntro"
           icon={Code2}
           title={t("home.cardDeveloperTitle")}
           description={t("home.cardDeveloperDesc")}

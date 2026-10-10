@@ -115,7 +115,7 @@ function iGM_DeveloperPortalInner() {
           </p>
         </header>
         <div className={styles.actionRow}>
-          <Link href="/G_DeveloperApply" className={styles.ghostButton}>
+          <Link href="/G_DeveloperIntro" className={styles.ghostButton}>
             <KeyRound size={15} strokeWidth={1.8} aria-hidden />
             {t("developer.portal.becomeDeveloper")}
           </Link>

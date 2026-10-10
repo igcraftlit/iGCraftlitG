@@ -1,0 +1,310 @@
+/*
+ * 文件路径：apps/web/src/iGM_Pages/G_DeveloperIntro/iGM_DeveloperIntro.module.css
+ * 所属层：前端 / 页面样式层
+ * 路由：/G_DeveloperIntro
+ * 模块：G_DeveloperIntro
+ * 作用：开发者初始界面（申请 / 文档 / 公示 三标签）专用样式
+ * 内容：气泡标签栏、分步表单步骤条与字数计数器、提交成功弹窗、
+ *       公示批次与名单表格、移动端折叠适配
+ * 说明：极简玻璃态，颜色取自全局主题变量，无装饰符号
+ */
+
+/* 区块：页面级布局 */
+.pageInner {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 区块：气泡标签栏 */
+.tabBar {
+  position: relative;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--igm-border);
+  border-radius: 999px;
+  background: var(--igm-surface-subtle, rgba(127, 127, 127, 0.06));
+  max-width: 520px;
+}
+
+.tabPill {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc((100% - 8px) / 3);
+  border-radius: 999px;
+  background: var(--igm-accent);
+  opacity: 0.14;
+  transition: transform 0.25s ease;
+  pointer-events: none;
+}
+
+.tabButton {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 10px;
+  border: none;
+  background: transparent;
+  color: var(--igm-text-muted);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  border-radius: 999px;
+  transition: color 0.2s ease;
+}
+
+.tabButton:hover {
+  color: var(--igm-text);
+}
+
+.tabButtonActive {
+  color: var(--igm-accent);
+}
+
+/* 区块：分步表单步骤条 */
+.stepBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.stepItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--igm-text-weak);
+}
+
+.stepDot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border);
+  font-size: 12px;
+}
+
+.stepItemActive .stepDot {
+  border-color: var(--igm-accent);
+  color: var(--igm-accent);
+}
+
+.stepItemDone .stepDot {
+  border-color: var(--igm-accent);
+  background: var(--igm-accent);
+  color: var(--igm-accent-contrast, #fff);
+}
+
+.stepItemActive {
+  color: var(--igm-text);
+  font-weight: 600;
+}
+
+/* 区块：两列/三列表单行 */
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.grid3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+/* 区块：字数计数器 */
+.counterRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--igm-text-weak);
+}
+
+.counterOk {
+  color: var(--igm-success, #2e7d32);
+}
+
+.counterWarn {
+  color: var(--igm-danger, #c62828);
+}
+
+/* 区块：提示与说明 */
+.hint {
+  font-size: 12px;
+  color: var(--igm-text-weak);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* 区块：提交成功弹窗 */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+}
+
+.modalCard {
+  width: 100%;
+  max-width: 420px;
+  border: 1px solid var(--igm-border);
+  border-radius: 14px;
+  padding: 22px;
+  background: var(--igm-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: center;
+}
+
+.modalIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  margin: 0 auto;
+  border-radius: 999px;
+  border: 1px solid var(--igm-accent);
+  color: var(--igm-accent);
+}
+
+.modalTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.modalText {
+  font-size: 13px;
+  color: var(--igm-text-weak);
+  line-height: 1.8;
+  margin: 0;
+}
+
+/* 区块：公示批次与名单 */
+.batchList {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.batchCard {
+  border: 1px solid var(--igm-border);
+  border-radius: 12px;
+  background: var(--igm-surface);
+  overflow: hidden;
+}
+
+.batchHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--igm-border);
+}
+
+.batchTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.batchMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--igm-text-weak);
+  flex-wrap: wrap;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 560px;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--igm-border);
+  white-space: nowrap;
+}
+
+.table th {
+  font-weight: 500;
+  color: var(--igm-text-weak);
+  font-size: 12px;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.noteList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--igm-text-weak);
+  line-height: 1.7;
+  margin: 0;
+  padding-left: 18px;
+}
+
+/* 移动端：标签栏与分步表单折叠 */
+@media (max-width: 767.98px) {
+  .tabBar {
+    max-width: none;
+  }
+
+  .tabButton {
+    font-size: 12.5px;
+    padding: 9px 6px;
+  }
+
+  .grid2,
+  .grid3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .stepItem span {
+    display: none;
+  }
+
+  .stepItemActive span {
+    display: inline;
+  }
+}

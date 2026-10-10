@@ -308,9 +308,9 @@
       "title": "開發者",
       "description": "透過 SDK 與適配器協議接入 iGCraftLit Community"
     },
-    "developerApply": {
-      "title": "開發者申請",
-      "description": "填寫用途、專案名稱、聯絡方式與預期呼叫量，提交後由組織擁有者審核"
+    "developerIntro": {
+      "title": "成為開發者",
+      "description": "了解開發者權益與申請流程，提交申請，查看已通過審核的開發者公示"
     },
     "developerStatus": {
       "title": "申請狀態",
@@ -1326,6 +1326,129 @@
     }
   },
   "developer": {
+    "intro": {
+      "title": "成為開發者",
+      "description": "了解開發者權益與申請流程，提交申請，查看已通過審核的開發者公示。",
+      "tabs": {
+        "apply": "開發者申請",
+        "docs": "申請文件",
+        "publicity": "開發者公示"
+      },
+      "apply": {
+        "needLogin": "請先登入帳號後再提交開發者申請。",
+        "login": "前往登入",
+        "orgOwnerNotice": "你作為組織所有者已具備開發者接入資格，無需提交申請，可直接進入開發者接入介面。",
+        "enterConsole": "進入開發者接入介面",
+        "approvedNotice": "你的開發者申請已通過審核，可直接進入開發者接入介面。",
+        "pendingNotice": "你已有一條待審核的申請，請等待審核結果。",
+        "viewStatus": "查看申請狀態",
+        "formDesc": "請如實填寫以下資訊。項目介紹需超過 100 字，申請理由需超過 200 字。",
+        "step_identity": "身分資訊",
+        "step_contact": "聯絡方式與地址",
+        "step_project": "項目與說明",
+        "developerName": "開發者名稱",
+        "developerNameHint": "預設填入你的社群使用者名稱，可修改，建議與社群身分保持一致。",
+        "age": "年齡",
+        "agePlaceholder": "1 - 120",
+        "birthMonth": "出生月份",
+        "birthDay": "出生日期",
+        "email": "聯絡信箱",
+        "emailPlaceholder": "you@example.com",
+        "phone": "聯絡電話",
+        "phonePlaceholder": "+886 912345678",
+        "contactHint": "信箱與聯絡電話至少填寫一項，可同時填寫。",
+        "country": "國家",
+        "province": "省 / 州",
+        "city": "城市",
+        "address": "詳細地址",
+        "postalCode": "郵遞區號",
+        "projectName": "項目名稱",
+        "projectNamePlaceholder": "請輸入項目或工具名稱",
+        "projectIntro": "項目介紹",
+        "projectIntroPlaceholder": "請介紹項目的功能、目標使用者與接入規劃（不少於 100 字）",
+        "projectIntroHint": "不少於 100 字",
+        "domain": "申請人域名",
+        "domainPlaceholder": "example.com",
+        "reason": "申請理由",
+        "reasonPlaceholder": "請說明你希望成為團隊開發者的原因（不少於 200 字）",
+        "reasonHint": "不少於 200 字",
+        "additional": "附加說明",
+        "additionalPlaceholder": "任何想補充的內容（選填）",
+        "agreeRules": "我已閱讀並同意開發者規範",
+        "counter": "{count} / {min} 字",
+        "prev": "上一步",
+        "next": "下一步",
+        "submit": "提交申請",
+        "submitting": "提交中…",
+        "submittedTitle": "申請已提交",
+        "submittedNotice": "申請已提交，請等待審核。開發者名額有限，具體以審核前公示批次為準。",
+        "close": "關閉",
+        "failed": "申請提交失敗，請稍後再試"
+      },
+      "docs": {
+        "toc": "ON THIS PAGE",
+        "lead": "本文件說明開發者權益、申請流程、名額分配、審核標準與申請規範，請在提交申請前完整閱讀。",
+        "benefits": {
+          "title": "開發者權益",
+          "intro": "通過審核的開發者可獲得以下權益：",
+          "api": "API 呼叫權限：可呼叫 iGCraftLit 開放介面，用於你的項目與社群能力對接。",
+          "sdk": "SDK 呼叫權限：可使用官方 SDK 與適配器協定，簡化驗證與請求流程。",
+          "quota": "呼叫額度：按批次分配介面呼叫額度，滿足常規開發與營運需求。",
+          "publicity": "公示展示：通過審核的開發者將列入官方開發者公示名單。"
+        },
+        "process": {
+          "title": "申請流程",
+          "intro": "開發者資格為申請制，標準流程如下：",
+          "submit": "提交申請：填寫並提交開發者申請表單。",
+          "review": "審核：由組織所有者或管理員進行審核。",
+          "publicity": "公示：通過審核的開發者進入公示批次，公示期 7 天。",
+          "result": "通過 / 拒絕：公示無異議即正式通過，可進入開發者平台；未通過將說明原因，可重新申請。"
+        },
+        "quota": {
+          "title": "名額說明",
+          "line1": "除聯合開發者（iGCraftLit、MuoCeon 負責人）外，每月的開發者名額為 30 名。",
+          "line2": "名額均值為每月 30 名，最終名額以審核前公示批次公布的名額為準。"
+        },
+        "criteria": {
+          "title": "審核標準",
+          "intro": "審核將綜合以下維度進行評估：",
+          "authenticity": "項目真實性：項目資訊真實、可核驗，具備實際開發計畫。",
+          "compliance": "內容合規：項目內容符合法令法規與社群規定。",
+          "contribution": "社群貢獻：對社群的使用、回饋或建設有積極貢獻。",
+          "activity": "活躍度：帳號活躍、溝通即時，具備持續營運能力。"
+        },
+        "norms": {
+          "title": "申請規範",
+          "intro": "提交申請時請遵守以下規範：",
+          "length": "項目介紹不少於 100 字，申請理由不少於 200 字。",
+          "truth": "所填資訊須真實有效，虛假資訊將被直接拒絕。",
+          "agree": "須勾選同意開發者規範後方可提交。",
+          "batch": "同一使用者僅保留一條有效申請，重複提交將被拒絕。"
+        },
+        "contact": {
+          "title": "聯絡方式",
+          "intro": "如需諮詢開發者申請相關事宜，可透過以下方式聯絡：",
+          "email": "官方信箱：igcraftlit@outlook.com",
+          "owner": "負責人聯絡方式：請透過社群站內訊息聯絡官方帳號。"
+        }
+      },
+      "publicity": {
+        "lead": "以下為各批次通過審核的開發者名單，最新批次置頂。",
+        "empty": "暫無已公示的開發者批次。",
+        "loadFailed": "開發者公示載入失敗，請稍後重試",
+        "latest": "最新批次",
+        "quota": "名額 {quota}",
+        "count": "已公示 {count} 人",
+        "publishedAt": "公示時間",
+        "developerName": "開發者名稱",
+        "uid": "社群 iGMUid",
+        "projectName": "項目名稱",
+        "approvedAt": "通過時間",
+        "note1": "每批次名額以審核前公示為準。",
+        "note2": "除聯合開發者（iGCraftLit、MuoCeon 負責人）外，每月名額上限 30 名。",
+        "note3": "公示期 7 天，期間可透過官方信箱進行檢舉或申訴。"
+      }
+    },
     "openAccess": "當前階段開發者調用完全放開；申請入口用於後續資質登記與配額管理。",
     "restricted": "開發者調用已進入審核制，請先提交申請並等待審核通過。",
     "applyEntry": "提交開發者申請",
@@ -1466,6 +1589,17 @@
       "projectUrlInvalid": "專案連結需以 http:// 或 https:// 開頭且不超過 200 個字元",
       "contactInvalid": "聯絡方式不能為空且不超過 120 個字元",
       "quotaInvalid": "預期調用量不合法",
+      "developerNameInvalid": "開發者名稱不能為空且不超過 60 個字元",
+      "ageInvalid": "年齡需為 1 至 120 之間的整數",
+      "birthInvalid": "出生月份或日期不合法",
+      "contactRequired": "郵箱與聯絡電話至少填寫一項",
+      "emailInvalid": "郵箱格式不正確",
+      "phoneInvalid": "手機號碼格式不正確",
+      "addressInvalid": "國家、省 / 州、城市與詳細地址均為必填，詳細地址不超過 200 個字元",
+      "postalInvalid": "郵遞區號不能為空且不超過 20 個字元",
+      "projectIntroInvalid": "項目介紹需超過 100 字且不超過 1000 字",
+      "domainInvalid": "申請人域名格式不正確",
+      "additionalInvalid": "附加說明不超過 500 個字元",
       "reasonInvalid": "申請理由不能為空且不超過 500 個字元",
       "rulesRequired": "請先閱讀並同意開發者規範",
       "applyPending": "你已有一條待審核的申請，請等待審核結果",

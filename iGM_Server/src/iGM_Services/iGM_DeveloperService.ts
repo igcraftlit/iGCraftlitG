@@ -13,11 +13,18 @@
 // 导入依赖 //
 import {
   iGM_FindDeveloperApplicationById,
+  iGM_FindDeveloperBatchByName,
+  iGM_FindDeveloperPublicityByApplication,
   iGM_FindLatestDeveloperApplicationByUser,
   iGM_InsertDeveloperApplication,
+  iGM_InsertDeveloperBatch,
+  iGM_InsertDeveloperPublicity,
   iGM_ListDeveloperApplicationsByUser,
   iGM_ListDeveloperApplicationsForAdmin,
+  iGM_ListDeveloperBatches,
+  iGM_ListDeveloperPublicity,
   iGM_ReviewDeveloperApplication,
+  iGM_UpdateDeveloperApplicationBatch,
   iGM_WithdrawDeveloperApplication,
 } from "../iGM_Repositories/iGM_DeveloperRepository";
 import {
@@ -36,6 +43,8 @@ import type { iGM_UserRow } from "../iGM_Types/iGM_Auth";
 import type {
   iGM_DeveloperApplicationRow,
   iGM_DeveloperApplyInput,
+  iGM_DeveloperBatchRow,
+  iGM_DeveloperPublicityRow,
 } from "../iGM_Types/iGM_Developer";
 
 // 类型定义 //
@@ -50,16 +59,24 @@ export class iGM_DeveloperError extends Error {
   }
 }
 
-/** 申请字段长度限制 */
+/** 申请字段长度限制与门槛（模块二十六规范化） */
+const iGM_DeveloperNameMax = 60;
 const iGM_ProjectNameMax = 60;
+const iGM_ProjectIntroMin = 100;
 const iGM_ProjectDescMax = 1000;
-const iGM_ProjectUrlMax = 200;
-const iGM_ContactMax = 120;
+const iGM_ReasonMin = 200;
 const iGM_ReasonMax = 500;
-
-/** 允许的枚举取值（缺省按 other / 空处理） */
-const iGM_ProjectTypes = ["launcher", "tool", "website", "plugin", "other"];
-const iGM_Quotas = ["low", "medium", "high"];
+const iGM_AddressMax = 200;
+const iGM_AdditionalMax = 500;
+const iGM_ContactEmailMax = 120;
+const iGM_ContactPhoneMax = 40;
+const iGM_PostalCodeMax = 20;
+/** 域名格式：形如 example.com（可含子域，不含协议与路径） */
+const iGM_DomainPattern = /^(?=.{1,253}$)([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
+/** 邮箱格式（宽松校验，由前端与后端双重把关） */
+const iGM_EmailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+/** 手机号格式：7-20 位，允许 + 与分隔符 */
+const iGM_PhonePattern = /^[+]?[0-9\-\s()]{7,20}$/;
 
 // 核心逻辑 //
 /** 行 → DTO（reviewerName 由调用方批量解析后传入） */
@@ -81,6 +98,20 @@ function iGM_ToApplicationDto(
     reviewerId: row.iGM_ReviewerId,
     reviewerName,
     reviewComment: row.iGM_ReviewComment,
+    developerName: row.iGM_DeveloperName,
+    age: row.iGM_Age,
+    birthMonth: row.iGM_BirthMonth,
+    birthDay: row.iGM_BirthDay,
+    contactEmail: row.iGM_ContactEmail,
+    contactPhone: row.iGM_ContactPhone,
+    country: row.iGM_Country,
+    province: row.iGM_Province,
+    city: row.iGM_City,
+    address: row.iGM_Address,
+    postalCode: row.iGM_PostalCode,
+    domain: row.iGM_Domain,
+    additional: row.iGM_Additional,
+    batchId: row.iGM_BatchId,
     createdAt: row.iGM_CreatedAt,
     updatedAt: row.iGM_UpdatedAt,
   };
@@ -123,60 +154,126 @@ export async function iGM_IsDeveloperReviewer(
   return (await iGM_FindOrganizationByOwnerEmail(user.iGM_Email)) !== null;
 }
 
-/** 校验申请入参，返回规范化后的字段 */
+/** 校验申请入参，返回规范化后的字段（模块二十六规范） */
 function iGM_ValidateApplyInput(input: iGM_DeveloperApplyInput): {
-  projectName: string;
-  projectType: string;
-  projectDesc: string;
-  projectUrl: string | null;
+  developerName: string;
+  age: number;
+  birthMonth: number;
+  birthDay: number;
+  contactEmail: string | null;
+  contactPhone: string | null;
   contact: string;
-  expectedQuota: string | null;
+  country: string;
+  province: string;
+  city: string;
+  address: string;
+  postalCode: string;
+  projectName: string;
+  projectIntro: string;
+  domain: string | null;
   reason: string;
+  additional: string | null;
 } {
+  const developerName = input.developerName.trim();
   const projectName = input.projectName.trim();
-  const projectDesc = input.projectDesc.trim();
-  const contact = input.contact.trim();
+  const projectIntro = input.projectIntro.trim();
   const reason = input.reason.trim();
-  const projectUrl = input.projectUrl?.trim() || null;
-  const expectedQuota = input.expectedQuota?.trim() || null;
-  const projectType = iGM_ProjectTypes.includes(input.projectType)
-    ? input.projectType
-    : "other";
+  const country = input.country.trim();
+  const province = input.province.trim();
+  const city = input.city.trim();
+  const address = input.address.trim();
+  const postalCode = input.postalCode.trim();
+  const contactEmail = input.contactEmail?.trim() || null;
+  const contactPhone = input.contactPhone?.trim() || null;
+  const domain = input.domain?.trim().toLowerCase() || null;
+  const additional = input.additional?.trim() || null;
 
+  const age = Number(input.age);
+  const birthMonth = Number(input.birthMonth);
+  const birthDay = Number(input.birthDay);
+
+  if (!developerName || developerName.length > iGM_DeveloperNameMax) {
+    throw new iGM_DeveloperError("developer.errors.developerNameInvalid", 422);
+  }
+  if (!Number.isInteger(age) || age < 1 || age > 120) {
+    throw new iGM_DeveloperError("developer.errors.ageInvalid", 422);
+  }
+  if (!Number.isInteger(birthMonth) || birthMonth < 1 || birthMonth > 12) {
+    throw new iGM_DeveloperError("developer.errors.birthInvalid", 422);
+  }
+  if (!Number.isInteger(birthDay) || birthDay < 1 || birthDay > 31) {
+    throw new iGM_DeveloperError("developer.errors.birthInvalid", 422);
+  }
+  // 邮箱与手机至少填写一项，填写项须符合格式
+  if (!contactEmail && !contactPhone) {
+    throw new iGM_DeveloperError("developer.errors.contactRequired", 422);
+  }
+  if (
+    contactEmail &&
+    (contactEmail.length > iGM_ContactEmailMax ||
+      !iGM_EmailPattern.test(contactEmail))
+  ) {
+    throw new iGM_DeveloperError("developer.errors.emailInvalid", 422);
+  }
+  if (
+    contactPhone &&
+    (contactPhone.length > iGM_ContactPhoneMax ||
+      !iGM_PhonePattern.test(contactPhone))
+  ) {
+    throw new iGM_DeveloperError("developer.errors.phoneInvalid", 422);
+  }
+  if (
+    !country ||
+    !province ||
+    !city ||
+    !address ||
+    address.length > iGM_AddressMax
+  ) {
+    throw new iGM_DeveloperError("developer.errors.addressInvalid", 422);
+  }
+  if (!postalCode || postalCode.length > iGM_PostalCodeMax) {
+    throw new iGM_DeveloperError("developer.errors.postalInvalid", 422);
+  }
   if (!projectName || projectName.length > iGM_ProjectNameMax) {
     throw new iGM_DeveloperError("developer.errors.projectNameInvalid", 422);
   }
-  if (!projectDesc || projectDesc.length > iGM_ProjectDescMax) {
-    throw new iGM_DeveloperError("developer.errors.projectDescInvalid", 422);
+  if (projectIntro.length <= iGM_ProjectIntroMin || projectIntro.length > iGM_ProjectDescMax) {
+    throw new iGM_DeveloperError("developer.errors.projectIntroInvalid", 422);
   }
-  if (
-    projectUrl &&
-    (projectUrl.length > iGM_ProjectUrlMax ||
-      !/^https?:\/\//i.test(projectUrl))
-  ) {
-    throw new iGM_DeveloperError("developer.errors.projectUrlInvalid", 422);
+  if (domain && !iGM_DomainPattern.test(domain)) {
+    throw new iGM_DeveloperError("developer.errors.domainInvalid", 422);
   }
-  if (!contact || contact.length > iGM_ContactMax) {
-    throw new iGM_DeveloperError("developer.errors.contactInvalid", 422);
-  }
-  if (expectedQuota && !iGM_Quotas.includes(expectedQuota)) {
-    throw new iGM_DeveloperError("developer.errors.quotaInvalid", 422);
-  }
-  if (!reason || reason.length > iGM_ReasonMax) {
+  if (reason.length <= iGM_ReasonMin || reason.length > iGM_ReasonMax) {
     throw new iGM_DeveloperError("developer.errors.reasonInvalid", 422);
+  }
+  if (additional && additional.length > iGM_AdditionalMax) {
+    throw new iGM_DeveloperError("developer.errors.additionalInvalid", 422);
   }
   if (!input.agreeRules) {
     throw new iGM_DeveloperError("developer.errors.rulesRequired", 422);
   }
 
+  // 联系方式展示文本：邮箱与手机合并（管理端列表沿用 iGM_Contact 显示）
+  const contact = [contactEmail, contactPhone].filter(Boolean).join(" / ");
+
   return {
-    projectName,
-    projectType,
-    projectDesc,
-    projectUrl,
+    developerName,
+    age,
+    birthMonth,
+    birthDay,
+    contactEmail,
+    contactPhone,
     contact,
-    expectedQuota,
+    country,
+    province,
+    city,
+    address,
+    postalCode,
+    projectName,
+    projectIntro,
+    domain,
     reason,
+    additional,
   };
 }
 
@@ -343,6 +440,115 @@ export async function iGM_ReviewDeveloperService(
   if (!ok) {
     throw new iGM_DeveloperError("developer.errors.applyReviewed", 409);
   }
+  // 通过审核即自动归入当前公示批次并写入公示（拒绝不公示）
+  if (action === "approve") {
+    await iGM_PublishDeveloperService(applicationId);
+  }
+}
+
+/* ---------- 模块二十六：开发者批次与公示 ---------- */
+
+/** 当前公示批次名额（除联合开发者外，每月上限 30 名） */
+const iGM_MonthlyQuota = 30;
+
+/**
+ * 取当前年月对应的公示批次，不存在则创建。
+ * 批次名形如 “2026-10 批次”，默认名额 30，状态 active。
+ */
+async function iGM_EnsureCurrentBatchService(now: string): Promise<iGM_DeveloperBatchRow> {
+  const month = now.slice(0, 7);
+  const batchName = `${month} 批次`;
+  const existing = await iGM_FindDeveloperBatchByName(batchName);
+  if (existing) return existing;
+  return await iGM_InsertDeveloperBatch({
+    batchName,
+    quota: iGM_MonthlyQuota,
+    publishedAt: now,
+    status: "active",
+    now,
+  });
+}
+
+/**
+ * 将一条已通过的申请纳入公示：分配当前批次并写入公示条目。
+ * 幂等：同一申请已公示时直接返回，不重复写入。
+ */
+export async function iGM_PublishDeveloperService(
+  applicationId: string,
+): Promise<void> {
+  const row = await iGM_FindDeveloperApplicationById(applicationId);
+  if (!row || row.iGM_Status !== "approved") {
+    throw new iGM_DeveloperError("developer.errors.applyNotFound", 404);
+  }
+  const published = await iGM_FindDeveloperPublicityByApplication(applicationId);
+  if (published) return;
+
+  const now = new Date().toISOString();
+  const batch = await iGM_EnsureCurrentBatchService(now);
+  await iGM_UpdateDeveloperApplicationBatch({
+    id: applicationId,
+    batchId: batch.iGM_Id,
+    now,
+  });
+  await iGM_InsertDeveloperPublicity({
+    batchId: batch.iGM_Id,
+    applicationId,
+    userId: row.iGM_UserId,
+    developerName: row.iGM_DeveloperName ?? row.iGM_ProjectName,
+    projectName: row.iGM_ProjectName,
+    approvedAt: now,
+  });
+}
+
+/**
+ * 开发者公示列表（公开）：按批次分组，最新批次置顶。
+ * 返回批次的名称 / 名额 / 公示时间 / 状态与该批次下的公示条目。
+ */
+export async function iGM_ListDeveloperPublicityService(): Promise<{
+  batches: Array<{
+    id: string;
+    batchName: string;
+    quota: number;
+    publishedAt: string | null;
+    status: string;
+    items: Array<{
+      id: string;
+      developerName: string;
+      uid: string | null;
+      projectName: string;
+      approvedAt: string;
+    }>;
+  }>;
+}> {
+  const [batches, publicity] = await Promise.all([
+    iGM_ListDeveloperBatches(),
+    iGM_ListDeveloperPublicity(),
+  ]);
+  const grouped = new Map<string, iGM_DeveloperPublicityRow[]>();
+  for (const item of publicity) {
+    const list = grouped.get(item.iGM_BatchId) ?? [];
+    list.push(item);
+    grouped.set(item.iGM_BatchId, list);
+  }
+  // 只为存在公示条目的批次返回（无条目的空批次不展示）
+  return {
+    batches: batches
+      .filter((batch) => (grouped.get(batch.iGM_Id)?.length ?? 0) > 0)
+      .map((batch) => ({
+        id: batch.iGM_Id,
+        batchName: batch.iGM_BatchName,
+        quota: batch.iGM_Quota,
+        publishedAt: batch.iGM_PublishedAt,
+        status: batch.iGM_Status,
+        items: (grouped.get(batch.iGM_Id) ?? []).map((item) => ({
+          id: item.iGM_Id,
+          developerName: item.iGM_DeveloperName,
+          uid: item.iGM_Uid,
+          projectName: item.iGM_ProjectName,
+          approvedAt: item.iGM_ApprovedAt,
+        })),
+      })),
+  };
 }
 
 // 模块二十五：管理后台「开发者」分区 —— 开发者账号列表与调用量监测 //
@@ -467,6 +673,8 @@ export default {
   iGM_WithdrawDeveloperApplyService,
   iGM_AdminListDevelopersService,
   iGM_ReviewDeveloperService,
+  iGM_PublishDeveloperService,
+  iGM_ListDeveloperPublicityService,
   iGM_ListDeveloperAccountsService,
   iGM_GetDeveloperCallStatsService,
 };

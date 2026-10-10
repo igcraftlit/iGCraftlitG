@@ -70,8 +70,8 @@ export const iGM_SeoDisallowPatterns = [
   "/*/G_OrgDetails",
   "/G_Admin",
   "/G_Auth",
-  // 模块十五：开发者申请与状态页（须登录，不收录）
-  "/*/G_DeveloperApply",
+  // 模块十五：开发者初始界面与状态页（不收录）
+  "/*/G_DeveloperIntro",
   "/*/G_DeveloperStatus",
   // 模块十六：开发者申请审核页（须登录，不收录）
   "/*/G_DeveloperReview",
