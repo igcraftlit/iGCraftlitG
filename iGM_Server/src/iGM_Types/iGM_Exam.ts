@@ -37,6 +37,8 @@ export interface iGM_ExamConvertProgressDto {
   status: iGM_ExamConvertStatus;
   /** 进度百分比（0 待转换 / 40 转换中 / 100 完成 / 0 失败） */
   percent: number;
+  /** 转换产物实际占用字节数；未完成或未知时为 null */
+  fileSize: number | null;
   /** 转换失败原因（无失败时为空串） */
   error: string;
 }
@@ -60,6 +62,8 @@ export interface iGM_ExamRow {
   iGM_Notice: string | null;
   /** 转换生成的 HTML 目录（相对存储根目录，不对外暴露） */
   iGM_HtmlPath: string | null;
+  /** 转换产物（HTML 目录及其中资源）实际占用字节数 */
+  iGM_FileSize: number | null;
   iGM_ParseStatus: string;
   iGM_OriginalFileDeleted: boolean;
   iGM_Status: string;
@@ -122,6 +126,8 @@ export interface iGM_ExamListItemDto {
   questionCount: number | null;
   status: iGM_ExamStatus;
   convertStatus: iGM_ExamConvertStatus;
+  /** 转换产物实际占用字节数；未完成或未知时为 null */
+  fileSize: number | null;
   createdAt: string;
 }
 

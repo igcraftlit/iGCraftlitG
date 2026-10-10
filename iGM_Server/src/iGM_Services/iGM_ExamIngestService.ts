@@ -6,13 +6,14 @@
  * 作用：试卷 PDF 落盘临时目录、转换 HTML 目录管理、HTML 资源读取与元数据正则识别
  * 内容：iGM_ExamError 业务错误类型、存储根 / 临时目录 / HTML 目录 / 日志目录解析与路径安全校验、
  *       PDF 格式校验与落盘（随机名）、临时文件读写删除、HTML 首页与资源读取（剥标签取文本）、
+ *       转换产物目录占用统计、
  *       Title/Subject/Issuer/Reviewer/Duration/Total Score/Question Count 中英文双语正则识别
  * 说明：本模块仅支持 PDF；转换成功后由业务层删除原始 PDF；
  *       磁盘绝对路径绝不出现在对外 DTO
  */
 
 // 导入依赖 //
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { join, resolve, sep } from "node:path";
 import { iGM_Config } from "../iGM_Config/iGM_Config";
 import { iGM_RandomUuid } from "./iGM_SecurityService";
@@ -106,6 +107,39 @@ export async function iGM_EnsureExamStorageRoot(): Promise<void> {
 /** 确保指定试卷的 HTML 目录存在（转换前调用，不清理旧产物） */
 export async function iGM_EnsureExamHtmlDir(examId: string): Promise<void> {
   await mkdir(iGM_ExamHtmlDir(examId), { recursive: true });
+}
+
+/** 递归统计目录内全部文件的字节数（目录不存在或读取失败按 0 处理） */
+async function iGM_MeasureDirSize(dir: string): Promise<number> {
+  let entries;
+  try {
+    entries = await readdir(dir, { withFileTypes: true });
+  } catch {
+    return 0;
+  }
+  let total = 0;
+  for (const entry of entries) {
+    const child = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      total += await iGM_MeasureDirSize(child);
+    } else if (entry.isFile()) {
+      try {
+        total += (await stat(child)).size;
+      } catch {
+        // 单个文件读取失败忽略，不影响整体统计
+      }
+    }
+  }
+  return total;
+}
+
+/**
+ * 统计某试卷转换产物的实际占用字节数
+ * 统计范围：<存储根>/<examId>（含 html 目录及其中的图片等资源）
+ */
+export async function iGM_MeasureExamUsage(examId: string): Promise<number> {
+  if (!iGM_ExamIdPattern.test(examId)) return 0;
+  return iGM_MeasureDirSize(join(iGM_ExamStorageRoot(), examId));
 }
 
 /** 删除指定试卷的整个转换目录（试卷删除 / 重新转换前调用） */
@@ -354,6 +388,7 @@ export default {
   iGM_ExamHtmlApiPath,
   iGM_EnsureExamStorageRoot,
   iGM_EnsureExamHtmlDir,
+  iGM_MeasureExamUsage,
   iGM_RemoveExamHtmlDir,
   iGM_ExamTempAbsolutePath,
   iGM_ResolveExamHtmlAssetPath,

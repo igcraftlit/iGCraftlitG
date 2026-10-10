@@ -53,6 +53,8 @@ export interface iGM_I18nDict {
   cardItems: string;
   unitMinutes: string;
   unitPoints: string;
+  /** 占用空间文案，{size} 为 MB 数值 */
+  fileSizeValue: string;
   // 试卷详情页
   detailRetrieving: string;
   detailMissing: string;
@@ -64,6 +66,9 @@ export interface iGM_I18nDict {
   detailPaperTitle: string;
   detailNoContent: string;
   detailPreviewHint: string;
+  paperZoomOut: string;
+  paperZoomFit: string;
+  paperZoomIn: string;
   detailSubmitTitle: string;
   detailSubmitLead: string;
   fieldSubject: string;

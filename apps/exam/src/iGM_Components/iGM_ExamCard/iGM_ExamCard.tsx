@@ -4,7 +4,7 @@
  * 路由：E_ExamList（/）
  * 模块：iGM_ExamCard
  * 作用：试卷档案卡片，模拟纸质档案卡（编号、标题、科目、命题方、时长、总分、题数、印章位）
- * 内容：档案编号条、标题、元数据刻度表、右下角印章位、抽出式淡入动效
+ * 内容：档案编号条、标题、元数据刻度表、占用空间、右下角印章位、抽出式淡入动效
  * 说明：卡片为链接容器，点击进入试卷详情；字段名与单位取自当前语言包
  */
 
@@ -13,7 +13,10 @@
 
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import type { iGM_ExamListItem } from "../../iGM_Services/iGM_ExamClient";
+import {
+  iGM_Exam_FormatSizeMb,
+  type iGM_ExamListItem,
+} from "../../iGM_Services/iGM_ExamClient";
 import { useI18n } from "../../iGM_i18n/iGM_I18nContext";
 import styles from "./iGM_ExamCard.module.css";
 
@@ -46,6 +49,8 @@ export function iGM_ExamCard({ exam, index = 0 }: iGM_ExamCardProps) {
     { label: t("cardTotal"), value: iGM_Exam_Dash(exam.totalScore, t("unitPoints")) },
     { label: t("cardItems"), value: iGM_Exam_Dash(exam.questionCount) },
   ];
+  // 转换产物占用空间（MB，保留一位小数）
+  const sizeText = iGM_Exam_FormatSizeMb(exam.fileSize);
 
   return (
     <Link
@@ -72,6 +77,13 @@ export function iGM_ExamCard({ exam, index = 0 }: iGM_ExamCardProps) {
           </div>
         ))}
       </dl>
+
+      {/* 占用空间 */}
+      {sizeText && (
+        <p className={`igm-mono ${styles.size}`}>
+          {t("fileSizeValue", { size: sizeText })}
+        </p>
+      )}
 
       {/* 命题方 + 印章位 */}
       <div className={styles.footRow}>

@@ -3,8 +3,8 @@
  * 所属层：前端 / 页面层
  * 路由：E_ExamDetail（/detail?id=xxx）
  * 模块：iGM_ExamDetail
- * 作用：试卷详情页，规格记录表 + 转换后 HTML 高保真预览（iframe）+ 实验计时器 + 盖章交卷
- * 内容：规格信息表、右上固定计时器、转换后 HTML 内嵌预览、交卷区、加载/失败/缺失状态
+ * 作用：试卷详情页，规格记录表 + 转换后 HTML 高保真预览（A4 版面 iframe + 缩放）+ 实验计时器 + 盖章交卷
+ * 内容：规格信息表、右上固定计时器、A4 比例试卷预览（默认适应宽度 / 手动缩放）、占用空间、交卷区、加载/失败/缺失状态
  * 说明：静态导出下通过 useSearchParams 读取 id；由路由壳提供 Suspense 边界；
  *       正文直接内嵌 pdf2htmlEX 生成的 HTML（自带分页与原始排版）；文案取自当前语言包
  */
@@ -12,13 +12,14 @@
 // 导入依赖 //
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, RefreshCw } from "lucide-react";
+import { ArrowLeft, Maximize2, RefreshCw, ZoomIn, ZoomOut } from "lucide-react";
 import {
   iGM_Exam_AbsoluteUrl,
   iGM_Exam_FetchDetail,
+  iGM_Exam_FormatSizeMb,
   iGM_ExamRequestError,
   type iGM_ExamDetail,
 } from "../iGM_Services/iGM_ExamClient";
@@ -36,6 +37,18 @@ interface iGM_Exam_RecordField {
   value: string;
 }
 
+/** A4 版面基准尺寸（210 × 297 mm，按 96 DPI 折算为像素），比例 210:297 */
+const iGM_Exam_A4Width = 794;
+const iGM_Exam_A4Height = 1123;
+
+/** 试卷预览版面最大宽度（居中显示，避免两侧留白过大） */
+const iGM_Exam_MaxSheetWidth = 900;
+
+/** 缩放区间与步长 */
+const iGM_Exam_MinZoom = 0.35;
+const iGM_Exam_MaxZoom = 2;
+const iGM_Exam_ZoomStep = 0.1;
+
 // 核心逻辑 //
 /** 数值缺省占位 */
 function iGM_Exam_Dash(value: number | null, suffix = ""): string {
@@ -52,6 +65,20 @@ export function E_ExamDetail() {
   const [exam, setExam] = useState<iGM_ExamDetail | null>(null);
   const [state, setState] = useState<iGM_Exam_DetailState>("loading");
   const [message, setMessage] = useState("");
+  const [zoom, setZoom] = useState(1);
+  const stageRef = useRef<HTMLDivElement | null>(null);
+
+  /** 按可用宽度计算「适应宽度」缩放（版面宽度不超过 900px） */
+  const iGM_Exam_FitZoom = useCallback((): number => {
+    const el = stageRef.current;
+    const available = el ? el.clientWidth : iGM_Exam_MaxSheetWidth;
+    const target = Math.min(available - 24, iGM_Exam_MaxSheetWidth);
+    const raw = target / iGM_Exam_A4Width;
+    return Math.min(
+      iGM_Exam_MaxSheetWidth / iGM_Exam_A4Width,
+      Math.max(iGM_Exam_MinZoom, raw),
+    );
+  }, []);
 
   const load = useCallback(async () => {
     if (!examId) {
@@ -74,6 +101,26 @@ export function E_ExamDetail() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // 试卷预览可用时：默认适应屏幕宽度，并在窗口尺寸变化时重新适配
+  const hasPreview = Boolean(exam?.htmlApiPath);
+  useEffect(() => {
+    if (!hasPreview) return;
+    setZoom(iGM_Exam_FitZoom());
+    const onResize = (): void => setZoom(iGM_Exam_FitZoom());
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [hasPreview, iGM_Exam_FitZoom]);
+
+  /** 手动缩放（限制在缩放区间内） */
+  function iGM_Exam_ZoomBy(delta: number): void {
+    setZoom((current) =>
+      Math.min(
+        iGM_Exam_MaxZoom,
+        Math.max(iGM_Exam_MinZoom, Number((current + delta).toFixed(2))),
+      ),
+    );
+  }
 
   if (state === "loading") {
     return (
@@ -115,6 +162,9 @@ export function E_ExamDetail() {
     { label: t("fieldTotalMarks"), value: iGM_Exam_Dash(exam.totalScore, t("unitPoints")) },
     { label: t("fieldItemCount"), value: iGM_Exam_Dash(exam.questionCount) },
   ];
+
+  // 转换产物占用空间（MB，保留一位小数）
+  const sizeText = iGM_Exam_FormatSizeMb(exam.fileSize);
 
   return (
     <main className={styles.page}>
@@ -166,21 +216,76 @@ export function E_ExamDetail() {
         </aside>
       </div>
 
-      {/* 试卷正文（pdf2htmlEX 转换后的高保真 HTML） */}
+      {/* 试卷正文（pdf2htmlEX 转换后的高保真 HTML，A4 版面） */}
       <section className={styles.paperSection} aria-label={t("detailPaperTitle")}>
         <div className={styles.paperHead}>
           <span className={`igm-mono ${styles.paperNum}`}>§ 2</span>
           <h2 className={`igm-serif ${styles.paperTitle}`}>{t("detailPaperTitle")}</h2>
+          {exam.htmlApiPath && (
+            <div className={styles.zoomBar}>
+              <button
+                type="button"
+                className={styles.zoomBtn}
+                onClick={() => iGM_Exam_ZoomBy(-iGM_Exam_ZoomStep)}
+                aria-label={t("paperZoomOut")}
+                title={t("paperZoomOut")}
+              >
+                <ZoomOut size={14} strokeWidth={1.8} />
+              </button>
+              <button
+                type="button"
+                className={styles.zoomBtn}
+                onClick={() => setZoom(iGM_Exam_FitZoom())}
+                aria-label={t("paperZoomFit")}
+                title={t("paperZoomFit")}
+              >
+                <Maximize2 size={14} strokeWidth={1.8} />
+                <span className="igm-mono">{t("paperZoomFit")}</span>
+              </button>
+              <button
+                type="button"
+                className={styles.zoomBtn}
+                onClick={() => iGM_Exam_ZoomBy(iGM_Exam_ZoomStep)}
+                aria-label={t("paperZoomIn")}
+                title={t("paperZoomIn")}
+              >
+                <ZoomIn size={14} strokeWidth={1.8} />
+              </button>
+              <span className={`igm-mono ${styles.zoomValue}`}>
+                {Math.round(zoom * 100)}%
+              </span>
+            </div>
+          )}
         </div>
         {exam.htmlApiPath ? (
           <>
-            <p className={`igm-mono ${styles.paperHint}`}>{t("detailPreviewHint")}</p>
-            <iframe
-              key={exam.htmlApiPath}
-              className={styles.htmlFrame}
-              src={iGM_Exam_AbsoluteUrl(exam.htmlApiPath)}
-              title={exam.title || exam.fileName}
-            />
+            <div className={styles.paperMeta}>
+              <p className={`igm-mono ${styles.paperHint}`}>{t("detailPreviewHint")}</p>
+              {sizeText && (
+                <span className={`igm-mono ${styles.paperSize}`}>
+                  {t("fileSizeValue", { size: sizeText })}
+                </span>
+              )}
+            </div>
+            <div className={styles.paperStage} ref={stageRef}>
+              <div
+                className={styles.paperSheet}
+                style={
+                  {
+                    "--igm-zoom": zoom,
+                    "--igm-a4-w": `${iGM_Exam_A4Width}px`,
+                    "--igm-a4-h": `${iGM_Exam_A4Height}px`,
+                  } as CSSProperties
+                }
+              >
+                <iframe
+                  key={exam.htmlApiPath}
+                  className={styles.htmlFrame}
+                  src={iGM_Exam_AbsoluteUrl(exam.htmlApiPath)}
+                  title={exam.title || exam.fileName}
+                />
+              </div>
+            </div>
           </>
         ) : (
           <p className={`igm-mono ${styles.paperEmpty}`}>{t("detailNoContent")}</p>

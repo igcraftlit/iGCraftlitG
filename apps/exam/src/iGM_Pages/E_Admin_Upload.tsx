@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import {
   iGM_Exam_FetchProgress,
+  iGM_Exam_FormatSizeMb,
   iGM_Exam_Upload,
   iGM_ExamRequestError,
   type iGM_ExamConvertProgress,
@@ -83,7 +84,7 @@ export function iGM_ExamUploadPage() {
     if (stage !== "completed" || !examId) return;
     const timer = setTimeout(() => {
       router.push(`/admin?examId=${encodeURIComponent(examId)}`);
-    }, 1200);
+    }, 2000);
     return () => clearTimeout(timer);
   }, [stage, examId, router]);
 
@@ -162,6 +163,8 @@ export function iGM_ExamUploadPage() {
 
   const percent = progress ? Math.min(100, Math.max(0, progress.percent)) : 0;
   const busy = stage === "uploading" || stage === "converting";
+  // 转换产物占用空间（MB，保留一位小数）
+  const sizeText = iGM_Exam_FormatSizeMb(progress?.fileSize ?? null);
 
   /** 阶段指示高亮状态 */
   function stepState(target: iGM_Exam_UploadStage): string {
@@ -267,6 +270,12 @@ export function iGM_ExamUploadPage() {
             <p className={`igm-mono ${styles.noteOk}`}>
               <CheckCircle2 size={14} strokeWidth={1.8} />
               {t("adminProgressDone")}
+            </p>
+          )}
+
+          {stage === "completed" && sizeText && (
+            <p className={`igm-mono ${styles.sizeNote}`}>
+              {t("fileSizeValue", { size: sizeText })}
             </p>
           )}
 

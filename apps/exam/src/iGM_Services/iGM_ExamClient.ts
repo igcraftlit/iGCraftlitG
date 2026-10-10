@@ -5,7 +5,7 @@
  * 模块：iGM_ExamClient
  * 作用：iG&M 教育考试系统唯一的后端访问出口
  * 内容：统一响应解包、列表 / 详情 / 管理端列表与详情、上传 PDF 建转换档、
- *       转换进度轮询、转换后 HTML 地址构造、校对更新、重新转换、删除、确认发布、交卷记录
+ *       转换进度轮询、转换后 HTML 地址构造、占用空间格式化、校对更新、重新转换、删除、确认发布、交卷记录
  * 说明：统一响应结构 { success, code, message, data }；错误归一化后抛出可读信息；
  *       本模块仅支持 PDF，转换由后端 pdf2htmlEX 产出自包含 HTML 目录
  */
@@ -30,6 +30,8 @@ export interface iGM_ExamConvertProgress {
   status: iGM_ExamConvertStatus;
   /** 进度百分比（0 待转换 / 40 转换中 / 100 完成 / 0 失败） */
   percent: number;
+  /** 转换产物实际占用字节数；未完成或未知时为 null */
+  fileSize: number | null;
   /** 转换失败原因（无失败时为空串） */
   error: string;
 }
@@ -54,6 +56,8 @@ export interface iGM_ExamListItem {
   questionCount: number | null;
   status: iGM_ExamStatus;
   convertStatus: iGM_ExamConvertStatus;
+  /** 转换产物实际占用字节数；未完成或未知时为 null */
+  fileSize: number | null;
   createdAt: string;
 }
 
@@ -189,6 +193,12 @@ export function iGM_Exam_AbsoluteUrl(path: string): string {
   return `${iGM_ExamConfig.apiBase}${path}`;
 }
 
+/** 转换产物占用空间（MB，保留一位小数）；未知时返回空串 */
+export function iGM_Exam_FormatSizeMb(bytes: number | null): string {
+  if (bytes === null || !Number.isFinite(bytes) || bytes < 0) return "";
+  return (bytes / (1024 * 1024)).toFixed(1);
+}
+
 /* ---------- 公开接口 ---------- */
 
 /** 已发布试卷列表 */
@@ -284,6 +294,7 @@ export async function iGM_Exam_Delete(examId: string): Promise<void> {
 // 导出 //
 export default {
   iGM_Exam_AbsoluteUrl,
+  iGM_Exam_FormatSizeMb,
   iGM_Exam_FetchList,
   iGM_Exam_FetchDetail,
   iGM_Exam_Submit,

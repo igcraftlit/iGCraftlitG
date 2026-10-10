@@ -184,7 +184,8 @@
 
 .note,
 .noteOk,
-.noteError {
+.noteError,
+.sizeNote {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -200,6 +201,12 @@
 
 .noteError {
   color: var(--igm-cinnabar);
+}
+
+/* 转换产物占用空间 */
+.sizeNote {
+  color: var(--igm-ink);
+  letter-spacing: 0.08em;
 }
 
 /* ============================= 操作 ============================= */

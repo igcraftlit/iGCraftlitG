@@ -48,6 +48,7 @@ export const iGM_en: iGM_I18nDict = {
   cardItems: "ITEMS",
   unitMinutes: " min",
   unitPoints: " pts",
+  fileSizeValue: "Storage: {size} MB",
   // 试卷详情页
   detailRetrieving: "RETRIEVING RECORD…",
   detailMissing: "No examination identifier provided.",
@@ -60,6 +61,9 @@ export const iGM_en: iGM_I18nDict = {
   detailNoContent: "No converted content is available yet; please wait for the conversion to finish.",
   detailPreviewHint:
     "A high-fidelity preview of the original layout; paging is supported.",
+  paperZoomOut: "Zoom out",
+  paperZoomFit: "Fit width",
+  paperZoomIn: "Zoom in",
   detailSubmitTitle: "Declaration of Submission",
   detailSubmitLead:
     "By submitting, you confirm that this session has been completed. The record is stored for institutional review.",

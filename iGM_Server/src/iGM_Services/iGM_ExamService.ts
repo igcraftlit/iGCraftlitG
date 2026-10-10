@@ -5,7 +5,7 @@
  * 模块：iGM_ExamService
  * 作用：iG&M 教育考试系统的试卷业务逻辑与 DTO 组装
  * 内容：编号生成（E-YYYY-NNN）、列表（公开/管理端）、详情、
- *       上传后后台 pdf2htmlEX 转换建档、转换进度查询、HTML 资源读取、
+ *       上传后后台 pdf2htmlEX 转换建档（含转换产物占用空间统计）、转换进度查询、HTML 资源读取、
  *       校对更新、确认并发布、重新转换、删除、交卷记录、原始文件读取
  * 说明：转换在后台异步执行，前端轮询进度接口；转换成功后立即删除原始 PDF，
  *       仅保留 HTML 目录；转换失败保留 PDF 24 小时供重新转换；
@@ -30,6 +30,7 @@ import {
   iGM_MarkExamOriginalDeleted,
   iGM_PublishExam,
   iGM_SetExamFileConvertStatus,
+  iGM_SetExamFileSize,
   iGM_SetExamHtmlPath,
   iGM_SetExamParseStatus,
   iGM_UpdateExamFields,
@@ -42,6 +43,7 @@ import {
   iGM_ExamHtmlDir,
   iGM_ExamHtmlRelativePath,
   iGM_ExamTempAbsolutePath,
+  iGM_MeasureExamUsage,
   iGM_ReadExamHtmlAsset,
   iGM_ReadExamHtmlText,
   iGM_ReadExamTempFile,
@@ -145,6 +147,7 @@ function iGM_ToListItem(
     questionCount: row.iGM_QuestionCount,
     status: row.iGM_Status as iGM_ExamStatus,
     convertStatus: (row.iGM_ParseStatus ?? "pending") as iGM_ExamConvertStatus,
+    fileSize: row.iGM_FileSize,
     createdAt: row.iGM_CreatedAt,
   };
 }
@@ -191,6 +194,7 @@ function iGM_BuildProgress(
     examId: row.iGM_Id,
     status,
     percent,
+    fileSize: row.iGM_FileSize,
     error: fileRow?.iGM_ConvertError ?? "",
   };
 }
@@ -274,6 +278,10 @@ export async function iGM_RunExamConvertService(
     await iGM_RemoveExamHtmlDir(examId);
     await iGM_EnsureExamHtmlDir(examId);
     await iGM_RunPdf2HtmlEx(inputAbsolutePath, htmlDir, examId);
+
+    // 统计转换产物（HTML 目录及其中的图片等资源）的实际占用字节数并入库
+    const usageBytes = await iGM_MeasureExamUsage(examId);
+    await iGM_SetExamFileSize(examId, usageBytes);
 
     // 从生成的 HTML 中剥离文本，识别 Title/Subject/Issuer/Reviewer/Duration/TotalScore/QuestionCount
     const plainText = await iGM_ReadExamHtmlText(examId);

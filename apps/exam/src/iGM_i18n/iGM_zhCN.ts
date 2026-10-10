@@ -48,6 +48,7 @@ export const iGM_zhCN: iGM_I18nDict = {
   cardItems: "题数",
   unitMinutes: " 分钟",
   unitPoints: " 分",
+  fileSizeValue: "占用空间：{size} MB",
   // 试卷详情页
   detailRetrieving: "正在检索记录…",
   detailMissing: "未提供考试标识。",
@@ -59,6 +60,9 @@ export const iGM_zhCN: iGM_I18nDict = {
   detailPaperTitle: "试卷正文",
   detailNoContent: "暂无转换后的试卷内容，请等待转换完成。",
   detailPreviewHint: "以下为原始排版的高保真预览，支持翻页查看。",
+  paperZoomOut: "缩小",
+  paperZoomFit: "适应宽度",
+  paperZoomIn: "放大",
   detailSubmitTitle: "交卷声明",
   detailSubmitLead: "点击交卷即表示本次考试已完成，记录将留存供学院复核。",
   fieldSubject: "科目",

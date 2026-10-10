@@ -3,8 +3,8 @@
  * 所属层：前端 / 页面样式层
  * 路由：E_ExamDetail（/detail?id=xxx）
  * 模块：iGM_ExamDetail
- * 作用：试卷详情页样式（实验记录表、计时器侧栏、解析正文区、交卷区）
- * 内容：页面容器、返回条、标题块、元数据布局、记录表、通知、正文区、交卷
+ * 作用：试卷详情页样式（实验记录表、计时器侧栏、A4 版面试卷预览、交卷区）
+ * 内容：页面容器、返回条、标题块、元数据布局、记录表、通知、A4 预览（缩放工具条 / 纸张 / iframe）、交卷
  * 说明：桌面左右分栏，平板起上下堆叠
  */
 
@@ -195,19 +195,93 @@
 }
 
 .paperHint {
-  margin: 0 0 12px;
+  margin: 0;
   font-size: 11px;
   letter-spacing: 0.1em;
   color: var(--igm-text-muted);
 }
 
-.htmlFrame {
-  width: 100%;
-  height: 78vh;
-  min-height: 560px;
+/* 预览工具条：缩放控制 */
+.zoomBar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.zoomBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 5px 9px;
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+  background: transparent;
+  color: var(--igm-ink);
+  font-size: 11px;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.zoomBtn:hover {
+  border-color: var(--igm-copper);
+  background: color-mix(in srgb, var(--igm-gold) 12%, transparent);
+}
+
+.zoomValue {
+  min-width: 42px;
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--igm-text-muted);
+}
+
+/* 提示 + 占用空间 */
+.paperMeta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.paperSize {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--igm-ink-soft);
+}
+
+/* A4 版面：桌面（纸张）居中，可缩放 */
+.paperStage {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow: auto;
+  padding: 18px 12px 26px;
+  background: var(--igm-paper-sink);
   border: 1px solid var(--igm-line-soft);
   border-radius: var(--igm-radius);
-  background: var(--igm-paper-sink);
+}
+
+.paperSheet {
+  flex: 0 0 auto;
+  width: var(--igm-a4-w, 794px);
+  height: var(--igm-a4-h, 1123px);
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+  zoom: var(--igm-zoom, 1);
+}
+
+.htmlFrame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #ffffff;
 }
 
 /* ============================= 交卷 ============================= */

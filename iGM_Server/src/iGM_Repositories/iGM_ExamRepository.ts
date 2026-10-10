@@ -4,7 +4,7 @@
  * 路由：G_Exam（/api/exam/*）
  * 模块：iGM_ExamRepository
  * 作用：iGM_Exams / iGM_ExamFiles / iGM_ExamSubmissions 三张表的唯一数据访问出口
- * 内容：试卷增删改查、按状态筛选、元数据与 HTML 目录写入、转换状态写入、
+ * 内容：试卷增删改查、按状态筛选、元数据与 HTML 目录写入、占用空间写入、转换状态写入、
  *       文件行读写与临时路径清理、交卷记录写入与计数、编号序号计算所需的 id 与创建时间序列
  * 说明：磁盘路径仅存相对存储根目录的内部路径，绝不对外暴露
  */
@@ -165,6 +165,18 @@ export async function iGM_SetExamHtmlPath(
     `UPDATE iGM_Exams SET iGM_HtmlPath = ?, iGM_UpdatedAt = ?
       WHERE iGM_Id = ?`,
     [htmlPath, new Date().toISOString(), examId],
+  );
+}
+
+/** 写入试卷转换产物的实际占用字节数（iGM_Exams.iGM_FileSize） */
+export async function iGM_SetExamFileSize(
+  examId: string,
+  fileSize: number,
+): Promise<void> {
+  await iGM_Db.run(
+    `UPDATE iGM_Exams SET iGM_FileSize = ?, iGM_UpdatedAt = ?
+      WHERE iGM_Id = ?`,
+    [fileSize, new Date().toISOString(), examId],
   );
 }
 
@@ -348,6 +360,7 @@ export default {
   iGM_InsertExam,
   iGM_UpdateExamFields,
   iGM_SetExamHtmlPath,
+  iGM_SetExamFileSize,
   iGM_SetExamParseStatus,
   iGM_MarkExamFileCompleted,
   iGM_SetExamFileConvertStatus,
