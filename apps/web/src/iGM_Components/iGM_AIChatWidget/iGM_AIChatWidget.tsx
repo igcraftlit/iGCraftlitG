@@ -3,20 +3,11 @@
  * 所属层：前端 / 通用组件层
  * 路由：全局（挂载于 iGM_Providers）
  * 模块：iGM_AIChatWidget
- * 作用：iGM StarWhisper AI 助手——右下角悬浮按钮，点击弹出屏幕居中模态框
- *       （AI 赋能系统模块一 / 模块二 / 模块三 / 模块四）
- * 内容：居中模态框（约 600x600、半透明遮罩、玻璃态）、通道切换 Tab（滑动气泡，
- *       Free (UPR) / Premium (SPR)）、按通道显示余额与模型名、Premium 充值入口、
- *       消息气泡列表、SSE 流式打字（光标闪烁）、模型信息按钮（展开态本地持久化）、
- *       余额不足拦截、会话 id 本地持久化、历史回填、错误兜底提示；
- *       模块四新增：会话记录目录（最多 3 个、可切换/新建、移动端可折叠）、
- *       点击 UPR 余额查看消耗流水（分页滚动加载）、能力边界提示行；
- *       本次修正：弹窗顶部账号专属提示、超时（红）/ 超字数截断（黄）气泡下方提示；
- *       模块五（安全修复）：账号切换清空 AI 本地缓存 + 按 userId 强制重挂载、
- *       未登录拦截（禁用输入 + 去登录）、Markdown 代码块渲染（语言标签 / 复制按钮）、
- *       停止生成按钮（AbortController 中止流式，已生成内容保留）
- * 说明：文案全部来自语言包 ai.*（五种语言）；请求只经 iGM_AIClient，
- *       DeepSeek 由后端代理，前端不接触任何密钥
+ * 作用：Chat iGM Nove V0.1 智能助手——右下角悬浮按钮，点击弹出屏幕居中模态框
+ * 内容：居中模态框（约 600x600、半透明遮罩、玻璃态）、UQ/Coin 双余额与模型名展示、
+ *       消息气泡列表、SSE 流式打字、模型信息按钮、余额不足拦截、会话持久化、
+ *       未登录拦截、Markdown 代码块渲染、停止生成按钮、能力边界提示行；
+ *       点击 UQ / Coin 余额查看消耗流水（分页滚动加载）
  */
 
 // 导入依赖 //
@@ -47,12 +38,11 @@ import {
   iGM_ApiAIConversation,
   iGM_ApiAIConversations,
   iGM_ApiAIStreamChat,
-  iGM_ApiAIUPRTransactions,
+  iGM_ApiAIQuotaTransactions,
   type iGM_AIChatMessage,
   type iGM_AIConversation,
-  type iGM_AIChannel,
   type iGM_AIStreamNotice,
-  type iGM_UPRTransactionItem,
+  type iGM_QuotaTransactionItem,
 } from "../../iGM_Services/iGM_AIClient";
 import {
   iGM_FormatDateTime,
@@ -63,29 +53,12 @@ import { iGM_AIChatMarkdown as IGM_AIChatMarkdown } from "./iGM_AIChatMarkdown";
 import styles from "./iGM_AIChatWidget.module.css";
 
 // 类型定义 //
-/** 会话 id 本地持久化键（刷新页面后继续上次对话） */
 const iGM_AI_CONVERSATION_STORAGE_KEY = "iGM_AIConversationId";
-
-/** 会话 id 归属账号键（换号时校验，归属不符立即清空，防止跨账号串号） */
 const iGM_AI_CONVERSATION_OWNER_STORAGE_KEY = "iGM_AIConversationOwner";
-
-/** 模型信息展开态本地持久化键（仅前端状态，不写数据库） */
 const iGM_AI_MODEL_INFO_STORAGE_KEY = "iGM_AIModelInfoOpen";
-
-/** 提问长度上限（与后端 DEEPSEEK_MAX_MESSAGE_LENGTH 口径一致） */
 const iGM_AI_MESSAGE_MAX_LENGTH = 2000;
-
-/** 单次提问固定扣费（UPR），与后端 IGM_AI_UPR_QUESTION_COST 默认值一致 */
 const iGM_AI_QUESTION_COST = 0.02;
-
-/** UPR 消耗流水分页大小（与后端默认值一致，服务端上限 50） */
-const iGM_AI_UPR_PAGE_SIZE = 20;
-
-/** 通道 Tab 文案（UPR / SPR 为额度专名，按惯例硬编码英文，同「Model Info」） */
-const iGM_AI_CHANNEL_LABELS: Record<iGM_AIChannel, string> = {
-  free: "Free (UPR)",
-  premium: "Premium (SPR)",
-};
+const iGM_AI_QUOTA_PAGE_SIZE = 20;
 
 /** 可展示的提示文案键集合（本地错误归一化与后端业务错误均收敛到这些键） */
 const iGM_AI_NOTICE_KEYS = [
@@ -99,8 +72,8 @@ const iGM_AI_NOTICE_KEYS = [
   "ai.errors.emptyMessage",
   "ai.errors.messageTooLong",
   "ai.errors.conversationNotFound",
-  "ai.errors.uprInsufficient",
-  "ai.errors.sprInsufficient",
+  "ai.errors.quotaInsufficient",
+  "ai.errors.quotaInsufficient",
   "ai.errors.quotaUserNotFound",
 ] as const;
 
@@ -160,28 +133,31 @@ function iGM_NextBubbleId(role: "user" | "assistant"): string {
   return `ai-${role}-${iGM_AIBubbleSeq}`;
 }
 
+/** 流水类型中文标签 */
+function iGM_QuotaTypeLabel(type: string): string {
+  const map: Record<string, string> = {
+    register: "注册赠送",
+    chat_question: "AI 提问",
+    chat_answer: "AI 回答",
+    recharge: "充值",
+    reward: "社区奖励",
+  };
+  return map[type] ?? type;
+}
+
 /** 服务端消息转界面气泡 */
 function iGM_ToBubble(message: iGM_AIChatMessage): iGM_AIBubble {
   return { id: message.id, role: message.role, content: message.content };
 }
 
-/** 把任意错误归一化为可展示的文案键，保证界面永不暴露原始错误或 i18n 键 */
-function iGM_ResolveErrorKey(
-  error: unknown,
-  channel: iGM_AIChannel = "free",
-): iGM_AINoticeKey {
+/** 把任意错误归一化为可展示的文案键 */
+function iGM_ResolveErrorKey(error: unknown): iGM_AINoticeKey {
   if (error instanceof iGM_RequestError) {
     if (error.kind === "timeout") return "ai.errors.timeout";
     if (error.kind === "network") return "ai.errors.network";
     if (error.code === 401) return "ai.widget.loginRequired";
-    // 402 余额不足：后端 message 已按通道给出文案键；兜底按当前通道映射
-    if (error.code === 402) {
-      return channel === "free"
-        ? "ai.errors.uprInsufficient"
-        : "ai.errors.sprInsufficient";
-    }
+    if (error.code === 402) return "ai.errors.quotaInsufficient";
     if (error.code === 429) return "ai.errors.busy";
-    // 后端业务错误 message 即文案键（ai.errors.*）
     if ((iGM_AI_NOTICE_KEYS as readonly string[]).includes(error.message)) {
       return error.message as iGM_AINoticeKey;
     }
@@ -189,13 +165,10 @@ function iGM_ResolveErrorKey(
   return "ai.errors.generic";
 }
 
-/** 当前通道余额是否不足以发起下一次提问（余额未知时不拦截，由后端兜底） */
-function iGM_IsBalanceInsufficient(
-  channel: iGM_AIChannel,
-  balance: number | null,
-): boolean {
+/** 当前余额是否不足以发起下一次提问 */
+function iGM_IsBalanceInsufficient(balance: number | null): boolean {
   if (balance === null) return false;
-  return channel === "free" ? balance < iGM_AI_QUESTION_COST : balance <= 0;
+  return balance < iGM_AI_QUESTION_COST;
 }
 
 /** iGM StarWhisper 悬浮入口 + 居中模态框 */
@@ -216,29 +189,25 @@ export function iGM_AIChatWidget() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [noticeKey, setNoticeKey] = useState<iGM_AINoticeKey | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  // 会话记录目录：本人最近 3 个会话（最新创建在前），移动端默认折叠
+  // 会话记录目录：本人最近 3 个会话（最新创建在前）
   const [conversations, setConversations] = useState<iGM_AIConversation[]>([]);
   const [sessionsOpen, setSessionsOpen] = useState(true);
-  // UPR 消耗详情面板：分页流水（下拉滚动加载更多）
-  const [uprDetailOpen, setUprDetailOpen] = useState(false);
-  const [uprItems, setUprItems] = useState<iGM_UPRTransactionItem[]>([]);
-  const [uprTotal, setUprTotal] = useState(0);
-  const [uprPage, setUprPage] = useState(0);
-  const [uprLoading, setUprLoading] = useState(false);
-  const [uprFailed, setUprFailed] = useState(false);
-  // 当前通道：free（本地 Qwen，扣 UPR）/ premium（DeepSeek Flash，扣 SPR）
-  const [channel, setChannel] = useState<iGM_AIChannel>("free");
-  // UPR / SPR 双余额与双通道模型名（未登录 / 查询失败时为 null）
-  const [uprBalance, setUprBalance] = useState<number | null>(null);
-  const [sprBalance, setSprBalance] = useState<number | null>(null);
-  const [freeModel, setFreeModel] = useState<string | null>(null);
-  const [premiumModel, setPremiumModel] = useState<string | null>(null);
+  // 流水详情面板（支持 UQ / Coin 两个币种）
+  const [quotaDetailChannel, setQuotaDetailChannel] = useState<"uq" | "coin" | null>(null);
+  const [quotaItems, setQuotaItems] = useState<iGM_QuotaTransactionItem[]>([]);
+  const [quotaTotal, setQuotaTotal] = useState(0);
+  const [quotaPage, setQuotaPage] = useState(0);
+  const [quotaLoading, setQuotaLoading] = useState(false);
+  const [quotaFailed, setQuotaFailed] = useState(false);
+  // UQ / Coin 双余额与模型名（未登录 / 查询失败时为 null）
+  const [uqBalance, setUqBalance] = useState<number | null>(null);
+  const [coinBalance, setCoinBalance] = useState<number | null>(null);
+  const [modelName, setModelName] = useState<string | null>(null);
   const [modelInfoOpen, setModelInfoOpen] = useState(false);
   const listRef = useRef<HTMLDivElement | null>(null);
   const streamAbortRef = useRef<AbortController | null>(null);
-  // uprLoadingRef：加载中防重入（滚动事件高频触发）；historySeqRef：防旧会话响应覆盖新选择
-  const uprLoadingRef = useRef(false);
-  const uprListRef = useRef<HTMLDivElement | null>(null);
+  const quotaLoadingRef = useRef(false);
+  const quotaListRef = useRef<HTMLDivElement | null>(null);
   const historySeqRef = useRef(0);
 
   // 账号切换隔离：登出或换号时清空全部 AI 本地缓存（会话 id / 归属账号 / 模型信息态）
@@ -311,19 +280,19 @@ export function iGM_AIChatWidget() {
   /** 刷新双余额与双模型名（失败静默，不打断对话主流程） */
   const iGM_RefreshInfo = useCallback(async () => {
     if (status !== "authenticated") {
-      setUprBalance(null);
-      setSprBalance(null);
-      setFreeModel(null);
-      setPremiumModel(null);
+      setUqBalance(null);
+      setCoinBalance(null);
+      setModelName(null);
+      setModelName(null);
       return;
     }
     try {
       const response = await iGM_ApiAIInfo();
       if (response.data) {
-        setUprBalance(response.data.uprBalance);
-        setSprBalance(response.data.sprBalance);
-        setFreeModel(response.data.freeModel);
-        setPremiumModel(response.data.premiumModel);
+        setUqBalance(response.data.uqBalance);
+        setCoinBalance(response.data.coinBalance);
+        setModelName(response.data.modelName);
+        setModelName(response.data.modelName);
       }
     } catch {
       // 余额查询失败静默处理
@@ -373,48 +342,48 @@ export function iGM_AIChatWidget() {
   }, []);
 
   /** 加载 UPR 消耗流水某页（第 1 页替换、其余追加；防重入，失败可重试） */
-  const iGM_LoadUPRPage = useCallback(async (page: number) => {
-    if (uprLoadingRef.current) return;
-    uprLoadingRef.current = true;
-    setUprLoading(true);
-    setUprFailed(false);
+  const iGM_LoadquotaPage = useCallback(async (page: number) => {
+    if (quotaLoadingRef.current) return;
+    quotaLoadingRef.current = true;
+    setQuotaLoading(true);
+    setQuotaFailed(false);
     try {
-      const response = await iGM_ApiAIUPRTransactions(page, iGM_AI_UPR_PAGE_SIZE);
+      const response = await iGM_ApiAIQuotaTransactions((quotaDetailChannel ?? "uq"), page, iGM_AI_QUOTA_PAGE_SIZE);
       const data = response.data;
       if (!data) {
-        setUprFailed(true);
+        setQuotaFailed(true);
         return;
       }
-      setUprItems((prev) => (page <= 1 ? data.items : [...prev, ...data.items]));
-      setUprTotal(data.total);
-      setUprPage(data.page);
+      setQuotaItems((prev) => (page <= 1 ? data.items : [...prev, ...data.items]));
+      setQuotaTotal(data.total);
+      setQuotaPage(data.page);
     } catch {
-      setUprFailed(true);
+      setQuotaFailed(true);
     } finally {
-      uprLoadingRef.current = false;
-      setUprLoading(false);
+      quotaLoadingRef.current = false;
+      setQuotaLoading(false);
     }
   }, []);
 
   /** 打开 UPR 消耗详情面板：重置流水并加载第一页 */
   const iGM_OpenUPRDetail = useCallback(() => {
-    setUprDetailOpen(true);
-    setUprItems([]);
-    setUprTotal(0);
-    setUprPage(0);
-    setUprFailed(false);
-    void iGM_LoadUPRPage(1);
-  }, [iGM_LoadUPRPage]);
+    setQuotaDetailChannel("uq");
+    setQuotaItems([]);
+    setQuotaTotal(0);
+    setQuotaPage(0);
+    setQuotaFailed(false);
+    void iGM_LoadquotaPage(1);
+  }, [iGM_LoadquotaPage]);
 
   /** UPR 流水列表滚动触底：仍有下一页时自动加载更多（失败后由重试按钮触发） */
-  const iGM_OnUPRScroll = useCallback(() => {
-    const list = uprListRef.current;
-    if (!list || uprLoadingRef.current || uprFailed) return;
-    if (uprItems.length === 0 || uprItems.length >= uprTotal) return;
+  const iGM_OnQuotaScroll = useCallback(() => {
+    const list = quotaListRef.current;
+    if (!list || quotaLoadingRef.current || quotaFailed) return;
+    if (quotaItems.length === 0 || quotaItems.length >= quotaTotal) return;
     if (list.scrollTop + list.clientHeight >= list.scrollHeight - 24) {
-      void iGM_LoadUPRPage(uprPage + 1);
+      void iGM_LoadquotaPage(quotaPage + 1);
     }
-  }, [uprItems.length, uprTotal, uprPage, uprFailed, iGM_LoadUPRPage]);
+  }, [quotaItems.length, quotaTotal, quotaPage, quotaFailed, iGM_LoadquotaPage]);
 
   /** 切换会话：中止当前流，按所选会话加载历史消息（序号防旧响应覆盖新选择） */
   const iGM_SelectConversation = useCallback(
@@ -469,7 +438,7 @@ export function iGM_AIChatWidget() {
   /** 关闭模态框：流式进行中时中止流（已收到内容保留，不弹错误） */
   const iGM_Close = useCallback(() => {
     streamAbortRef.current?.abort();
-    setUprDetailOpen(false);
+    setQuotaDetailChannel(null);
     setOpen(false);
   }, []);
 
@@ -486,13 +455,9 @@ export function iGM_AIChatWidget() {
       setNoticeKey("ai.widget.loginRequired");
       return;
     }
-    const activeBalance = channel === "free" ? uprBalance : sprBalance;
-    if (iGM_IsBalanceInsufficient(channel, activeBalance)) {
-      setNoticeKey(
-        channel === "free"
-          ? "ai.errors.uprInsufficient"
-          : "ai.errors.sprInsufficient",
-      );
+    // 两个币种余额都不够才拦截
+    if (iGM_IsBalanceInsufficient(uqBalance ?? 0) && iGM_IsBalanceInsufficient(coinBalance ?? 0)) {
+      setNoticeKey("ai.errors.quotaInsufficient");
       return;
     }
     setNoticeKey(null);
@@ -518,15 +483,14 @@ export function iGM_AIChatWidget() {
 
     try {
       await iGM_ApiAIStreamChat(
-        channel,
         text,
         conversationId,
         {
-          onConversationId: (id) => {
+          onConversationId: (id: string) => {
             setConversationId(id);
             iGM_WriteStoredConversationId(id, userId);
           },
-          onDelta: (delta) => {
+          onDelta: (delta: string) => {
             streamedText += delta;
             setMessages((prev) =>
               prev.map((message) =>
@@ -536,11 +500,11 @@ export function iGM_AIChatWidget() {
               ),
             );
           },
-          onNotice: (streamNotice) => {
+          onNotice: (streamNotice: unknown) => {
             setMessages((prev) =>
               prev.map((message) =>
                 message.id === assistantId
-                  ? { ...message, notice: streamNotice }
+                  ? { ...message, notice: streamNotice as never }
                   : message,
               ),
             );
@@ -549,7 +513,7 @@ export function iGM_AIChatWidget() {
         controller.signal,
       );
     } catch (error) {
-      const notice = iGM_ResolveErrorKey(error, channel);
+      const notice = iGM_ResolveErrorKey(error);
       if (notice === "ai.errors.timeout" && streamedText.length > 0) {
         // 超时已按生成内容扣费：仅在气泡下方以红色提示，避免与全局错误条重复
         setMessages((prev) =>
@@ -590,9 +554,8 @@ export function iGM_AIChatWidget() {
     status,
     userId,
     conversationId,
-    channel,
-    uprBalance,
-    sprBalance,
+    uqBalance,
+    coinBalance,
     iGM_RefreshInfo,
     iGM_RefreshConversations,
   ]);
@@ -614,13 +577,10 @@ export function iGM_AIChatWidget() {
     router.push(`/G_Auth/login?redirect=${encodeURIComponent(pathname)}`);
   }, [iGM_Close, router, pathname]);
 
-  // 登录态派生值：未登录（含加载中）时输入区与发送按钮整体禁用
   const isAuthenticated = status === "authenticated";
-
-  // 当前通道派生的展示值：余额 / 模型名 / 是否不足
-  const activeBalance = channel === "free" ? uprBalance : sprBalance;
-  const activeModel = channel === "free" ? freeModel : premiumModel;
-  const insufficient = iGM_IsBalanceInsufficient(channel, activeBalance);
+  const insufficient =
+    iGM_IsBalanceInsufficient(uqBalance ?? 0) &&
+    iGM_IsBalanceInsufficient(coinBalance ?? 0);
 
   if (!open) {
     return (
@@ -653,25 +613,27 @@ export function iGM_AIChatWidget() {
             <Sparkles size={16} strokeWidth={1.8} />
           </span>
           <p className={styles.headerTitle}>{t("ai.widget.title")}</p>
-          {activeBalance !== null &&
-            (channel === "free" ? (
+          {isAuthenticated && (
+            <div className={styles.balances}>
               <button
                 type="button"
                 className={`${styles.balance} ${styles.balanceAction}`}
-                onClick={iGM_OpenUPRDetail}
-                title={t("ai.widget.viewUPRDetail")}
+                onClick={() => { setQuotaDetailChannel("uq"); setQuotaItems([]); setQuotaTotal(0); setQuotaPage(0); setQuotaFailed(false); void iGM_LoadquotaPage(1); }}
+                title="UQ 流水"
               >
                 <Coins size={13} strokeWidth={1.8} aria-hidden />
-                {"UPR: "}
-                {iGM_FormatQuota(activeBalance)}
+                UQ: {uqBalance !== null ? iGM_FormatQuota(uqBalance) : "--"}
               </button>
-            ) : (
-              <span className={styles.balance}>
-                <Coins size={13} strokeWidth={1.8} aria-hidden />
-                {"SPR: "}
-                {iGM_FormatQuota(activeBalance)}
-              </span>
-            ))}
+              <button
+                type="button"
+                className={`${styles.balance} ${styles.balanceAction}`}
+                onClick={() => { setQuotaDetailChannel("coin"); setQuotaItems([]); setQuotaTotal(0); setQuotaPage(0); setQuotaFailed(false); void iGM_LoadquotaPage(1); }}
+                title="Coin 流水"
+              >
+                Coin: {coinBalance !== null ? iGM_FormatQuota(coinBalance) : "--"}
+              </button>
+            </div>
+          )}
           <button
             type="button"
             className={styles.headerClose}
@@ -682,43 +644,16 @@ export function iGM_AIChatWidget() {
           </button>
         </header>
 
-        {/* 账号专属提示：会话与流水均按当前账号严格隔离 */}
+        {/* 账号专属提示 */}
         <p className={styles.accountTip}>{t("ai.widget.accountIsolation")}</p>
 
-        {/* 通道切换：极简 Tab + 滑动气泡（Free 扣 UPR / Premium 扣 SPR） */}
-        <div
-          className={styles.channelTabs}
-          role="tablist"
-          aria-label={t("ai.widget.title")}
-        >
-          <span
-            className={styles.channelBubble}
-            style={{
-              left: channel === "premium" ? "50%" : "3px",
-              right: channel === "premium" ? "3px" : "50%",
-            }}
-            aria-hidden
-          />
-          {(["free", "premium"] as iGM_AIChannel[]).map((item) => (
-            <button
-              key={item}
-              type="button"
-              role="tab"
-              aria-selected={channel === item}
-              className={`${styles.channelTab} ${
-                channel === item ? styles.channelTabActive : ""
-              }`}
-              onClick={() => {
-                setChannel(item);
-                setNoticeKey(null);
-              }}
-            >
-              {iGM_AI_CHANNEL_LABELS[item]}
-            </button>
-          ))}
+        {/* 单通道提示（模型名） */}
+        <div className={styles.modelRow}>
+          <Cpu size={13} strokeWidth={1.8} aria-hidden />
+          {modelName ?? "Chat iGM Nove V0.1"}
         </div>
 
-        {/* 会话记录目录：本地最多保留 3 个（最新创建在前），可折叠、可切换、可新建 */}
+        {/* 会话记录目录 */}
         <div className={styles.sessionsBar}>
           <button
             type="button"
@@ -876,12 +811,8 @@ export function iGM_AIChatWidget() {
             </button>
             {modelInfoOpen && (
               <span className={styles.modelName}>
-                {activeModel
-                  ? `${activeModel} (${t(
-                      channel === "free"
-                        ? "ai.widget.modelLocal"
-                        : "ai.widget.modelCloud",
-                    )})`
+                {modelName
+                  ? `${modelName} (${t("ai.widget.modelLocal")})`
                   : "—"}
               </span>
             )}
@@ -913,11 +844,7 @@ export function iGM_AIChatWidget() {
                 status === "anonymous"
                   ? t("ai.widget.loginRequired")
                   : insufficient
-                    ? t(
-                        channel === "free"
-                          ? "ai.errors.uprInsufficient"
-                          : "ai.errors.sprInsufficient",
-                      )
+                    ? t("ai.errors.quotaInsufficient")
                     : t("ai.widget.placeholder")
               }
               disabled={!isAuthenticated || insufficient || sending}
@@ -949,31 +876,21 @@ export function iGM_AIChatWidget() {
             )}
           </div>
 
-          {/* Premium 通道专属：充值 SPR 入口（跳转账户充值页） */}
-          {channel === "premium" && (
-            <button
-              type="button"
-              className={styles.recharge}
-              onClick={() => router.push("/G_Account_Recharge")}
-            >
-              <Coins size={13} strokeWidth={1.8} aria-hidden />
-              {t("ai.widget.rechargeSpr")}
-            </button>
-          )}
-
-          {/* 能力边界提示：可答站内问题与通用知识 / 无法访问外部网站 / 不回答敏感话题 */}
+          {/* 能力边界提示 */}
           <p className={styles.capability}>{t("ai.widget.capability")}</p>
         </footer>
 
-        {/* UPR 消耗详情：点击头部 UPR 余额打开的玻璃态覆盖层（时间倒序 + 滚动加载） */}
-        {uprDetailOpen && (
+        {/* 消耗详情面板：根据 quotaDetailChannel 显示 UQ 或 Coin 流水 */}
+        {quotaDetailChannel !== null && (
           <div className={styles.detailPanel}>
             <div className={styles.detailHeader}>
-              <p className={styles.detailTitle}>{t("ai.upr.title")}</p>
+              <p className={styles.detailTitle}>
+                {quotaDetailChannel === "uq" ? "UQ 消耗流水" : "Coin 消耗流水"}
+              </p>
               <button
                 type="button"
                 className={styles.detailClose}
-                onClick={() => setUprDetailOpen(false)}
+                onClick={() => setQuotaDetailChannel(null)}
                 aria-label={t("ai.widget.close")}
               >
                 <X size={15} strokeWidth={1.8} />
@@ -981,17 +898,17 @@ export function iGM_AIChatWidget() {
             </div>
             <div
               className={styles.detailList}
-              ref={uprListRef}
-              onScroll={iGM_OnUPRScroll}
+              ref={quotaListRef}
+              onScroll={iGM_OnQuotaScroll}
             >
-              {uprItems.length === 0 && !uprLoading && !uprFailed && (
-                <p className={styles.detailEmpty}>{t("ai.upr.empty")}</p>
+              {quotaItems.length === 0 && !quotaLoading && !quotaFailed && (
+                <p className={styles.detailEmpty}>暂无流水记录</p>
               )}
-              {uprItems.map((item) => (
+              {quotaItems.map((item) => (
                 <div key={item.id} className={styles.detailRow}>
                   <div className={styles.detailRowTop}>
                     <span className={styles.detailType}>
-                      {t(`ai.upr.type.${item.type}`)}
+                      {iGM_QuotaTypeLabel(item.type)}
                     </span>
                     <span
                       className={
@@ -1002,26 +919,26 @@ export function iGM_AIChatWidget() {
                       {iGM_FormatQuota(item.amount)}
                     </span>
                   </div>
-                  <p className={styles.detailDetail}>{item.detail}</p>
+                  {item.detail && (
+                    <p className={styles.detailDetail}>{item.detail}</p>
+                  )}
                   <div className={styles.detailRowBottom}>
                     <span className={styles.detailTime}>
                       {iGM_FormatDateTime(locale, item.createdAt)}
                     </span>
                     <span className={styles.detailBalance}>
-                      {t("ai.upr.balanceAfter")}
-                      {": "}
-                      {iGM_FormatQuota(item.balanceAfter)}
+                      余额：{iGM_FormatQuota(item.balanceAfter)}
                     </span>
                   </div>
                 </div>
               ))}
-              {uprLoading && (
+              {quotaLoading && (
                 <p className={styles.detailHint}>
                   <Loader2 size={13} className={styles.spinner} aria-hidden />
-                  {t("ai.upr.loadingMore")}
+                  加载中...
                 </p>
               )}
-              {!uprLoading && uprFailed && (
+              {!quotaLoading && quotaFailed && (
                 <div className={styles.detailError} role="alert">
                   <span className={styles.detailErrorText}>
                     {t("ai.errors.network")}
@@ -1029,17 +946,17 @@ export function iGM_AIChatWidget() {
                   <button
                     type="button"
                     className={styles.detailRetry}
-                    onClick={() => void iGM_LoadUPRPage(uprPage + 1)}
+                    onClick={() => void iGM_LoadquotaPage(quotaPage + 1)}
                   >
-                    {t("ai.upr.retry")}
+                    重试
                   </button>
                 </div>
               )}
-              {!uprLoading &&
-                !uprFailed &&
-                uprItems.length > 0 &&
-                uprItems.length >= uprTotal && (
-                  <p className={styles.detailHint}>{t("ai.upr.allLoaded")}</p>
+              {!quotaLoading &&
+                !quotaFailed &&
+                quotaItems.length > 0 &&
+                quotaItems.length >= quotaTotal && (
+                  <p className={styles.detailHint}>已加载全部</p>
                 )}
             </div>
           </div>

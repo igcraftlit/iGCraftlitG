@@ -1,14 +1,8 @@
 /**
  * 文件路径：iGM_Server/src/iGM_Repositories/iGM_QuotaRepository.ts
- * 所属层：后端 / 数据访问层
- * 路由：G_AI、G_Admin
  * 模块：iGM_QuotaRepository
- * 作用：UPR / SPR 流水表与用户双余额列的唯一数据访问出口（AI 赋能系统模块三 / 模块四）
- * 内容：双余额读取（普通 / 行级锁）、双余额更新、流水写入、流水数量统计、
- *       流水按时间倒序分页查询、双通道统计聚合
- * 说明：两张流水表同构，通过内部表名 / 列名常量参数化复用同一组 SQL
- *       （常量仅为内部字面量，不含外部输入，无注入风险）；
- *       numeric 列由 PostgreSQL 驱动返回字符串，统一经 iGM_ToNumber 转为数字；
+ * 作用：UQ / Coin 双币种流水表与用户双余额列的唯一数据访问出口
+ * 说明：两张流水表同构，通过内部常量参数化复用同一组 SQL；
  *       余额变动必须由业务层放在事务内调用（锁读 → 更新 → 写流水）
  */
 
@@ -19,48 +13,37 @@ import type {
   iGM_AICallStatsUserRow,
   iGM_QuotaChannel,
   iGM_QuotaTransactionRow,
-  iGM_QuotaTransactionType,
 } from "../iGM_Types/iGM_Quota";
 
 // 类型定义 //
-/** 写入一条额度流水的入参 */
 export interface iGM_InsertQuotaTransactionParams {
   userId: string;
-  type: iGM_QuotaTransactionType;
-  /** 变动值：正数为增加、负数为消耗 */
+  type: string;
   amount: number;
-  /** 变动后余额 */
   balanceAfter: number;
   detail: string;
   createdAt: string;
 }
 
-/** 用户双余额 */
 export interface iGM_UserQuotaBalances {
-  upr: number;
-  spr: number;
+  uq: number;
+  coin: number;
 }
 
 // 核心逻辑 //
-/** 额度通道 → 流水表名（内部常量，仅用于 SQL 拼接） */
+/** 币种 → 流水表名（内部常量，仅用于 SQL 拼接） */
 const iGM_QuotaTableNames: Record<iGM_QuotaChannel, string> = {
-  upr: "iGM_UPRTransactions",
-  spr: "iGM_SPRTransactions",
+  uq: "iGM_UQTransactions",
+  coin: "iGM_CoinTransactions",
 };
 
-/** 额度通道 → 用户余额列名（内部常量，仅用于 SQL 拼接） */
+/** 币种 → 用户余额列名 */
 const iGM_QuotaColumnNames: Record<iGM_QuotaChannel, string> = {
-  upr: "iGM_UprBalance",
-  spr: "iGM_SprBalance",
+  uq: "iGM_UqBalance",
+  coin: "iGM_CoinBalance",
 };
 
-/** 额度通道 → 调用次数口径的流水类型（UPR 按提问、SPR 按回答） */
-const iGM_QuotaCallTypes: Record<iGM_QuotaChannel, string> = {
-  upr: "chat_question",
-  spr: "chat_answer",
-};
-
-/** numeric / 字符串统一转数字（无效值按 0 兜底） */
+/** numeric / 字符串统一转数字 */
 function iGM_ToNumber(value: unknown): number {
   const parsed = typeof value === "number" ? value : Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
@@ -72,42 +55,39 @@ export async function iGM_GetUserQuotaBalances(
 ): Promise<iGM_UserQuotaBalances | null> {
   const row = (await iGM_Db
     .query(
-      `SELECT iGM_UprBalance, iGM_SprBalance FROM iGM_Users WHERE iGM_Id = ?`,
+      `SELECT iGM_UqBalance, iGM_CoinBalance FROM iGM_Users WHERE iGM_Id = ?`,
     )
     .get(userId)) as
-    | { iGM_UprBalance: string | number; iGM_SprBalance: string | number }
+    | { iGM_UqBalance: string | number; iGM_CoinBalance: string | number }
     | undefined;
   return row
     ? {
-        upr: iGM_ToNumber(row.iGM_UprBalance),
-        spr: iGM_ToNumber(row.iGM_SprBalance),
+        uq: iGM_ToNumber(row.iGM_UqBalance),
+        coin: iGM_ToNumber(row.iGM_CoinBalance),
       }
     : null;
 }
 
-/**
- * 行级锁读取用户双余额（防并发竞态）。
- * 必须在事务内调用，锁持有至事务提交
- */
+/** 行级锁读取（必须在事务内调用） */
 export async function iGM_LockUserQuotaBalances(
   userId: string,
 ): Promise<iGM_UserQuotaBalances | null> {
   const row = (await iGM_Db
     .query(
-      `SELECT iGM_UprBalance, iGM_SprBalance FROM iGM_Users WHERE iGM_Id = ? FOR UPDATE`,
+      `SELECT iGM_UqBalance, iGM_CoinBalance FROM iGM_Users WHERE iGM_Id = ? FOR UPDATE`,
     )
     .get(userId)) as
-    | { iGM_UprBalance: string | number; iGM_SprBalance: string | number }
+    | { iGM_UqBalance: string | number; iGM_CoinBalance: string | number }
     | undefined;
   return row
     ? {
-        upr: iGM_ToNumber(row.iGM_UprBalance),
-        spr: iGM_ToNumber(row.iGM_SprBalance),
+        uq: iGM_ToNumber(row.iGM_UqBalance),
+        coin: iGM_ToNumber(row.iGM_CoinBalance),
       }
     : null;
 }
 
-/** 更新用户指定通道余额（同时刷新用户更新时间） */
+/** 更新指定币种余额 */
 export async function iGM_UpdateUserQuotaBalance(
   channel: iGM_QuotaChannel,
   userId: string,
@@ -120,10 +100,10 @@ export async function iGM_UpdateUserQuotaBalance(
   );
 }
 
-/** 写入一条额度变动流水 */
+/** 写入一条流水 */
 export async function iGM_InsertQuotaTransaction(
   channel: iGM_QuotaChannel,
-  params: iGM_InsertQuotaTransactionParams,
+  p: iGM_InsertQuotaTransactionParams,
 ): Promise<void> {
   await iGM_Db.run(
     `INSERT INTO ${iGM_QuotaTableNames[channel]}
@@ -131,17 +111,17 @@ export async function iGM_InsertQuotaTransaction(
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [
       iGM_RandomUuid(),
-      params.userId,
-      params.type,
-      params.amount,
-      params.balanceAfter,
-      params.detail,
-      params.createdAt,
+      p.userId,
+      p.type,
+      p.amount,
+      p.balanceAfter,
+      p.detail,
+      p.createdAt,
     ],
   );
 }
 
-/** 时间范围内调用次数（UPR 按提问条数 / SPR 按回答条数） */
+/** 时间范围内调用次数（提问条数） */
 export async function iGM_CountQuotaCallsSince(
   channel: iGM_QuotaChannel,
   sinceIso: string,
@@ -150,14 +130,14 @@ export async function iGM_CountQuotaCallsSince(
     .query(
       `SELECT COUNT(*) AS iGM_Total
          FROM ${iGM_QuotaTableNames[channel]}
-        WHERE iGM_Type = '${iGM_QuotaCallTypes[channel]}'
+        WHERE iGM_Type = 'chat_question'
           AND iGM_CreatedAt >= ?`,
     )
     .get(sinceIso)) as { iGM_Total: number };
   return row.iGM_Total;
 }
 
-/** 时间范围内消耗额度总额（提问 + 回答扣费绝对值之和） */
+/** 时间范围内消耗总额 */
 export async function iGM_SumQuotaConsumedSince(
   channel: iGM_QuotaChannel,
   sinceIso: string,
@@ -173,7 +153,7 @@ export async function iGM_SumQuotaConsumedSince(
   return iGM_ToNumber(row.iGM_Total);
 }
 
-/** 时间范围内消耗 Top N 用户（附用户名 / 昵称与调用次数） */
+/** 时间范围内 Top N 消耗用户 */
 export async function iGM_ListTopQuotaUsers(
   channel: iGM_QuotaChannel,
   sinceIso: string,
@@ -181,11 +161,11 @@ export async function iGM_ListTopQuotaUsers(
 ): Promise<iGM_AICallStatsUserRow[]> {
   return (await iGM_Db
     .query(
-      `SELECT t.iGM_UserId   AS iGM_UserId,
-              u.iGM_Username AS iGM_Username,
-              u.iGM_DisplayName AS iGM_DisplayName,
+      `SELECT t.iGM_UserId,
+              u.iGM_Username,
+              u.iGM_DisplayName,
               SUM(-t.iGM_Amount) AS iGM_Consumed,
-              COUNT(*) FILTER (WHERE t.iGM_Type = '${iGM_QuotaCallTypes[channel]}') AS iGM_Calls
+              COUNT(*) FILTER (WHERE t.iGM_Type = 'chat_question') AS iGM_Calls
          FROM ${iGM_QuotaTableNames[channel]} t
          JOIN iGM_Users u ON u.iGM_Id = t.iGM_UserId
         WHERE t.iGM_Type IN ('chat_question', 'chat_answer')
@@ -197,7 +177,7 @@ export async function iGM_ListTopQuotaUsers(
     .all(sinceIso, limit)) as iGM_AICallStatsUserRow[];
 }
 
-/** 统计某用户某通道流水总条数（分页元数据） */
+/** 统计某用户流水总条数 */
 export async function iGM_CountQuotaTransactions(
   channel: iGM_QuotaChannel,
   userId: string,
@@ -212,10 +192,7 @@ export async function iGM_CountQuotaTransactions(
   return row.iGM_Total;
 }
 
-/**
- * 分页查询某用户某通道流水（时间倒序）。
- * 同一毫秒内多笔流水按主键倒序兜底，保证分页翻页结果稳定
- */
+/** 分页查询用户流水（时间倒序） */
 export async function iGM_ListQuotaTransactionsPage(
   channel: iGM_QuotaChannel,
   userId: string,

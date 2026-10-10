@@ -19,14 +19,12 @@
       "loginRequired": "Please sign in to use the AI assistant",
       "goLogin": "Sign in",
       "modelInfo": "Model Info",
-      "rechargeSpr": "Top up SPR",
       "modelLocal": "Local",
       "modelCloud": "Cloud",
       "sessions": "Conversations",
       "newConversation": "New chat",
       "sessionsEmpty": "No conversation history yet",
       "sessionUntitled": "New conversation",
-      "viewUPRDetail": "View UPR usage details",
       "capability": "Answers site and general questions · No external web access · No sensitive topics",
       "accountIsolation": "This conversation is visible only to your account"
     },
@@ -44,24 +42,8 @@
       "emptyMessage": "Please enter a message first",
       "messageTooLong": "Your message is too long. Please shorten it and try again",
       "conversationNotFound": "This conversation no longer exists",
-      "uprInsufficient": "Insufficient UPR. Get more via daily check-ins or events.",
-      "sprInsufficient": "Insufficient SPR. Please top up first.",
+      "quotaInsufficient": "Both UQ and Coin balance are insufficient. Complete tasks or top up to continue.",
       "quotaUserNotFound": "Account not found or deleted. Please sign in again"
-    },
-    "upr": {
-      "title": "UPR Usage Details",
-      "empty": "No usage records yet",
-      "loadingMore": "Loading…",
-      "allLoaded": "All records loaded",
-      "retry": "Retry",
-      "balanceAfter": "Balance after",
-      "type": {
-        "register": "Sign-up bonus",
-        "chat_question": "Question charge",
-        "chat_answer": "Answer charge",
-        "recharge": "Top-up",
-        "reward": "Reward"
-      }
     }
   },
   "nav": {

@@ -19,14 +19,12 @@
       "loginRequired": "请先登录账号后使用 AI 助手",
       "goLogin": "去登录",
       "modelInfo": "Model Info",
-      "rechargeSpr": "充值 SPR",
       "modelLocal": "Local",
       "modelCloud": "Cloud",
       "sessions": "会话记录",
       "newConversation": "新建会话",
       "sessionsEmpty": "暂无历史会话",
       "sessionUntitled": "新会话",
-      "viewUPRDetail": "查看 UPR 消耗详情",
       "capability": "可回答站内问题与通用知识 · 无法访问外部网站 · 不回答敏感话题",
       "accountIsolation": "当前对话仅对当前账号可见"
     },
@@ -44,24 +42,8 @@
       "emptyMessage": "请输入内容后再发送",
       "messageTooLong": "内容过长，请精简后再发送",
       "conversationNotFound": "对话记录不存在或已失效",
-      "uprInsufficient": "UPR 余额不足，可通过签到或活动获取。",
-      "sprInsufficient": "SPR 余额不足，请前往充值。",
+      "quotaInsufficient": "UQ 与 Coin 余额均不足，完成任务或充值后可继续使用。",
       "quotaUserNotFound": "账户不存在或已被删除，请重新登录"
-    },
-    "upr": {
-      "title": "UPR 消耗详情",
-      "empty": "暂无消耗记录",
-      "loadingMore": "正在加载…",
-      "allLoaded": "已加载全部记录",
-      "retry": "重试",
-      "balanceAfter": "变动后余额",
-      "type": {
-        "register": "注册赠送",
-        "chat_question": "提问扣费",
-        "chat_answer": "回答扣费",
-        "recharge": "充值",
-        "reward": "奖励"
-      }
     }
   },
   "nav": {

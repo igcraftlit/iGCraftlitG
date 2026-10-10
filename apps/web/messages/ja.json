@@ -19,14 +19,12 @@
       "loginRequired": "AI アシスタントを利用するには、先にログインしてください",
       "goLogin": "ログイン",
       "modelInfo": "Model Info",
-      "rechargeSpr": "SPR をチャージ",
       "modelLocal": "Local",
       "modelCloud": "Cloud",
       "sessions": "会話履歴",
       "newConversation": "新しい会話",
       "sessionsEmpty": "会話履歴はまだありません",
       "sessionUntitled": "新しい会話",
-      "viewUPRDetail": "UPR 消費明細を表示",
       "capability": "サイト内の質問と一般知識に回答 · 外部サイトへのアクセス不可 · センシティブな話題には回答しません",
       "accountIsolation": "この会話は現在のアカウントにのみ表示されます"
     },
@@ -44,24 +42,8 @@
       "emptyMessage": "内容を入力してから送信してください",
       "messageTooLong": "内容が長すぎます。短くしてから再送信してください",
       "conversationNotFound": "会話履歴が存在しないか、無効になりました",
-      "uprInsufficient": "UPR 残高が不足しています。毎日チェックインやイベントで獲得できます。",
-      "sprInsufficient": "SPR 残高が不足しています。チャージしてください。",
+      "quotaInsufficient": "UQ と Coin の残高が共に不足しています。タスクを完了するかチャージしてください。",
       "quotaUserNotFound": "アカウントが存在しないか削除されました。再度ログインしてください"
-    },
-    "upr": {
-      "title": "UPR 消費明細",
-      "empty": "消費記録はありません",
-      "loadingMore": "読み込み中…",
-      "allLoaded": "すべての記録を読み込みました",
-      "retry": "再試行",
-      "balanceAfter": "変動後の残高",
-      "type": {
-        "register": "登録ボーナス",
-        "chat_question": "質問の課金",
-        "chat_answer": "回答の課金",
-        "recharge": "チャージ",
-        "reward": "報酬"
-      }
     }
   },
   "nav": {

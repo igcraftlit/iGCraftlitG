@@ -1,20 +1,16 @@
 /**
  * 文件路径：iGM_Server/src/iGM_Types/iGM_Quota.ts
  * 所属层：后端 / 类型定义层
- * 路由：G_AI、G_Admin、G_Auth
  * 模块：iGM_Quota
- * 作用：UPR（通用额度）/ SPR（付费额度）双额度体系的类型定义（AI 赋能系统模块三 / 模块四）
- * 内容：流水类型联合、额度通道、流水表行、余额与模型信息结果、流水分页查询结果、
- *       管理后台双通道统计结果、流水类型判定工具
- * 说明：UPR 调用本地 Qwen 模型（免费）、SPR 调用 DeepSeek Flash（付费）；
- *       金额精度与 NUMERIC(14,4) 一致
+ * 作用：UQ（常规额度）/ Coin（社区币）双币种体系类型定义
+ * 说明：
+ *   - UQ：默认赠送 10，免费消耗，优先扣除
+ *   - Coin：默认赠送 5，付费消耗（1 元 = 1 Coin），UQ 不足时自动扣
+ *   - 所有余额、消耗、流水统一保留 3 位小数（NUMERIC(14,3)）
  */
 
-// 导入依赖 //
-// （本文件仅包含类型定义，无运行时依赖）
-
 // 类型定义 //
-/** 额度流水类型：注册赠送 / 提问扣费 / 回答按 token 扣费 / 充值 / 奖励（预留） */
+/** 额度流水类型：注册赠送 / 提问扣费 / 回答按 token 扣费 / 充值 / 奖励 */
 export type iGM_QuotaTransactionType =
   | "register"
   | "chat_question"
@@ -22,93 +18,84 @@ export type iGM_QuotaTransactionType =
   | "recharge"
   | "reward";
 
-/** 额度通道：upr 通用（本地 Qwen）/ spr 付费（DeepSeek Flash） */
-export type iGM_QuotaChannel = "upr" | "spr";
+/** 币种通道：uq 常规额度 / coin 社区币 */
+export type iGM_QuotaChannel = "uq" | "coin";
 
 /**
- * 回答扣费原因：normal 正常产出 / timeout 流式超时中断 / truncated 超字数截断 /
- * stopped 用户手动停止（按已生成内容扣费）。
- * 用于流水备注，保证超时、截断与手动停止的扣费记录可追溯
+ * AI 计费时段
+ *  - nonpeak 非高峰：周六、法定节假日、每天 22:00 至次日 08:00
+ *  - peak 高峰：工作日 08:00 至 22:00（Coin 按非高峰 1.5 倍结算）
+ */
+export type iGM_AIChargePeriod = "peak" | "nonpeak";
+
+/**
+ * 回答扣费原因：
+ *  - normal    正常产出
+ *  - timeout   流式超时中断
+ *  - truncated 超字数截断
+ *  - stopped   用户手动停止（按已生成内容扣费）
  */
 export type iGM_AIChargeReason = "normal" | "timeout" | "truncated" | "stopped";
 
-/** iGM_UPRTransactions / iGM_SPRTransactions 表行（两表同构） */
+/** 流水表行（两表同构） */
 export interface iGM_QuotaTransactionRow {
   iGM_Id: string;
   iGM_UserId: string;
   iGM_Type: string;
-  /** numeric 列由驱动返回字符串，使用前需转为数字 */
   iGM_Amount: string | number;
   iGM_BalanceAfter: string | number;
   iGM_Detail: string;
   iGM_CreatedAt: string;
 }
 
-/** 余额与模型信息查询结果（GET /G_AI/balance） */
+/** 余额查询结果（GET /G_AI/balance） */
 export interface iGM_AIInfoResult {
-  /** UPR 余额（可为负数：回答扣费允许扣成负数，下次提问被拦截） */
-  uprBalance: number;
-  /** SPR 余额（可为负数） */
-  sprBalance: number;
-  /** Free 通道当前模型名（界面「模型信息」按钮展示） */
-  freeModel: string;
-  /** Premium 通道当前模型名 */
-  premiumModel: string;
+  /** UQ 余额 */
+  uqBalance: number;
+  /** Coin 余额 */
+  coinBalance: number;
+  /** 当前对外模型名（Chat iGM Nove V0.1） */
+  modelName: string;
 }
 
-/** 流水条目（对前端；numeric 列已归一为数字，iGM_Type 已收敛为联合类型） */
+/** 流水 DTO（numeric 列已转数字，保留 3 位小数） */
 export interface iGM_QuotaTransactionDto {
   id: string;
   type: iGM_QuotaTransactionType;
-  /** 变动值：正数为增加、负数为消耗 */
   amount: number;
-  /** 变动后余额 */
   balanceAfter: number;
   detail: string;
   createdAt: string;
 }
 
-/** 流水分页查询结果（GET /G_AI/upr-transactions，时间倒序） */
+/** 流水分页结果（时间倒序） */
 export interface iGM_QuotaTransactionPageResult {
   items: iGM_QuotaTransactionDto[];
-  /** 该通道流水总条数（前端判断是否还有下一页） */
   total: number;
-  /** 当前页码（从 1 开始） */
   page: number;
-  /** 每页条数（已按服务端上限收敛） */
   pageSize: number;
 }
 
-/** 管理后台 AI 调用统计时间范围：日 / 周 / 月 */
+/** 管理后台统计时间范围 */
 export type iGM_AICallStatsRange = "day" | "week" | "month";
 
-/** Top 用户消耗排行行（聚合自对应额度流水表） */
+/** Top 用户消耗排行行 */
 export interface iGM_AICallStatsUserRow {
   iGM_UserId: string;
   iGM_Username: string;
   iGM_DisplayName: string | null;
-  /** 消耗额度总额（numeric 列由驱动返回字符串） */
   iGM_Consumed: string | number;
   iGM_Calls: number;
 }
 
-/** UPR 通道统计 */
-export interface iGM_AICallStatsUprChannel {
-  /** 调用次数（所选范围内提问条数） */
+/** 单币种通道统计 */
+export interface iGM_AICallStatsChannel {
   totalCalls: number;
-  /** 所选范围内总消耗 UPR */
   totalConsumed: number;
-  /** 当日消耗 UPR（固定为今天，不随筛选范围变化） */
   todayConsumed: number;
 }
 
-/** SPR 通道统计（较 UPR 多收入口径：消耗按 1 SPR = 1 元折算） */
-export interface iGM_AICallStatsSprChannel extends iGM_AICallStatsUprChannel {
-  /** 所选范围内总收入（元） */
-  totalRevenue: number;
-}
-
-/** 排行条目（对前端） */
+/** 排行条目 */
 export interface iGM_AICallStatsUser {
   userId: string;
   username: string;
@@ -117,19 +104,16 @@ export interface iGM_AICallStatsUser {
   calls: number;
 }
 
-/** 管理后台双通道统计结果 */
+/** 管理后台双币种统计结果 */
 export interface iGM_AICallStatsResult {
   range: iGM_AICallStatsRange;
-  upr: iGM_AICallStatsUprChannel;
-  spr: iGM_AICallStatsSprChannel;
-  /** UPR 消耗排行 Top 10 */
-  topUprUsers: iGM_AICallStatsUser[];
-  /** SPR 消耗排行 Top 10 */
-  topSprUsers: iGM_AICallStatsUser[];
+  uq: iGM_AICallStatsChannel;
+  coin: iGM_AICallStatsChannel;
+  topUqUsers: iGM_AICallStatsUser[];
+  topCoinUsers: iGM_AICallStatsUser[];
 }
 
 // 核心逻辑 //
-/** 判断未知值是否为合法流水类型（数据库返回字符串，出参前收敛） */
 export function iGM_IsQuotaTransactionType(
   value: unknown,
 ): value is iGM_QuotaTransactionType {
@@ -142,5 +126,38 @@ export function iGM_IsQuotaTransactionType(
   );
 }
 
+/**
+ * 判定计费时段（Asia/Shanghai 本地时间）：
+ *   - 周六（6）/周日（0） → nonpeak
+ *   - 工作日 22:00-08:00 → nonpeak
+ *   - 工作日 08:00-22:00 → peak
+ * 法定节假日暂按工作日处理（如需精确可后续接入节假日 API）
+ */
+export function iGM_DetermineChargePeriod(now?: Date): iGM_AIChargePeriod {
+  const d = now ?? new Date();
+  const day = d.getDay();
+  const hour = d.getHours();
+  if (day === 0 || day === 6) return "nonpeak";
+  if (hour < 8 || hour >= 22) return "nonpeak";
+  return "peak";
+}
+
+/**
+ * 按 3 位小数四舍五入（避免 NUMERIC 和 JS 浮点精度差）
+ */
+export function iGM_Round3(n: number): number {
+  return Math.round(n * 1000) / 1000;
+}
+
+/**
+ * Coin 计费（按百万 token × 时段倍率）：
+ *   非高峰：输入 3 Coin / 百万 token、输出 8 Coin / 百万 token
+ *   高峰：  输入 4.5 Coin / 百万 token、输出 12 Coin / 百万 token
+ */
+export const iGM_CoinRate = {
+  nonpeak: { inputPerMillion: 3, outputPerMillion: 8 },
+  peak: { inputPerMillion: 4.5, outputPerMillion: 12 },
+};
+
 // 导出 //
-export default { iGM_IsQuotaTransactionType };
+export default { iGM_IsQuotaTransactionType, iGM_DetermineChargePeriod, iGM_Round3 };

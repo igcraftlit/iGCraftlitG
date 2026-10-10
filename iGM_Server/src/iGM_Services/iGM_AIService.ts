@@ -3,26 +3,16 @@
  * 所属层：后端 / 业务服务层
  * 路由：G_AI
  * 模块：iGM_AIService
- * 作用：AI 助手业务——双通道（Free 本地 Qwen / Premium 云端 DeepSeek）流式对话、
+ * 作用：AI 助手业务——本地 Ollama 单通道流式对话（Chat iGM Nove V0.1）、
  *       会话维护（最多保留 3 个，超限自动删除最早创建的一条）、上下文拼接、
- *       SSE 代理 DeepSeek / Ollama、流结束落库并按通道计费
- *       （AI 赋能系统模块一 / 模块三 / 模块四）
- * 内容：业务错误类型、上游诊断日志、通用知识 + 站内资料 System Prompt、双通道流式提问业务、
- *       流式收尾（消息落库 + UPR / SPR 回答扣费）、历史查询业务、会话列表业务
+ *       SSE 代理 Ollama、流结束落库并按 UQ/Coin 双币种计费（高峰/非高峰时段）
  * 说明：
- *   - Premium 通道 API Key 仅在本层从后端配置读取，严禁下发前端或写入仓库；
- *   - 不实现 RAG：通过 System Prompt 提供站内资料与回答边界（可答站内与通用知识，
- *     排除政治 / 法律 / 黄赌毒等敏感内容，无法实时访问外部互联网）；
- *   - Free 通道（UPR）：提问前固定扣 0.02 UPR（余额不足 402）；流结束后按
- *     回答 token × 0.003 UPR 扣费（与消息落库同一事务，允许负数）；
- *   - Premium 通道（SPR）：提问前校验 SPR 余额为正（不足 402）；流结束后按输入 /
- *     输出 token 计价并加 15% 利润扣费（允许负数），每次调用写一条流水；
- *   - 超时 / 截断扣费：只要模型已产出内容，无论超时、截断还是网络异常都按实际产出扣费——
- *     流式输出超过 90 秒强制中断，上游未返回 usage 时按文本长度估算 token；
- *     回答超过 5000 字自动截断并在落库内容末尾追加提示；
- *   - 用户停止扣费：客户端断开（点击「停止生成」/ 关闭弹窗 / 刷新页面）时立即中止上游并收尾，
- *     已生成内容照常落库计费，流水备注「用户手动停止，按已生成内容扣费」；
- *   - 账号级严格隔离：所有会话 / 消息查询、创建、删除均以鉴权得到的 userId 为条件
+ *   - 仅保留本地 Ollama 单通道（原 UPR/SPR/DeepSeek/Free/Premium 全部废弃）；
+ *   - 计费规则：优先扣 UQ（免费额度 10/注册赠送），UQ 不足自动扣 Coin（社区币 5/注册赠送）；
+ *   - Coin 时段：非高峰 3/8 Coin 每百万 token（输入/输出），高峰 4.5/12（非高峰 × 1.5）；
+ *   - 90 秒超时 / 5000 字截断 / 用户手动停止 → 均按已生成内容照常扣费；
+ *   - 账号级严格隔离：所有会话/消息查询均以鉴权得到的 userId 为条件；
+ *   - 不接 RAG，通过 System Prompt 限定回答范围
  */
 
 // 导入依赖 //
@@ -41,12 +31,7 @@ import {
   iGM_ListRecentAIMessages,
   iGM_TouchAIConversation,
 } from "../iGM_Repositories/iGM_AIRepository";
-import {
-  iGM_ChargeAnswerSPRService,
-  iGM_ChargeAnswerUPRService,
-  iGM_ChargeQuestionUPRService,
-  iGM_CheckSPRTalkAllowedService,
-} from "./iGM_QuotaService";
+import { iGM_Charge } from "./iGM_QuotaService";
 import type { iGM_AIChargeReason } from "../iGM_Types/iGM_Quota";
 import {
   iGM_IsAIRole,
@@ -54,7 +39,6 @@ import {
   iGM_ToAIMessageDto,
   type iGM_AIChatCompletionMessage,
   type iGM_AIChatStreamInput,
-  type iGM_AIChannel,
   type iGM_AIConversationDto,
   type iGM_AIConversationResult,
   type iGM_AIConversationRow,
@@ -86,9 +70,8 @@ interface iGM_AIUpstreamStreamChunk {
  * 【站内资料】与【站内 API 文档摘要】为精简速览，禁止编造不存在的功能或接口
  */
 const iGM_AI_SYSTEM_PROMPT = [
-  "你是 iGCraftLit Community 的官方助手 iGM StarWhisper。",
-  "你可以回答用户关于 iGCraftLit 社区的任何问题，包括社区功能、账号注册、组织认证、开发者接入、资源下载、用户管理规定、启动器使用等。",
-  "你也可以回答通用的知识性问题，但必须遵守以下规则：",
+  "你是 Chat iGM Nove V0.1，由 iGCraftLit 本地部署的智能助手。",
+  "你可以回答用户关于 iGCraftLit 社区的任何问题，也可以回答通用知识性问题，但必须遵守以下规则：",
   "",
   "1. 不得回答涉及国家政治、法律法规、黄赌毒等敏感内容，遇到此类问题直接回复：“该问题不在我的回答范围内。”",
   "2. 你可以调用站内 API 文档、用户管理规定、社区公告等内部资料，并直接输出相关内容。",
@@ -102,7 +85,7 @@ const iGM_AI_SYSTEM_PROMPT = [
   "- 注册与登录：使用邮箱 + 用户名 + 密码注册，需输入邮箱验证码激活；注册前须阅读并同意《iGCraftLit 用户管理规定》。",
   "- iGMUid：注册后分配的 11 位唯一号码，一经分配不可修改。",
   "- 等级与成长：通过每日签到、任务与等级考核提升等级；达到条件可在勋章墙领取勋章。",
-  "- 额度与通道：iGM StarWhisper 提供两个通道——Free 通道（UPR 通用额度，调用本地模型，免费使用）与 Premium 通道（SPR 付费额度，调用云端模型，按用量计费）；新用户注册免费赠送 10 UPR。",
+  "- 额度体系：iGM Nove V0.1 使用 UQ（常规额度，新用户赠送 10，免费消耗）与 Coin（社区币，新用户赠送 5，1 元 = 1 Coin）双币种计费；优先扣除 UQ，UQ 不足时自动扣 Coin。",
   "- 成为开发者：从“成为开发者”入口提交申请（项目名称、类型、简介、链接、联系方式等），审核通过后可使用开发者平台，创建 OAuth 应用（client_id / client_secret）并按开发者文档接入 API / SDK。",
   "- 组织认证：组织负责人使用登记邮箱注册后自动获得对应组织的认证徽标。",
   "- 资源中心：提供 Minecraft 模组、光影、材质包、整合包等资源下载（当前支持 Fabric 加载器与 Modrinth 来源）。",
@@ -193,12 +176,11 @@ async function iGM_CreateAIConversationWithLimit(
 
 /**
  * 流式收尾（尽力而为，不得中断 SSE 输出）：
- * 回复非空时，在同一事务内写入提问与回复消息、刷新会话时间，并按通道计费：
- *   - Free 通道（UPR）：answerTokens × 单价（允许扣成负数）；
- *   - Premium 通道（SPR）：按输入 / 输出 token 计价 + 利润（每次调用写一条流水）；
- * 说明：promptTokens / completionTokens 由调用方保证为「实测值或按文本长度估算值」，
- *       因此超时中断、超字数截断、用户手动停止、上游异常等只要模型已产出内容，均会按实际产出扣费；
- *       reason 用于流水备注（回答超时扣费 / 超字数截断扣费 / 用户手动停止，按已生成内容扣费）
+ * 回复非空时，在同一事务内写入提问与回复消息、刷新会话时间，并按 UQ/Coin 双币种计费：
+ *   - 优先扣 UQ（免费额度），UQ 不足自动扣 Coin（社区币）；
+ *   - Coin 按高峰/非高峰时段不同单价；
+ *   - 只要模型已产出内容（正常 / 超时 / 截断 / 用户手动停止），均按实际产出扣费；
+ *   - reason 用于流水备注
  */
 async function iGM_FinalizeStream(params: {
   conversationId: string;
@@ -207,7 +189,6 @@ async function iGM_FinalizeStream(params: {
   askedAt: string;
   repliedAt: string;
   assistantText: string;
-  channel: iGM_AIChannel;
   promptTokens: number;
   completionTokens: number;
   reason: iGM_AIChargeReason;
@@ -230,46 +211,28 @@ async function iGM_FinalizeStream(params: {
       params.repliedAt,
     );
     await iGM_TouchAIConversation(params.conversationId, params.userId, params.repliedAt);
-    if (params.channel === "free") {
-      // UPR：按回答 token 计费（估算值兜底，保证超时 / 截断也扣费）
-      if (params.completionTokens > 0) {
-        await iGM_ChargeAnswerUPRService(
-          params.userId,
-          params.completionTokens,
-          params.reason,
-          params.repliedAt,
-        );
-      }
-    } else {
-      // SPR：按输入 / 输出 token 计费（即使为 0 也写流水，保证调用可追溯）
-      await iGM_ChargeAnswerSPRService(
-        params.userId,
-        params.promptTokens,
-        params.completionTokens,
-        params.reason,
-        params.repliedAt,
-      );
+    // 单通道：统一走 iGM_Charge（优先 UQ，不足 Coin，高峰/非高峰时段自动计算）
+    if (params.completionTokens > 0) {
+      await iGM_Charge({
+        userId: params.userId,
+        reason: params.reason,
+        completionTokens: params.completionTokens,
+        now: new Date(params.repliedAt),
+      });
     }
   });
   await write();
 }
 
 /**
- * 双通道流式提问业务（SSE）：
- * 1. 校验提问非空且不超长；Premium 通道额外校验 API Key 已配置；
+ * 单通道流式提问业务（SSE）：
+ * 1. 校验提问非空且不超长；
  * 2. 解析会话（无 id 新建，有 id 校验归属）；
- * 3. 通道预扣 / 校验：Free 提问扣 0.02 UPR（不足 402）；
- *    Premium 校验 SPR 余额为正（不足 402）；
- * 4. 携带 System Prompt 与最近历史请求上游（stream: true + include_usage）：
- *    Free → 本地 Ollama Qwen；Premium → DeepSeek；
+ * 3. 提问预扣（优先 UQ、不足 Coin，0.02 固定）；
+ * 4. 携带 System Prompt 与最近历史请求本地 Ollama（stream: true + include_usage）；
  * 5. 返回 ReadableStream：逐块转发 `data: {"delta": ...}`，流结束前完成
- *    消息落库与回答扣费，最后发送 `data: [DONE]`。
- * 超时（流式输出超过 90 秒）强制中断并发错误帧 ai.errors.timeout，
- * 同时按已生成内容估算 token 扣费、写「回答超时扣费」流水；
- * 回答超过最大字数（5000 字）时在累计层面即截断、下发 notice 帧，
- * 落库内容末尾追加截断提示、写「超字数截断扣费」流水；
- * 客户端断开（点击「停止生成」/ 关闭弹窗 / 刷新页面）时立即中止上游、取消读取并静默收尾，
- * 已生成内容照常落库计费（reason 为 stopped，「用户手动停止，按已生成内容扣费」）
+ *    消息落库与回答计费，最后发送 `data: [DONE]`。
+ * 超时（90 秒）强制中断、5000 字截断、用户手动停止 → 均按已生成内容照常扣费
  */
 export async function iGM_StreamAIService(
   userId: string,
@@ -283,18 +246,11 @@ export async function iGM_StreamAIService(
   if (message.length > iGM_Config.ai.maxMessageLength) {
     throw new iGM_AIError("ai.errors.messageTooLong", 400);
   }
-  const channel = input.channel;
-  // Premium 通道需要云端 API Key；Free 通道为本地模型，无需鉴权
-  if (channel === "premium" && iGM_Config.ai.premium.apiKey.length === 0) {
-    iGM_AILog("DEEPSEEK_API_KEY 未配置，拒绝 Premium 通道提问");
-    throw new iGM_AIError("ai.errors.authError", 503);
-  }
 
   // 会话解析：带 id 时严格校验归属，防止越权读写他人会话
   let conversation: iGM_AIConversationRow;
   const conversationId = input.conversationId?.trim();
   if (conversationId) {
-    // 账号级隔离：查询即带 userId，他人会话与不存在的会话统一返回 404
     const existing = await iGM_FindAIConversationById(conversationId, userId);
     if (!existing) {
       throw new iGM_AIError("ai.errors.conversationNotFound", 404);
@@ -307,14 +263,8 @@ export async function iGM_StreamAIService(
     );
   }
 
-  // 通道预扣 / 校验（独立事务；失败在此拦截，不会发起上游请求）
-  if (channel === "free") {
-    // UPR：提问固定扣费 0.02
-    await iGM_ChargeQuestionUPRService(userId);
-  } else {
-    // SPR：Premium 通道要求余额为正，否则提示前往充值
-    await iGM_CheckSPRTalkAllowedService(userId);
-  }
+  // 提问预扣（优先 UQ，不足 Coin）——不足直接抛 402，不会发起上游请求
+  await iGM_Charge({ userId, reason: "normal" });
 
   // 上下文：系统提示词 + 最近历史消息 + 本次提问
   const history = await iGM_ListRecentAIMessages(
@@ -334,20 +284,15 @@ export async function iGM_StreamAIService(
     { role: "user", content: message },
   ];
 
-  // 通道配置：免费走本地 Ollama，付费走 DeepSeek
-  const channelConfig =
-    channel === "free" ? iGM_Config.ai.free : iGM_Config.ai.premium;
-  const { apiBase, model, timeoutMs } = channelConfig;
+  // 单通道配置：本地 Ollama
+  const { apiBase, model, timeoutMs } = iGM_Config.ai.channel;
 
-  // 上游请求头：Premium 携带 Bearer Key（Free 为本地模型，无鉴权）
+  // 上游请求头：本地模型无鉴权
   const upstreamHeaders: Record<string, string> = {
     "Content-Type": "application/json",
   };
-  if (channel === "premium") {
-    upstreamHeaders.Authorization = `Bearer ${iGM_Config.ai.premium.apiKey}`;
-  }
 
-  // 上游请求：通道超时与客户端断开均中止；请求期间不得泄漏 Key
+  // 上游请求：超时与客户端断开均中止
   const upstream = new AbortController();
   const timer = setTimeout(() => upstream.abort(), timeoutMs);
   // 客户端断开标记：request.signal 与 ReadableStream cancel 双通道捕获，任一触发即视为用户中止
@@ -386,7 +331,7 @@ export async function iGM_StreamAIService(
     if (upstream.signal.aborted && !iGM_IsClientAborted()) {
       throw new iGM_AIError("ai.errors.timeout", 504);
     }
-    iGM_AILog(`上游请求失败（${channel}）：${iGM_Truncate(String(error))}`);
+    iGM_AILog(`上游请求失败：${iGM_Truncate(String(error))}`);
     throw new iGM_AIError("ai.errors.upstream", 502);
   }
 
@@ -394,7 +339,7 @@ export async function iGM_StreamAIService(
     const raw = await upstreamResponse.text().catch(() => "");
     cleanup();
     iGM_AILog(
-      `上游返回 HTTP ${upstreamResponse.status}（${channel}）：${iGM_Truncate(raw)}`,
+      `上游返回 HTTP ${upstreamResponse.status}：${iGM_Truncate(raw)}`,
     );
     if (upstreamResponse.status === 401 || upstreamResponse.status === 403) {
       throw new iGM_AIError("ai.errors.authError", 503);
@@ -501,7 +446,7 @@ export async function iGM_StreamAIService(
       } catch (error) {
         timedOut = upstream.signal.aborted && !iGM_IsClientAborted();
         if (!timedOut && !iGM_IsClientAborted()) {
-          iGM_AILog(`流式转发异常（${channel}）：${iGM_Truncate(String(error))}`);
+          iGM_AILog(`流式转发异常：${iGM_Truncate(String(error))}`);
         }
         if (!iGM_IsClientAborted()) {
           // 超时：下发错误帧同时附带 notice，前端据此在气泡下方提示「已按生成内容扣费」
@@ -529,7 +474,7 @@ export async function iGM_StreamAIService(
       const stopped = iGM_IsClientAborted();
       if (stopped && assistantText.trim().length > 0) {
         iGM_AILog(
-          `客户端中断（${channel}）：按已生成内容 ${assistantText.length} 字计费收尾`,
+          `客户端中断：按已生成内容 ${assistantText.length} 字计费收尾`,
         );
       }
       const reason: iGM_AIChargeReason = stopped
@@ -553,7 +498,6 @@ export async function iGM_StreamAIService(
           askedAt,
           repliedAt,
           assistantText: storedText,
-          channel,
           promptTokens: effectivePromptTokens,
           completionTokens: effectiveCompletionTokens,
           reason,

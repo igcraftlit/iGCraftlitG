@@ -16,9 +16,6 @@
 /** 消息角色：仅用户提问与 AI 回复两种 */
 export type iGM_AIRole = "user" | "assistant";
 
-/** AI 对话通道：free（UPR，本地 Qwen）/ premium（SPR，云端 DeepSeek） */
-export type iGM_AIChannel = "free" | "premium";
-
 /** iGM_AIConversations 表行 */
 export interface iGM_AIConversationRow {
   iGM_Id: string;
@@ -53,12 +50,10 @@ export interface iGM_AIMessageDto {
   createdAt: string;
 }
 
-/** GET /G_AI/chat/free、/G_AI/chat/premium 入参（conversationId 缺省表示新建会话） */
+/** POST /G_AI/chat 入参（conversationId 缺省表示新建会话） */
 export interface iGM_AIChatStreamInput {
   message: string;
   conversationId?: string | null;
-  /** 对话通道：决定上游模型与计费额度（free → UPR / premium → SPR） */
-  channel: iGM_AIChannel;
 }
 
 /** GET /G_AI/messages 返回数据 */
