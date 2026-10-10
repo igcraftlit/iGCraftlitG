@@ -3,10 +3,10 @@
  * 所属层：后端 / 业务服务层
  * 路由：无（启动时注册的定时任务）
  * 模块：iGM_ExamCleanupService
- * 作用：清理临时目录中未确认或解析失败的试卷原始文件
- * 内容：保留期判定（未确认 7 天 / 解析失败 24 小时）、磁盘文件删除、
+ * 作用：清理临时目录中转换失败或长期未完成转换的试卷原始 PDF
+ * 内容：保留期判定（转换失败 24 小时 / 其余 7 天）、磁盘文件删除、
  *       文件行临时路径置空、试卷标记原始文件已删除、定时器注册
- * 说明：已确认的文件由确认流程立即删除，不在本任务处理范围内；
+ * 说明：转换成功的原始 PDF 由转换流程立即删除，不在本任务处理范围内；
  *       清理失败仅记录日志，不影响其他文件
  */
 
@@ -22,16 +22,16 @@ import { iGM_RemoveExamTempFile } from "./iGM_ExamIngestService";
 // （本服务仅对外暴露执行与注册两个函数）
 
 // 核心逻辑 //
-/** 未确认文件的保留期：7 天 */
+/** 未完成转换文件的保留期：7 天 */
 const iGM_ExamRetentionMs = 7 * 24 * 60 * 60 * 1000;
-/** 解析失败文件的保留期：24 小时 */
+/** 转换失败文件的保留期：24 小时 */
 const iGM_ExamFailedRetentionMs = 24 * 60 * 60 * 1000;
 /** 定时清理间隔：6 小时 */
 const iGM_ExamCleanupIntervalMs = 6 * 60 * 60 * 1000;
 
 /** 单个文件行的保留期（毫秒） */
-function iGM_ExamRetentionFor(parseStatus: string): number {
-  return parseStatus === "failed"
+function iGM_ExamRetentionFor(convertStatus: string): number {
+  return convertStatus === "failed"
     ? iGM_ExamFailedRetentionMs
     : iGM_ExamRetentionMs;
 }
@@ -47,7 +47,7 @@ export async function iGM_RunExamCleanup(): Promise<number> {
   for (const file of files) {
     const uploadedAt = Date.parse(file.iGM_UploadedAt);
     if (!Number.isFinite(uploadedAt)) continue;
-    if (now - uploadedAt < iGM_ExamRetentionFor(file.iGM_ParseStatus)) continue;
+    if (now - uploadedAt < iGM_ExamRetentionFor(file.iGM_ConvertStatus)) continue;
     if (file.iGM_TempPath) {
       await iGM_RemoveExamTempFile(file.iGM_TempPath);
     }

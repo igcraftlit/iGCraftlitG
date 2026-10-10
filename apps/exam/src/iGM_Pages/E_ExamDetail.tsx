@@ -3,10 +3,10 @@
  * 所属层：前端 / 页面层
  * 路由：E_ExamDetail（/detail?id=xxx）
  * 模块：iGM_ExamDetail
- * 作用：试卷详情页，信息栏 + 结构化内容块正文（含目录导航）+ 实验计时器 + 盖章交卷
- * 内容：规格信息表、右上固定计时器、结构化块正文与目录、交卷区、加载/失败/缺失状态
+ * 作用：试卷详情页，规格记录表 + 转换后 HTML 高保真预览（iframe）+ 实验计时器 + 盖章交卷
+ * 内容：规格信息表、右上固定计时器、转换后 HTML 内嵌预览、交卷区、加载/失败/缺失状态
  * 说明：静态导出下通过 useSearchParams 读取 id；由路由壳提供 Suspense 边界；
- *       正文按 Block 类型用自定义组件渲染，不加载 PDF；文案取自当前语言包
+ *       正文直接内嵌 pdf2htmlEX 生成的 HTML（自带分页与原始排版）；文案取自当前语言包
  */
 
 // 导入依赖 //
@@ -17,11 +17,11 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import {
+  iGM_Exam_AbsoluteUrl,
   iGM_Exam_FetchDetail,
   iGM_ExamRequestError,
   type iGM_ExamDetail,
 } from "../iGM_Services/iGM_ExamClient";
-import { iGM_ExamBlockView as IGM_ExamBlockView } from "../iGM_Components/iGM_ExamBlockView/iGM_ExamBlockView";
 import { iGM_ExamTimer as IGM_ExamTimer } from "../iGM_Components/iGM_ExamTimer/iGM_ExamTimer";
 import { iGM_StampButton as IGM_StampButton } from "../iGM_Components/iGM_StampButton/iGM_StampButton";
 import { useI18n } from "../iGM_i18n/iGM_I18nContext";
@@ -166,18 +166,22 @@ export function E_ExamDetail() {
         </aside>
       </div>
 
-      {/* 试卷正文（解析文本） */}
+      {/* 试卷正文（pdf2htmlEX 转换后的高保真 HTML） */}
       <section className={styles.paperSection} aria-label={t("detailPaperTitle")}>
         <div className={styles.paperHead}>
           <span className={`igm-mono ${styles.paperNum}`}>§ 2</span>
           <h2 className={`igm-serif ${styles.paperTitle}`}>{t("detailPaperTitle")}</h2>
         </div>
-        {exam.contentBlocks.length > 0 ? (
-          <IGM_ExamBlockView
-            blocks={exam.contentBlocks}
-            imageBase={exam.imageApiBase}
-            showToc
-          />
+        {exam.htmlApiPath ? (
+          <>
+            <p className={`igm-mono ${styles.paperHint}`}>{t("detailPreviewHint")}</p>
+            <iframe
+              key={exam.htmlApiPath}
+              className={styles.htmlFrame}
+              src={iGM_Exam_AbsoluteUrl(exam.htmlApiPath)}
+              title={exam.title || exam.fileName}
+            />
+          </>
         ) : (
           <p className={`igm-mono ${styles.paperEmpty}`}>{t("detailNoContent")}</p>
         )}

@@ -26,6 +26,7 @@ export interface iGM_I18nDict {
   mastheadSubtitle: string;
   navExaminations: string;
   navAdmin: string;
+  navUpload: string;
   themeGroupLabel: string;
   themeLight: string;
   themeDark: string;
@@ -61,8 +62,8 @@ export interface iGM_I18nDict {
   detailEyebrow: string;
   detailSpecTitle: string;
   detailPaperTitle: string;
-  detailTocTitle: string;
   detailNoContent: string;
+  detailPreviewHint: string;
   detailSubmitTitle: string;
   detailSubmitLead: string;
   fieldSubject: string;
@@ -97,19 +98,16 @@ export interface iGM_I18nDict {
   adminPreviewDeleted: string;
   adminDownloadOriginal: string;
   adminRecognizedLabel: string;
-  adminParseLabel: string;
   adminFieldTitle: string;
   adminFieldDuration: string;
   adminFieldTotal: string;
   adminFieldItems: string;
   adminFieldNotice: string;
-  adminFieldContent: string;
   adminPlaceholderTitle: string;
   adminPlaceholderSubject: string;
   adminPlaceholderIssuer: string;
   adminPlaceholderReviewer: string;
   adminPlaceholderNotice: string;
-  adminPlaceholderContent: string;
   adminSave: string;
   adminConfirm: string;
   adminReparse: string;
@@ -144,47 +142,37 @@ export interface iGM_I18nDict {
   adminDiscarded: string;
   adminDiscardTitle: string;
   adminDiscardBody: string;
-  // 解析进度
+  // 转换进度
   adminProgressTitle: string;
-  adminProgressPages: string;
+  adminProgressConverting: string;
   adminProgressWaiting: string;
   adminProgressDone: string;
   adminProgressFailed: string;
-  adminParsingBanner: string;
-  // 结构化内容块
-  blockPage: string;
-  blockMoveUp: string;
-  blockMoveDown: string;
-  blockDelete: string;
-  blockLevel: string;
-  blockTextPlaceholder: string;
-  blockListPlaceholder: string;
-  blockListHint: string;
-  blockTablePlaceholder: string;
-  blockTableHint: string;
-  blockCaptionPlaceholder: string;
-  blockNumber: string;
-  blockScore: string;
-  blockQuestionStemPlaceholder: string;
-  blockOptionsPlaceholder: string;
-  blockOptionsHint: string;
-  blockAnswerPlaceholder: string;
-  blockTypeHeading: string;
-  blockTypeParagraph: string;
-  blockTypeList: string;
-  blockTypeTable: string;
-  blockTypeImage: string;
-  blockTypeFormula: string;
-  blockTypeQuestion: string;
+  adminConvertingBanner: string;
+  adminGotoUpload: string;
+  // 上传页
+  uploadEyebrow: string;
+  uploadTitle: string;
+  uploadLead: string;
+  uploadDropHint: string;
+  uploadPick: string;
+  uploadOnlyPdf: string;
+  uploadTooLarge: string;
+  uploadStageUpload: string;
+  uploadStageConvert: string;
+  uploadStageDone: string;
+  uploadStageFailed: string;
+  uploadOpenPreview: string;
+  uploadRetry: string;
+  uploadFailed: string;
   // 状态标签
   statusDraft: string;
   statusPublished: string;
   statusClosed: string;
-  parseStatusPending: string;
-  parseStatusParsing: string;
-  parseStatusParsed: string;
-  parseStatusConfirmed: string;
-  parseStatusFailed: string;
+  convertStatusPending: string;
+  convertStatusConverting: string;
+  convertStatusCompleted: string;
+  convertStatusFailed: string;
 }
 
 /** 语言包键联合类型 */

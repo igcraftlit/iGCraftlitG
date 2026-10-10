@@ -4,15 +4,15 @@
  * 路由：G_Exam（/api/exam/*）
  * 模块：iGM_ExamRepository
  * 作用：iGM_Exams / iGM_ExamFiles / iGM_ExamSubmissions 三张表的唯一数据访问出口
- * 内容：试卷增删改查、按状态筛选、解析全文与解析状态写入、文件行读写与确认删除、
- *       交卷记录写入与计数、编号序号计算所需的 id 与创建时间序列
+ * 内容：试卷增删改查、按状态筛选、元数据与 HTML 目录写入、转换状态写入、
+ *       文件行读写与临时路径清理、交卷记录写入与计数、编号序号计算所需的 id 与创建时间序列
+ * 说明：磁盘路径仅存相对存储根目录的内部路径，绝不对外暴露
  */
 
 // 导入依赖 //
 import { iGM_Db } from "../iGM_Database/iGM_Database";
 import { iGM_RandomUuid } from "../iGM_Services/iGM_SecurityService";
 import type {
-  iGM_ExamBlock,
   iGM_ExamFileRow,
   iGM_ExamRecognized,
   iGM_ExamRow,
@@ -38,7 +38,7 @@ export interface iGM_ExamFileWriteFields {
   fileType: string;
   fileSize: number;
   tempPath: string;
-  parseStatus: string;
+  convertStatus: string;
 }
 
 // 核心逻辑 //
@@ -88,7 +88,7 @@ export async function iGM_ListExamIdCreatedPairs(): Promise<
     .all()) as { iGM_Id: string; iGM_CreatedAt: string }[];
 }
 
-/** 新建试卷（草稿），返回新试卷 ID；结构化内容块待后台解析完成后写入 */
+/** 新建试卷（草稿），返回新试卷 ID；HTML 目录待后台转换完成后写入 */
 export async function iGM_InsertExam(
   fields: iGM_ExamWriteFields,
   parseStatus: string,
@@ -100,7 +100,7 @@ export async function iGM_InsertExam(
     `INSERT INTO iGM_Exams
        (iGM_Id, iGM_Title, iGM_Subject, iGM_Issuer, iGM_Reviewer,
         iGM_Duration, iGM_TotalScore, iGM_QuestionCount, iGM_Notice,
-        iGM_ContentBlocks, iGM_ParseStatus, iGM_OriginalFileDeleted,
+        iGM_HtmlPath, iGM_ParseStatus, iGM_OriginalFileDeleted,
         iGM_Status, iGM_CreatedBy, iGM_CreatedAt, iGM_UpdatedAt)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, 'draft', ?, ?, ?)`,
     [
@@ -124,22 +124,19 @@ export async function iGM_InsertExam(
 }
 
 /**
- * 校对 / 解析结果更新试卷元数据与结构化内容块（不改状态）
- * @param contentBlocks 结构化内容块；null 表示清空
- * @param parseStatus 为空时不改动解析状态
+ * 校对 / 识别结果更新试卷元数据（不改状态）
+ * @param parseStatus 为空时不改动转换状态
  */
 export async function iGM_UpdateExamFields(
   examId: string,
   fields: iGM_ExamWriteFields,
-  contentBlocks: iGM_ExamBlock[] | null,
   parseStatus: string | null,
 ): Promise<void> {
-  const blocksJson = contentBlocks ? JSON.stringify(contentBlocks) : null;
   await iGM_Db.run(
     `UPDATE iGM_Exams SET
        iGM_Title = ?, iGM_Subject = ?, iGM_Issuer = ?, iGM_Reviewer = ?,
        iGM_Duration = ?, iGM_TotalScore = ?, iGM_QuestionCount = ?,
-       iGM_Notice = ?, iGM_ContentBlocks = ?::jsonb,
+       iGM_Notice = ?,
        iGM_ParseStatus = COALESCE(?, iGM_ParseStatus),
        iGM_UpdatedAt = ?
      WHERE iGM_Id = ?`,
@@ -152,7 +149,6 @@ export async function iGM_UpdateExamFields(
       fields.totalScore,
       fields.questionCount,
       fields.notice,
-      blocksJson,
       parseStatus,
       new Date().toISOString(),
       examId,
@@ -160,19 +156,19 @@ export async function iGM_UpdateExamFields(
   );
 }
 
-/** 写入图片目录路径（相对存储根目录；非 PDF 试卷写入 null） */
-export async function iGM_SetExamImagesPath(
+/** 写入转换生成的 HTML 目录路径（相对存储根目录） */
+export async function iGM_SetExamHtmlPath(
   examId: string,
-  imagesPath: string | null,
+  htmlPath: string | null,
 ): Promise<void> {
   await iGM_Db.run(
-    `UPDATE iGM_Exams SET iGM_ImagesPath = ?, iGM_UpdatedAt = ?
+    `UPDATE iGM_Exams SET iGM_HtmlPath = ?, iGM_UpdatedAt = ?
       WHERE iGM_Id = ?`,
-    [imagesPath, new Date().toISOString(), examId],
+    [htmlPath, new Date().toISOString(), examId],
   );
 }
 
-/** 更新试卷解析状态（parsing / parsed / failed） */
+/** 更新试卷转换状态（pending / converting / completed / failed） */
 export async function iGM_SetExamParseStatus(
   examId: string,
   parseStatus: string,
@@ -184,52 +180,60 @@ export async function iGM_SetExamParseStatus(
   );
 }
 
-/** 更新试卷文件的解析进度（页数 / 总页数 / 状态） */
-export async function iGM_UpdateExamFileProgress(
+/** 标记试卷文件转换完成（记录完成时间并清除失败原因） */
+export async function iGM_MarkExamFileCompleted(
   examId: string,
-  parsedPages: number,
-  totalPages: number,
-  parseStatus: string | null,
+  now: string,
 ): Promise<void> {
   await iGM_Db.run(
     `UPDATE iGM_ExamFiles SET
-       iGM_ParsedPages = ?, iGM_TotalPages = ?,
-       iGM_ParseStatus = COALESCE(?, iGM_ParseStatus)
+       iGM_ConvertStatus = 'completed',
+       iGM_ConvertError = NULL,
+       iGM_ConvertedAt = ?
      WHERE iGM_ExamId = ?`,
-    [parsedPages, totalPages, parseStatus, examId],
+    [now, examId],
   );
 }
 
-/** 标记试卷文件解析失败并记录原因（保留已完成页数） */
+/** 重置试卷文件转换状态为转换中（重新转换前调用，同时清除旧失败原因） */
+export async function iGM_SetExamFileConvertStatus(
+  examId: string,
+  convertStatus: string,
+): Promise<void> {
+  await iGM_Db.run(
+    `UPDATE iGM_ExamFiles SET
+       iGM_ConvertStatus = ?, iGM_ConvertError = NULL
+     WHERE iGM_ExamId = ?`,
+    [convertStatus, examId],
+  );
+}
+
+/** 标记试卷文件转换失败并记录原因 */
 export async function iGM_MarkExamFileFailed(
   examId: string,
-  parseError: string,
+  convertError: string,
 ): Promise<void> {
   await iGM_Db.run(
     `UPDATE iGM_ExamFiles SET
-       iGM_ParseStatus = 'failed', iGM_ParseError = ?
+       iGM_ConvertStatus = 'failed', iGM_ConvertError = ?
      WHERE iGM_ExamId = ?`,
-    [parseError, examId],
+    [convertError, examId],
   );
 }
 
-/** 管理员确认：标记解析已确认、原始文件已删除，并发布试卷 */
-export async function iGM_ConfirmExam(
+/** 发布试卷（管理端确认并发布仅切换状态） */
+export async function iGM_PublishExam(
   examId: string,
   status: string,
 ): Promise<void> {
   await iGM_Db.run(
-    `UPDATE iGM_Exams SET
-       iGM_ParseStatus = 'confirmed',
-       iGM_OriginalFileDeleted = ?,
-       iGM_Status = ?,
-       iGM_UpdatedAt = ?
-     WHERE iGM_Id = ?`,
-    [true, status, new Date().toISOString(), examId],
+    `UPDATE iGM_Exams SET iGM_Status = ?, iGM_UpdatedAt = ?
+      WHERE iGM_Id = ?`,
+    [status, new Date().toISOString(), examId],
   );
 }
 
-/** 标记试卷原始文件已在磁盘上删除（定时清理使用，不改状态） */
+/** 标记试卷原始文件已在磁盘上删除（转换成功 / 定时清理使用，不改状态） */
 export async function iGM_MarkExamOriginalDeleted(examId: string): Promise<void> {
   await iGM_Db.run(
     `UPDATE iGM_Exams SET iGM_OriginalFileDeleted = ?, iGM_UpdatedAt = ?
@@ -243,7 +247,7 @@ export async function iGM_DeleteExam(examId: string): Promise<void> {
   await iGM_Db.run(`DELETE FROM iGM_Exams WHERE iGM_Id = ?`, [examId]);
 }
 
-/** 写入试卷文件行（临时路径与解析状态） */
+/** 写入试卷文件行（临时路径与转换状态） */
 export async function iGM_InsertExamFile(
   examId: string,
   file: iGM_ExamFileWriteFields,
@@ -251,7 +255,7 @@ export async function iGM_InsertExamFile(
   await iGM_Db.run(
     `INSERT INTO iGM_ExamFiles
        (iGM_Id, iGM_ExamId, iGM_FileName, iGM_FileType, iGM_FileSize,
-        iGM_TempPath, iGM_ParseStatus, iGM_UploadedAt)
+        iGM_TempPath, iGM_ConvertStatus, iGM_UploadedAt)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       iGM_RandomUuid(),
@@ -260,7 +264,7 @@ export async function iGM_InsertExamFile(
       file.fileType,
       file.fileSize,
       file.tempPath,
-      file.parseStatus,
+      file.convertStatus,
       new Date().toISOString(),
     ],
   );
@@ -279,23 +283,7 @@ export async function iGM_FindExamFileByExamId(
   );
 }
 
-/** 管理员确认后清空临时路径并标记文件已删除 */
-export async function iGM_ConfirmExamFile(
-  examId: string,
-  now: string,
-): Promise<void> {
-  await iGM_Db.run(
-    `UPDATE iGM_ExamFiles SET
-       iGM_TempPath = NULL,
-       iGM_ParseStatus = 'confirmed',
-       iGM_ConfirmedAt = ?,
-       iGM_DeletedAt = ?
-     WHERE iGM_ExamId = ?`,
-    [now, now, examId],
-  );
-}
-
-/** 定时清理：清空临时路径并标记删除时间（保留原解析状态） */
+/** 清空临时路径并标记删除时间（转换成功 / 定时清理使用，保留转换状态） */
 export async function iGM_ClearExamFileTempPath(
   examId: string,
   now: string,
@@ -359,16 +347,16 @@ export default {
   iGM_ListExamIdCreatedPairs,
   iGM_InsertExam,
   iGM_UpdateExamFields,
-  iGM_SetExamImagesPath,
+  iGM_SetExamHtmlPath,
   iGM_SetExamParseStatus,
-  iGM_UpdateExamFileProgress,
+  iGM_MarkExamFileCompleted,
+  iGM_SetExamFileConvertStatus,
   iGM_MarkExamFileFailed,
-  iGM_ConfirmExam,
+  iGM_PublishExam,
   iGM_MarkExamOriginalDeleted,
   iGM_DeleteExam,
   iGM_InsertExamFile,
   iGM_FindExamFileByExamId,
-  iGM_ConfirmExamFile,
   iGM_ClearExamFileTempPath,
   iGM_ListExamFilesWithTempPath,
   iGM_InsertSubmission,

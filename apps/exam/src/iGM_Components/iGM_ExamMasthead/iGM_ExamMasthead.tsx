@@ -54,6 +54,7 @@ const iGM_Exam_BuildDate = new Date(
 /** 导航项路由（文案由当前语言包提供） */
 const iGM_Exam_NavRoutes = [
   { href: "/", labelKey: "navExaminations" },
+  { href: "/admin/upload", labelKey: "navUpload" },
   { href: "/admin", labelKey: "navAdmin" },
 ] as const;
 
@@ -97,10 +98,7 @@ export function iGM_ExamMasthead({ initialDate }: iGM_ExamMastheadProps) {
         <nav className={styles.navRow} aria-label="Primary">
           <ul className={styles.navList}>
             {iGM_Exam_NavRoutes.map((item) => {
-              const active =
-                item.href === "/"
-                  ? pathname === "/"
-                  : pathname.startsWith(item.href);
+              const active = pathname === item.href;
               return (
                 <li key={item.href}>
                   <Link

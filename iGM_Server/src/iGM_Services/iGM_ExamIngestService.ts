@@ -3,13 +3,12 @@
  * 所属层：后端 / 业务服务层
  * 路由：G_Exam（/api/exam/upload、/api/exam/reparse 内部调用）
  * 模块：iGM_ExamIngestService
- * 作用：试卷文档落盘临时目录、按格式解析为结构化内容块、图片目录管理与元数据正则识别
- * 内容：iGM_ExamError 业务错误类型、临时/图片目录解析与路径安全校验、
- *       文档格式校验与落盘（随机后缀命名）、PDF 逐页解析（pdfjs-dist）与
- *       其余格式（DOC / DOCX / TXT / MD）文本块转换、图片字节读取、
+ * 作用：试卷 PDF 落盘临时目录、转换 HTML 目录管理、HTML 资源读取与元数据正则识别
+ * 内容：iGM_ExamError 业务错误类型、存储根 / 临时目录 / HTML 目录 / 日志目录解析与路径安全校验、
+ *       PDF 格式校验与落盘（随机名）、临时文件读写删除、HTML 首页与资源读取（剥标签取文本）、
  *       Title/Subject/Issuer/Reviewer/Duration/Total Score/Question Count 中英文双语正则识别
- * 说明：原始文件先保留在临时目录，管理员确认后才删除；磁盘绝对路径绝不出现在对外 DTO；
- *       图片按试卷独立成目录（exams/images/<examId>），Block 内仅保存文件名
+ * 说明：本模块仅支持 PDF；转换成功后由业务层删除原始 PDF；
+ *       磁盘绝对路径绝不出现在对外 DTO
  */
 
 // 导入依赖 //
@@ -19,14 +18,7 @@ import { iGM_Config } from "../iGM_Config/iGM_Config";
 import { iGM_RandomUuid } from "./iGM_SecurityService";
 import { iGM_SanitizeOriginalName } from "./iGM_StorageService";
 import {
-  iGM_BlocksToPlainText,
-  iGM_ConvertTextToBlocks,
-  iGM_ParsePdfBlocks,
-  type iGM_ExamParseHandlers,
-} from "./iGM_ExamBlockParser";
-import {
   iGM_ResolveExamFileType,
-  type iGM_ExamBlock,
   type iGM_ExamFileType,
   type iGM_ExamRecognized,
 } from "../iGM_Types/iGM_Exam";
@@ -45,20 +37,14 @@ export class iGM_ExamError extends Error {
 
 /** 落盘结果 */
 export interface iGM_ExamStoredFile {
-  /** 相对存储根目录的相对路径（入库 iGM_TempPath，不对外暴露） */
+  /** 相对临时目录的相对路径（入库 iGM_TempPath，不对外暴露） */
   relativePath: string;
   /** 清理后的原始文件名（仅展示） */
   fileName: string;
-  /** 文档格式 */
+  /** 文档格式（固定 pdf） */
   fileType: iGM_ExamFileType;
   /** 文件字节数 */
   fileSize: number;
-}
-
-/** 单次解析产出：结构化内容块 + 用于元数据识别的纯文本 */
-export interface iGM_ExamParseOutcome {
-  blocks: iGM_ExamBlock[];
-  plainText: string;
 }
 
 // 核心逻辑 //
@@ -67,55 +53,75 @@ const iGM_ExamMaxFileSize = Number(
   process.env.IGM_EXAM_MAX_FILE_SIZE ?? 50 * 1024 * 1024,
 );
 
-/** 图片文件名白名单：uuid 主名 + 受控扩展名，杜绝路径穿越 */
-const iGM_ExamImageName = /^[A-Za-z0-9-]{1,64}\.(?:png|jpg|jpeg)$/;
+/** 试卷标识白名单：uuid 主名，杜绝路径穿越 */
+const iGM_ExamIdPattern = /^[A-Za-z0-9-]{1,64}$/;
 
-/** 试卷存储根目录：D:/IGWEB/uploads */
-function iGM_ExamStorageRoot(): string {
-  return process.env.IGM_EXAM_UPLOAD_DIR ?? iGM_Config.upload.rootDir;
+/** HTML 资源文件名白名单：首字符字母数字，其余允许点划线下划线，杜绝 `..` */
+const iGM_ExamHtmlName = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
+
+/** PDF 文件头魔数：%PDF- */
+const iGM_ExamPdfMagic = [0x25, 0x50, 0x44, 0x46, 0x2d];
+
+/**
+ * 试卷存储根目录
+ * 优先级：IGM_EXAM_UPLOAD_DIR > UPLOAD_DIR > <本地存储根>/exams（D:/IGWEB/uploads/exams）
+ */
+export function iGM_ExamStorageRoot(): string {
+  const explicit = process.env.IGM_EXAM_UPLOAD_DIR ?? process.env.UPLOAD_DIR;
+  if (explicit && explicit.trim().length > 0) return resolve(explicit.trim());
+  return resolve(iGM_Config.upload.rootDir, "exams");
 }
 
-/** 试卷临时文件目录：D:/IGWEB/uploads/exams/temp */
+/** 试卷临时文件目录：<根>/temp */
 export function iGM_ExamTempDir(): string {
-  return join(iGM_ExamStorageRoot(), "exams", "temp");
+  return join(iGM_ExamStorageRoot(), "temp");
 }
 
-/** 试卷图片根目录：D:/IGWEB/uploads/exams/images */
-export function iGM_ExamImagesRoot(): string {
-  return join(iGM_ExamStorageRoot(), "exams", "images");
+/** 试卷转换日志目录：<根>/logs */
+export function iGM_ExamLogsDir(): string {
+  return join(iGM_ExamStorageRoot(), "logs");
 }
 
-/** 指定试卷的图片目录绝对路径 */
-export function iGM_ExamImagesDir(examId: string): string {
-  return join(iGM_ExamImagesRoot(), examId);
+/** 指定试卷的 HTML 目录绝对路径：<根>/<examId>/html */
+export function iGM_ExamHtmlDir(examId: string): string {
+  return join(iGM_ExamStorageRoot(), examId, "html");
 }
 
-/** 指定试卷图片目录相对存储根目录的路径（入库 iGM_ImagesPath） */
-export function iGM_ExamImagesRelativePath(examId: string): string {
-  return `exams/images/${examId}`;
+/** 指定试卷 HTML 目录相对存储根目录的路径（入库 iGM_HtmlPath） */
+export function iGM_ExamHtmlRelativePath(examId: string): string {
+  return `${examId}/html`;
 }
 
-/** 确保试卷临时目录存在 */
+/** 指定试卷转换后 HTML 首页的可访问地址（iframe src / 静态路由） */
+export function iGM_ExamHtmlApiPath(examId: string): string {
+  return `/uploads/exams/${examId}/html/index.html`;
+}
+
+/** 确保试卷存储根下的临时目录与日志目录存在 */
 export async function iGM_EnsureExamStorageRoot(): Promise<void> {
   await mkdir(iGM_ExamTempDir(), { recursive: true });
+  await mkdir(iGM_ExamLogsDir(), { recursive: true });
 }
 
-/** 确保指定试卷的图片目录存在 */
-export async function iGM_EnsureExamImagesDir(examId: string): Promise<void> {
-  await mkdir(iGM_ExamImagesDir(examId), { recursive: true });
+/** 确保指定试卷的 HTML 目录存在（转换前调用，不清理旧产物） */
+export async function iGM_EnsureExamHtmlDir(examId: string): Promise<void> {
+  await mkdir(iGM_ExamHtmlDir(examId), { recursive: true });
 }
 
-/** 删除指定试卷的图片目录（试卷删除 / 重新解析前调用） */
-export async function iGM_RemoveExamImagesDir(examId: string): Promise<void> {
+/** 删除指定试卷的整个转换目录（试卷删除 / 重新转换前调用） */
+export async function iGM_RemoveExamHtmlDir(examId: string): Promise<void> {
   try {
-    await rm(iGM_ExamImagesDir(examId), { recursive: true, force: true });
+    await rm(join(iGM_ExamStorageRoot(), examId), {
+      recursive: true,
+      force: true,
+    });
   } catch {
-    console.warn(`[iGM_ExamIngestService] 删除试卷图片目录失败：${examId}`);
+    console.warn(`[iGM_ExamIngestService] 删除试卷转换目录失败：${examId}`);
   }
 }
 
 /** 把相对路径解析为绝对路径，并强制校验仍位于试卷临时目录内 */
-function iGM_ResolveExamPath(relativePath: string): string {
+function iGM_ResolveExamTempPath(relativePath: string): string {
   const root = resolve(iGM_ExamTempDir());
   const target = resolve(root, relativePath);
   if (target !== root && !target.startsWith(root + sep)) {
@@ -124,20 +130,26 @@ function iGM_ResolveExamPath(relativePath: string): string {
   return target;
 }
 
-/** 试卷临时文件的绝对路径（解析 DOC 等需要文件路径的格式时使用） */
+/** 试卷临时文件的绝对路径（供 pdf2htmlEX 读取） */
 export function iGM_ExamTempAbsolutePath(relativePath: string): string {
-  return iGM_ResolveExamPath(relativePath);
+  return iGM_ResolveExamTempPath(relativePath);
 }
 
-/** 校验图片文件名并解析为绝对路径，强制仍位于该试卷的图片目录内 */
-function iGM_ResolveExamImagePath(examId: string, fileName: string): string {
-  if (!iGM_ExamImageName.test(fileName)) {
-    throw new iGM_ExamError("试卷图片路径非法", 400);
+/** 校验 HTML 资源文件名并解析为绝对路径，强制仍位于该试卷的 HTML 目录内 */
+export function iGM_ResolveExamHtmlAssetPath(
+  examId: string,
+  name: string,
+): string {
+  if (!iGM_ExamIdPattern.test(examId)) {
+    throw new iGM_ExamError("试卷标识非法", 400);
   }
-  const root = resolve(iGM_ExamImagesDir(examId));
-  const target = resolve(root, fileName);
+  if (!iGM_ExamHtmlName.test(name)) {
+    throw new iGM_ExamError("试卷资源路径非法", 400);
+  }
+  const root = resolve(iGM_ExamHtmlDir(examId));
+  const target = resolve(root, name);
   if (!target.startsWith(root + sep)) {
-    throw new iGM_ExamError("试卷图片路径非法", 400);
+    throw new iGM_ExamError("试卷资源路径非法", 400);
   }
   return target;
 }
@@ -148,108 +160,22 @@ function iGM_HasMagic(bytes: Uint8Array, magic: readonly number[]): boolean {
   return magic.every((value, index) => bytes[index] === value);
 }
 
-/** 文件内容魔数：PDF / DOCX（ZIP） / DOC（OLE 复合文档） */
-const iGM_ExamPdfMagic = [0x25, 0x50, 0x44, 0x46, 0x2d];
-const iGM_ExamZipMagic = [0x50, 0x4b, 0x03, 0x04];
-const iGM_ExamOleMagic = [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1];
-
-/** 校验文件格式与体积，格式与扩展名不符时抛 422 */
-function iGM_AssertExamFile(
-  fileType: iGM_ExamFileType,
-  bytes: Uint8Array,
-): void {
+/** 校验 PDF 格式与体积，内容与扩展名不符时抛 422 */
+function iGM_AssertExamFile(bytes: Uint8Array): void {
   if (bytes.byteLength <= 0) {
     throw new iGM_ExamError("上传的试卷文件为空", 422);
   }
   if (bytes.byteLength > iGM_ExamMaxFileSize) {
     throw new iGM_ExamError("试卷文件超过 50MB 上限", 413);
   }
-  if (fileType === "pdf" && !iGM_HasMagic(bytes, iGM_ExamPdfMagic)) {
+  if (!iGM_HasMagic(bytes, iGM_ExamPdfMagic)) {
     throw new iGM_ExamError("文件内容不是有效的 PDF", 422);
   }
-  if (fileType === "docx" && !iGM_HasMagic(bytes, iGM_ExamZipMagic)) {
-    throw new iGM_ExamError("文件内容不是有效的 DOCX", 422);
-  }
-  if (fileType === "doc" && !iGM_HasMagic(bytes, iGM_ExamOleMagic)) {
-    throw new iGM_ExamError("文件内容不是有效的 DOC", 422);
-  }
-}
-
-/** 把纯文本按空行切分为段落（保留单行换行） */
-function iGM_TextToMarkdown(text: string): string {
-  return text
-    .replace(/\r\n?/g, "\n")
-    .split(/\n{2,}/)
-    .map((block) => block.split("\n").map((line) => line.trimEnd()).join("\n"))
-    .map((block) => block.replace(/^\n+|\n+$/g, ""))
-    .filter((block) => block.trim().length > 0)
-    .join("\n\n");
-}
-
-/** 解析 DOCX：mammoth 转 HTML，再经 turndown 转 Markdown */
-async function iGM_ExtractDocx(
-  bytes: Uint8Array,
-): Promise<{ markdown: string; plainText: string }> {
-  try {
-    const mammoth = await import("mammoth");
-    const { value } = await mammoth.convertToHtml({
-      buffer: Buffer.from(bytes),
-    });
-    const { default: TurndownService } = await import("turndown");
-    const turndown = new TurndownService({
-      headingStyle: "atx",
-      codeBlockStyle: "fenced",
-      bulletListMarker: "-",
-    });
-    return {
-      markdown: turndown.turndown(value ?? ""),
-      plainText: (value ?? "").replace(/<[^>]+>/g, " "),
-    };
-  } catch {
-    throw new iGM_ExamError("DOCX 解析失败，请确认文件未损坏", 422);
-  }
-}
-
-/** 解析 DOC（旧版二进制格式）：word-extractor 纯 JS 抽取正文 */
-async function iGM_ExtractDoc(
-  absolutePath: string,
-): Promise<{ markdown: string; plainText: string }> {
-  try {
-    const { default: WordExtractor } = await import("word-extractor");
-    const extractor = new WordExtractor();
-    const document = await extractor.extract(absolutePath);
-    const text = document.getBody() ?? "";
-    return { markdown: iGM_TextToMarkdown(text), plainText: text };
-  } catch {
-    throw new iGM_ExamError(
-      "DOC 解析失败，请转换为 DOCX 或 PDF 后重新上传",
-      422,
-    );
-  }
-}
-
-/** 按格式解析非 PDF 文档为 Markdown 全文 */
-async function iGM_ParseTextDocument(
-  absolutePath: string,
-  fileType: iGM_ExamFileType,
-  bytes: Uint8Array,
-): Promise<{ markdown: string; plainText: string }> {
-  if (fileType === "docx") {
-    return await iGM_ExtractDocx(bytes);
-  }
-  if (fileType === "doc") {
-    return await iGM_ExtractDoc(absolutePath);
-  }
-  // TXT / MD：直接读取；MD 保留原有 Markdown 结构
-  const text = new TextDecoder("utf-8").decode(bytes).replace(/^\uFEFF/, "");
-  return {
-    markdown: fileType === "md" ? text : iGM_TextToMarkdown(text),
-    plainText: text,
-  };
 }
 
 /**
- * 将上传文档写入临时目录（uuid 命名，防冲突），返回落盘信息
+ * 将上传的 PDF 写入临时目录（随机名防冲突），返回落盘信息
+ * 非 PDF 或内容非法一律拒绝
  */
 export async function iGM_StoreExamTempFile(
   originalName: string,
@@ -258,16 +184,13 @@ export async function iGM_StoreExamTempFile(
   const fileName = iGM_SanitizeOriginalName(originalName);
   const fileType = iGM_ResolveExamFileType(fileName);
   if (!fileType) {
-    throw new iGM_ExamError(
-      "仅支持 PDF / DOC / DOCX / TXT / MD 格式的试卷文件",
-      422,
-    );
+    throw new iGM_ExamError("仅支持 PDF 格式的试卷文件", 422);
   }
-  iGM_AssertExamFile(fileType, bytes);
+  iGM_AssertExamFile(bytes);
   await iGM_EnsureExamStorageRoot();
 
   const storedName = `${iGM_RandomUuid()}.${fileType}`;
-  const absolutePath = iGM_ResolveExamPath(storedName);
+  const absolutePath = iGM_ResolveExamTempPath(storedName);
   try {
     await writeFile(absolutePath, bytes);
   } catch {
@@ -281,33 +204,75 @@ export async function iGM_StoreExamTempFile(
   };
 }
 
-/**
- * 按格式把文档解析为结构化内容块
- * - PDF：pdfjs-dist 逐页解析文字与图片，图片落盘到该试卷的图片目录，逐页上报进度
- * - 其余格式：抽取文本后按 Markdown 标记转换为标题 / 列表 / 段落块（单页，立即上报完成）
- */
-export async function iGM_ParseExamDocumentToBlocks(
-  absolutePath: string,
-  fileType: iGM_ExamFileType,
-  bytes: Uint8Array,
-  examId: string,
-  handlers: iGM_ExamParseHandlers = {},
-): Promise<iGM_ExamParseOutcome> {
-  if (fileType === "pdf") {
-    await iGM_EnsureExamImagesDir(examId);
-    const blocks = await iGM_ParsePdfBlocks(
-      bytes,
-      iGM_ExamImagesDir(examId),
-      handlers,
-    );
-    return { blocks, plainText: iGM_BlocksToPlainText(blocks) };
+/** 读取临时文件字节（原始文件下载使用） */
+export async function iGM_ReadExamTempFile(
+  relativePath: string,
+): Promise<Uint8Array> {
+  const absolutePath = iGM_ResolveExamTempPath(relativePath);
+  try {
+    const buffer = await readFile(absolutePath);
+    return new Uint8Array(buffer);
+  } catch {
+    throw new iGM_ExamError("原始文件不存在", 404);
   }
+}
 
-  const parsed = await iGM_ParseTextDocument(absolutePath, fileType, bytes);
-  const blocks = iGM_ConvertTextToBlocks(parsed.markdown);
-  await handlers.onTotal?.(1);
-  await handlers.onPage?.(1, 1, blocks.length);
-  return { blocks, plainText: parsed.plainText };
+/** 删除临时文件（失败不抛出，由调用方决定是否忽略） */
+export async function iGM_RemoveExamTempFile(
+  relativePath: string,
+): Promise<void> {
+  try {
+    await rm(iGM_ResolveExamTempPath(relativePath), { force: true });
+  } catch {
+    console.warn(`[iGM_ExamIngestService] 删除试卷文件失败：${relativePath}`);
+  }
+}
+
+/**
+ * 读取转换后试卷的 HTML 首页文本（剥标签）用于元数据识别
+ * 首页缺失时抛 404（转换未完成或产物被清理）
+ */
+export async function iGM_ReadExamHtmlText(examId: string): Promise<string> {
+  const absolutePath = iGM_ResolveExamHtmlAssetPath(examId, "index.html");
+  try {
+    const html = await readFile(absolutePath, "utf8");
+    return iGM_StripHtml(html);
+  } catch {
+    throw new iGM_ExamError("试卷 HTML 不存在", 404);
+  }
+}
+
+/** 读取转换后试卷目录内的任意资源字节（字体 / 图片 / CSS / JS） */
+export async function iGM_ReadExamHtmlAsset(
+  examId: string,
+  name: string,
+): Promise<Uint8Array> {
+  const absolutePath = iGM_ResolveExamHtmlAssetPath(examId, name);
+  try {
+    const buffer = await readFile(absolutePath);
+    return new Uint8Array(buffer);
+  } catch {
+    throw new iGM_ExamError("试卷资源不存在", 404);
+  }
+}
+
+/** 剥离 HTML 标签与脚本样式，归一化空白，得到可正则匹配的纯文本 */
+function iGM_StripHtml(html: string): string {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&#(\d+);/g, (_match, code: string) =>
+      String.fromCharCode(Number(code)),
+    )
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /** 第一个匹配分组的文本（中英文模式依次尝试），未命中返回空串 */
@@ -342,8 +307,8 @@ function iGM_MatchNumber(
 }
 
 /**
- * 从解析文本中按正则识别试卷元数据
- * 规则来自模块规格：中英文双语模式，命中即取
+ * 从转换后 HTML 的纯文本中按正则识别试卷元数据
+ * 规则来自模块规格：中英文双语模式，命中即取（识别失败由管理员补全）
  */
 export function iGM_RecognizeExamMeta(rawText: string): iGM_ExamRecognized {
   const title = iGM_MatchText(rawText, [
@@ -378,59 +343,24 @@ export function iGM_RecognizeExamMeta(rawText: string): iGM_ExamRecognized {
   return { title, subject, issuer, reviewer, duration, totalScore, questionCount };
 }
 
-/** 读取临时文件字节（站内预览 / 下载 / 解析使用） */
-export async function iGM_ReadExamTempFile(
-  relativePath: string,
-): Promise<Uint8Array> {
-  const absolutePath = iGM_ResolveExamPath(relativePath);
-  try {
-    const buffer = await readFile(absolutePath);
-    return new Uint8Array(buffer);
-  } catch {
-    throw new iGM_ExamError("原始文件不存在", 404);
-  }
-}
-
-/** 删除临时文件（失败不抛出，由调用方决定是否忽略） */
-export async function iGM_RemoveExamTempFile(
-  relativePath: string,
-): Promise<void> {
-  try {
-    await rm(iGM_ResolveExamPath(relativePath), { force: true });
-  } catch {
-    console.warn(`[iGM_ExamIngestService] 删除试卷文件失败：${relativePath}`);
-  }
-}
-
-/** 读取该试卷图片目录内的图片字节（前端渲染 Block 图片使用） */
-export async function iGM_ReadExamImage(
-  examId: string,
-  fileName: string,
-): Promise<Uint8Array> {
-  const absolutePath = iGM_ResolveExamImagePath(examId, fileName);
-  try {
-    const buffer = await readFile(absolutePath);
-    return new Uint8Array(buffer);
-  } catch {
-    throw new iGM_ExamError("试卷图片不存在", 404);
-  }
-}
-
 // 导出 //
 export default {
   iGM_ExamError,
+  iGM_ExamStorageRoot,
   iGM_ExamTempDir,
-  iGM_ExamImagesRoot,
-  iGM_ExamImagesDir,
-  iGM_ExamImagesRelativePath,
+  iGM_ExamLogsDir,
+  iGM_ExamHtmlDir,
+  iGM_ExamHtmlRelativePath,
+  iGM_ExamHtmlApiPath,
   iGM_EnsureExamStorageRoot,
-  iGM_EnsureExamImagesDir,
-  iGM_RemoveExamImagesDir,
+  iGM_EnsureExamHtmlDir,
+  iGM_RemoveExamHtmlDir,
   iGM_ExamTempAbsolutePath,
+  iGM_ResolveExamHtmlAssetPath,
   iGM_StoreExamTempFile,
-  iGM_ParseExamDocumentToBlocks,
-  iGM_RecognizeExamMeta,
   iGM_ReadExamTempFile,
   iGM_RemoveExamTempFile,
-  iGM_ReadExamImage,
+  iGM_ReadExamHtmlText,
+  iGM_ReadExamHtmlAsset,
+  iGM_RecognizeExamMeta,
 };

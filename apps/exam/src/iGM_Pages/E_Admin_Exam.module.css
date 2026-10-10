@@ -86,6 +86,7 @@
   color: var(--igm-paper);
   border: 1px solid var(--igm-ink);
   border-radius: var(--igm-radius);
+  text-decoration: none;
   transition: background 0.18s ease, border-color 0.18s ease;
 }
 
@@ -423,31 +424,6 @@
   color: var(--igm-cinnabar);
 }
 
-/* ============================= 解析全文与预览 ============================= */
-.contentArea {
-  font-family: var(--igm-font-mono), ui-monospace, monospace;
-  font-size: 12px;
-  line-height: 1.7;
-}
-
-.previewBox {
-  max-height: 460px;
-  overflow-y: auto;
-  padding: 4px;
-  border: 1px solid var(--igm-line-soft);
-  border-radius: var(--igm-radius);
-  background: var(--igm-paper-sink);
-}
-
-.previewEmpty {
-  margin: 0;
-  padding: 18px 0;
-  text-align: center;
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  color: var(--igm-text-muted);
-}
-
 /* ============================= 状态标签 ============================= */
 .statusTag {
   display: inline-flex;
@@ -476,26 +452,21 @@
   border-color: color-mix(in srgb, var(--igm-cinnabar) 60%, transparent);
 }
 
-.ps_pending {
+.cv_pending {
   color: var(--igm-text-muted);
 }
 
-.ps_parsing {
+.cv_converting {
   color: var(--igm-copper);
   border-color: color-mix(in srgb, var(--igm-copper) 45%, transparent);
 }
 
-.ps_parsed {
-  color: var(--igm-copper);
-  border-color: color-mix(in srgb, var(--igm-copper) 55%, transparent);
-}
-
-.ps_confirmed {
+.cv_completed {
   color: var(--igm-ink-soft);
   border-color: color-mix(in srgb, var(--igm-ink-soft) 55%, transparent);
 }
 
-.ps_failed {
+.cv_failed {
   color: var(--igm-cinnabar);
   border-color: color-mix(in srgb, var(--igm-cinnabar) 60%, transparent);
 }

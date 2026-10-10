@@ -1,0 +1,252 @@
+/**
+ * 文件路径：apps/exam/src/iGM_Pages/E_Admin_Upload.module.css
+ * 所属层：前端 / 页面样式层
+ * 路由：E_Admin_Upload（/admin/upload）
+ * 模块：iGM_ExamUpload
+ * 作用：试卷上传页样式（页头、拖拽区、阶段指示、进度条、提示与操作）
+ * 内容：页面容器、拖拽选择区、阶段步骤、进度条、提示、按钮
+ * 说明：沿用考试系统学术极简风格，配色取自全局 CSS 变量
+ */
+
+/* ============================= 页面容器 ============================= */
+.page {
+  max-width: var(--igm-maxw);
+  margin: 0 auto;
+  padding: 36px 28px 80px;
+}
+
+/* ============================= 页头 ============================= */
+.head {
+  max-width: 760px;
+  margin-bottom: 30px;
+  animation: igm-ink-in 0.5s ease both;
+}
+
+.headEyebrow {
+  margin: 0 0 10px;
+}
+
+.headTitle {
+  margin: 0 0 12px;
+  font-size: clamp(26px, 4vw, 38px);
+  font-weight: 700;
+  line-height: 1.16;
+  color: var(--igm-ink);
+}
+
+.headLead {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--igm-text-muted);
+}
+
+/* ============================= 拖拽选择区 ============================= */
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 56px 24px;
+  text-align: center;
+  border: 1px dashed var(--igm-line);
+  border-radius: var(--igm-radius);
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+.dropzoneActive {
+  border-color: var(--igm-copper);
+  background: color-mix(in srgb, var(--igm-gold) 10%, transparent);
+}
+
+.dropIcon {
+  color: var(--igm-copper);
+}
+
+.dropHint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.8;
+  letter-spacing: 0.06em;
+  color: var(--igm-text-muted);
+}
+
+.pickBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 24px;
+  background: var(--igm-ink);
+  color: var(--igm-paper);
+  border: 1px solid var(--igm-ink);
+  border-radius: var(--igm-radius);
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.pickBtn:hover:not(:disabled) {
+  background: var(--igm-ink-soft);
+  border-color: var(--igm-ink-soft);
+}
+
+.pickBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pickLabel {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.spin {
+  animation: igm-admin-spin 1s linear infinite;
+}
+
+@keyframes igm-admin-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.hiddenInput {
+  display: none;
+}
+
+/* ============================= 阶段与进度 ============================= */
+.stageBox {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+  padding: 20px 22px;
+  border: 1px solid var(--igm-line-soft);
+  border-radius: var(--igm-radius);
+  background: var(--igm-paper-raised);
+}
+
+.stageSteps {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.step {
+  padding: 3px 10px;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--igm-text-muted);
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+}
+
+.stepActive {
+  color: var(--igm-ink);
+  border-color: var(--igm-copper);
+  background: color-mix(in srgb, var(--igm-gold) 14%, transparent);
+}
+
+.stepDone {
+  color: var(--igm-ink-soft);
+  border-color: var(--igm-ink-soft);
+}
+
+.stepFailed {
+  color: var(--igm-cinnabar);
+  border-color: color-mix(in srgb, var(--igm-cinnabar) 60%, transparent);
+}
+
+.stepArrow {
+  color: var(--igm-text-muted);
+}
+
+.fileName {
+  margin: 0;
+  font-size: 12px;
+  color: var(--igm-text-muted);
+  word-break: break-all;
+}
+
+.progressTrack {
+  height: 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--igm-line) 60%, transparent);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--igm-copper);
+  transition: width 0.3s ease;
+}
+
+.note,
+.noteOk,
+.noteError {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+.noteOk {
+  color: var(--igm-ink-soft);
+}
+
+.noteError {
+  color: var(--igm-cinnabar);
+}
+
+/* ============================= 操作 ============================= */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.retryBtn,
+.openBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: var(--igm-radius);
+  font-size: 12px;
+  border: 1px solid var(--igm-line);
+  background: transparent;
+  color: var(--igm-ink);
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.retryBtn:hover {
+  border-color: var(--igm-copper);
+  background: color-mix(in srgb, var(--igm-gold) 12%, transparent);
+}
+
+.openBtn {
+  background: var(--igm-ink);
+  border-color: var(--igm-ink);
+  color: var(--igm-paper);
+}
+
+.openBtn:hover {
+  background: var(--igm-ink-soft);
+  border-color: var(--igm-ink-soft);
+}
+
+/* ============================= 响应式 ============================= */
+@media (max-width: 640px) {
+  .page {
+    padding: 22px 16px 60px;
+  }
+
+  .dropzone {
+    padding: 40px 16px;
+  }
+}

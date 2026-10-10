@@ -1,12 +1,13 @@
 /**
  * 文件路径：iGM_Server/src/iGM_Routes/G_Exam.ts
  * 所属层：后端 / 路由层
- * 路由：/api/exam/*
+ * 路由：/api/exam/* 与 /uploads/exams/*
  * 模块：G_Exam
- * 作用：iG&M 教育考试系统路由集合（试卷列表 / 详情 / 原文预览 / 图片 / 解析进度 / 上传解析 / 校对 / 确认删除 / 重新解析 / 删除）
- * 内容：公开列表与详情、管理端列表与详情、原始文件内联预览或下载、解析图片字节、
- *       解析进度查询、上传后台解析建档、校对更新、确认删除原文件并发布、重新解析、删除、交卷记录
- * 约束：统一响应 { success, code, message, data }；原始文件按格式返回二进制流；
+ * 作用：iG&M 教育考试系统路由集合（试卷列表 / 详情 / 原文下载 / 转换 HTML 静态资源 /
+ *       转换进度 / 上传转换 / 校对 / 确认发布 / 重新转换 / 删除 / 交卷）
+ * 内容：公开列表与详情、管理端列表与详情、原始 PDF 内联预览、转换后 HTML 目录静态服务、
+ *       转换进度查询、上传后台转换建档、校对更新、确认发布、重新转换、删除、交卷记录
+ * 约束：统一响应 { success, code, message, data }；二进制流不套统一响应结构；
  *       本模块暂不做登录与权限校验
  */
 
@@ -23,36 +24,28 @@ import {
 } from "./iGM_RouteSupport";
 import { iGM_ExtractUploadFile } from "../iGM_Services/iGM_FileService";
 import {
-  iGM_ConfirmExamService,
   iGM_DeleteExamService,
   iGM_ExamError,
+  iGM_GetExamConvertProgressService,
   iGM_GetExamDetailService,
-  iGM_GetExamParseProgressService,
   iGM_ListAdminExamsService,
   iGM_ListPublicExamsService,
+  iGM_PublishExamService,
   iGM_ReadExamFileService,
-  iGM_ReadExamImageService,
+  iGM_ReadExamHtmlAssetService,
   iGM_ReparseExamService,
   iGM_SubmitExamService,
   iGM_UpdateExamService,
   iGM_UploadExamService,
 } from "../iGM_Services/iGM_ExamService";
-import type { iGM_ExamBlock } from "../iGM_Types/iGM_Exam";
 
 // 类型定义 //
-/** 原始文件 MIME 与是否可内联预览 */
+/** 原始文件 MIME 与是否可内联预览（本模块仅 PDF） */
 const iGM_ExamFileHeaders: Record<
   string,
   { mime: string; inline: boolean }
 > = {
   pdf: { mime: "application/pdf", inline: true },
-  docx: {
-    mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    inline: false,
-  },
-  doc: { mime: "application/msword", inline: false },
-  txt: { mime: "text/plain; charset=utf-8", inline: false },
-  md: { mime: "text/markdown; charset=utf-8", inline: false },
 };
 
 // 核心逻辑 //
@@ -78,19 +71,12 @@ function iGM_RequireExamIdBody(ctx: iGM_RouteContext): string {
   return examId;
 }
 
-/**
- * 读取结构化内容块字段（前端以 JSON 字符串提交）
- * 非法 JSON 或非数组一律视为空数组，避免脏数据入库
- */
-function iGM_BlocksField(body: unknown): iGM_ExamBlock[] {
-  const raw = iGM_Field(body, "contentBlocks");
-  if (raw.length === 0) return [];
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as iGM_ExamBlock[]) : [];
-  } catch {
-    return [];
-  }
+/** Uint8Array → ArrayBuffer（TS 的 BodyInit 定义不接受 Uint8Array 视图） */
+function iGM_BinaryBody(bytes: Uint8Array): ArrayBuffer {
+  return bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength,
+  ) as ArrayBuffer;
 }
 
 /* ---------- 公开：已发布试卷列表 ---------- */
@@ -99,7 +85,7 @@ async function iGM_HandlePublicList(ctx: iGM_RouteContext) {
   return iGM_Ok({ exams: await iGM_ListPublicExamsService() });
 }
 
-/* ---------- 公开：试卷详情（含解析全文） ---------- */
+/* ---------- 公开：试卷详情 ---------- */
 async function iGM_HandleDetail(ctx: iGM_RouteContext) {
   const examId = iGM_RequireExamId(ctx);
   return iGM_Ok({
@@ -115,7 +101,7 @@ async function iGM_HandleAdminDetail(ctx: iGM_RouteContext) {
   });
 }
 
-/* ---------- 原始文件：PDF 内联预览，其余格式按附件下载 ---------- */
+/* ---------- 原始文件：PDF 内联预览（转换失败保留期内可用） ---------- */
 async function iGM_HandleFile(ctx: iGM_RouteContext) {
   const examId = iGM_RequireExamId(ctx);
   const { bytes, fileName, fileType } = await iGM_ReadExamFileService(examId);
@@ -131,36 +117,40 @@ async function iGM_HandleFile(ctx: iGM_RouteContext) {
   ctx.set.headers["Content-Length"] = String(bytes.byteLength);
   ctx.set.headers["Cache-Control"] = "no-store";
   ctx.set.headers["X-Content-Type-Options"] = "nosniff";
-  // Uint8Array 在 TS 的 BodyInit 定义下不被直接接受，转为底层 ArrayBuffer 传入
-  const body = bytes.buffer.slice(
-    bytes.byteOffset,
-    bytes.byteOffset + bytes.byteLength,
-  ) as ArrayBuffer;
-  return new Response(body, { status: 200, headers: ctx.set.headers });
+  return new Response(iGM_BinaryBody(bytes), {
+    status: 200,
+    headers: ctx.set.headers,
+  });
 }
 
-/* ---------- 解析图片：按 examId + 文件名返回图片字节 ---------- */
-async function iGM_HandleImage(ctx: iGM_RouteContext) {
-  const examId = iGM_RequireExamId(ctx);
-  const name = iGM_Query(ctx.query, "name");
-  if (!name) throw new iGM_ExamError("缺少图片文件名", 400);
-  const { bytes, contentType } = await iGM_ReadExamImageService(examId, name);
+/* ---------- 转换后 HTML 静态服务：iframe 首页与同级 CSS / JS / 字体 / 图片 ---------- */
+async function iGM_HandleHtmlAsset(ctx: iGM_RouteContext) {
+  const examId = ctx.params?.examId ?? "";
+  const name = ctx.params?.name ?? "";
+  if (!examId || !name) throw new iGM_ExamError("缺少试卷资源参数", 400);
+  const { bytes, contentType } = await iGM_ReadExamHtmlAssetService(
+    examId,
+    name,
+  );
   ctx.set.headers["Content-Type"] = contentType;
   ctx.set.headers["Content-Length"] = String(bytes.byteLength);
-  ctx.set.headers["Cache-Control"] = "public, max-age=86400";
+  // 首页不缓存（草稿可随时重新转换），其余静态资源长缓存
+  ctx.set.headers["Cache-Control"] =
+    name === "index.html" ? "no-store" : "public, max-age=86400";
   ctx.set.headers["X-Content-Type-Options"] = "nosniff";
-  const body = bytes.buffer.slice(
-    bytes.byteOffset,
-    bytes.byteOffset + bytes.byteLength,
-  ) as ArrayBuffer;
-  return new Response(body, { status: 200, headers: ctx.set.headers });
+  return new Response(iGM_BinaryBody(bytes), {
+    status: 200,
+    headers: ctx.set.headers,
+  });
 }
 
-/* ---------- 管理端：解析进度（前端上传 / 重新解析后轮询） ---------- */
+/* ---------- 管理端：转换进度（前端上传 / 重新转换后轮询） ---------- */
 async function iGM_HandleProgress(ctx: iGM_RouteContext) {
   iGM_EnforceRateLimit(ctx, "examRead", `ip:${iGM_ClientIp(ctx)}`);
   const examId = iGM_RequireExamId(ctx);
-  return iGM_Ok({ progress: await iGM_GetExamParseProgressService(examId) });
+  return iGM_Ok({
+    progress: await iGM_GetExamConvertProgressService(examId),
+  });
 }
 
 /* ---------- 管理端：全部试卷列表 ---------- */
@@ -169,7 +159,7 @@ async function iGM_HandleAdminList(ctx: iGM_RouteContext) {
   return iGM_Ok({ exams: await iGM_ListAdminExamsService() });
 }
 
-/* ---------- 管理端：上传试卷文档并解析建档 ---------- */
+/* ---------- 管理端：上传 PDF 并后台转换建档 ---------- */
 async function iGM_HandleUpload(ctx: iGM_RouteContext) {
   const ip = iGM_ClientIp(ctx);
   iGM_EnforceRateLimit(ctx, "examUpload", `ip:${ip}`);
@@ -177,10 +167,10 @@ async function iGM_HandleUpload(ctx: iGM_RouteContext) {
   const file = iGM_ExtractUploadFile(ctx.body);
   const exam = await iGM_UploadExamService(file, user?.iGM_Id ?? null);
   ctx.set.status = 201;
-  return iGM_Ok({ exam }, "试卷已解析建档，请校对后确认");
+  return iGM_Ok({ exam }, "试卷已上传，正在后台转换");
 }
 
-/* ---------- 管理端：校对更新（元数据 + 解析全文） ---------- */
+/* ---------- 管理端：校对更新元数据 ---------- */
 async function iGM_HandleUpdate(ctx: iGM_RouteContext) {
   const body = ctx.body;
   const examId = iGM_RequireExamIdBody(ctx);
@@ -193,30 +183,29 @@ async function iGM_HandleUpdate(ctx: iGM_RouteContext) {
     totalScore: iGM_NumberField(body, "totalScore"),
     questionCount: iGM_NumberField(body, "questionCount"),
     notice: iGM_Field(body, "notice"),
-    contentBlocks: iGM_BlocksField(body),
   });
   return iGM_Ok({ updated: true }, "试卷信息已保存");
 }
 
-/* ---------- 管理端：确认并删除原文件，同时发布 ---------- */
+/* ---------- 管理端：确认并发布 ---------- */
 async function iGM_HandleConfirm(ctx: iGM_RouteContext) {
   const ip = iGM_ClientIp(ctx);
   iGM_EnforceRateLimit(ctx, "examUpload", `ip:${ip}`);
   const examId = iGM_RequireExamIdBody(ctx);
-  await iGM_ConfirmExamService(examId);
-  return iGM_Ok({ confirmed: true }, "已确认并删除原始文件，试卷已发布");
+  await iGM_PublishExamService(examId);
+  return iGM_Ok({ confirmed: true }, "试卷已发布");
 }
 
-/* ---------- 管理端：使用原始文件重新解析 ---------- */
+/* ---------- 管理端：使用原始 PDF 重新转换 ---------- */
 async function iGM_HandleReparse(ctx: iGM_RouteContext) {
   const ip = iGM_ClientIp(ctx);
   iGM_EnforceRateLimit(ctx, "examUpload", `ip:${ip}`);
   const examId = iGM_RequireExamIdBody(ctx);
   await iGM_ReparseExamService(examId);
-  return iGM_Ok({ reparsed: true }, "已按原始文件重新解析");
+  return iGM_Ok({ reparsed: true }, "已按原始文件重新转换");
 }
 
-/* ---------- 管理端：删除试卷及其原始文件 ---------- */
+/* ---------- 管理端：删除试卷及其原始文件与 HTML 目录 ---------- */
 async function iGM_HandleDelete(ctx: iGM_RouteContext) {
   const examId = iGM_RequireExamIdBody(ctx);
   await iGM_DeleteExamService(examId);
@@ -239,13 +228,13 @@ async function iGM_HandleSubmit(ctx: iGM_RouteContext) {
 
 /**
  * G_Exam 路由集合
- * 前缀统一 /api/exam/；原始文件直接返回二进制 Response（不套统一响应结构）
+ * 前缀统一 /api/exam/；转换产物走 /uploads/exams/<examId>/html/<name> 路径式静态服务
  */
 export const G_Exam = new Elysia({ name: "G_Exam" })
   .get("/api/exam/list", iGM_HandlePublicList as never)
   .get("/api/exam/detail", iGM_HandleDetail as never)
   .get("/api/exam/file", iGM_HandleFile as never)
-  .get("/api/exam/image", iGM_HandleImage as never)
+  .get("/uploads/exams/:examId/html/:name", iGM_HandleHtmlAsset as never)
   .get("/api/exam/admin/list", iGM_HandleAdminList as never)
   .get("/api/exam/admin/detail", iGM_HandleAdminDetail as never)
   .get("/api/exam/admin/progress", iGM_HandleProgress as never)

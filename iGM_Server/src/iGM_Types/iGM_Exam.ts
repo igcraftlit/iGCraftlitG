@@ -4,8 +4,10 @@
  * 路由：G_Exam（/api/exam/*）
  * 模块：iGM_Exam
  * 作用：iG&M 教育考试系统的状态枚举、数据行、DTO 与识别结果类型
- * 内容：试卷状态与解析状态、结构化内容块、试卷/文件/交卷数据行、列表与详情 DTO、
- *       解析进度 DTO、文档自动识别结果、支持的文件格式白名单
+ * 内容：试卷状态与转换状态、试卷/文件/交卷数据行、列表与详情 DTO、
+ *       转换进度 DTO、文档自动识别结果、支持的文件格式白名单
+ * 说明：本模块仅支持 PDF，转换由 pdf2htmlEX 产出自包含 HTML 目录，
+ *       磁盘路径绝不出现在对外 DTO
  */
 
 // 导入依赖 //
@@ -22,89 +24,28 @@ export const iGM_ExamStatuses: readonly iGM_ExamStatus[] = [
   "closed",
 ];
 
-/** 解析状态：待解析 / 解析中 / 已解析 / 已确认 / 解析失败 */
-export type iGM_ExamParseStatus =
+/** 转换状态：待转换 / 转换中 / 已完成 / 转换失败 */
+export type iGM_ExamConvertStatus =
   | "pending"
-  | "parsing"
-  | "parsed"
-  | "confirmed"
+  | "converting"
+  | "completed"
   | "failed";
 
-/**
- * 结构化内容块类型
- * 说明：试卷解析结果以块为单位存储，前端按类型用自定义组件渲染，不使用 Markdown
- */
-export type iGM_ExamBlockType =
-  | "heading"
-  | "paragraph"
-  | "list"
-  | "table"
-  | "image"
-  | "formula"
-  | "question";
-
-/**
- * 结构化内容块
- * 说明：仅承载渲染所需数据；磁盘路径不出现，图片仅保存 images 目录内的文件名
- */
-export interface iGM_ExamBlock {
-  /** 块唯一标识（前端编辑与排序稳定键） */
-  id: string;
-  type: iGM_ExamBlockType;
-  /** heading：层级 1-6；image：仅作说明 */
-  level?: number;
-  /** heading / paragraph / formula / question 题干 / image 替代文本 */
-  text?: string;
-  /** list：是否有序列表 */
-  ordered?: boolean;
-  /** list：列表项文本 */
-  items?: string[];
-  /** table：二维单元格文本（首行为表头） */
-  rows?: string[][];
-  /** image：images 目录内的文件名 */
-  src?: string;
-  /** image：图片原始像素宽高 */
-  width?: number;
-  height?: number;
-  /** question：题号（如 1 / 一） */
-  number?: string;
-  /** question：可选项文本 */
-  options?: string[];
-  /** question：参考答案 */
-  answer?: string;
-  /** question：分值 */
-  score?: number;
-  /** 解析来源页码（1 起） */
-  page?: number;
-}
-
-/** 解析进度快照（前端上传后轮询） */
-export interface iGM_ExamParseProgressDto {
+/** 转换进度快照（前端上传后轮询） */
+export interface iGM_ExamConvertProgressDto {
   examId: string;
-  status: iGM_ExamParseStatus;
-  /** 已解析页数 */
-  parsedPages: number;
-  /** 总页数（解析开始前为 0） */
-  totalPages: number;
-  /** 已生成的块数量 */
-  blockCount: number;
-  /** 进度百分比（0-100，取整） */
+  status: iGM_ExamConvertStatus;
+  /** 进度百分比（0 待转换 / 40 转换中 / 100 完成 / 0 失败） */
   percent: number;
-  /** 解析失败原因（无失败时为空串） */
+  /** 转换失败原因（无失败时为空串） */
   error: string;
 }
 
-/** 支持上传的文档格式（扩展名，小写不含点） */
-export type iGM_ExamFileType = "pdf" | "docx" | "doc" | "txt" | "md";
+/** 支持上传的文档格式（扩展名，小写不含点）：本模块仅 PDF */
+export type iGM_ExamFileType = "pdf";
 
 /** 支持上传的文档格式全集 */
-export const iGM_ExamFileTypes: readonly iGM_ExamFileType[] = [
-  "pdf",
-  "docx",
-  "doc",
-  "txt",
-  "md",
-];
+export const iGM_ExamFileTypes: readonly iGM_ExamFileType[] = ["pdf"];
 
 /** 试卷数据行（对应 iGM_Exams 表） */
 export interface iGM_ExamRow {
@@ -117,10 +58,8 @@ export interface iGM_ExamRow {
   iGM_TotalScore: number | null;
   iGM_QuestionCount: number | null;
   iGM_Notice: string | null;
-  /** 结构化内容块（PostgreSQL JSONB，驱动已解析为对象） */
-  iGM_ContentBlocks: iGM_ExamBlock[] | null;
-  /** 提取图片所在目录（相对存储根目录，不对外暴露） */
-  iGM_ImagesPath: string | null;
+  /** 转换生成的 HTML 目录（相对存储根目录，不对外暴露） */
+  iGM_HtmlPath: string | null;
   iGM_ParseStatus: string;
   iGM_OriginalFileDeleted: boolean;
   iGM_Status: string;
@@ -133,20 +72,18 @@ export interface iGM_ExamRow {
 export interface iGM_ExamFileRow {
   iGM_Id: string;
   iGM_ExamId: string;
+  /** 上传时的原始文件名（仅展示） */
   iGM_FileName: string;
   iGM_FileType: string | null;
   iGM_FileSize: number | null;
   /** 临时目录中的相对路径；原始文件已删除时为 null */
   iGM_TempPath: string | null;
-  iGM_ParseStatus: string;
-  /** 已解析页数 */
-  iGM_ParsedPages: number;
-  /** 文档总页数（解析开始前为 0） */
-  iGM_TotalPages: number;
-  /** 解析失败原因 */
-  iGM_ParseError: string | null;
+  iGM_ConvertStatus: string;
+  /** 转换失败原因 */
+  iGM_ConvertError: string | null;
   iGM_UploadedAt: string;
-  iGM_ConfirmedAt: string | null;
+  /** 转换完成时间 */
+  iGM_ConvertedAt: string | null;
   iGM_DeletedAt: string | null;
 }
 
@@ -184,27 +121,25 @@ export interface iGM_ExamListItemDto {
   totalScore: number | null;
   questionCount: number | null;
   status: iGM_ExamStatus;
-  parseStatus: iGM_ExamParseStatus;
+  convertStatus: iGM_ExamConvertStatus;
   createdAt: string;
 }
 
-/** 试卷详情 DTO（不含磁盘路径，仅暴露文件接口地址） */
+/** 试卷详情 DTO（不含磁盘路径，仅暴露 HTML 与文件接口地址） */
 export interface iGM_ExamDetailDto extends iGM_ExamListItemDto {
   reviewer: string;
   notice: string;
-  /** 结构化内容块（前端按类型渲染与编辑） */
-  contentBlocks: iGM_ExamBlock[];
-  /** 解析进度快照 */
-  parseProgress: iGM_ExamParseProgressDto;
-  /** 原始文件是否仍在服务器上（管理员确认后为 false） */
+  /** 转换进度快照 */
+  convertProgress: iGM_ExamConvertProgressDto;
+  /** 转换后 HTML 首页的可访问地址（iframe src）；未完成时为空串 */
+  htmlApiPath: string;
+  /** 原始文件是否仍在服务器上（转换成功后为 false） */
   hasOriginalFile: boolean;
-  /** 原始文件下载 / 预览接口地址；无原始文件时为空串 */
+  /** 原始文件下载接口地址；无原始文件时为空串 */
   fileApiPath: string;
-  /** 图片接口前缀（`imageApiBase + block.src` 即为可访问地址）；无图片目录时为空串 */
-  imageApiBase: string;
   /** 原始文件名（仅用于展示） */
   fileName: string;
-  /** 原始文件格式：pdf 可内联预览，其余仅下载 */
+  /** 原始文件格式（本模块固定 pdf） */
   fileType: string;
 }
 
@@ -221,7 +156,7 @@ export function iGM_IsExamStatus(value: string): value is iGM_ExamStatus {
   return (iGM_ExamStatuses as readonly string[]).includes(value);
 }
 
-/** 从文件名解析支持的文档格式，不支持时返回 null */
+/** 从文件名解析支持的文档格式，仅 PDF，其余返回 null */
 export function iGM_ResolveExamFileType(
   fileName: string,
 ): iGM_ExamFileType | null {

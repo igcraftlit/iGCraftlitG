@@ -231,13 +231,13 @@ const iGM_Server = new Elysia()
 // 启动前确保上传根目录存在（建目录不幂等、空实现即可安全重复调用）
 await iGM_EnsureUploadRoot();
 
-// iG&M 教育考试系统：确保试卷临时目录存在（D:/IGWEB/uploads/exams/temp）
+// iG&M 教育考试系统：确保试卷临时目录与转换日志目录存在（D:/IGWEB/uploads/exams/{temp,logs}）
 await iGM_EnsureExamStorageRoot();
 
 // 启动时自动执行数据库迁移
 await iGM_RunMigrations();
 
-// iG&M 教育考试系统：注册临时文件清理任务（未确认 7 天 / 解析失败 24 小时）
+// iG&M 教育考试系统：注册临时文件清理任务（转换失败 24 小时 / 未完成 7 天）
 iGM_StartExamCleanup();
 
 // 仅在本地直接运行时监听端口（被导入时不占用端口）
