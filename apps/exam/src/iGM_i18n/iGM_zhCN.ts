@@ -71,6 +71,8 @@ export const iGM_zhCN: iGM_I18nDict = {
   fieldDuration: "时长",
   fieldTotalMarks: "总分",
   fieldItemCount: "题数",
+  statDuration: "限时",
+  unitQuestions: " 题",
   noticeTag: "须知",
   // 计时器
   timerTitle: "考试计时器",

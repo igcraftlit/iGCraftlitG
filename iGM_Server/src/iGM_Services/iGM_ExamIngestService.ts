@@ -6,7 +6,7 @@
  * 作用：试卷 PDF 落盘临时目录、转换 HTML 目录管理、HTML 资源读取与元数据正则识别
  * 内容：iGM_ExamError 业务错误类型、存储根 / 临时目录 / HTML 目录 / 日志目录解析与路径安全校验、
  *       PDF 格式校验与落盘（随机名）、临时文件读写删除、HTML 首页与资源读取（剥标签取文本）、
- *       转换产物目录占用统计、
+ *       转换产物目录占用统计、页面基准尺寸解析、禁止横向溢出样式注入、
  *       Title/Subject/Issuer/Reviewer/Duration/Total Score/Question Count 中英文双语正则识别
  * 说明：本模块仅支持 PDF；转换成功后由业务层删除原始 PDF；
  *       磁盘绝对路径绝不出现在对外 DTO
@@ -62,6 +62,9 @@ const iGM_ExamHtmlName = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
 
 /** PDF 文件头魔数：%PDF- */
 const iGM_ExamPdfMagic = [0x25, 0x50, 0x44, 0x46, 0x2d];
+
+/** 注入到转换产物 index.html 的样式元素 id（幂等标记，避免重复注入） */
+const iGM_ExamHtmlOverrideMarker = "igm-exam-overrides";
 
 /**
  * 试卷存储根目录
@@ -290,6 +293,125 @@ export async function iGM_ReadExamHtmlAsset(
   }
 }
 
+/**
+ * 在转换产物 index.html 中注入「禁止横向溢出」的样式（幂等）
+ * pdf2htmlEX 以绝对定位还原 PDF 版面，页面宽度固定为 PDF 页宽；
+ * 前端会按后端上报的页宽设定 iframe 视口，此处仅作为子像素取整的兜底，
+ * 只隐藏横向溢出，不改动页面宽度与纵向滚动
+ */
+export async function iGM_ApplyExamHtmlOverrides(examId: string): Promise<void> {
+  if (!iGM_ExamIdPattern.test(examId)) return;
+  const absolutePath = iGM_ResolveExamHtmlAssetPath(examId, "index.html");
+  let html: string;
+  try {
+    html = await readFile(absolutePath, "utf8");
+  } catch {
+    return;
+  }
+  if (html.includes(iGM_ExamHtmlOverrideMarker)) return;
+  // 只做「防溢出」处理：不改动 pdf2htmlEX 的绝对定位坐标与页面宽度。
+  // #page-container 的横向溢出仅在其视口不小于真实页宽时才隐藏（此时内容本就不会溢出，
+  // 仅消除子像素取整产生的滚动条）；视口更窄时保留滚动，避免裁切内容
+  const pageSize = await iGM_ReadExamPageSize(examId);
+  const fitRule = pageSize
+    ? `@media (min-width:${pageSize.width}px){#page-container{overflow-x:hidden;}}`
+    : "";
+  const style =
+    `<style id="${iGM_ExamHtmlOverrideMarker}">` +
+    `html,body{max-width:100%;overflow-x:hidden;}` +
+    fitRule +
+    `img{max-width:100%;height:auto;}` +
+    `table{width:100%;table-layout:fixed;word-break:break-word;}` +
+    `p,div,pre,code{max-width:100%;word-wrap:break-word;}` +
+    `</style>`;
+  const injected = html.includes("</head>")
+    ? html.replace("</head>", `${style}</head>`)
+    : `${style}${html}`;
+  try {
+    await writeFile(absolutePath, injected, "utf8");
+  } catch (error) {
+    console.warn(
+      `[iGM_ExamIngestService] 注入试卷样式失败：${examId}：${String(error)}`,
+    );
+  }
+}
+
+/** 试卷页面基准尺寸（CSS 像素） */
+export interface iGM_ExamPageSize {
+  width: number;
+  height: number;
+}
+
+/** 从 CSS 文本中读取指定类名规则里的 px 尺寸（未命中返回 null） */
+function iGM_MatchCssSize(
+  css: string,
+  className: string,
+  property: "width" | "height",
+): number | null {
+  const pattern = new RegExp(
+    `\\.${className}\\s*\\{[^}]*?${property}\\s*:\\s*([0-9.]+)px`,
+    "i",
+  );
+  const matched = pattern.exec(css);
+  if (!matched) return null;
+  const value = Number(matched[1]);
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+/**
+ * 解析转换后试卷的页面基准尺寸（CSS 像素）
+ * 步骤：从 index.html 定位首个页面框架的类名（如 `<div class="pf w0 h0">`），
+ *       再在内嵌样式或同目录外链样式表中读取 `.wN{width}` 与 `.hN{height}`；
+ * 解析失败返回 null（前端回退 A4 基准）
+ */
+export async function iGM_ReadExamPageSize(
+  examId: string,
+): Promise<iGM_ExamPageSize | null> {
+  if (!iGM_ExamIdPattern.test(examId)) return null;
+  let html: string;
+  try {
+    html = await readFile(
+      iGM_ResolveExamHtmlAssetPath(examId, "index.html"),
+      "utf8",
+    );
+  } catch {
+    return null;
+  }
+  const frame = /\bclass="[^"]*?\bw(\d+)\b[^"]*?\bh(\d+)\b[^"]*?"/i.exec(html);
+  if (!frame) return null;
+  const widthClass = `w${frame[1]}`;
+  const heightClass = `h${frame[2]}`;
+
+  // 样式来源：内嵌样式优先，其次同目录下的外链样式表
+  const sources: string[] = [html];
+  try {
+    const dir = iGM_ExamHtmlDir(examId);
+    const entries = await readdir(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (!entry.isFile() || !entry.name.toLowerCase().endsWith(".css")) continue;
+      try {
+        sources.push(await readFile(join(dir, entry.name), "utf8"));
+      } catch {
+        // 单个样式表读取失败忽略
+      }
+    }
+  } catch {
+    // 目录读取失败忽略，仅使用内嵌样式
+  }
+
+  for (const source of sources) {
+    const width = iGM_MatchCssSize(source, widthClass, "width");
+    const height = iGM_MatchCssSize(source, heightClass, "height");
+    if (width !== null && height !== null) {
+      return {
+        width: Math.round(width * 100) / 100,
+        height: Math.round(height * 100) / 100,
+      };
+    }
+  }
+  return null;
+}
+
 /** 剥离 HTML 标签与脚本样式，归一化空白，得到可正则匹配的纯文本 */
 function iGM_StripHtml(html: string): string {
   return html
@@ -362,16 +484,28 @@ export function iGM_RecognizeExamMeta(rawText: string): iGM_ExamRecognized {
     /Reviewer\s*[:：]\s*([^\n]+)/i,
   ]);
   const duration = iGM_MatchNumber(rawText, [
-    /考试时间\s*[:：]?\s*(\d+)\s*分钟/,
-    /Duration\s*[:：]\s*(\d+)\s*min/i,
+    /(?:考试|答卷|作答|测试)时间\s*[:：]?\s*(\d+)\s*分钟/,
+    /(?:考试|答卷|作答)时长\s*[:：]?\s*(\d+)\s*分钟/,
+    /用时\s*[:：]?\s*(\d+)\s*分钟/,
+    /限时\s*[:：]?\s*(\d+)\s*分钟/,
+    /时间\s*[:：]\s*(\d+)\s*分钟/,
+    /(?:Duration|Time)\s*[:：]?\s*(\d+)\s*(?:min|minutes)/i,
+    /(\d+)\s*minutes?/i,
   ]);
   const totalScore = iGM_MatchNumber(rawText, [
     /试卷满分\s*[:：]?\s*(\d+)\s*分/,
-    /Total Score\s*[:：]\s*(\d+)/i,
+    /满分\s*[:：]?\s*(\d+)\s*分/,
+    /总分\s*[:：]?\s*(\d+)\s*分/,
+    /总分\s*[:：]?\s*(\d+)/,
+    /(?:Total\s*Score|Full\s*Marks?)\s*[:：]?\s*(\d+)/i,
+    /(\d+)\s*(?:marks|points)/i,
   ]);
   const questionCount = iGM_MatchNumber(rawText, [
-    /共\s*(\d+)\s*小题/,
+    /共\s*(\d+)\s*(?:小|大)?题/,
+    /(?:题数|题目数|试题数)\s*[:：]?\s*(\d+)/,
+    /(\d+)\s*(?:道|个)\s*(?:小)?题/,
     /(\d+)\s+Questions?/i,
+    /Questions?\s*[:：]?\s*(\d+)/i,
   ]);
 
   return { title, subject, issuer, reviewer, duration, totalScore, questionCount };
@@ -397,5 +531,7 @@ export default {
   iGM_RemoveExamTempFile,
   iGM_ReadExamHtmlText,
   iGM_ReadExamHtmlAsset,
+  iGM_ApplyExamHtmlOverrides,
+  iGM_ReadExamPageSize,
   iGM_RecognizeExamMeta,
 };

@@ -5,7 +5,7 @@
  * 模块：iGM_ExamService
  * 作用：iG&M 教育考试系统的试卷业务逻辑与 DTO 组装
  * 内容：编号生成（E-YYYY-NNN）、列表（公开/管理端）、详情、
- *       上传后后台 pdf2htmlEX 转换建档（含转换产物占用空间统计）、转换进度查询、HTML 资源读取、
+ *       上传后后台 pdf2htmlEX 转换建档（含转换产物占用空间统计、页面基准尺寸解析）、转换进度查询、HTML 资源读取、
  *       校对更新、确认并发布、重新转换、删除、交卷记录、原始文件读取
  * 说明：转换在后台异步执行，前端轮询进度接口；转换成功后立即删除原始 PDF，
  *       仅保留 HTML 目录；转换失败保留 PDF 24 小时供重新转换；
@@ -38,6 +38,7 @@ import {
 } from "../iGM_Repositories/iGM_ExamRepository";
 import {
   iGM_ExamError,
+  iGM_ApplyExamHtmlOverrides,
   iGM_EnsureExamHtmlDir,
   iGM_ExamHtmlApiPath,
   iGM_ExamHtmlDir,
@@ -46,6 +47,7 @@ import {
   iGM_MeasureExamUsage,
   iGM_ReadExamHtmlAsset,
   iGM_ReadExamHtmlText,
+  iGM_ReadExamPageSize,
   iGM_ReadExamTempFile,
   iGM_RecognizeExamMeta,
   iGM_RemoveExamHtmlDir,
@@ -242,15 +244,18 @@ export async function iGM_GetExamDetailService(
     iGM_FindExamFileByExamId(examId),
   ]);
   const hasOriginalFile = Boolean(fileRow?.iGM_TempPath);
+  const htmlReady =
+    row.iGM_ParseStatus === "completed" && Boolean(row.iGM_HtmlPath);
+  // 页面基准尺寸用于前端按真实页宽设定 iframe 视口，避免正文横向滚动
+  const pageSize = htmlReady ? await iGM_ReadExamPageSize(row.iGM_Id) : null;
   return {
     ...iGM_ToListItem(row, codeMap.get(row.iGM_Id) ?? ""),
     reviewer: row.iGM_Reviewer ?? "",
     notice: row.iGM_Notice ?? "",
     convertProgress: iGM_BuildProgress(row, fileRow),
-    htmlApiPath:
-      row.iGM_ParseStatus === "completed" && row.iGM_HtmlPath
-        ? iGM_ExamHtmlApiPath(row.iGM_Id)
-        : "",
+    htmlApiPath: htmlReady ? iGM_ExamHtmlApiPath(row.iGM_Id) : "",
+    pageWidth: pageSize?.width ?? null,
+    pageHeight: pageSize?.height ?? null,
     hasOriginalFile,
     fileApiPath: hasOriginalFile
       ? `/api/exam/file?examId=${encodeURIComponent(row.iGM_Id)}`
@@ -278,6 +283,9 @@ export async function iGM_RunExamConvertService(
     await iGM_RemoveExamHtmlDir(examId);
     await iGM_EnsureExamHtmlDir(examId);
     await iGM_RunPdf2HtmlEx(inputAbsolutePath, htmlDir, examId);
+
+    // 注入禁止横向溢出的样式（幂等），避免正文出现横向滚动条
+    await iGM_ApplyExamHtmlOverrides(examId);
 
     // 统计转换产物（HTML 目录及其中的图片等资源）的实际占用字节数并入库
     const usageBytes = await iGM_MeasureExamUsage(examId);

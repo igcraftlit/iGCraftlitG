@@ -73,6 +73,8 @@ export const iGM_en: iGM_I18nDict = {
   fieldDuration: "DURATION",
   fieldTotalMarks: "TOTAL MARKS",
   fieldItemCount: "ITEM COUNT",
+  statDuration: "TIME LIMIT",
+  unitQuestions: " items",
   noticeTag: "NOTICE",
   // 计时器
   timerTitle: "SESSION TIMER",

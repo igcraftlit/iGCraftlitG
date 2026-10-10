@@ -4,7 +4,8 @@
  * 路由：E_ExamDetail（/detail?id=xxx）
  * 模块：iGM_ExamDetail
  * 作用：试卷详情页，规格记录表 + 转换后 HTML 高保真预览（A4 版面 iframe + 缩放）+ 实验计时器 + 盖章交卷
- * 内容：规格信息表、右上固定计时器、A4 比例试卷预览（默认适应宽度 / 手动缩放）、占用空间、交卷区、加载/失败/缺失状态
+ * 内容：顶部信息栏（题数 / 限时 / 总分）、规格信息表、右上固定计时器、
+ *       试卷预览（按真实页宽适配、默认适应宽度 / 手动缩放）、占用空间、交卷区、加载/失败/缺失状态
  * 说明：静态导出下通过 useSearchParams 读取 id；由路由壳提供 Suspense 边界；
  *       正文直接内嵌 pdf2htmlEX 生成的 HTML（自带分页与原始排版）；文案取自当前语言包
  */
@@ -37,7 +38,7 @@ interface iGM_Exam_RecordField {
   value: string;
 }
 
-/** A4 版面基准尺寸（210 × 297 mm，按 96 DPI 折算为像素），比例 210:297 */
+/** A4 版面回退尺寸（210 × 297 mm，按 96 DPI 折算为像素），后端未上报页尺寸时使用 */
 const iGM_Exam_A4Width = 794;
 const iGM_Exam_A4Height = 1123;
 
@@ -49,10 +50,13 @@ const iGM_Exam_MinZoom = 0.35;
 const iGM_Exam_MaxZoom = 2;
 const iGM_Exam_ZoomStep = 0.1;
 
+/** 空值占位符 */
+const iGM_Exam_Empty = "--";
+
 // 核心逻辑 //
-/** 数值缺省占位 */
-function iGM_Exam_Dash(value: number | null, suffix = ""): string {
-  if (value === null || Number.isNaN(value)) return "—";
+/** 数值统计文本：空值显示占位符，否则数值 + 单位 */
+function iGM_Exam_StatValue(value: number | null, suffix = ""): string {
+  if (value === null || !Number.isFinite(value)) return iGM_Exam_Empty;
   return `${value}${suffix}`;
 }
 
@@ -68,17 +72,24 @@ export function E_ExamDetail() {
   const [zoom, setZoom] = useState(1);
   const stageRef = useRef<HTMLDivElement | null>(null);
 
-  /** 按可用宽度计算「适应宽度」缩放（版面宽度不超过 900px） */
+  // 版面基准尺寸：优先使用后端上报的真实 PDF 页尺寸，回退 A4
+  const sheetWidth =
+    exam?.pageWidth && exam.pageWidth > 0 ? exam.pageWidth : iGM_Exam_A4Width;
+  const sheetHeight =
+    exam?.pageHeight && exam.pageHeight > 0 ? exam.pageHeight : iGM_Exam_A4Height;
+
+  /**
+   * 按可用宽度计算「适应宽度」缩放
+   * 预留 stage 左右内边距与边框（约 24px），并封顶 100%（不放大），
+   * 确保默认视图下版面宽度不超过可视区，只保留纵向滚动
+   */
   const iGM_Exam_FitZoom = useCallback((): number => {
     const el = stageRef.current;
     const available = el ? el.clientWidth : iGM_Exam_MaxSheetWidth;
     const target = Math.min(available - 24, iGM_Exam_MaxSheetWidth);
-    const raw = target / iGM_Exam_A4Width;
-    return Math.min(
-      iGM_Exam_MaxSheetWidth / iGM_Exam_A4Width,
-      Math.max(iGM_Exam_MinZoom, raw),
-    );
-  }, []);
+    const raw = target / sheetWidth;
+    return Math.min(1, Math.max(iGM_Exam_MinZoom, raw));
+  }, [sheetWidth]);
 
   const load = useCallback(async () => {
     if (!examId) {
@@ -154,13 +165,20 @@ export function E_ExamDetail() {
     );
   }
 
+  // 顶部信息栏：题数 / 限时 / 总分（空值显示占位符）
+  const stats: iGM_Exam_RecordField[] = [
+    { label: t("cardItems"), value: iGM_Exam_StatValue(exam.questionCount, t("unitQuestions")) },
+    { label: t("statDuration"), value: iGM_Exam_StatValue(exam.duration, t("unitMinutes")) },
+    { label: t("cardTotal"), value: iGM_Exam_StatValue(exam.totalScore, t("unitPoints")) },
+  ];
+
   const fields: iGM_Exam_RecordField[] = [
-    { label: t("fieldSubject"), value: exam.subject || "—" },
-    { label: t("fieldIssuer"), value: exam.issuer || "—" },
-    { label: t("fieldReviewer"), value: exam.reviewer || "—" },
-    { label: t("fieldDuration"), value: iGM_Exam_Dash(exam.duration, t("unitMinutes")) },
-    { label: t("fieldTotalMarks"), value: iGM_Exam_Dash(exam.totalScore, t("unitPoints")) },
-    { label: t("fieldItemCount"), value: iGM_Exam_Dash(exam.questionCount) },
+    { label: t("fieldSubject"), value: exam.subject || iGM_Exam_Empty },
+    { label: t("fieldIssuer"), value: exam.issuer || iGM_Exam_Empty },
+    { label: t("fieldReviewer"), value: exam.reviewer || iGM_Exam_Empty },
+    { label: t("fieldDuration"), value: iGM_Exam_StatValue(exam.duration, t("unitMinutes")) },
+    { label: t("fieldTotalMarks"), value: iGM_Exam_StatValue(exam.totalScore, t("unitPoints")) },
+    { label: t("fieldItemCount"), value: iGM_Exam_StatValue(exam.questionCount, t("unitQuestions")) },
   ];
 
   // 转换产物占用空间（MB，保留一位小数）
@@ -182,6 +200,16 @@ export function E_ExamDetail() {
         <p className={`igm-eyebrow ${styles.titleEyebrow}`}>{t("detailEyebrow")}</p>
         <h1 className={`igm-serif ${styles.title}`}>{exam.title}</h1>
       </header>
+
+      {/* 顶部信息栏：题数 / 限时 / 总分 */}
+      <div className={styles.statStrip}>
+        {stats.map((stat) => (
+          <div key={stat.label} className={styles.statItem}>
+            <span className={`igm-mono ${styles.statLabel}`}>{stat.label}</span>
+            <span className={`igm-serif ${styles.statValue}`}>{stat.value}</span>
+          </div>
+        ))}
+      </div>
 
       {/* 规格记录表 + 计时器 */}
       <div className={styles.metaLayout}>
@@ -273,8 +301,8 @@ export function E_ExamDetail() {
                 style={
                   {
                     "--igm-zoom": zoom,
-                    "--igm-a4-w": `${iGM_Exam_A4Width}px`,
-                    "--igm-a4-h": `${iGM_Exam_A4Height}px`,
+                    "--igm-page-w": `${sheetWidth}px`,
+                    "--igm-page-h": `${sheetHeight}px`,
                   } as CSSProperties
                 }
               >

@@ -65,6 +65,8 @@ html,
 body {
   margin: 0;
   padding: 0;
+  /* 全局禁止横向溢出：页面只保留纵向滚动 */
+  overflow-x: hidden;
 }
 
 html {
@@ -113,6 +115,7 @@ button {
 
 img {
   max-width: 100%;
+  height: auto;
   display: block;
 }
 

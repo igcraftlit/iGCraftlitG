@@ -4,7 +4,8 @@
  * 路由：E_ExamDetail（/detail?id=xxx）
  * 模块：iGM_ExamDetail
  * 作用：试卷详情页样式（实验记录表、计时器侧栏、A4 版面试卷预览、交卷区）
- * 内容：页面容器、返回条、标题块、元数据布局、记录表、通知、A4 预览（缩放工具条 / 纸张 / iframe）、交卷
+ * 内容：页面容器、返回条、标题块、顶部信息栏（题数 / 限时 / 总分）、元数据布局、记录表、通知、
+ *       试卷预览（缩放工具条 / 纸张 / iframe，尺寸取自真实 PDF 页尺寸）、交卷
  * 说明：桌面左右分栏，平板起上下堆叠
  */
 
@@ -66,6 +67,39 @@
   font-size: clamp(26px, 4vw, 40px);
   font-weight: 700;
   line-height: 1.18;
+  color: var(--igm-ink);
+}
+
+/* ============================= 顶部信息栏 ============================= */
+/* 题数 / 限时 / 总分：三格横条，上下双细线，格间以背景色透出 1px 分隔线 */
+.statStrip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin-bottom: 28px;
+  background: var(--igm-line-soft);
+  border-top: 1px solid var(--igm-line);
+  border-bottom: 1px solid var(--igm-line);
+  animation: igm-ink-in 0.5s ease both;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 18px;
+  background: var(--igm-paper-raised);
+}
+
+.statLabel {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--igm-text-muted);
+}
+
+.statValue {
+  font-size: 20px;
+  font-weight: 700;
   color: var(--igm-ink);
 }
 
@@ -254,7 +288,8 @@
   color: var(--igm-ink-soft);
 }
 
-/* A4 版面：桌面（纸张）居中，可缩放 */
+/* 预览舞台：默认「适应宽度」下版面不超出可视区，只保留纵向滚动；
+   手动放大后如需查看右侧，舞台自身提供横向滚动 */
 .paperStage {
   display: flex;
   justify-content: center;
@@ -266,10 +301,12 @@
   border-radius: var(--igm-radius);
 }
 
+/* 纸张：尺寸取自后端上报的真实 PDF 页尺寸（回退 A4），缩放由 --igm-zoom 控制 */
 .paperSheet {
   flex: 0 0 auto;
-  width: var(--igm-a4-w, 794px);
-  height: var(--igm-a4-h, 1123px);
+  width: var(--igm-page-w, 794px);
+  height: var(--igm-page-h, 1123px);
+  overflow: hidden;
   background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.08);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
@@ -280,6 +317,7 @@
   display: block;
   width: 100%;
   height: 100%;
+  overflow: hidden;
   border: 0;
   background: #ffffff;
 }
@@ -354,6 +392,14 @@
 @media (max-width: 640px) {
   .page {
     padding: 22px 16px 60px;
+  }
+
+  .statItem {
+    padding: 12px;
+  }
+
+  .statValue {
+    font-size: 17px;
   }
 
   .recordGrid {

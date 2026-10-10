@@ -77,6 +77,10 @@ export interface iGM_I18nDict {
   fieldDuration: string;
   fieldTotalMarks: string;
   fieldItemCount: string;
+  /** 顶部信息栏：限时标签 */
+  statDuration: string;
+  /** 题数单位（题 / items） */
+  unitQuestions: string;
   noticeTag: string;
   // 计时器
   timerTitle: string;

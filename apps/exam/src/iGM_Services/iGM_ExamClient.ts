@@ -74,6 +74,10 @@ export interface iGM_ExamDetail extends iGM_ExamListItem {
   convertProgress: iGM_ExamConvertProgress;
   /** 转换后 HTML 首页的可访问地址（iframe src）；未完成时为空串 */
   htmlApiPath: string;
+  /** 转换后页面基准宽度（CSS 像素）；未完成或解析失败时为 null */
+  pageWidth: number | null;
+  /** 转换后页面基准高度（CSS 像素）；未完成或解析失败时为 null */
+  pageHeight: number | null;
   /** 原始文件是否仍在服务器上（转换成功后为 false） */
   hasOriginalFile: boolean;
   /** 原始文件下载接口地址；无原始文件时为空串 */
