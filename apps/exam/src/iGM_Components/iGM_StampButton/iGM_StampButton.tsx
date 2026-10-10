@@ -5,7 +5,7 @@
  * 模块：iGM_StampButton
  * 作用：交卷按钮，点击后模拟"盖印章"效果，朱砂红印记落下并记录交卷
  * 内容：按钮、盖章动效、已完成印记、提交中与错误态
- * 说明：盖章动效为纯 CSS 关键帧；提交成功后显示固定印记不可重复交卷
+ * 说明：盖章动效为纯 CSS 关键帧；提交成功后显示固定印记不可重复交卷；文案取自当前语言包
  */
 
 // 导入依赖 //
@@ -13,6 +13,7 @@
 
 import { useState } from "react";
 import { iGM_Exam_Submit, iGM_ExamRequestError } from "../../iGM_Services/iGM_ExamClient";
+import { useI18n } from "../../iGM_i18n/iGM_I18nContext";
 import styles from "./iGM_StampButton.module.css";
 
 // 类型定义 //
@@ -28,6 +29,7 @@ type iGM_Exam_StampPhase = "idle" | "stamping" | "done";
 // 核心逻辑 //
 /** 盖章交卷按钮 */
 export function iGM_StampButton({ examId, onSubmitted }: iGM_StampButtonProps) {
+  const { t } = useI18n();
   const [phase, setPhase] = useState<iGM_Exam_StampPhase>("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -45,9 +47,7 @@ export function iGM_StampButton({ examId, onSubmitted }: iGM_StampButtonProps) {
     } catch (err) {
       setPhase("idle");
       setError(
-        err instanceof iGM_ExamRequestError
-          ? err.message
-          : "Submission failed. Please try again.",
+        err instanceof iGM_ExamRequestError ? err.message : t("stampError"),
       );
     }
   }
@@ -61,7 +61,7 @@ export function iGM_StampButton({ examId, onSubmitted }: iGM_StampButtonProps) {
         disabled={phase !== "idle"}
       >
         <span className={`igm-mono ${styles.label}`}>
-          {phase === "done" ? "SUBMITTED" : "SUBMIT PAPER"}
+          {phase === "done" ? t("stampSubmitted") : t("stampSubmit")}
         </span>
 
         {/* 盖章印记层 */}
@@ -75,9 +75,7 @@ export function iGM_StampButton({ examId, onSubmitted }: iGM_StampButtonProps) {
 
       {error && <p className={`igm-mono ${styles.error}`}>{error}</p>}
       {phase === "done" && !error && (
-        <p className={`igm-mono ${styles.note}`}>
-          Submission recorded. The paper remains available for review.
-        </p>
+        <p className={`igm-mono ${styles.note}`}>{t("stampNote")}</p>
       )}
     </div>
   );

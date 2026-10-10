@@ -5,7 +5,7 @@
  * 模块：iGM_ExamAdmin
  * 作用：试卷管理端，上传 PDF、校对识别结果、发布 / 关闭 / 删除试卷
  * 内容：上传区、左右分栏校对区（左 PDF 前 3 页预览、右识别结果表单）、试卷台账
- * 说明：本模块暂不做权限校验；静态导出下数据由客户端在挂载后获取
+ * 说明：本模块暂不做权限校验；静态导出下数据由客户端在挂载后获取；文案取自当前语言包
  */
 
 // 导入依赖 //
@@ -38,6 +38,8 @@ import {
   type iGM_ExamUpdateInput,
 } from "../iGM_Services/iGM_ExamClient";
 import { iGM_ExamReader as IGM_ExamReader } from "../iGM_Components/iGM_ExamReader/iGM_ExamReader";
+import { useI18n } from "../iGM_i18n/iGM_I18nContext";
+import type { iGM_I18nKey } from "../iGM_i18n/iGM_I18nTypes";
 import styles from "./E_Admin_Exam.module.css";
 
 // 类型定义 //
@@ -58,6 +60,13 @@ interface iGM_Exam_EditorDraft {
 }
 
 // 核心逻辑 //
+/** 状态 → 语言包键 */
+const iGM_Exam_StatusKeys: Record<iGM_ExamStatus, iGM_I18nKey> = {
+  draft: "statusDraft",
+  published: "statusPublished",
+  closed: "statusClosed",
+};
+
 /** 数字字符串 → 可空整数（空串或非数字返回 null） */
 function iGM_Exam_ParseInt(value: string): number | null {
   const trimmed = value.trim();
@@ -66,13 +75,9 @@ function iGM_Exam_ParseInt(value: string): number | null {
   return Number.isNaN(n) ? null : n;
 }
 
-/** 状态标签文本 */
-function iGM_Exam_StatusLabel(status: iGM_ExamStatus): string {
-  return status.toUpperCase();
-}
-
 /** 管理端 */
 export function iGM_ExamAdmin() {
+  const { t } = useI18n();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const replaceInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -91,11 +96,8 @@ export function iGM_ExamAdmin() {
       setExams(list);
       setState("ready");
     } catch (err) {
-      setMessage(
-        err instanceof iGM_ExamRequestError
-          ? err.message
-          : "Unable to load the administration ledger.",
-      );
+      // 保留后端的具体提示；无具体提示时在渲染层回落语言包文案
+      setMessage(err instanceof iGM_ExamRequestError ? err.message : "");
       setState("error");
     }
   }, []);
@@ -132,10 +134,10 @@ export function iGM_ExamAdmin() {
         status: "draft",
       });
       setPreviewKey((k) => k + 1);
-      setNotice("PDF ingested. Review the recognized fields, then publish.");
+      setNotice(t("adminIngested"));
       await load();
     } catch (err) {
-      setMessage(iGM_Exam_ReadError(err, "Upload failed."));
+      setMessage(iGM_Exam_ReadError(err, t("adminUploadFailed")));
     } finally {
       setBusy(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -181,10 +183,10 @@ export function iGM_ExamAdmin() {
     };
     try {
       await iGM_Exam_Update(payload);
-      setNotice("Changes saved.");
+      setNotice(t("adminSaved"));
       await load();
     } catch (err) {
-      setMessage(iGM_Exam_ReadError(err, "Save failed."));
+      setMessage(iGM_Exam_ReadError(err, t("adminSaveFailed")));
     } finally {
       setBusy(false);
     }
@@ -199,9 +201,9 @@ export function iGM_ExamAdmin() {
     try {
       await iGM_Exam_ReplaceFile(draft.examId, file);
       setPreviewKey((k) => k + 1);
-      setNotice("Paper file replaced.");
+      setNotice(t("adminReplaced"));
     } catch (err) {
-      setMessage(iGM_Exam_ReadError(err, "Replace failed."));
+      setMessage(iGM_Exam_ReadError(err, t("adminReplaceFailed")));
     } finally {
       setBusy(false);
       if (replaceInputRef.current) replaceInputRef.current.value = "";
@@ -216,10 +218,10 @@ export function iGM_ExamAdmin() {
     try {
       await iGM_Exam_Publish(examId);
       setDraft((d) => (d && d.examId === examId ? { ...d, status: "published" } : d));
-      setNotice("Paper published to the public catalogue.");
+      setNotice(t("adminPublished"));
       await load();
     } catch (err) {
-      setMessage(iGM_Exam_ReadError(err, "Publish failed."));
+      setMessage(iGM_Exam_ReadError(err, t("adminPublishFailed")));
     } finally {
       setBusy(false);
     }
@@ -233,10 +235,10 @@ export function iGM_ExamAdmin() {
     try {
       await iGM_Exam_Close(examId);
       setDraft((d) => (d && d.examId === examId ? { ...d, status: "closed" } : d));
-      setNotice("Paper closed.");
+      setNotice(t("adminClosed"));
       await load();
     } catch (err) {
-      setMessage(iGM_Exam_ReadError(err, "Close failed."));
+      setMessage(iGM_Exam_ReadError(err, t("adminCloseFailed")));
     } finally {
       setBusy(false);
     }
@@ -250,10 +252,10 @@ export function iGM_ExamAdmin() {
     try {
       await iGM_Exam_Delete(examId);
       setDraft((d) => (d && d.examId === examId ? null : d));
-      setNotice("Paper deleted.");
+      setNotice(t("adminDeleted"));
       await load();
     } catch (err) {
-      setMessage(iGM_Exam_ReadError(err, "Delete failed."));
+      setMessage(iGM_Exam_ReadError(err, t("adminDeleteFailed")));
     } finally {
       setBusy(false);
     }
@@ -263,24 +265,23 @@ export function iGM_ExamAdmin() {
     <main className={styles.page}>
       {/* 页头 */}
       <header className={styles.head}>
-        <p className={`igm-eyebrow ${styles.headEyebrow}`}>INSTITUTIONAL CONSOLE</p>
-        <h1 className={`igm-serif ${styles.headTitle}`}>Examination Administration</h1>
-        <p className={styles.headLead}>
-          Ingest a paper as PDF, verify the automatically recognised
-          specifications, then publish it to the public catalogue.
-        </p>
+        <p className={`igm-eyebrow ${styles.headEyebrow}`}>{t("adminEyebrow")}</p>
+        <h1 className={`igm-serif ${styles.headTitle}`}>{t("adminTitle")}</h1>
+        <p className={styles.headLead}>{t("adminLead")}</p>
       </header>
 
       {/* 上传区 */}
-      <section className={`igm-double-rule ${styles.uploadSection}`} aria-label="Upload paper">
+      <section
+        className={`igm-double-rule ${styles.uploadSection}`}
+        aria-label={t("adminIngestTitle")}
+      >
         <div className={styles.uploadText}>
           <span className={`igm-mono ${styles.sectionNum}`}>§ 1</span>
           <div>
-            <h2 className={`igm-serif ${styles.sectionTitle}`}>Ingest Paper</h2>
-            <p className={styles.sectionLead}>
-              PDF only, up to 30 MB. Metadata is extracted from the first three
-              pages.
-            </p>
+            <h2 className={`igm-serif ${styles.sectionTitle}`}>
+              {t("adminIngestTitle")}
+            </h2>
+            <p className={styles.sectionLead}>{t("adminIngestLead")}</p>
           </div>
         </div>
         <button
@@ -294,7 +295,7 @@ export function iGM_ExamAdmin() {
           ) : (
             <FileUp size={15} strokeWidth={1.8} />
           )}
-          <span className={`igm-mono ${styles.uploadLabel}`}>SELECT PDF</span>
+          <span className={`igm-mono ${styles.uploadLabel}`}>{t("adminSelectPdf")}</span>
         </button>
         <input
           ref={fileInputRef}
@@ -324,21 +325,21 @@ export function iGM_ExamAdmin() {
 
       {/* 校对区 */}
       {draft && (
-        <section className={styles.reviewSection} aria-label="Proofreading">
+        <section className={styles.reviewSection} aria-label={t("adminProofTitle")}>
           <div className={styles.reviewHead}>
             <span className={`igm-mono ${styles.sectionNum}`}>§ 2</span>
-            <h2 className={`igm-serif ${styles.sectionTitle}`}>Proofreading</h2>
+            <h2 className={`igm-serif ${styles.sectionTitle}`}>{t("adminProofTitle")}</h2>
             <span
               className={`igm-mono ${styles.statusTag} ${styles[`st_${draft.status}`]}`}
             >
-              {iGM_Exam_StatusLabel(draft.status)}
+              {t(iGM_Exam_StatusKeys[draft.status])}
             </span>
           </div>
 
           <div className={styles.reviewLayout}>
             {/* 左：PDF 前 3 页预览 */}
             <div className={styles.pdfPane}>
-              <p className={`igm-mono ${styles.paneLabel}`}>PAPER PREVIEW · 3 PAGES</p>
+              <p className={`igm-mono ${styles.paneLabel}`}>{t("adminPreviewLabel")}</p>
               <IGM_ExamReader
                 key={previewKey}
                 fileUrl={iGM_Exam_BuildFileUrl(draft.examId)}
@@ -352,7 +353,7 @@ export function iGM_ExamAdmin() {
                 disabled={busy}
               >
                 <RotateCcw size={13} strokeWidth={1.8} />
-                Replace PDF
+                {t("adminReplacePdf")}
               </button>
               <input
                 ref={replaceInputRef}
@@ -368,7 +369,9 @@ export function iGM_ExamAdmin() {
 
             {/* 右：识别结果表单 */}
             <div className={styles.formPane}>
-              <p className={`igm-mono ${styles.paneLabel}`}>RECOGNISED SPECIFICATIONS</p>
+              <p className={`igm-mono ${styles.paneLabel}`}>
+                {t("adminRecognizedLabel")}
+              </p>
               <form
                 className={styles.form}
                 onSubmit={(e) => {
@@ -377,49 +380,59 @@ export function iGM_ExamAdmin() {
                 }}
               >
                 <label className={styles.field}>
-                  <span className={`igm-mono ${styles.fieldLabel}`}>TITLE</span>
+                  <span className={`igm-mono ${styles.fieldLabel}`}>
+                    {t("adminFieldTitle")}
+                  </span>
                   <input
                     className={styles.input}
                     value={draft.title}
                     onChange={(e) => setDraft({ ...draft, title: e.target.value })}
-                    placeholder="e.g. 2026 Provincial Examination"
+                    placeholder={t("adminPlaceholderTitle")}
                   />
                 </label>
 
                 <div className={styles.fieldRow}>
                   <label className={styles.field}>
-                    <span className={`igm-mono ${styles.fieldLabel}`}>SUBJECT</span>
+                    <span className={`igm-mono ${styles.fieldLabel}`}>
+                      {t("fieldSubject")}
+                    </span>
                     <input
                       className={styles.input}
                       value={draft.subject}
                       onChange={(e) => setDraft({ ...draft, subject: e.target.value })}
-                      placeholder="Subject"
+                      placeholder={t("adminPlaceholderSubject")}
                     />
                   </label>
                   <label className={styles.field}>
-                    <span className={`igm-mono ${styles.fieldLabel}`}>ISSUER</span>
+                    <span className={`igm-mono ${styles.fieldLabel}`}>
+                      {t("fieldIssuer")}
+                    </span>
                     <input
                       className={styles.input}
                       value={draft.issuer}
                       onChange={(e) => setDraft({ ...draft, issuer: e.target.value })}
-                      placeholder="Issuer"
+                      placeholder={t("adminPlaceholderIssuer")}
                     />
                   </label>
                 </div>
 
                 <label className={styles.field}>
-                  <span className={`igm-mono ${styles.fieldLabel}`}>REVIEWER</span>
+                  <span className={`igm-mono ${styles.fieldLabel}`}>
+                    {t("fieldReviewer")}
+                  </span>
                   <input
                     className={styles.input}
                     value={draft.reviewer}
                     onChange={(e) => setDraft({ ...draft, reviewer: e.target.value })}
-                    placeholder="Reviewer"
+                    placeholder={t("adminPlaceholderReviewer")}
                   />
                 </label>
 
                 <div className={styles.fieldRowThree}>
                   <label className={styles.field}>
-                    <span className={`igm-mono ${styles.fieldLabel}`}>DURATION (MIN)</span>
+                    <span className={`igm-mono ${styles.fieldLabel}`}>
+                      {t("adminFieldDuration")}
+                    </span>
                     <input
                       className={styles.input}
                       inputMode="numeric"
@@ -429,7 +442,9 @@ export function iGM_ExamAdmin() {
                     />
                   </label>
                   <label className={styles.field}>
-                    <span className={`igm-mono ${styles.fieldLabel}`}>TOTAL (PTS)</span>
+                    <span className={`igm-mono ${styles.fieldLabel}`}>
+                      {t("adminFieldTotal")}
+                    </span>
                     <input
                       className={styles.input}
                       inputMode="numeric"
@@ -439,7 +454,9 @@ export function iGM_ExamAdmin() {
                     />
                   </label>
                   <label className={styles.field}>
-                    <span className={`igm-mono ${styles.fieldLabel}`}>ITEMS</span>
+                    <span className={`igm-mono ${styles.fieldLabel}`}>
+                      {t("adminFieldItems")}
+                    </span>
                     <input
                       className={styles.input}
                       inputMode="numeric"
@@ -453,13 +470,15 @@ export function iGM_ExamAdmin() {
                 </div>
 
                 <label className={styles.field}>
-                  <span className={`igm-mono ${styles.fieldLabel}`}>NOTICE</span>
+                  <span className={`igm-mono ${styles.fieldLabel}`}>
+                    {t("adminFieldNotice")}
+                  </span>
                   <textarea
                     className={styles.textarea}
                     rows={3}
                     value={draft.notice}
                     onChange={(e) => setDraft({ ...draft, notice: e.target.value })}
-                    placeholder="Instructions shown to candidates (optional)"
+                    placeholder={t("adminPlaceholderNotice")}
                   />
                 </label>
 
@@ -467,7 +486,7 @@ export function iGM_ExamAdmin() {
                 <div className={styles.actions}>
                   <button type="submit" className={styles.primary} disabled={busy}>
                     <Save size={14} strokeWidth={1.8} />
-                    <span className="igm-mono">SAVE</span>
+                    <span className="igm-mono">{t("adminSave")}</span>
                   </button>
                   <button
                     type="button"
@@ -476,7 +495,7 @@ export function iGM_ExamAdmin() {
                     disabled={busy || draft.status === "published"}
                   >
                     <Send size={14} strokeWidth={1.8} />
-                    <span className="igm-mono">PUBLISH</span>
+                    <span className="igm-mono">{t("adminPublish")}</span>
                   </button>
                   <button
                     type="button"
@@ -485,7 +504,7 @@ export function iGM_ExamAdmin() {
                     disabled={busy || draft.status === "closed"}
                   >
                     <Lock size={14} strokeWidth={1.8} />
-                    <span className="igm-mono">CLOSE</span>
+                    <span className="igm-mono">{t("adminClose")}</span>
                   </button>
                   <button
                     type="button"
@@ -494,7 +513,7 @@ export function iGM_ExamAdmin() {
                     disabled={busy}
                   >
                     <Trash2 size={14} strokeWidth={1.8} />
-                    <span className="igm-mono">DELETE</span>
+                    <span className="igm-mono">{t("adminDelete")}</span>
                   </button>
                 </div>
               </form>
@@ -504,34 +523,38 @@ export function iGM_ExamAdmin() {
       )}
 
       {/* 台账 */}
-      <section className={styles.ledgerSection} aria-label="Ledger">
+      <section className={styles.ledgerSection} aria-label={t("adminLedgerTitle")}>
         <div className={styles.ledgerHead}>
           <span className={`igm-mono ${styles.sectionNum}`}>§ 3</span>
-          <h2 className={`igm-serif ${styles.sectionTitle}`}>Paper Ledger</h2>
+          <h2 className={`igm-serif ${styles.sectionTitle}`}>
+            {t("adminLedgerTitle")}
+          </h2>
           <span className={`igm-mono ${styles.ledgerCount}`}>
-            {String(exams.length).padStart(3, "0")} ENTRIES
+            {String(exams.length).padStart(3, "0")} {t("adminLedgerEntries")}
           </span>
         </div>
 
         {state === "loading" && (
-          <p className={`igm-mono ${styles.state}`}>LOADING LEDGER…</p>
+          <p className={`igm-mono ${styles.state}`}>{t("adminLedgerLoading")}</p>
         )}
         {state === "error" && (
-          <p className={`igm-mono ${styles.stateError}`}>{message}</p>
+          <p className={`igm-mono ${styles.stateError}`}>
+            {message || t("adminLedgerError")}
+          </p>
         )}
         {state === "ready" && exams.length === 0 && (
-          <p className={`igm-mono ${styles.state}`}>No papers ingested yet.</p>
+          <p className={`igm-mono ${styles.state}`}>{t("adminLedgerEmpty")}</p>
         )}
 
         {state === "ready" && exams.length > 0 && (
           <div className={styles.table}>
             <div className={`igm-mono ${styles.tableHeadRow}`}>
-              <span>CODE</span>
-              <span>TITLE</span>
-              <span>SUBJECT</span>
-              <span>TOTAL</span>
-              <span>SUBMISSIONS</span>
-              <span>STATUS</span>
+              <span>{t("adminColCode")}</span>
+              <span>{t("adminColTitle")}</span>
+              <span>{t("adminColSubject")}</span>
+              <span>{t("adminColTotal")}</span>
+              <span>{t("adminColSubmissions")}</span>
+              <span>{t("adminColStatus")}</span>
               <span />
             </div>
             {exams.map((item) => (
@@ -550,7 +573,7 @@ export function iGM_ExamAdmin() {
                 <span
                   className={`igm-mono ${styles.statusTag} ${styles[`st_${item.status}`]}`}
                 >
-                  {iGM_Exam_StatusLabel(item.status)}
+                  {t(iGM_Exam_StatusKeys[item.status])}
                 </span>
                 <button
                   type="button"
@@ -558,7 +581,7 @@ export function iGM_ExamAdmin() {
                   onClick={() => void openEditor(item)}
                   disabled={busy}
                 >
-                  Review
+                  {t("adminReview")}
                 </button>
               </div>
             ))}

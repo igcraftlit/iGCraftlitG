@@ -15,6 +15,7 @@ import type { ReactNode } from "react";
 import { Inter, JetBrains_Mono, Source_Serif_4 } from "next/font/google";
 import { iGM_ExamMasthead as IGM_ExamMasthead } from "../iGM_Components/iGM_ExamMasthead/iGM_ExamMasthead";
 import { iGM_ExamFooter as IGM_ExamFooter } from "../iGM_Components/iGM_ExamFooter/iGM_ExamFooter";
+import { iGM_ExamI18nProvider as IGM_ExamI18nProvider } from "../iGM_i18n/iGM_I18nContext";
 import "./globals.css";
 
 // 类型定义 //
@@ -58,9 +59,10 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-/** 防 FOUC 主题初始化脚本：首屏绘制前根据 localStorage/系统偏好写入 data-theme */
+/** 防 FOUC 主题与语言初始化脚本：首屏绘制前写入 data-theme 与 lang */
 const iGM_Exam_ThemeInitScript = `
-(function(){try{var s=localStorage.getItem('iGM_Exam_Theme')||'system';var t=s==='system'?(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):s;document.documentElement.setAttribute('data-theme',t);document.documentElement.style.colorScheme=t}catch(e){}})();
+(function(){try{var s=localStorage.getItem('iGM_Exam_Theme')||'system';var t=s==='system'?(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):s;document.documentElement.setAttribute('data-theme',t);document.documentElement.style.colorScheme=t}catch(e){}
+try{var l=localStorage.getItem('iGM_Exam_Lang');if(l==='zh-CN'||l==='en'){document.documentElement.lang=l}}catch(e){}})();
 `;
 
 /** 根布局 */
@@ -69,7 +71,7 @@ export default function iGM_Exam_RootLayout({
 }: iGM_Exam_RootLayoutProps) {
   return (
     <html
-      lang="en"
+      lang="zh-CN"
       suppressHydrationWarning
       className={`${iGM_Exam_Serif.variable} ${iGM_Exam_Sans.variable} ${iGM_Exam_Mono.variable}`}
     >
@@ -79,9 +81,11 @@ export default function iGM_Exam_RootLayout({
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: iGM_Exam_ThemeInitScript }}
         />
-        <IGM_ExamMasthead />
-        {children}
-        <IGM_ExamFooter />
+        <IGM_ExamI18nProvider>
+          <IGM_ExamMasthead />
+          {children}
+          <IGM_ExamFooter />
+        </IGM_ExamI18nProvider>
       </body>
     </html>
   );

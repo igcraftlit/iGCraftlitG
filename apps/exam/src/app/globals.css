@@ -148,6 +148,21 @@ img {
   color: var(--igm-copper);
 }
 
+/* ============================= 中文排版 ============================= */
+/* 中文正文行高与字距：避免拥挤；不改变冷色调与无衬线正文、等宽数字体系 */
+html[lang="zh-CN"] body {
+  line-height: 1.85;
+  letter-spacing: 0.02em;
+}
+
+html[lang="zh-CN"] .igm-eyebrow {
+  letter-spacing: 0.2em;
+}
+
+html[lang="zh-CN"] .igm-serif {
+  letter-spacing: 0.035em;
+}
+
 /* ============================= 通用构件 ============================= */
 .igm-section-num {
   font-family: var(--igm-font-mono), ui-monospace, monospace;

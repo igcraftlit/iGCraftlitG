@@ -44,7 +44,7 @@
 /* ============================= 统计带 ============================= */
 .statBand {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 1px;
   margin: 30px 0 38px;
   padding: 14px 0;
@@ -176,7 +176,7 @@
   align-items: center;
   gap: 16px;
   padding: 64px 0;
-  border: 1px dashed var(--igm-line-soft);
+  border: 1px solid var(--igm-line-soft);
   border-radius: var(--igm-radius);
   background: color-mix(in srgb, var(--igm-paper-raised) 60%, transparent);
 }

@@ -5,7 +5,7 @@
  * 模块：iGM_ExamReader
  * 作用：PDF.js 试卷阅读器，模拟"放大镜 + 页码转盘"的仪器感浏览体验
  * 内容：canvas 渲染、翻页、缩放（放大镜刻度）、全屏、页码转盘导航、纸张质感底衬
- * 说明：纯客户端组件；禁止下载导出，仅站内展示
+ * 说明：纯客户端组件；禁止下载导出，仅站内展示；文案取自当前语言包
  */
 
 // 导入依赖 //
@@ -21,6 +21,7 @@ import {
   ZoomOut,
 } from "lucide-react";
 import type { PDFDocumentProxy } from "pdfjs-dist";
+import { useI18n } from "../../iGM_i18n/iGM_I18nContext";
 import styles from "./iGM_ExamReader.module.css";
 
 // 类型定义 //
@@ -46,6 +47,7 @@ export function iGM_ExamReader({
   compact = false,
   maxPages,
 }: iGM_ExamReaderProps) {
+  const { t } = useI18n();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const shellRef = useRef<HTMLDivElement | null>(null);
   const docRef = useRef<PDFDocumentProxy | null>(null);
@@ -55,7 +57,7 @@ export function iGM_ExamReader({
   const [page, setPage] = useState(1);
   const [zoomIndex, setZoomIndex] = useState(3);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
 
   const zoom = iGM_Exam_ZoomSteps[zoomIndex];
@@ -64,7 +66,7 @@ export function iGM_ExamReader({
   useEffect(() => {
     let disposed = false;
     setLoading(true);
-    setError(null);
+    setFailed(false);
     setPage(1);
 
     (async () => {
@@ -82,7 +84,7 @@ export function iGM_ExamReader({
         setLoading(false);
       } catch {
         if (!disposed) {
-          setError("Unable to load the examination paper.");
+          setFailed(true);
           setLoading(false);
         }
       }
@@ -129,10 +131,10 @@ export function iGM_ExamReader({
   }, [page, zoom]);
 
   useEffect(() => {
-    if (!loading && !error) {
+    if (!loading && !failed) {
       void renderPage();
     }
-  }, [loading, error, renderPage]);
+  }, [loading, failed, renderPage]);
 
   // 全屏状态同步
   useEffect(() => {
@@ -168,15 +170,15 @@ export function iGM_ExamReader({
     >
       {/* 工具条 */}
       <div className={styles.toolbar}>
-        <span className={`igm-mono ${styles.toolLabel}`}>VIEWER</span>
+        <span className={`igm-mono ${styles.toolLabel}`}>{t("readerLabel")}</span>
         <div className={styles.tools}>
           <button
             type="button"
             className={styles.tool}
             onClick={() => setZoomIndex((i) => Math.max(0, i - 1))}
             disabled={zoomIndex === 0 || loading}
-            aria-label="Zoom out"
-            title="Zoom out"
+            aria-label={t("readerZoomOut")}
+            title={t("readerZoomOut")}
           >
             <ZoomOut size={14} strokeWidth={1.8} />
           </button>
@@ -190,8 +192,8 @@ export function iGM_ExamReader({
               setZoomIndex((i) => Math.min(iGM_Exam_ZoomSteps.length - 1, i + 1))
             }
             disabled={zoomIndex === iGM_Exam_ZoomSteps.length - 1 || loading}
-            aria-label="Zoom in"
-            title="Zoom in"
+            aria-label={t("readerZoomIn")}
+            title={t("readerZoomIn")}
           >
             <ZoomIn size={14} strokeWidth={1.8} />
           </button>
@@ -199,8 +201,8 @@ export function iGM_ExamReader({
             type="button"
             className={styles.tool}
             onClick={toggleFullscreen}
-            aria-label={fullscreen ? "Exit fullscreen" : "Fullscreen"}
-            title={fullscreen ? "Exit fullscreen" : "Fullscreen"}
+            aria-label={fullscreen ? t("readerExitFullscreen") : t("readerFullscreen")}
+            title={fullscreen ? t("readerExitFullscreen") : t("readerFullscreen")}
           >
             {fullscreen ? (
               <Minimize2 size={14} strokeWidth={1.8} />
@@ -213,25 +215,23 @@ export function iGM_ExamReader({
 
       {/* 画布区 */}
       <div className={styles.stage}>
-        {loading && (
-          <p className={`igm-mono ${styles.state}`}>LOADING PAPER…</p>
-        )}
-        {error && <p className={`igm-mono ${styles.stateError}`}>{error}</p>}
-        {!loading && !error && (
+        {loading && <p className={`igm-mono ${styles.state}`}>{t("readerLoading")}</p>}
+        {failed && <p className={`igm-mono ${styles.stateError}`}>{t("readerError")}</p>}
+        {!loading && !failed && (
           <canvas ref={canvasRef} className={styles.canvas} />
         )}
       </div>
 
       {/* 页码转盘 */}
-      {!loading && !error && (
+      {!loading && !failed && (
         <div className={styles.dial}>
           <button
             type="button"
             className={styles.dialBtn}
             onClick={() => goPage(page - 1)}
             disabled={page <= 1}
-            aria-label="Previous page"
-            title="Previous page"
+            aria-label={t("readerPrev")}
+            title={t("readerPrev")}
           >
             <ChevronLeft size={16} strokeWidth={1.8} />
           </button>
@@ -251,8 +251,8 @@ export function iGM_ExamReader({
             className={styles.dialBtn}
             onClick={() => goPage(page + 1)}
             disabled={page >= pageCount}
-            aria-label="Next page"
-            title="Next page"
+            aria-label={t("readerNext")}
+            title={t("readerNext")}
           >
             <ChevronRight size={16} strokeWidth={1.8} />
           </button>

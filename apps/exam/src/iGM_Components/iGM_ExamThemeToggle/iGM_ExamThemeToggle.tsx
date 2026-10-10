@@ -5,6 +5,7 @@
  * 模块：iGM_ExamThemeToggle
  * 作用：学术仪器风格的明暗模式摇杆开关（区别于主站的按钮式切换）
  * 内容：LIGHT / DARK 两档分段开关、刻度装饰、读写 localStorage 与 data-theme
+ * 说明：无障碍标签取自当前语言包
  */
 
 // 导入依赖 //
@@ -12,6 +13,7 @@
 
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
+import { useI18n } from "../../iGM_i18n/iGM_I18nContext";
 import styles from "./iGM_ExamThemeToggle.module.css";
 
 // 类型定义 //
@@ -30,6 +32,7 @@ function iGM_Exam_ReadTheme(): iGM_Exam_Theme {
 
 /** 明暗模式摇杆开关 */
 export function iGM_ExamThemeToggle() {
+  const { t } = useI18n();
   const [theme, setTheme] = useState<iGM_Exam_Theme>("light");
   const [mounted, setMounted] = useState(false);
 
@@ -53,7 +56,7 @@ export function iGM_ExamThemeToggle() {
     <div
       className={styles.rocker}
       role="group"
-      aria-label="Colour scheme"
+      aria-label={t("themeGroupLabel")}
       data-mounted={mounted}
     >
       <span className={styles.ticks} aria-hidden />
@@ -61,7 +64,7 @@ export function iGM_ExamThemeToggle() {
         type="button"
         className={`${styles.stop} ${theme === "light" ? styles.active : ""}`}
         aria-pressed={theme === "light"}
-        title="Light"
+        title={t("themeLight")}
         onClick={() => iGM_Exam_Apply("light")}
       >
         <Sun size={13} strokeWidth={1.9} />
@@ -71,7 +74,7 @@ export function iGM_ExamThemeToggle() {
         type="button"
         className={`${styles.stop} ${theme === "dark" ? styles.active : ""}`}
         aria-pressed={theme === "dark"}
-        title="Dark"
+        title={t("themeDark")}
         onClick={() => iGM_Exam_Apply("dark")}
       >
         <Moon size={13} strokeWidth={1.9} />

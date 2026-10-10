@@ -5,11 +5,15 @@
  * 模块：iGM_ExamFooter
  * 作用：页脚，模拟学术期刊版权栏（机构名、卷期、版权、返回主站）
  * 内容：机构名、版权年份、版本号、返回 iGCraftLit 主站链接、装饰双线
+ * 说明：机构名与版权文案取自当前语言包
  */
 
 // 导入依赖 //
+"use client";
+
 import Link from "next/link";
 import { GraduationCap } from "lucide-react";
+import { useI18n } from "../../iGM_i18n/iGM_I18nContext";
 import styles from "./iGM_ExamFooter.module.css";
 
 // 类型定义 //
@@ -18,6 +22,7 @@ import styles from "./iGM_ExamFooter.module.css";
 // 核心逻辑 //
 /** 页脚 */
 export function iGM_ExamFooter() {
+  const { t } = useI18n();
   const version = process.env.NEXT_PUBLIC_IGM_EXAM_VERSION ?? "0.1.0";
   const year = new Date().getFullYear();
 
@@ -26,14 +31,12 @@ export function iGM_ExamFooter() {
       <div className={styles.inner}>
         <div className={styles.brand}>
           <GraduationCap size={16} strokeWidth={1.6} className={styles.mark} />
-          <span className={`igm-serif ${styles.name}`}>
-            iG&amp;M Educational Examination Institute
-          </span>
+          <span className={`igm-serif ${styles.name}`}>{t("instituteName")}</span>
         </div>
 
         <div className={styles.metaRow}>
           <span className={`igm-mono ${styles.meta}`}>
-            © {year} iGCraftLit Community
+            {t("footerCopyright", { year })}
           </span>
           <span className={`igm-mono ${styles.meta}`}>V{version}</span>
           <Link href="https://igcraftlit.com" className={`igm-mono ${styles.link}`}>

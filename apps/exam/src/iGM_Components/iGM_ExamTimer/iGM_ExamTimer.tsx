@@ -5,7 +5,7 @@
  * 模块：iGM_ExamTimer
  * 作用：实验计时器样式的考试倒计时（等宽数字、秒级跳动、刻度盘装饰）
  * 内容：时/分/秒三段等宽数字、进度弧、超时提示、暂停与重置
- * 说明：以考试时长（分钟）为基准倒计时；不做交卷拦截，仅作显示
+ * 说明：以考试时长（分钟）为基准倒计时；不做交卷拦截，仅作显示；文案取自当前语言包
  */
 
 // 导入依赖 //
@@ -13,6 +13,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pause, Play, RotateCcw } from "lucide-react";
+import { useI18n } from "../../iGM_i18n/iGM_I18nContext";
 import styles from "./iGM_ExamTimer.module.css";
 
 // 类型定义 //
@@ -43,6 +44,7 @@ function iGM_Exam_SplitClock(totalSeconds: number): iGM_Exam_ClockParts {
 
 /** 实验计时器 */
 export function iGM_ExamTimer({ durationMinutes }: iGM_ExamTimerProps) {
+  const { t } = useI18n();
   const total = Math.max(0, (durationMinutes ?? 0) * 60);
   const [remaining, setRemaining] = useState(total);
   const [running, setRunning] = useState(total > 0);
@@ -83,15 +85,15 @@ export function iGM_ExamTimer({ durationMinutes }: iGM_ExamTimerProps) {
   return (
     <div className={`${styles.timer} ${expired ? styles.expired : ""}`}>
       <div className={styles.headRow}>
-        <span className={`igm-mono ${styles.head}`}>SESSION TIMER</span>
+        <span className={`igm-mono ${styles.head}`}>{t("timerTitle")}</span>
         <div className={styles.controls}>
           <button
             type="button"
             className={styles.ctrl}
             onClick={() => setRunning((v) => !v)}
             disabled={expired || total === 0}
-            title={running ? "Pause" : "Resume"}
-            aria-label={running ? "Pause timer" : "Resume timer"}
+            title={running ? t("timerPause") : t("timerResume")}
+            aria-label={running ? t("timerPause") : t("timerResume")}
           >
             {running ? <Pause size={13} strokeWidth={1.9} /> : <Play size={13} strokeWidth={1.9} />}
           </button>
@@ -100,8 +102,8 @@ export function iGM_ExamTimer({ durationMinutes }: iGM_ExamTimerProps) {
             className={styles.ctrl}
             onClick={reset}
             disabled={total === 0}
-            title="Reset"
-            aria-label="Reset timer"
+            title={t("timerReset")}
+            aria-label={t("timerReset")}
           >
             <RotateCcw size={13} strokeWidth={1.9} />
           </button>
@@ -125,7 +127,11 @@ export function iGM_ExamTimer({ durationMinutes }: iGM_ExamTimerProps) {
       </div>
 
       <p className={`igm-mono ${styles.caption}`}>
-        {total === 0 ? "NO TIME LIMIT" : expired ? "TIME EXPIRED" : "ELAPSED"}
+        {total === 0
+          ? t("timerNoLimit")
+          : expired
+            ? t("timerExpired")
+            : t("timerElapsed")}
       </p>
     </div>
   );

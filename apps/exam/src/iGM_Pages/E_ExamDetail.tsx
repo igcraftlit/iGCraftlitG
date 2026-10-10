@@ -5,7 +5,7 @@
  * 模块：iGM_ExamDetail
  * 作用：试卷详情页，实验记录表式元数据 + 实验计时器 + PDF.js 阅读器 + 盖章交卷
  * 内容：元数据记录表、右上固定计时器、阅读器主体、交卷区、加载/失败/缺失状态
- * 说明：静态导出下通过 useSearchParams 读取 id；由路由壳提供 Suspense 边界
+ * 说明：静态导出下通过 useSearchParams 读取 id；由路由壳提供 Suspense 边界；文案取自当前语言包
  */
 
 // 导入依赖 //
@@ -24,6 +24,7 @@ import {
 import { iGM_ExamReader as IGM_ExamReader } from "../iGM_Components/iGM_ExamReader/iGM_ExamReader";
 import { iGM_ExamTimer as IGM_ExamTimer } from "../iGM_Components/iGM_ExamTimer/iGM_ExamTimer";
 import { iGM_StampButton as IGM_StampButton } from "../iGM_Components/iGM_StampButton/iGM_StampButton";
+import { useI18n } from "../iGM_i18n/iGM_I18nContext";
 import styles from "./E_ExamDetail.module.css";
 
 // 类型定义 //
@@ -45,6 +46,7 @@ function iGM_Exam_Dash(value: number | null, suffix = ""): string {
 /** 试卷详情页 */
 export function E_ExamDetail() {
   const params = useSearchParams();
+  const { t } = useI18n();
   const examId = params.get("id") ?? "";
 
   const [exam, setExam] = useState<iGM_ExamDetail | null>(null);
@@ -63,11 +65,8 @@ export function E_ExamDetail() {
       setExam(detail);
       setState("ready");
     } catch (err) {
-      setMessage(
-        err instanceof iGM_ExamRequestError
-          ? err.message
-          : "Unable to load the examination paper.",
-      );
+      // 保留后端的具体提示；无具体提示时在渲染层回落语言包文案
+      setMessage(err instanceof iGM_ExamRequestError ? err.message : "");
       setState("error");
     }
   }, [examId]);
@@ -79,7 +78,7 @@ export function E_ExamDetail() {
   if (state === "loading") {
     return (
       <main className={styles.page}>
-        <p className={`igm-mono ${styles.state}`}>RETRIEVING RECORD…</p>
+        <p className={`igm-mono ${styles.state}`}>{t("detailRetrieving")}</p>
       </main>
     );
   }
@@ -89,20 +88,18 @@ export function E_ExamDetail() {
       <main className={styles.page}>
         <div className={styles.errorBox}>
           <p className={`igm-mono ${styles.errorText}`}>
-            {state === "missing"
-              ? "No examination identifier provided."
-              : message}
+            {state === "missing" ? t("detailMissing") : message || t("detailError")}
           </p>
           <div className={styles.errorActions}>
             {state === "error" && (
               <button type="button" className={styles.action} onClick={() => void load()}>
                 <RefreshCw size={13} strokeWidth={1.8} />
-                Retry
+                {t("actionRetry")}
               </button>
             )}
             <Link href="/" className={styles.action}>
               <ArrowLeft size={13} strokeWidth={1.8} />
-              Back to catalogue
+              {t("detailBack")}
             </Link>
           </div>
         </div>
@@ -111,12 +108,12 @@ export function E_ExamDetail() {
   }
 
   const fields: iGM_Exam_RecordField[] = [
-    { label: "SUBJECT", value: exam.subject || "—" },
-    { label: "ISSUER", value: exam.issuer || "—" },
-    { label: "REVIEWER", value: exam.reviewer || "—" },
-    { label: "DURATION", value: iGM_Exam_Dash(exam.duration, " min") },
-    { label: "TOTAL MARKS", value: iGM_Exam_Dash(exam.totalScore, " pts") },
-    { label: "ITEM COUNT", value: iGM_Exam_Dash(exam.questionCount) },
+    { label: t("fieldSubject"), value: exam.subject || "—" },
+    { label: t("fieldIssuer"), value: exam.issuer || "—" },
+    { label: t("fieldReviewer"), value: exam.reviewer || "—" },
+    { label: t("fieldDuration"), value: iGM_Exam_Dash(exam.duration, t("unitMinutes")) },
+    { label: t("fieldTotalMarks"), value: iGM_Exam_Dash(exam.totalScore, t("unitPoints")) },
+    { label: t("fieldItemCount"), value: iGM_Exam_Dash(exam.questionCount) },
   ];
 
   return (
@@ -125,24 +122,27 @@ export function E_ExamDetail() {
       <div className={styles.backRow}>
         <Link href="/" className={styles.back}>
           <ArrowLeft size={14} strokeWidth={1.8} />
-          <span className={`igm-mono ${styles.backLabel}`}>CATALOGUE</span>
+          <span className={`igm-mono ${styles.backLabel}`}>{t("detailCatalogue")}</span>
         </Link>
         <span className={`igm-mono ${styles.recordCode}`}>{exam.code}</span>
       </div>
 
       {/* 标题 */}
       <header className={styles.titleBlock}>
-        <p className={`igm-eyebrow ${styles.titleEyebrow}`}>EXAMINATION RECORD</p>
+        <p className={`igm-eyebrow ${styles.titleEyebrow}`}>{t("detailEyebrow")}</p>
         <h1 className={`igm-serif ${styles.title}`}>{exam.title}</h1>
       </header>
 
       {/* 实验记录表 + 计时器 */}
       <div className={styles.metaLayout}>
-        <section className={`igm-double-rule ${styles.recordTable}`} aria-label="Examination metadata">
+        <section
+          className={`igm-double-rule ${styles.recordTable}`}
+          aria-label={t("detailSpecTitle")}
+        >
           <div className={styles.recordHead}>
             <span className={`igm-mono ${styles.recordHeadNum}`}>§ 1</span>
             <h2 className={`igm-serif ${styles.recordHeadTitle}`}>
-              Record of Specifications
+              {t("detailSpecTitle")}
             </h2>
           </div>
           <dl className={styles.recordGrid}>
@@ -155,7 +155,7 @@ export function E_ExamDetail() {
           </dl>
           {exam.notice && (
             <p className={styles.notice}>
-              <span className={`igm-mono ${styles.noticeTag}`}>NOTICE</span>
+              <span className={`igm-mono ${styles.noticeTag}`}>{t("noticeTag")}</span>
               {exam.notice}
             </p>
           )}
@@ -167,10 +167,13 @@ export function E_ExamDetail() {
       </div>
 
       {/* 阅读器 */}
-      <section className={styles.readerSection} aria-label="Examination paper">
+      <section
+        className={styles.readerSection}
+        aria-label={t("detailViewerTitle")}
+      >
         <div className={styles.readerHead}>
           <span className={`igm-mono ${styles.readerNum}`}>§ 2</span>
-          <h2 className={`igm-serif ${styles.readerTitle}`}>Paper Viewer</h2>
+          <h2 className={`igm-serif ${styles.readerTitle}`}>{t("detailViewerTitle")}</h2>
           <span className={`igm-mono ${styles.readerFile}`} title={exam.fileName}>
             {exam.fileName || "paper.pdf"}
           </span>
@@ -179,15 +182,12 @@ export function E_ExamDetail() {
       </section>
 
       {/* 交卷 */}
-      <section className={styles.submitSection} aria-label="Submission">
+      <section className={styles.submitSection} aria-label={t("detailSubmitTitle")}>
         <div className={styles.submitHead}>
           <span className={`igm-mono ${styles.submitNum}`}>§ 3</span>
-          <h2 className={`igm-serif ${styles.submitTitle}`}>Declaration of Submission</h2>
+          <h2 className={`igm-serif ${styles.submitTitle}`}>{t("detailSubmitTitle")}</h2>
         </div>
-        <p className={styles.submitLead}>
-          By submitting, you confirm that this session has been completed. The
-          record is stored for institutional review.
-        </p>
+        <p className={styles.submitLead}>{t("detailSubmitLead")}</p>
         <IGM_StampButton examId={exam.id} />
       </section>
     </main>

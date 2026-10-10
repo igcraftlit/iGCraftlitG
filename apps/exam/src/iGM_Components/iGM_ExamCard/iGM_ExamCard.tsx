@@ -5,7 +5,7 @@
  * 模块：iGM_ExamCard
  * 作用：试卷档案卡片，模拟纸质档案卡（编号、标题、科目、命题方、时长、总分、题数、印章位）
  * 内容：档案编号条、标题、元数据刻度表、右下角印章位、抽出式淡入动效
- * 说明：卡片为链接容器，点击进入试卷详情
+ * 说明：卡片为链接容器，点击进入试卷详情；字段名与单位取自当前语言包
  */
 
 // 导入依赖 //
@@ -14,6 +14,7 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import type { iGM_ExamListItem } from "../../iGM_Services/iGM_ExamClient";
+import { useI18n } from "../../iGM_i18n/iGM_I18nContext";
 import styles from "./iGM_ExamCard.module.css";
 
 // 类型定义 //
@@ -39,10 +40,11 @@ function iGM_Exam_Dash(value: number | null, suffix = ""): string {
 
 /** 档案卡片 */
 export function iGM_ExamCard({ exam, index = 0 }: iGM_ExamCardProps) {
+  const { t } = useI18n();
   const meta: iGM_Exam_CardMeta[] = [
-    { label: "DURATION", value: iGM_Exam_Dash(exam.duration, " min") },
-    { label: "TOTAL", value: iGM_Exam_Dash(exam.totalScore, " pts") },
-    { label: "ITEMS", value: iGM_Exam_Dash(exam.questionCount) },
+    { label: t("cardDuration"), value: iGM_Exam_Dash(exam.duration, t("unitMinutes")) },
+    { label: t("cardTotal"), value: iGM_Exam_Dash(exam.totalScore, t("unitPoints")) },
+    { label: t("cardItems"), value: iGM_Exam_Dash(exam.questionCount) },
   ];
 
   return (

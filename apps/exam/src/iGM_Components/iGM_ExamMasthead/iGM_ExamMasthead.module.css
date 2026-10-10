@@ -41,6 +41,13 @@
   color: var(--igm-copper);
 }
 
+/* 右上角控件组：主题摇杆 + 语言切换 */
+.controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
 /* ============================= 刊名行 ============================= */
 .titleRow {
   padding: 16px 0 12px;
@@ -137,6 +144,25 @@
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--igm-text-muted);
+}
+
+/* ============================= 中文排版 ============================= */
+/* 中文字距与行高微调，避免拥挤；不改变冷色调与字体体系 */
+:global(html[lang="zh-CN"]) .title {
+  letter-spacing: 0.06em;
+}
+
+:global(html[lang="zh-CN"]) .subtitle {
+  letter-spacing: 0.22em;
+}
+
+:global(html[lang="zh-CN"]) .navLink {
+  letter-spacing: 0.08em;
+}
+
+:global(html[lang="zh-CN"]) .volIssue,
+:global(html[lang="zh-CN"]) .date {
+  letter-spacing: 0.12em;
 }
 
 /* ============================= 响应式 ============================= */

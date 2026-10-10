@@ -4,8 +4,9 @@
  * 路由：全局
  * 模块：iGM_ExamMasthead
  * 作用：顶部横向学术期刊刊头导航（刊名 + 卷期 + 日期 + 索引/管理入口）
- * 内容：卷期与日期元信息、居中机构名、EST. 2026 副标题、横向导航、主题摇杆
- * 说明：刊头日期在客户端挂载后按本地时间刷新，首屏使用构建期日期，避免水合不一致
+ * 内容：卷期与日期元信息、居中机构名、副标题、横向导航、主题摇杆与语言切换
+ * 说明：刊头日期在客户端挂载后按本地时间刷新，并按当前语言格式化，
+ *       首屏使用构建期日期，避免水合不一致
  */
 
 // 导入依赖 //
@@ -16,18 +17,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { GraduationCap } from "lucide-react";
 import { iGM_ExamThemeToggle as IGM_ExamThemeToggle } from "../iGM_ExamThemeToggle/iGM_ExamThemeToggle";
+import { iGM_ExamLangToggle as IGM_ExamLangToggle } from "../iGM_ExamLangToggle/iGM_ExamLangToggle";
+import { useI18n } from "../../iGM_i18n/iGM_I18nContext";
 import styles from "./iGM_ExamMasthead.module.css";
 
 // 类型定义 //
 interface iGM_ExamMastheadProps {
-  /** 卷期与日期元信息（缺省时按构建期日期渲染） */
-  initialMeta?: iGM_Exam_MastheadMeta;
-}
-
-interface iGM_Exam_MastheadMeta {
-  volume: string;
-  issue: string;
-  date: string;
+  /** 刊头基准日期（缺省时按构建期日期渲染） */
+  initialDate?: Date;
 }
 
 // 核心逻辑 //
@@ -49,71 +46,57 @@ function iGM_Exam_ToRoman(value: number): string {
   return out;
 }
 
-const iGM_Exam_Months = [
-  "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
-  "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
-];
-
-/** 由日期推导卷期与日期文本 */
-function iGM_Exam_BuildMeta(base: Date): iGM_Exam_MastheadMeta {
-  return {
-    volume: iGM_Exam_ToRoman(base.getFullYear() - 2025),
-    issue: String(base.getMonth() + 1).padStart(2, "0"),
-    date: `${String(base.getDate()).padStart(2, "0")} ${
-      iGM_Exam_Months[base.getMonth()]
-    } ${base.getFullYear()}`,
-  };
-}
-
 /** 构建期日期（环境变量注入），水合前后一致 */
 const iGM_Exam_BuildDate = new Date(
   process.env.NEXT_PUBLIC_IGM_EXAM_BUILD_TIME || Date.now(),
 );
 
-const iGM_Exam_NavItems = [
-  { href: "/", label: "Examinations" },
-  { href: "/admin", label: "Administration" },
+/** 导航项路由（文案由当前语言包提供） */
+const iGM_Exam_NavRoutes = [
+  { href: "/", labelKey: "navExaminations" },
+  { href: "/admin", labelKey: "navAdmin" },
 ] as const;
 
 /** 学术期刊刊头 */
-export function iGM_ExamMasthead({ initialMeta }: iGM_ExamMastheadProps) {
+export function iGM_ExamMasthead({ initialDate }: iGM_ExamMastheadProps) {
   const pathname = usePathname();
-  const [meta, setMeta] = useState<iGM_Exam_MastheadMeta>(
-    initialMeta ?? iGM_Exam_BuildMeta(iGM_Exam_BuildDate),
-  );
+  const { t, formatDate } = useI18n();
+  const [baseDate, setBaseDate] = useState<Date>(initialDate ?? iGM_Exam_BuildDate);
 
   useEffect(() => {
-    setMeta(iGM_Exam_BuildMeta(new Date()));
+    setBaseDate(new Date());
   }, []);
+
+  const volume = iGM_Exam_ToRoman(baseDate.getFullYear() - 2025);
+  const issue = String(baseDate.getMonth() + 1).padStart(2, "0");
 
   return (
     <header className={styles.masthead}>
       <div className={styles.inner}>
-        {/* 元信息行：卷期 + 主题摇杆 */}
+        {/* 元信息行：卷期 + 主题摇杆 + 语言切换 */}
         <div className={styles.metaRow}>
           <span className={`igm-mono ${styles.volIssue}`}>
-            VOL. {meta.volume} · NO. {meta.issue}
+            {t("mastheadMeta", { volume, issue })}
           </span>
-          <IGM_ExamThemeToggle />
+          <div className={styles.controls}>
+            <IGM_ExamThemeToggle />
+            <IGM_ExamLangToggle />
+          </div>
         </div>
 
         {/* 刊名（机构名） */}
         <div className={styles.titleRow}>
           <Link href="/" className={styles.titleLink}>
             <GraduationCap size={26} strokeWidth={1.5} className={styles.mark} />
-            <span className={`igm-serif ${styles.title}`}>
-              iG&amp;M Educational Examination Institute
-            </span>
+            <span className={`igm-serif ${styles.title}`}>{t("instituteName")}</span>
           </Link>
-          <p className={`igm-mono ${styles.subtitle}`}>
-            EST. 2026 · ACADEMIC ASSESSMENT
-          </p>
+          <p className={`igm-mono ${styles.subtitle}`}>{t("mastheadSubtitle")}</p>
         </div>
 
         {/* 横向导航 + 日期 */}
         <nav className={styles.navRow} aria-label="Primary">
           <ul className={styles.navList}>
-            {iGM_Exam_NavItems.map((item) => {
+            {iGM_Exam_NavRoutes.map((item) => {
               const active =
                 item.href === "/"
                   ? pathname === "/"
@@ -125,13 +108,13 @@ export function iGM_ExamMasthead({ initialMeta }: iGM_ExamMastheadProps) {
                     className={`${styles.navLink} ${active ? styles.navActive : ""}`}
                     aria-current={active ? "page" : undefined}
                   >
-                    {item.label}
+                    {t(item.labelKey)}
                   </Link>
                 </li>
               );
             })}
           </ul>
-          <span className={`igm-mono ${styles.date}`}>{meta.date}</span>
+          <span className={`igm-mono ${styles.date}`}>{formatDate(baseDate)}</span>
         </nav>
       </div>
     </header>

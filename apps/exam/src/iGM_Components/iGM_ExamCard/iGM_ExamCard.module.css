@@ -45,7 +45,7 @@
   justify-content: space-between;
   gap: 12px;
   padding-bottom: 10px;
-  border-bottom: 1px dashed var(--igm-line-soft);
+  border-bottom: 1px solid var(--igm-line-soft);
 }
 
 .code {

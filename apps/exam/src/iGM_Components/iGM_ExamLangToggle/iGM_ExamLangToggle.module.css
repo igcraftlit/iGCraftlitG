@@ -1,0 +1,110 @@
+/**
+ * 文件路径：apps/exam/src/iGM_Components/iGM_ExamLangToggle/iGM_ExamLangToggle.module.css
+ * 所属层：前端 / 组件样式层
+ * 路由：全局
+ * 模块：iGM_ExamLangToggle
+ * 作用：语言切换器样式（仪器刻度按钮 + 下拉面板）
+ * 内容：触发按钮、下拉面板、选项行、选中态、勾选标记
+ * 说明：沿用学术仪器风格，方角细边，不使用主站玻璃态与圆角阴影
+ */
+
+/* ============================= 触发按钮 ============================= */
+.wrap {
+  position: relative;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 28px;
+  padding: 0 9px;
+  background: transparent;
+  border: 1px solid var(--igm-line-soft);
+  border-radius: var(--igm-radius);
+  color: var(--igm-text-muted);
+  transition: color 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+.trigger:hover {
+  color: var(--igm-ink);
+  border-color: var(--igm-copper);
+  background: color-mix(in srgb, var(--igm-gold) 12%, transparent);
+}
+
+.code {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.caret {
+  transition: transform 0.18s ease;
+}
+
+.caret[data-open="true"] {
+  transform: rotate(180deg);
+}
+
+/* ============================= 下拉面板 ============================= */
+.menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 60;
+  min-width: 152px;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--igm-paper-raised);
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+  box-shadow: var(--igm-shadow-tight);
+  animation: igm-ink-in 0.16s ease both;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 9px;
+  background: transparent;
+  border: none;
+  border-radius: var(--igm-radius);
+  color: var(--igm-text);
+  text-align: left;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+
+.option:hover {
+  background: color-mix(in srgb, var(--igm-gold) 16%, transparent);
+}
+
+.optionActive {
+  color: var(--igm-cinnabar);
+}
+
+.optionName {
+  flex: 1;
+  font-size: 13px;
+}
+
+.optionCode {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--igm-text-muted);
+}
+
+.optionActive .optionCode {
+  color: var(--igm-cinnabar);
+}
+
+.check {
+  flex-shrink: 0;
+}
+
+/* ============================= 中文排版微调 ============================= */
+:global(html[lang="zh-CN"]) .optionName {
+  letter-spacing: 0.02em;
+}
