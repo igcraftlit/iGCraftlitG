@@ -32,7 +32,8 @@ interface iGM_CLI_NavItem {
     | "commands"
     | "sdk"
     | "api"
-    | "oauth";
+    | "oauth"
+    | "publicity";
   /** 目标路径（不含语言前缀，可含锚点） */
   href: string;
 }
@@ -46,6 +47,7 @@ const iGM_CLI_NavItems: iGM_CLI_NavItem[] = [
   { key: "sdk", href: "/sdk" },
   { key: "api", href: "/api" },
   { key: "oauth", href: "/oauth/apply" },
+  { key: "publicity", href: "/oauth/publicity" },
 ];
 
 /** iGCraftLit 主站地址（文档子站返回入口，外链新标签页打开） */

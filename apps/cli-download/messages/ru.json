@@ -9,7 +9,8 @@
     "commands": "Команды",
     "sdk": "SDK",
     "api": "API",
-    "oauth": "OAuth"
+    "oauth": "OAuth",
+    "publicity": "Разработчики"
   },
   "hero": {
     "title": "iGM CLI Download API",

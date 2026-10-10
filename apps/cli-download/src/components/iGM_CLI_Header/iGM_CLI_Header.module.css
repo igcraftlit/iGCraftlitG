@@ -17,7 +17,8 @@
 }
 
 .inner {
-  max-width: 1080px;
+  /* 顶部导航项较多，容器略宽于 1080px 正文，保证七项菜单在各语言下均单行 */
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
   height: 60px;
@@ -49,9 +50,10 @@
 }
 
 .navLink {
-  padding: 6px 12px;
+  padding: 6px 10px;
   border-radius: var(--igm-radius);
   font-size: 14px;
+  white-space: nowrap;
   color: var(--igm-text-muted);
   transition:
     color var(--igm-motion-nav) var(--igm-motion-ease),
