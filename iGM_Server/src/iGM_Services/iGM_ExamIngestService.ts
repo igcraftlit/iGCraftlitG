@@ -467,21 +467,25 @@ function iGM_MatchNumber(
  * 规则来自模块规格：中英文双语模式，命中即取（识别失败由管理员补全）
  */
 export function iGM_RecognizeExamMeta(rawText: string): iGM_ExamRecognized {
+  // 标题：年份与「年」之间常带空格；科目卷名前的学段名称长度受限，避免吞掉后续正文
   const title = iGM_MatchText(rawText, [
-    /\d{4}年[\u4e00-\u9fa5]+(?:学业水平考试|考试|统考|联考)/,
+    /\d{4}\s*年\s*[\u4e00-\u9fa5]{2,30}?\s*(?:学业水平考试|考试|统考|联考)/,
     /\d{4}\s+(?:Provincial|National)\s+Examination/i,
   ]);
+  // 科目卷名：前缀可能含拉丁字母（如 Minecraft科目·Ⅰ卷）
   const subject = iGM_MatchText(rawText, [
-    /([\u4e00-\u9fa5]+科目[·・]?[IⅠ]+卷)/,
-    /Subject\s*[:：]\s*([^\n]+)/i,
+    /([A-Za-z\u4e00-\u9fa5]{1,20}科目\s*[·・]?\s*[IⅠ]+卷)/,
+    /Subject\s*[:：]\s*([^\n]{1,80}?)(?=\s*(?:Issuer|Reviewer|Notice|$))/i,
   ]);
+  // 命题方：以「审题 / 考生须知」等后续标签为截止边界，避免吞掉整篇正文
   const issuer = iGM_MatchText(rawText, [
-    /命题[：:]\s*([^\n]+)/,
-    /Issuer\s*[:：]\s*([^\n]+)/i,
+    /命题\s*[：:]\s*([^\n]{1,80}?)(?=\s*(?:审题|考生须知|注意事项|命题|$))/,
+    /Issuer\s*[:：]\s*([^\n]{1,80}?)(?=\s*(?:Reviewer|Notice|$))/i,
   ]);
+  // 审题方：以「考生须知 / 注意事项」等后续标签为截止边界
   const reviewer = iGM_MatchText(rawText, [
-    /审题[：:]\s*([^\n]+)/,
-    /Reviewer\s*[:：]\s*([^\n]+)/i,
+    /审题\s*[：:]\s*([^\n]{1,80}?)(?=\s*(?:考生须知|注意事项|命题|审题|$))/,
+    /Reviewer\s*[:：]\s*([^\n]{1,80}?)(?=\s*(?:Notice|$))/i,
   ]);
   const duration = iGM_MatchNumber(rawText, [
     /(?:考试|答卷|作答|测试)时间\s*[:：]?\s*(\d+)\s*分钟/,

@@ -205,22 +205,6 @@ export function iGM_Exam_FormatSizeMb(bytes: number | null): string {
 
 /* ---------- 公开接口 ---------- */
 
-/** 已发布试卷列表 */
-export async function iGM_Exam_FetchList(): Promise<iGM_ExamListItem[]> {
-  const data = await iGM_Exam_Get<{ exams: iGM_ExamListItem[] }>("/api/exam/list");
-  return data.exams;
-}
-
-/** 试卷详情（公开） */
-export async function iGM_Exam_FetchDetail(
-  examId: string,
-): Promise<iGM_ExamDetail> {
-  const data = await iGM_Exam_Get<{ exam: iGM_ExamDetail }>(
-    `/api/exam/detail?examId=${encodeURIComponent(examId)}`,
-  );
-  return data.exam;
-}
-
 /** 交卷 */
 export async function iGM_Exam_Submit(
   examId: string,
@@ -290,6 +274,11 @@ export async function iGM_Exam_Reparse(examId: string): Promise<void> {
   await iGM_Exam_Post<{ reparsed: boolean }>("/api/exam/reparse", { examId });
 }
 
+/** 基于已存 HTML 重新识别并回填元数据（原始 PDF 已删除时使用） */
+export async function iGM_Exam_Recognize(examId: string): Promise<void> {
+  await iGM_Exam_Post<{ recognized: boolean }>("/api/exam/recognize", { examId });
+}
+
 /** 删除试卷及关联原始文件与 HTML 目录 */
 export async function iGM_Exam_Delete(examId: string): Promise<void> {
   await iGM_Exam_Post<{ deleted: boolean }>("/api/exam/delete", { examId });
@@ -299,8 +288,6 @@ export async function iGM_Exam_Delete(examId: string): Promise<void> {
 export default {
   iGM_Exam_AbsoluteUrl,
   iGM_Exam_FormatSizeMb,
-  iGM_Exam_FetchList,
-  iGM_Exam_FetchDetail,
   iGM_Exam_Submit,
   iGM_Exam_FetchAdminList,
   iGM_Exam_FetchAdminDetail,
@@ -309,5 +296,6 @@ export default {
   iGM_Exam_Update,
   iGM_Exam_Confirm,
   iGM_Exam_Reparse,
+  iGM_Exam_Recognize,
   iGM_Exam_Delete,
 };

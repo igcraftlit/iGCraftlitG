@@ -33,11 +33,16 @@ import {
   iGM_PublishExamService,
   iGM_ReadExamFileService,
   iGM_ReadExamHtmlAssetService,
+  iGM_ReRecognizeExamMetaService,
   iGM_ReparseExamService,
   iGM_SubmitExamService,
   iGM_UpdateExamService,
   iGM_UploadExamService,
 } from "../iGM_Services/iGM_ExamService";
+import {
+  iGM_CommitExamStaticFiles,
+  iGM_GenerateExamStaticFile,
+} from "../iGM_Services/iGM_ExamStaticService";
 
 // 类型定义 //
 /** 原始文件 MIME 与是否可内联预览（本模块仅 PDF） */
@@ -193,6 +198,15 @@ async function iGM_HandleConfirm(ctx: iGM_RouteContext) {
   iGM_EnforceRateLimit(ctx, "examUpload", `ip:${ip}`);
   const examId = iGM_RequireExamIdBody(ctx);
   await iGM_PublishExamService(examId);
+  // 发布后导出静态数据并推送，触发 Cloudflare Pages 重新构建（失败不阻断发布）
+  try {
+    await iGM_GenerateExamStaticFile(examId);
+    await iGM_CommitExamStaticFiles();
+  } catch (error) {
+    console.warn(
+      `[G_Exam] 生成试卷静态数据失败：${examId}：${String(error)}`,
+    );
+  }
   return iGM_Ok({ confirmed: true }, "试卷已发布");
 }
 
@@ -203,6 +217,15 @@ async function iGM_HandleReparse(ctx: iGM_RouteContext) {
   const examId = iGM_RequireExamIdBody(ctx);
   await iGM_ReparseExamService(examId);
   return iGM_Ok({ reparsed: true }, "已按原始文件重新转换");
+}
+
+/* ---------- 管理端：基于已存 HTML 重新识别并回填元数据 ---------- */
+async function iGM_HandleRecognize(ctx: iGM_RouteContext) {
+  const ip = iGM_ClientIp(ctx);
+  iGM_EnforceRateLimit(ctx, "examUpload", `ip:${ip}`);
+  const examId = iGM_RequireExamIdBody(ctx);
+  await iGM_ReRecognizeExamMetaService(examId);
+  return iGM_Ok({ recognized: true }, "已重新识别试卷信息");
 }
 
 /* ---------- 管理端：删除试卷及其原始文件与 HTML 目录 ---------- */
@@ -242,6 +265,7 @@ export const G_Exam = new Elysia({ name: "G_Exam" })
   .post("/api/exam/update", iGM_HandleUpdate as never)
   .post("/api/exam/confirm", iGM_HandleConfirm as never)
   .post("/api/exam/reparse", iGM_HandleReparse as never)
+  .post("/api/exam/recognize", iGM_HandleRecognize as never)
   .post("/api/exam/delete", iGM_HandleDelete as never)
   .post("/api/exam/submit", iGM_HandleSubmit as never);
 

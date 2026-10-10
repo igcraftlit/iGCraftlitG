@@ -120,7 +120,7 @@ function iGM_ExamAssetMimeType(name: string): string {
 }
 
 /** 生成试卷编号映射：按创建年份分组，组内按创建时间顺序编号 E-YYYY-NNN */
-async function iGM_BuildExamCodeMap(): Promise<Map<string, string>> {
+export async function iGM_BuildExamCodeMap(): Promise<Map<string, string>> {
   const pairs = await iGM_ListExamIdCreatedPairs();
   const counters = new Map<string, number>();
   const codeMap = new Map<string, string>();
@@ -396,6 +396,37 @@ export async function iGM_ReparseExamService(examId: string): Promise<void> {
   void iGM_RunExamConvertService(examId, fileRow.iGM_TempPath);
 }
 
+/**
+ * 基于已存 HTML 重新识别元数据并回填
+ * 原始 PDF 已在转换成功时删除，无法重新转换，故直接从 HTML 产物重放识别；
+ * 已校对的字段仅在识别到新值时覆盖，未识别到的保留原值，不改动转换状态
+ */
+export async function iGM_ReRecognizeExamMetaService(
+  examId: string,
+): Promise<void> {
+  const row = await iGM_FindExamById(examId);
+  if (!row) throw new iGM_ExamError("试卷不存在", 404);
+  if (row.iGM_ParseStatus !== "completed" || !row.iGM_HtmlPath) {
+    throw new iGM_ExamError("试卷尚未完成转换，无法识别", 422);
+  }
+  const plainText = await iGM_ReadExamHtmlText(examId);
+  const recognized = iGM_RecognizeExamMeta(plainText);
+  await iGM_UpdateExamFields(
+    examId,
+    iGM_ToWriteFields({
+      title: recognized.title || (row.iGM_Title ?? ""),
+      subject: recognized.subject || (row.iGM_Subject ?? ""),
+      issuer: recognized.issuer || (row.iGM_Issuer ?? ""),
+      reviewer: recognized.reviewer || (row.iGM_Reviewer ?? ""),
+      duration: recognized.duration ?? row.iGM_Duration,
+      totalScore: recognized.totalScore ?? row.iGM_TotalScore,
+      questionCount: recognized.questionCount ?? row.iGM_QuestionCount,
+      notice: row.iGM_Notice ?? "",
+    }),
+    null,
+  );
+}
+
 /** 删除试卷：同时删除临时目录中的原始文件与 HTML 转换目录 */
 export async function iGM_DeleteExamService(examId: string): Promise<void> {
   const row = await iGM_FindExamById(examId);
@@ -471,6 +502,7 @@ export default {
   iGM_UpdateExamService,
   iGM_PublishExamService,
   iGM_ReparseExamService,
+  iGM_ReRecognizeExamMetaService,
   iGM_DeleteExamService,
   iGM_SubmitExamService,
   iGM_ReadExamFileService,

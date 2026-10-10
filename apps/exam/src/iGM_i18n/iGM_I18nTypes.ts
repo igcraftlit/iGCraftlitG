@@ -120,6 +120,7 @@ export interface iGM_I18nDict {
   adminSave: string;
   adminConfirm: string;
   adminReparse: string;
+  adminRecognize: string;
   adminDelete: string;
   adminConfirmTitle: string;
   adminConfirmBody: string;
@@ -141,11 +142,13 @@ export interface iGM_I18nDict {
   adminSaveFailed: string;
   adminConfirmFailed: string;
   adminReparseFailed: string;
+  adminRecognizeFailed: string;
   adminDeleteFailed: string;
   adminIngested: string;
   adminSaved: string;
   adminConfirmed: string;
   adminReparsed: string;
+  adminRecognized: string;
   adminDeleted: string;
   adminDiscard: string;
   adminDiscarded: string;

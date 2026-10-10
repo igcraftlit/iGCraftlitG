@@ -18,12 +18,13 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Maximize2, RefreshCw, ZoomIn, ZoomOut } from "lucide-react";
 import {
-  iGM_Exam_AbsoluteUrl,
-  iGM_Exam_FetchDetail,
   iGM_Exam_FormatSizeMb,
   iGM_ExamRequestError,
-  type iGM_ExamDetail,
 } from "../iGM_Services/iGM_ExamClient";
+import {
+  iGM_Exam_FetchStaticDetail,
+  type iGM_ExamStaticDetail,
+} from "../iGM_Services/iGM_ExamStaticClient";
 import { iGM_ExamTimer as IGM_ExamTimer } from "../iGM_Components/iGM_ExamTimer/iGM_ExamTimer";
 import { iGM_StampButton as IGM_StampButton } from "../iGM_Components/iGM_StampButton/iGM_StampButton";
 import { useI18n } from "../iGM_i18n/iGM_I18nContext";
@@ -66,7 +67,7 @@ export function E_ExamDetail() {
   const { t } = useI18n();
   const examId = params.get("id") ?? "";
 
-  const [exam, setExam] = useState<iGM_ExamDetail | null>(null);
+  const [exam, setExam] = useState<iGM_ExamStaticDetail | null>(null);
   const [state, setState] = useState<iGM_Exam_DetailState>("loading");
   const [message, setMessage] = useState("");
   const [zoom, setZoom] = useState(1);
@@ -99,11 +100,15 @@ export function E_ExamDetail() {
     setState("loading");
     setMessage("");
     try {
-      const detail = await iGM_Exam_FetchDetail(examId);
+      const detail = await iGM_Exam_FetchStaticDetail(examId);
       setExam(detail);
       setState("ready");
     } catch (err) {
-      // 保留后端的具体提示；无具体提示时在渲染层回落语言包文案
+      // 静态数据缺失（404）视为试卷不存在；其余保留具体提示，无提示时回落语言包文案
+      if (err instanceof iGM_ExamRequestError && err.code === 404) {
+        setState("missing");
+        return;
+      }
       setMessage(err instanceof iGM_ExamRequestError ? err.message : "");
       setState("error");
     }
@@ -114,7 +119,7 @@ export function E_ExamDetail() {
   }, [load]);
 
   // 试卷预览可用时：默认适应屏幕宽度，并在窗口尺寸变化时重新适配
-  const hasPreview = Boolean(exam?.htmlApiPath);
+  const hasPreview = Boolean(exam?.htmlPath);
   useEffect(() => {
     if (!hasPreview) return;
     setZoom(iGM_Exam_FitZoom());
@@ -249,7 +254,7 @@ export function E_ExamDetail() {
         <div className={styles.paperHead}>
           <span className={`igm-mono ${styles.paperNum}`}>§ 2</span>
           <h2 className={`igm-serif ${styles.paperTitle}`}>{t("detailPaperTitle")}</h2>
-          {exam.htmlApiPath && (
+          {exam.htmlPath && (
             <div className={styles.zoomBar}>
               <button
                 type="button"
@@ -285,7 +290,7 @@ export function E_ExamDetail() {
             </div>
           )}
         </div>
-        {exam.htmlApiPath ? (
+        {exam.htmlPath ? (
           <>
             <div className={styles.paperMeta}>
               <p className={`igm-mono ${styles.paperHint}`}>{t("detailPreviewHint")}</p>
@@ -307,9 +312,9 @@ export function E_ExamDetail() {
                 }
               >
                 <iframe
-                  key={exam.htmlApiPath}
+                  key={exam.htmlPath}
                   className={styles.htmlFrame}
-                  src={iGM_Exam_AbsoluteUrl(exam.htmlApiPath)}
+                  src={exam.htmlPath}
                   title={exam.title || exam.fileName}
                 />
               </div>

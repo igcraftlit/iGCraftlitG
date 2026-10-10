@@ -14,7 +14,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { FileSearch, RefreshCw } from "lucide-react";
 import {
-  iGM_Exam_FetchList,
+  iGM_Exam_FetchStaticIndex,
+} from "../iGM_Services/iGM_ExamStaticClient";
+import {
   iGM_ExamRequestError,
   type iGM_ExamListItem,
 } from "../iGM_Services/iGM_ExamClient";
@@ -37,7 +39,7 @@ export function E_ExamList() {
     setState("loading");
     setMessage("");
     try {
-      const list = await iGM_Exam_FetchList();
+      const list = await iGM_Exam_FetchStaticIndex();
       setExams(list);
       setState("ready");
     } catch (err) {

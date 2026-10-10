@@ -22,6 +22,7 @@ import {
   Download,
   FileUp,
   Loader2,
+  RefreshCw,
   RotateCcw,
   Save,
   ShieldCheck,
@@ -35,6 +36,7 @@ import {
   iGM_Exam_FetchAdminList,
   iGM_Exam_FetchProgress,
   iGM_Exam_Reparse,
+  iGM_Exam_Recognize,
   iGM_Exam_Update,
   iGM_ExamRequestError,
   type iGM_ExamAdminListItem,
@@ -348,6 +350,24 @@ export function iGM_ExamAdmin() {
     }
   }
 
+  /** 基于已存 HTML 重新识别元数据（原始 PDF 已删除时使用） */
+  async function recognize(): Promise<void> {
+    if (!draft) return;
+    setBusy(true);
+    setNotice("");
+    setMessage("");
+    try {
+      await iGM_Exam_Recognize(draft.examId);
+      await refreshDraft(draft.examId);
+      setNotice(t("adminRecognized"));
+      await load();
+    } catch (err) {
+      setMessage(iGM_Exam_ReadError(err, t("adminRecognizeFailed")));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   /** 二次确认后：放弃本次试卷，删除原始文件与 HTML 目录 */
   async function discard(): Promise<void> {
     if (!draft) return;
@@ -611,6 +631,15 @@ export function iGM_ExamAdmin() {
                   >
                     <RotateCcw size={14} strokeWidth={1.8} />
                     <span className="igm-mono">{t("adminReparse")}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.reparse}
+                    onClick={() => void recognize()}
+                    disabled={busy || !draft.htmlApiPath}
+                  >
+                    <RefreshCw size={14} strokeWidth={1.8} />
+                    <span className="igm-mono">{t("adminRecognize")}</span>
                   </button>
                   <button
                     type="button"
