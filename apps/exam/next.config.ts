@@ -3,7 +3,7 @@
  * 所属层：前端 / 构建配置层
  * 路由：全局
  * 模块：iGM_Exam_NextConfig
- * 作用：iG&M 教育考试系统子站点 Next.js 纯静态 SSG 构建配置
+ * 作用：iGC&M 教育考试系统子站点 Next.js 纯静态 SSG 构建配置
  * 内容：output export、图片关闭优化、构建期环境变量注入
  */
 

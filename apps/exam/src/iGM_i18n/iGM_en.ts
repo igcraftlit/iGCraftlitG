@@ -15,7 +15,7 @@ import type { iGM_I18nDict } from "./iGM_I18nTypes";
 /** 英文语言包 */
 export const iGM_en: iGM_I18nDict = {
   // 机构与刊头
-  instituteName: "iG&M Educational Examination Institute",
+  instituteName: "iGC&M Education Examinations Research Institute",
   mastheadMeta: "VOL. {volume} · NO. {issue}",
   mastheadSubtitle: "EST. 2026 · ACADEMIC ASSESSMENT",
   navExaminations: "Examinations",

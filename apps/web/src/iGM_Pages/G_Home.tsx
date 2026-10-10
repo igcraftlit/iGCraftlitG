@@ -67,7 +67,7 @@ export function G_Home() {
           title={t("home.cardDeveloperTitle")}
           description={t("home.cardDeveloperDesc")}
         />
-        {/* iG&M Exam：跳转独立教育考试子站点（外链原样跳转） */}
+        {/* iGC&M Exam：跳转独立教育考试子站点（外链原样跳转） */}
         <IGM_NavCard
           href="https://exam.igcraftlit.com"
           icon={GraduationCap}

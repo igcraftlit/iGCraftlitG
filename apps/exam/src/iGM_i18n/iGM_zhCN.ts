@@ -15,7 +15,7 @@ import type { iGM_I18nDict } from "./iGM_I18nTypes";
 /** 简体中文语言包 */
 export const iGM_zhCN: iGM_I18nDict = {
   // 机构与刊头
-  instituteName: "iG&M 教育考试学院",
+  instituteName: "iGC&M 教育考试研究院",
   mastheadMeta: "第 {volume} 卷 · 第 {issue} 期",
   mastheadSubtitle: "创院于 2026 · 学术测评",
   navExaminations: "考试目录",

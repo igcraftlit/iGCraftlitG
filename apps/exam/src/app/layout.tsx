@@ -3,7 +3,7 @@
  * 所属层：前端 / 根布局（Next.js App Router 框架必需文件）
  * 路由：全局
  * 模块：iGM_Exam_RootLayout
- * 作用：iG&M 教育考试系统子站点 HTML 根节点、字体变量与全局样式注入
+ * 作用：iGC&M 教育考试系统子站点 HTML 根节点、字体变量与全局样式注入
  * 内容：衬线（Source Serif 4）/ 无衬线（Inter）/ 等宽（JetBrains Mono）
  *       三套字体变量、防 FOUC 主题初始化脚本、站点元数据
  */
@@ -49,9 +49,16 @@ const iGM_Exam_Mono = JetBrains_Mono({
 
 // 核心逻辑 //
 export const metadata: Metadata = {
-  title: "iG&M Educational Examination Institute",
+  title: "iGC&M Education Examinations Research Institute",
   description:
-    "iG&M Educational Examination Institute — Academic Assessment Platform",
+    "iGC&M Education Examinations Research Institute — Academic Assessment Platform",
+  openGraph: {
+    title: "iGC&M Education Examinations Research Institute",
+    description:
+      "iGC&M Education Examinations Research Institute — Academic Assessment Platform",
+    siteName: "iGC&M Education Examinations Research Institute",
+    type: "website",
+  },
 };
 
 export const viewport: Viewport = {

@@ -64,7 +64,7 @@ import { iGM_AIError } from "./iGM_Services/iGM_AIService";
 import { iGM_QuotaError } from "./iGM_Services/iGM_QuotaService";
 // 全站搜索：帖子 / 资源 / 用户 / 组织聚合搜索
 import { G_Search } from "./iGM_Routes/G_Search";
-// iG&M 教育考试系统：试卷业务错误（上传/识别/发布等）
+// iGC&M 教育考试系统：试卷业务错误（上传/识别/发布等）
 import { G_Exam } from "./iGM_Routes/G_Exam";
 import { iGM_ExamError } from "./iGM_Services/iGM_ExamService";
 import { iGM_EnsureExamStorageRoot } from "./iGM_Services/iGM_ExamIngestService";
@@ -166,7 +166,7 @@ const iGM_Server = new Elysia()
       set.status = error.status;
       return iGM_Fail(error.status, error.message);
     }
-    // iG&M 教育考试系统：试卷业务错误（上传/识别/发布/删除等）
+    // iGC&M 教育考试系统：试卷业务错误（上传/识别/发布/删除等）
     if (error instanceof iGM_ExamError) {
       set.status = error.status;
       return iGM_Fail(error.status, error.message);
@@ -222,7 +222,7 @@ const iGM_Server = new Elysia()
   .use(G_AI)
   // 全站搜索：帖子 / 资源 / 用户 / 组织聚合搜索（公开只读，按 IP 限流）
   .use(G_Search)
-  // iG&M 教育考试系统：试卷列表 / 详情 / 上传识别 / 校对 / 发布（/api/exam/*）
+  // iGC&M 教育考试系统：试卷列表 / 详情 / 上传识别 / 校对 / 发布（/api/exam/*）
   .use(G_Exam)
   // 根路径占位
   .get("/", () => ({
@@ -235,13 +235,13 @@ const iGM_Server = new Elysia()
 // 启动前确保上传根目录存在（建目录不幂等、空实现即可安全重复调用）
 await iGM_EnsureUploadRoot();
 
-// iG&M 教育考试系统：确保试卷临时目录与转换日志目录存在（D:/IGWEB/uploads/exams/{temp,logs}）
+// iGC&M 教育考试系统：确保试卷临时目录与转换日志目录存在（D:/IGWEB/uploads/exams/{temp,logs}）
 await iGM_EnsureExamStorageRoot();
 
 // 启动时自动执行数据库迁移
 await iGM_RunMigrations();
 
-// iG&M 教育考试系统：注册临时文件清理任务（转换失败 24 小时 / 未完成 7 天）
+// iGC&M 教育考试系统：注册临时文件清理任务（转换失败 24 小时 / 未完成 7 天）
 iGM_StartExamCleanup();
 
 // 仅在本地直接运行时监听端口（被导入时不占用端口）
