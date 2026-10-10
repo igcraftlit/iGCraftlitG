@@ -301,7 +301,8 @@
 .primary,
 .confirm,
 .reparse,
-.delete {
+.delete,
+.discard {
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -335,6 +336,11 @@
   background: color-mix(in srgb, var(--igm-gold) 14%, transparent);
 }
 
+.discard:hover:not(:disabled) {
+  border-color: var(--igm-text-muted);
+  background: color-mix(in srgb, var(--igm-text-muted) 12%, transparent);
+}
+
 .delete {
   color: var(--igm-cinnabar);
   border-color: color-mix(in srgb, var(--igm-cinnabar) 45%, transparent);
@@ -348,9 +354,73 @@
 .primary:disabled,
 .confirm:disabled,
 .reparse:disabled,
-.delete:disabled {
+.delete:disabled,
+.discard:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+/* ============================= 解析进度 ============================= */
+.progressBox {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  margin-bottom: 6px;
+  border: 1px solid var(--igm-line-soft);
+  border-radius: var(--igm-radius);
+  background: var(--igm-paper-sink);
+}
+
+.progressHead {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.progressLabel {
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  color: var(--igm-copper);
+}
+
+.progressValue {
+  margin-left: auto;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--igm-text-muted);
+}
+
+.progressTrack {
+  height: 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--igm-line) 60%, transparent);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--igm-copper);
+  transition: width 0.3s ease;
+}
+
+.progressFillFailed {
+  background: var(--igm-cinnabar);
+}
+
+.progressNote {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+.progressNoteError {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--igm-cinnabar);
 }
 
 /* ============================= 解析全文与预览 ============================= */
@@ -408,6 +478,11 @@
 
 .ps_pending {
   color: var(--igm-text-muted);
+}
+
+.ps_parsing {
+  color: var(--igm-copper);
+  border-color: color-mix(in srgb, var(--igm-copper) 45%, transparent);
 }
 
 .ps_parsed {

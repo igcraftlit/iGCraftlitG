@@ -4,8 +4,8 @@
  * 路由：全局（调用后端 /api/exam/*）
  * 模块：iGM_ExamClient
  * 作用：iG&M 教育考试系统唯一的后端访问出口
- * 内容：统一响应解包、列表 / 详情 / 管理端列表与详情、上传解析建档、
- *       校对更新、确认删除原文件、重新解析、删除、交卷记录、原始文件地址构造
+ * 内容：统一响应解包、列表 / 详情 / 管理端列表与详情、上传解析建档、解析进度轮询、
+ *       结构化内容块契约、图片地址构造、校对更新、确认删除原文件、重新解析、删除、交卷记录
  * 说明：统一响应结构 { success, code, message, data }；错误归一化后抛出可读信息
  */
 
@@ -16,8 +16,64 @@ import { iGM_ExamConfig } from "./iGM_ExamConfig";
 /** 试卷状态：草稿 / 已发布 / 已关闭 */
 export type iGM_ExamStatus = "draft" | "published" | "closed";
 
-/** 解析状态：待解析 / 已解析 / 已确认 / 解析失败 */
-export type iGM_ExamParseStatus = "pending" | "parsed" | "confirmed" | "failed";
+/** 解析状态：待解析 / 解析中 / 已解析 / 已确认 / 解析失败 */
+export type iGM_ExamParseStatus =
+  | "pending"
+  | "parsing"
+  | "parsed"
+  | "confirmed"
+  | "failed";
+
+/** 结构化内容块类型 */
+export type iGM_ExamBlockType =
+  | "heading"
+  | "paragraph"
+  | "list"
+  | "table"
+  | "image"
+  | "formula"
+  | "question";
+
+/** 结构化内容块（与后端 iGM_ExamBlock 契约一致） */
+export interface iGM_ExamBlock {
+  id: string;
+  type: iGM_ExamBlockType;
+  /** heading：层级 1-6 */
+  level?: number;
+  /** heading / paragraph / formula / question 题干 */
+  text?: string;
+  /** list：是否有序列表 */
+  ordered?: boolean;
+  /** list：列表项文本 */
+  items?: string[];
+  /** table：二维单元格文本（首行为表头） */
+  rows?: string[][];
+  /** image：图片文件名（配合 imageApiBase 拼接地址） */
+  src?: string;
+  width?: number;
+  height?: number;
+  /** question：题号 */
+  number?: string;
+  /** question：可选项文本 */
+  options?: string[];
+  /** question：参考答案 */
+  answer?: string;
+  /** question：分值 */
+  score?: number;
+  /** 解析来源页码（1 起） */
+  page?: number;
+}
+
+/** 解析进度快照 */
+export interface iGM_ExamParseProgress {
+  examId: string;
+  status: iGM_ExamParseStatus;
+  parsedPages: number;
+  totalPages: number;
+  blockCount: number;
+  percent: number;
+  error: string;
+}
 
 /** 统一响应结构 */
 interface iGM_ExamEnvelope<T> {
@@ -47,16 +103,20 @@ export interface iGM_ExamAdminListItem extends iGM_ExamListItem {
   submissionCount: number;
 }
 
-/** 试卷详情（含解析全文与原始文件信息） */
+/** 试卷详情（含结构化内容块与原始文件信息） */
 export interface iGM_ExamDetail extends iGM_ExamListItem {
   reviewer: string;
   notice: string;
-  /** 解析后的试卷全文（Markdown） */
-  contentMarkdown: string;
+  /** 结构化内容块（前端按类型用自定义组件渲染） */
+  contentBlocks: iGM_ExamBlock[];
+  /** 解析进度快照 */
+  parseProgress: iGM_ExamParseProgress;
   /** 原始文件是否仍在服务器上（管理员确认后为 false） */
   hasOriginalFile: boolean;
   /** 原始文件预览 / 下载接口地址；无原始文件时为空串 */
   fileApiPath: string;
+  /** 图片接口前缀（配合 block.src 拼接）；无图片目录时为空串 */
+  imageApiBase: string;
   /** 原始文件名（仅用于展示） */
   fileName: string;
   /** 原始文件格式：pdf 可内联预览，其余仅下载 */
@@ -74,8 +134,8 @@ export interface iGM_ExamUpdateInput {
   totalScore: number | null;
   questionCount: number | null;
   notice: string;
-  /** 解析全文（Markdown），可手动修改 */
-  contentMarkdown: string;
+  /** 结构化内容块，可手动修改、调整、删除 */
+  contentBlocks: iGM_ExamBlock[];
 }
 
 /** 交卷结果 */
@@ -174,6 +234,12 @@ export function iGM_Exam_AbsoluteUrl(path: string): string {
   return `${iGM_ExamConfig.apiBase}${path}`;
 }
 
+/** 图片块地址：以详情返回的 imageApiBase 为前缀，拼上图片文件名 */
+export function iGM_Exam_ImageUrl(base: string, src: string): string {
+  if (!base || !src) return "";
+  return `${iGM_ExamConfig.apiBase}${base}${encodeURIComponent(src)}`;
+}
+
 /* ---------- 公开接口 ---------- */
 
 /** 已发布试卷列表 */
@@ -223,7 +289,7 @@ export async function iGM_Exam_FetchAdminDetail(
   return data.exam;
 }
 
-/** 上传试卷文档：解析全文并建档为草稿 */
+/** 上传试卷文档：后端落盘后立即返回，解析在后台进行 */
 export async function iGM_Exam_Upload(file: File): Promise<iGM_ExamDetail> {
   const form = new FormData();
   form.append("file", file);
@@ -234,11 +300,25 @@ export async function iGM_Exam_Upload(file: File): Promise<iGM_ExamDetail> {
   return data.exam;
 }
 
-/** 校对更新（元数据 + 解析全文，不删除原始文件） */
+/** 查询解析进度（上传 / 重新解析后轮询） */
+export async function iGM_Exam_FetchProgress(
+  examId: string,
+): Promise<iGM_ExamParseProgress> {
+  const data = await iGM_Exam_Get<{ progress: iGM_ExamParseProgress }>(
+    `/api/exam/admin/progress?examId=${encodeURIComponent(examId)}`,
+  );
+  return data.progress;
+}
+
+/** 校对更新（元数据 + 结构化内容块，不删除原始文件） */
 export async function iGM_Exam_Update(
   input: iGM_ExamUpdateInput,
 ): Promise<void> {
-  await iGM_Exam_Post<{ updated: boolean }>("/api/exam/update", input);
+  // 内容块以 JSON 字符串提交，后端统一按字符串解析后再落 JSONB
+  await iGM_Exam_Post<{ updated: boolean }>("/api/exam/update", {
+    ...input,
+    contentBlocks: JSON.stringify(input.contentBlocks),
+  });
 }
 
 /** 确认并删除原始文件，同时发布试卷 */
@@ -259,12 +339,14 @@ export async function iGM_Exam_Delete(examId: string): Promise<void> {
 // 导出 //
 export default {
   iGM_Exam_AbsoluteUrl,
+  iGM_Exam_ImageUrl,
   iGM_Exam_FetchList,
   iGM_Exam_FetchDetail,
   iGM_Exam_Submit,
   iGM_Exam_FetchAdminList,
   iGM_Exam_FetchAdminDetail,
   iGM_Exam_Upload,
+  iGM_Exam_FetchProgress,
   iGM_Exam_Update,
   iGM_Exam_Confirm,
   iGM_Exam_Reparse,

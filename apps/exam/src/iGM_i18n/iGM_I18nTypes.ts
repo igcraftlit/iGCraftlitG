@@ -140,11 +140,48 @@ export interface iGM_I18nDict {
   adminConfirmed: string;
   adminReparsed: string;
   adminDeleted: string;
+  adminDiscard: string;
+  adminDiscarded: string;
+  adminDiscardTitle: string;
+  adminDiscardBody: string;
+  // 解析进度
+  adminProgressTitle: string;
+  adminProgressPages: string;
+  adminProgressWaiting: string;
+  adminProgressDone: string;
+  adminProgressFailed: string;
+  adminParsingBanner: string;
+  // 结构化内容块
+  blockPage: string;
+  blockMoveUp: string;
+  blockMoveDown: string;
+  blockDelete: string;
+  blockLevel: string;
+  blockTextPlaceholder: string;
+  blockListPlaceholder: string;
+  blockListHint: string;
+  blockTablePlaceholder: string;
+  blockTableHint: string;
+  blockCaptionPlaceholder: string;
+  blockNumber: string;
+  blockScore: string;
+  blockQuestionStemPlaceholder: string;
+  blockOptionsPlaceholder: string;
+  blockOptionsHint: string;
+  blockAnswerPlaceholder: string;
+  blockTypeHeading: string;
+  blockTypeParagraph: string;
+  blockTypeList: string;
+  blockTypeTable: string;
+  blockTypeImage: string;
+  blockTypeFormula: string;
+  blockTypeQuestion: string;
   // 状态标签
   statusDraft: string;
   statusPublished: string;
   statusClosed: string;
   parseStatusPending: string;
+  parseStatusParsing: string;
   parseStatusParsed: string;
   parseStatusConfirmed: string;
   parseStatusFailed: string;

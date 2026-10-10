@@ -12,6 +12,7 @@
 import { iGM_Db } from "../iGM_Database/iGM_Database";
 import { iGM_RandomUuid } from "../iGM_Services/iGM_SecurityService";
 import type {
+  iGM_ExamBlock,
   iGM_ExamFileRow,
   iGM_ExamRecognized,
   iGM_ExamRow,
@@ -87,10 +88,9 @@ export async function iGM_ListExamIdCreatedPairs(): Promise<
     .all()) as { iGM_Id: string; iGM_CreatedAt: string }[];
 }
 
-/** 新建试卷（草稿），返回新试卷 ID */
+/** 新建试卷（草稿），返回新试卷 ID；结构化内容块待后台解析完成后写入 */
 export async function iGM_InsertExam(
   fields: iGM_ExamWriteFields,
-  contentMarkdown: string,
   parseStatus: string,
   createdBy: string | null,
 ): Promise<string> {
@@ -100,9 +100,9 @@ export async function iGM_InsertExam(
     `INSERT INTO iGM_Exams
        (iGM_Id, iGM_Title, iGM_Subject, iGM_Issuer, iGM_Reviewer,
         iGM_Duration, iGM_TotalScore, iGM_QuestionCount, iGM_Notice,
-        iGM_ContentMarkdown, iGM_ParseStatus, iGM_OriginalFileDeleted,
+        iGM_ContentBlocks, iGM_ParseStatus, iGM_OriginalFileDeleted,
         iGM_Status, iGM_CreatedBy, iGM_CreatedAt, iGM_UpdatedAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, 'draft', ?, ?, ?)`,
     [
       id,
       fields.title,
@@ -113,7 +113,6 @@ export async function iGM_InsertExam(
       fields.totalScore,
       fields.questionCount,
       fields.notice,
-      contentMarkdown,
       parseStatus,
       false,
       createdBy,
@@ -125,20 +124,22 @@ export async function iGM_InsertExam(
 }
 
 /**
- * 校对更新试卷元数据与解析全文（不改状态）
+ * 校对 / 解析结果更新试卷元数据与结构化内容块（不改状态）
+ * @param contentBlocks 结构化内容块；null 表示清空
  * @param parseStatus 为空时不改动解析状态
  */
 export async function iGM_UpdateExamFields(
   examId: string,
   fields: iGM_ExamWriteFields,
-  contentMarkdown: string,
+  contentBlocks: iGM_ExamBlock[] | null,
   parseStatus: string | null,
 ): Promise<void> {
+  const blocksJson = contentBlocks ? JSON.stringify(contentBlocks) : null;
   await iGM_Db.run(
     `UPDATE iGM_Exams SET
        iGM_Title = ?, iGM_Subject = ?, iGM_Issuer = ?, iGM_Reviewer = ?,
        iGM_Duration = ?, iGM_TotalScore = ?, iGM_QuestionCount = ?,
-       iGM_Notice = ?, iGM_ContentMarkdown = ?,
+       iGM_Notice = ?, iGM_ContentBlocks = ?::jsonb,
        iGM_ParseStatus = COALESCE(?, iGM_ParseStatus),
        iGM_UpdatedAt = ?
      WHERE iGM_Id = ?`,
@@ -151,11 +152,64 @@ export async function iGM_UpdateExamFields(
       fields.totalScore,
       fields.questionCount,
       fields.notice,
-      contentMarkdown,
+      blocksJson,
       parseStatus,
       new Date().toISOString(),
       examId,
     ],
+  );
+}
+
+/** 写入图片目录路径（相对存储根目录；非 PDF 试卷写入 null） */
+export async function iGM_SetExamImagesPath(
+  examId: string,
+  imagesPath: string | null,
+): Promise<void> {
+  await iGM_Db.run(
+    `UPDATE iGM_Exams SET iGM_ImagesPath = ?, iGM_UpdatedAt = ?
+      WHERE iGM_Id = ?`,
+    [imagesPath, new Date().toISOString(), examId],
+  );
+}
+
+/** 更新试卷解析状态（parsing / parsed / failed） */
+export async function iGM_SetExamParseStatus(
+  examId: string,
+  parseStatus: string,
+): Promise<void> {
+  await iGM_Db.run(
+    `UPDATE iGM_Exams SET iGM_ParseStatus = ?, iGM_UpdatedAt = ?
+      WHERE iGM_Id = ?`,
+    [parseStatus, new Date().toISOString(), examId],
+  );
+}
+
+/** 更新试卷文件的解析进度（页数 / 总页数 / 状态） */
+export async function iGM_UpdateExamFileProgress(
+  examId: string,
+  parsedPages: number,
+  totalPages: number,
+  parseStatus: string | null,
+): Promise<void> {
+  await iGM_Db.run(
+    `UPDATE iGM_ExamFiles SET
+       iGM_ParsedPages = ?, iGM_TotalPages = ?,
+       iGM_ParseStatus = COALESCE(?, iGM_ParseStatus)
+     WHERE iGM_ExamId = ?`,
+    [parsedPages, totalPages, parseStatus, examId],
+  );
+}
+
+/** 标记试卷文件解析失败并记录原因（保留已完成页数） */
+export async function iGM_MarkExamFileFailed(
+  examId: string,
+  parseError: string,
+): Promise<void> {
+  await iGM_Db.run(
+    `UPDATE iGM_ExamFiles SET
+       iGM_ParseStatus = 'failed', iGM_ParseError = ?
+     WHERE iGM_ExamId = ?`,
+    [parseError, examId],
   );
 }
 
@@ -305,6 +359,10 @@ export default {
   iGM_ListExamIdCreatedPairs,
   iGM_InsertExam,
   iGM_UpdateExamFields,
+  iGM_SetExamImagesPath,
+  iGM_SetExamParseStatus,
+  iGM_UpdateExamFileProgress,
+  iGM_MarkExamFileFailed,
   iGM_ConfirmExam,
   iGM_MarkExamOriginalDeleted,
   iGM_DeleteExam,

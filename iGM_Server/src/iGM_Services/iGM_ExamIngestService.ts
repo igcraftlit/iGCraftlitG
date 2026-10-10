@@ -1,13 +1,15 @@
 /**
  * 文件路径：iGM_Server/src/iGM_Services/iGM_ExamIngestService.ts
  * 所属层：后端 / 业务服务层
- * 路由：G_Exam（/api/exam/upload、/api/exam/reparse）
+ * 路由：G_Exam（/api/exam/upload、/api/exam/reparse 内部调用）
  * 模块：iGM_ExamIngestService
- * 作用：试卷文档（PDF / DOC / DOCX / TXT / MD）落盘临时目录、解析为 Markdown、正则识别元数据
- * 内容：iGM_ExamError 业务错误类型、临时目录解析与路径安全校验、
- *       文档格式校验与落盘（随机后缀命名）、pdf-parse / mammoth / word-extractor 解析、
+ * 作用：试卷文档落盘临时目录、按格式解析为结构化内容块、图片目录管理与元数据正则识别
+ * 内容：iGM_ExamError 业务错误类型、临时/图片目录解析与路径安全校验、
+ *       文档格式校验与落盘（随机后缀命名）、PDF 逐页解析（pdfjs-dist）与
+ *       其余格式（DOC / DOCX / TXT / MD）文本块转换、图片字节读取、
  *       Title/Subject/Issuer/Reviewer/Duration/Total Score/Question Count 中英文双语正则识别
- * 说明：原始文件先保留在临时目录，管理员确认后才删除；磁盘绝对路径绝不出现在对外 DTO
+ * 说明：原始文件先保留在临时目录，管理员确认后才删除；磁盘绝对路径绝不出现在对外 DTO；
+ *       图片按试卷独立成目录（exams/images/<examId>），Block 内仅保存文件名
  */
 
 // 导入依赖 //
@@ -17,7 +19,14 @@ import { iGM_Config } from "../iGM_Config/iGM_Config";
 import { iGM_RandomUuid } from "./iGM_SecurityService";
 import { iGM_SanitizeOriginalName } from "./iGM_StorageService";
 import {
+  iGM_BlocksToPlainText,
+  iGM_ConvertTextToBlocks,
+  iGM_ParsePdfBlocks,
+  type iGM_ExamParseHandlers,
+} from "./iGM_ExamBlockParser";
+import {
   iGM_ResolveExamFileType,
+  type iGM_ExamBlock,
   type iGM_ExamFileType,
   type iGM_ExamRecognized,
 } from "../iGM_Types/iGM_Exam";
@@ -46,11 +55,10 @@ export interface iGM_ExamStoredFile {
   fileSize: number;
 }
 
-/** 上传解析结果：落盘信息 + 解析全文 + 识别字段 */
-export interface iGM_ExamIngestResult {
-  stored: iGM_ExamStoredFile;
-  markdown: string;
-  recognized: iGM_ExamRecognized;
+/** 单次解析产出：结构化内容块 + 用于元数据识别的纯文本 */
+export interface iGM_ExamParseOutcome {
+  blocks: iGM_ExamBlock[];
+  plainText: string;
 }
 
 // 核心逻辑 //
@@ -58,18 +66,52 @@ export interface iGM_ExamIngestResult {
 const iGM_ExamMaxFileSize = Number(
   process.env.IGM_EXAM_MAX_FILE_SIZE ?? 50 * 1024 * 1024,
 );
-/** 解析全文入库长度上限，避免异常文档产生超大内容 */
-const iGM_ExamContentLimit = 400000;
+
+/** 图片文件名白名单：uuid 主名 + 受控扩展名，杜绝路径穿越 */
+const iGM_ExamImageName = /^[A-Za-z0-9-]{1,64}\.(?:png|jpg|jpeg)$/;
+
+/** 试卷存储根目录：D:/IGWEB/uploads */
+function iGM_ExamStorageRoot(): string {
+  return process.env.IGM_EXAM_UPLOAD_DIR ?? iGM_Config.upload.rootDir;
+}
 
 /** 试卷临时文件目录：D:/IGWEB/uploads/exams/temp */
 export function iGM_ExamTempDir(): string {
-  const root = process.env.IGM_EXAM_UPLOAD_DIR ?? iGM_Config.upload.rootDir;
-  return join(root, "exams", "temp");
+  return join(iGM_ExamStorageRoot(), "exams", "temp");
+}
+
+/** 试卷图片根目录：D:/IGWEB/uploads/exams/images */
+export function iGM_ExamImagesRoot(): string {
+  return join(iGM_ExamStorageRoot(), "exams", "images");
+}
+
+/** 指定试卷的图片目录绝对路径 */
+export function iGM_ExamImagesDir(examId: string): string {
+  return join(iGM_ExamImagesRoot(), examId);
+}
+
+/** 指定试卷图片目录相对存储根目录的路径（入库 iGM_ImagesPath） */
+export function iGM_ExamImagesRelativePath(examId: string): string {
+  return `exams/images/${examId}`;
 }
 
 /** 确保试卷临时目录存在 */
 export async function iGM_EnsureExamStorageRoot(): Promise<void> {
   await mkdir(iGM_ExamTempDir(), { recursive: true });
+}
+
+/** 确保指定试卷的图片目录存在 */
+export async function iGM_EnsureExamImagesDir(examId: string): Promise<void> {
+  await mkdir(iGM_ExamImagesDir(examId), { recursive: true });
+}
+
+/** 删除指定试卷的图片目录（试卷删除 / 重新解析前调用） */
+export async function iGM_RemoveExamImagesDir(examId: string): Promise<void> {
+  try {
+    await rm(iGM_ExamImagesDir(examId), { recursive: true, force: true });
+  } catch {
+    console.warn(`[iGM_ExamIngestService] 删除试卷图片目录失败：${examId}`);
+  }
 }
 
 /** 把相对路径解析为绝对路径，并强制校验仍位于试卷临时目录内 */
@@ -78,6 +120,24 @@ function iGM_ResolveExamPath(relativePath: string): string {
   const target = resolve(root, relativePath);
   if (target !== root && !target.startsWith(root + sep)) {
     throw new iGM_ExamError("试卷文件路径非法", 400);
+  }
+  return target;
+}
+
+/** 试卷临时文件的绝对路径（解析 DOC 等需要文件路径的格式时使用） */
+export function iGM_ExamTempAbsolutePath(relativePath: string): string {
+  return iGM_ResolveExamPath(relativePath);
+}
+
+/** 校验图片文件名并解析为绝对路径，强制仍位于该试卷的图片目录内 */
+function iGM_ResolveExamImagePath(examId: string, fileName: string): string {
+  if (!iGM_ExamImageName.test(fileName)) {
+    throw new iGM_ExamError("试卷图片路径非法", 400);
+  }
+  const root = resolve(iGM_ExamImagesDir(examId));
+  const target = resolve(root, fileName);
+  if (!target.startsWith(root + sep)) {
+    throw new iGM_ExamError("试卷图片路径非法", 400);
   }
   return target;
 }
@@ -115,7 +175,7 @@ function iGM_AssertExamFile(
   }
 }
 
-/** 把纯文本按空行切分为 Markdown 段落 */
+/** 把纯文本按空行切分为段落（保留单行换行） */
 function iGM_TextToMarkdown(text: string): string {
   return text
     .replace(/\r\n?/g, "\n")
@@ -124,20 +184,6 @@ function iGM_TextToMarkdown(text: string): string {
     .map((block) => block.replace(/^\n+|\n+$/g, ""))
     .filter((block) => block.trim().length > 0)
     .join("\n\n");
-}
-
-/** 抽取 PDF 全文文本（pdf-parse v2） */
-async function iGM_ExtractPdfText(bytes: Uint8Array): Promise<string> {
-  const { PDFParse } = await import("pdf-parse");
-  const parser = new PDFParse({ data: bytes });
-  try {
-    const full = await parser.getText();
-    return full.text ?? "";
-  } catch {
-    throw new iGM_ExamError("PDF 文本解析失败，请确认文件未加密", 422);
-  } finally {
-    await parser.destroy().catch(() => undefined);
-  }
 }
 
 /** 解析 DOCX：mammoth 转 HTML，再经 turndown 转 Markdown */
@@ -182,19 +228,12 @@ async function iGM_ExtractDoc(
   }
 }
 
-/**
- * 按格式解析文档为 Markdown 全文
- * @param absolutePath 已落盘的绝对路径（DOC 抽取需要文件路径）
- */
-async function iGM_ParseExamDocument(
+/** 按格式解析非 PDF 文档为 Markdown 全文 */
+async function iGM_ParseTextDocument(
   absolutePath: string,
   fileType: iGM_ExamFileType,
   bytes: Uint8Array,
 ): Promise<{ markdown: string; plainText: string }> {
-  if (fileType === "pdf") {
-    const text = await iGM_ExtractPdfText(bytes);
-    return { markdown: iGM_TextToMarkdown(text), plainText: text };
-  }
   if (fileType === "docx") {
     return await iGM_ExtractDocx(bytes);
   }
@@ -212,7 +251,7 @@ async function iGM_ParseExamDocument(
 /**
  * 将上传文档写入临时目录（uuid 命名，防冲突），返回落盘信息
  */
-async function iGM_StoreExamTempFile(
+export async function iGM_StoreExamTempFile(
   originalName: string,
   bytes: Uint8Array,
 ): Promise<iGM_ExamStoredFile> {
@@ -240,6 +279,35 @@ async function iGM_StoreExamTempFile(
     fileType,
     fileSize: bytes.byteLength,
   };
+}
+
+/**
+ * 按格式把文档解析为结构化内容块
+ * - PDF：pdfjs-dist 逐页解析文字与图片，图片落盘到该试卷的图片目录，逐页上报进度
+ * - 其余格式：抽取文本后按 Markdown 标记转换为标题 / 列表 / 段落块（单页，立即上报完成）
+ */
+export async function iGM_ParseExamDocumentToBlocks(
+  absolutePath: string,
+  fileType: iGM_ExamFileType,
+  bytes: Uint8Array,
+  examId: string,
+  handlers: iGM_ExamParseHandlers = {},
+): Promise<iGM_ExamParseOutcome> {
+  if (fileType === "pdf") {
+    await iGM_EnsureExamImagesDir(examId);
+    const blocks = await iGM_ParsePdfBlocks(
+      bytes,
+      iGM_ExamImagesDir(examId),
+      handlers,
+    );
+    return { blocks, plainText: iGM_BlocksToPlainText(blocks) };
+  }
+
+  const parsed = await iGM_ParseTextDocument(absolutePath, fileType, bytes);
+  const blocks = iGM_ConvertTextToBlocks(parsed.markdown);
+  await handlers.onTotal?.(1);
+  await handlers.onPage?.(1, 1, blocks.length);
+  return { blocks, plainText: parsed.plainText };
 }
 
 /** 第一个匹配分组的文本（中英文模式依次尝试），未命中返回空串 */
@@ -310,48 +378,7 @@ export function iGM_RecognizeExamMeta(rawText: string): iGM_ExamRecognized {
   return { title, subject, issuer, reviewer, duration, totalScore, questionCount };
 }
 
-/**
- * 试卷入库主流程：校验并落盘临时文件 → 解析为 Markdown → 正则识别元数据
- * 解析失败时抛出业务错误，由路由层转换为「必须转换为 DOCX 或 PDF」类提示
- */
-export async function iGM_IngestExamDocument(
-  file: File,
-): Promise<iGM_ExamIngestResult> {
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  const stored = await iGM_StoreExamTempFile(file.name, bytes);
-  const absolutePath = iGM_ResolveExamPath(stored.relativePath);
-  const parsed = await iGM_ParseExamDocument(
-    absolutePath,
-    stored.fileType,
-    bytes,
-  );
-  return {
-    stored,
-    markdown: parsed.markdown.slice(0, iGM_ExamContentLimit),
-    recognized: iGM_RecognizeExamMeta(parsed.plainText),
-  };
-}
-
-/** 按已有临时文件重新解析（管理员「重新解析」使用） */
-export async function iGM_ReparseExamDocument(
-  relativePath: string,
-  fileType: iGM_ExamFileType,
-): Promise<{ markdown: string; recognized: iGM_ExamRecognized }> {
-  const absolutePath = iGM_ResolveExamPath(relativePath);
-  let bytes: Uint8Array;
-  try {
-    bytes = new Uint8Array(await readFile(absolutePath));
-  } catch {
-    throw new iGM_ExamError("原始文件不存在，无法重新解析", 404);
-  }
-  const parsed = await iGM_ParseExamDocument(absolutePath, fileType, bytes);
-  return {
-    markdown: parsed.markdown.slice(0, iGM_ExamContentLimit),
-    recognized: iGM_RecognizeExamMeta(parsed.plainText),
-  };
-}
-
-/** 读取临时文件字节（站内预览 / 下载使用） */
+/** 读取临时文件字节（站内预览 / 下载 / 解析使用） */
 export async function iGM_ReadExamTempFile(
   relativePath: string,
 ): Promise<Uint8Array> {
@@ -375,14 +402,35 @@ export async function iGM_RemoveExamTempFile(
   }
 }
 
+/** 读取该试卷图片目录内的图片字节（前端渲染 Block 图片使用） */
+export async function iGM_ReadExamImage(
+  examId: string,
+  fileName: string,
+): Promise<Uint8Array> {
+  const absolutePath = iGM_ResolveExamImagePath(examId, fileName);
+  try {
+    const buffer = await readFile(absolutePath);
+    return new Uint8Array(buffer);
+  } catch {
+    throw new iGM_ExamError("试卷图片不存在", 404);
+  }
+}
+
 // 导出 //
 export default {
   iGM_ExamError,
   iGM_ExamTempDir,
+  iGM_ExamImagesRoot,
+  iGM_ExamImagesDir,
+  iGM_ExamImagesRelativePath,
   iGM_EnsureExamStorageRoot,
+  iGM_EnsureExamImagesDir,
+  iGM_RemoveExamImagesDir,
+  iGM_ExamTempAbsolutePath,
+  iGM_StoreExamTempFile,
+  iGM_ParseExamDocumentToBlocks,
   iGM_RecognizeExamMeta,
-  iGM_IngestExamDocument,
-  iGM_ReparseExamDocument,
   iGM_ReadExamTempFile,
   iGM_RemoveExamTempFile,
+  iGM_ReadExamImage,
 };
