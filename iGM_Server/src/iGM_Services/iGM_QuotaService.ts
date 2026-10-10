@@ -28,7 +28,7 @@ import type {
   iGM_AICallStatsResult,
   iGM_QuotaChannel,
 } from "../iGM_Types/iGM_Quota";
-import { iGM_DetermineChargePeriod, iGM_Round3, iGM_CoinRate } from "../iGM_Types/iGM_Quota";
+import { iGM_DetermineChargePeriod, iGM_Round3, iGM_CoinRate, iGM_IsQuotaTransactionType } from "../iGM_Types/iGM_Quota";
 import {
   iGM_CountQuotaCallsSince,
   iGM_ListTopQuotaUsers,
