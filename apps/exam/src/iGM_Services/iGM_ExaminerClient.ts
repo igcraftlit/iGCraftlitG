@@ -5,7 +5,8 @@
  *       E_Admin_Exam（/admin）、E_Admin_Upload（/admin/upload）
  * 模块：iGM_ExaminerClient
  * 作用：命题创作者（Examiner）申请、准入状态与命题方预设的后端访问出口
- * 内容：登录态读取（/G_Auth/me）、准入状态查询、申请提交、命题方预设的增删改查
+ * 内容：登录态读取（/G_Auth/me）、准入状态查询、命题者编号档案读取、申请提交、
+ *       命题方预设的增删改查
  * 说明：统一携带 Cookie（credentials: "include"），解包 { success, code, message, data }，
  *       失败抛出 iGM_ExamRequestError；审核面板（review）在社区主站实现，本模块不包含
  */
@@ -68,6 +69,12 @@ export interface iGM_IssuerPresetDto {
   mine: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+/** 命题者编号档案（考试站右上角徽标使用） */
+export interface iGM_CreatorProfile {
+  isExaminer: boolean;
+  creatorNumber: string;
 }
 
 /** 当前登录用户（/G_Auth/me 返回的 user 字段） */
@@ -186,6 +193,37 @@ export async function iGM_Examiner_SubmitApply(
   return data.application;
 }
 
+/* ---------- 命题者编号档案 ---------- */
+
+/**
+ * 读取当前登录用户的命题者编号档案。
+ * 未登录或非在册命题创作者时，后端返回 HTTP 200 + success:false（code:"NOT_EXAMINER"），
+ * 此时返回 null；网络异常同样返回 null，绝不抛出，供徽标静默降级。
+ */
+export async function iGM_Examiner_FetchCreatorProfile(): Promise<iGM_CreatorProfile | null> {
+  try {
+    const response = await fetch(
+      `${iGM_ExamConfig.apiBase}/api/exam/creator/profile`,
+      {
+        headers: { Accept: "application/json" },
+        credentials: "include",
+      },
+    );
+    if (!response.ok) return null;
+    const payload = (await response.json()) as {
+      success: boolean;
+      code: number | string;
+      data: iGM_CreatorProfile | null;
+    };
+    if (!payload.success || payload.code === "NOT_EXAMINER" || !payload.data) {
+      return null;
+    }
+    return { isExaminer: true, creatorNumber: payload.data.creatorNumber };
+  } catch {
+    return null;
+  }
+}
+
 /* ---------- 命题方预设 ---------- */
 
 /** 命题方预设列表（含全站可见与他人共享的预设） */
@@ -234,6 +272,7 @@ export async function iGM_Examiner_DeletePreset(
 export default {
   iGM_Examiner_FetchMe,
   iGM_Examiner_FetchStatus,
+  iGM_Examiner_FetchCreatorProfile,
   iGM_Examiner_SubmitApply,
   iGM_Examiner_FetchPresets,
   iGM_Examiner_CreatePreset,

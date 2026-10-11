@@ -1,0 +1,130 @@
+/**
+ * 文件路径：apps/exam/src/iGM_Components/iGM_ExamCreatorBadge/iGM_ExamCreatorBadge.module.css
+ * 所属层：前端 / 组件样式层
+ * 路由：全局（刊头右上角）
+ * 模块：iGM_ExamCreatorBadge
+ * 作用：命题创作者编号徽标样式（仪器刻度徽章 + 弹出编号面板）
+ * 内容：徽标容器、触发徽标、编号文本、弹出面板、复制按钮、窄屏仅图标降级
+ * 说明：沿用学术仪器风格，方角细边与铜金 / 墨蓝配色，不使用圆角阴影装饰
+ */
+
+/* ============================= 徽标容器 ============================= */
+.wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ============================= 触发徽标 ============================= */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 9px;
+  background: transparent;
+  border: 1px solid var(--igm-line-soft);
+  border-radius: var(--igm-radius);
+  color: var(--igm-ink);
+  transition: color 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+.badge:hover {
+  border-color: var(--igm-copper);
+  background: color-mix(in srgb, var(--igm-gold) 12%, transparent);
+}
+
+.wrap[data-open="true"] .badge {
+  border-color: var(--igm-copper);
+  background: color-mix(in srgb, var(--igm-gold) 16%, transparent);
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--igm-copper);
+}
+
+.number {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+/* ============================= 弹出面板 ============================= */
+.popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 9px;
+  background: var(--igm-paper-raised);
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+  box-shadow: var(--igm-shadow-tight);
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.16s ease;
+}
+
+.wrap:hover .popover,
+.wrap[data-open="true"] .popover {
+  opacity: 1;
+  visibility: visible;
+}
+
+.popoverNumber {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--igm-ink);
+}
+
+.popoverLabel {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--igm-text-muted);
+}
+
+/* ============================= 复制按钮 ============================= */
+.copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 7px;
+  background: transparent;
+  border: 1px solid var(--igm-line-soft);
+  border-radius: var(--igm-radius);
+  color: var(--igm-text-muted);
+  transition: color 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+.copy:hover {
+  color: var(--igm-ink);
+  border-color: var(--igm-copper);
+  background: color-mix(in srgb, var(--igm-gold) 12%, transparent);
+}
+
+.copyText {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+/* ============================= 响应式 ============================= */
+/* 窄屏：隐藏编号文本，仅保留图标；点按徽标弹出完整编号 */
+@media (max-width: 640px) {
+  .number {
+    display: none;
+  }
+
+  .badge {
+    padding: 0 7px;
+  }
+
+  .popover {
+    gap: 8px;
+  }
+}

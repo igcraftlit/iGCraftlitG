@@ -4,7 +4,7 @@
  * 路由：全局
  * 模块：iGM_ExamMasthead
  * 作用：顶部横向学术期刊刊头导航（刊名 + 卷期 + 日期 + 索引/管理入口）
- * 内容：卷期与日期元信息、居中机构名、副标题、横向导航、主题摇杆与语言切换
+ * 内容：卷期与日期元信息、居中机构名、副标题、横向导航、主题摇杆、命题者编号徽标与语言切换
  * 说明：刊头日期在客户端挂载后按本地时间刷新，并按当前语言格式化，
  *       首屏使用构建期日期，避免水合不一致
  */
@@ -17,6 +17,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { GraduationCap } from "lucide-react";
 import { iGM_ExamThemeToggle as IGM_ExamThemeToggle } from "../iGM_ExamThemeToggle/iGM_ExamThemeToggle";
+import { iGM_ExamCreatorBadge as IGM_ExamCreatorBadge } from "../iGM_ExamCreatorBadge/iGM_ExamCreatorBadge";
 import { iGM_ExamLangToggle as IGM_ExamLangToggle } from "../iGM_ExamLangToggle/iGM_ExamLangToggle";
 import { useI18n } from "../../iGM_i18n/iGM_I18nContext";
 import styles from "./iGM_ExamMasthead.module.css";
@@ -85,6 +86,7 @@ export function iGM_ExamMasthead({ initialDate }: iGM_ExamMastheadProps) {
           </span>
           <div className={styles.controls}>
             <IGM_ExamThemeToggle />
+            <IGM_ExamCreatorBadge />
             <IGM_ExamLangToggle />
           </div>
         </div>

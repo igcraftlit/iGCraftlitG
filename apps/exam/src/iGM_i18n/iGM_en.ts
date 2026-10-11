@@ -246,6 +246,11 @@ export const iGM_en: iGM_I18nDict = {
   examinerGateTitle: "Examiner Access",
   examinerGateLead: "Examination management is available to approved examiners only.",
   examinerGateGotoPresets: "Issuer Presets",
+  // 命题创作者：命题者编号徽标
+  creatorBadgeLabel: "Question Creator",
+  creatorBadgeCopy: "Copy number",
+  creatorBadgeCopied: "Copied",
+  creatorBadgeHint: "Examiner No.",
   // 命题方预设
   presetsEyebrow: "Examiner",
   presetsTitle: "Issuer Presets",

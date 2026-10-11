@@ -241,6 +241,11 @@ export const iGM_zhCN: iGM_I18nDict = {
   examinerGateTitle: "命题创作者权限",
   examinerGateLead: "考试管理仅对通过审核的命题创作者开放。",
   examinerGateGotoPresets: "命题方预设",
+  // 命题创作者：命题者编号徽标
+  creatorBadgeLabel: "命题创作者",
+  creatorBadgeCopy: "复制编号",
+  creatorBadgeCopied: "已复制",
+  creatorBadgeHint: "命题者编号",
   // 命题方预设
   presetsEyebrow: "命题创作者",
   presetsTitle: "命题方预设",

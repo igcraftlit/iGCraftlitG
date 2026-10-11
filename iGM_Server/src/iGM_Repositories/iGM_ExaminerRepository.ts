@@ -4,8 +4,9 @@
  * 路由：G_Examiner（/G_Examiner/*）
  * 模块：iGM_ExaminerRepository
  * 作用：iGM_ExaminerApplications 与 iGM_Examiners 两张表的唯一数据访问出口
- * 内容：申请写入与查询（按用户 / 按状态）、审核结果写回、创作者资格写入与撤销
+ * 内容：申请写入与查询（按用户 / 按状态）、审核结果写回、创作者资格写入（分配编号）与撤销
  * 说明：命题创作者资格仅在审核通过后写入 iGM_Examiners；
+ *       资格行携带专属命题者编号 iGM_CreatorNumber（10 位零填充），
  *       申请状态流转：pending → approved / rejected
  */
 
@@ -174,7 +175,7 @@ export async function iGM_FindExaminerByUser(
   );
 }
 
-/** 授予命题创作者资格（已存在则更新为 active） */
+/** 授予命题创作者资格（已存在则更新为 active 并保留原编号；新建时分配下一个编号） */
 export async function iGM_UpsertExaminer(
   userId: string,
   status = "active",
@@ -190,8 +191,14 @@ export async function iGM_UpsertExaminer(
   }
   await iGM_Db.run(
     `INSERT INTO iGM_Examiners
-       (iGM_Id, iGM_UserId, iGM_Status, iGM_ApprovedAt, iGM_CreatedAt, iGM_UpdatedAt)
-     VALUES (?, ?, ?, ?, ?, ?)`,
+       (iGM_Id, iGM_UserId, iGM_Status, iGM_ApprovedAt, iGM_CreatedAt, iGM_UpdatedAt,
+        iGM_CreatorNumber)
+     VALUES (
+       ?, ?, ?, ?, ?, ?,
+       -- 顺序编号：接续现有最大编号 +1，零填充至 10 位
+       (SELECT LPAD((COALESCE(MAX(iGM_CreatorNumber::int), 0) + 1)::text, 10, '0')
+          FROM iGM_Examiners)
+     )`,
     [iGM_RandomUuid(), userId, status, now, now, now],
   );
 }

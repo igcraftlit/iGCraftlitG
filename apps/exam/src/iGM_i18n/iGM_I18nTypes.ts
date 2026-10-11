@@ -245,6 +245,11 @@ export interface iGM_I18nDict {
   examinerGateTitle: string;
   examinerGateLead: string;
   examinerGateGotoPresets: string;
+  // 命题创作者：命题者编号徽标
+  creatorBadgeLabel: string;
+  creatorBadgeCopy: string;
+  creatorBadgeCopied: string;
+  creatorBadgeHint: string;
   // 命题方预设
   presetsEyebrow: string;
   presetsTitle: string;

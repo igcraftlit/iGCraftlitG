@@ -5,7 +5,7 @@
  * 模块：iGM_Examiner
  * 作用：命题创作者申请 / 命题创作者 / 命题方预设的状态枚举、数据行与 DTO 类型
  * 内容：申请状态与方向白名单、申请 / 创作者 / 预设数据行、
- *       申请 DTO、准入状态 DTO、预设 DTO、申请与预设入参、表单校验常量
+ *       申请 DTO、准入状态 DTO、命题者编号 DTO、预设 DTO、申请与预设入参、表单校验常量
  * 说明：命题创作者资格由社区主站管理员审核通过后写入 iGM_Examiners；
  *       预设默认全站可见，试卷命题方文本命中关键词时归档到对应预设
  */
@@ -62,6 +62,8 @@ export interface iGM_ExaminerRow {
   iGM_Id: string;
   iGM_UserId: string;
   iGM_Status: string;
+  /** 命题创作者专属编号（10 位零填充，形如 0000000001；未编号时为 null） */
+  iGM_CreatorNumber: string | null;
   iGM_ApprovedAt: string;
   iGM_CreatedAt: string;
   iGM_UpdatedAt: string;
@@ -110,6 +112,14 @@ export interface iGM_ExaminerGateDto {
   application: iGM_ExaminerApplicationDto | null;
   /** 当前用户是否具备审核资格（管理员 / 信任组织负责人） */
   canReview: boolean;
+}
+
+/** 命题者编号 DTO（对外，考试站右上角徽标使用） */
+export interface iGM_CreatorProfileDto {
+  /** 是否具备命题创作者资格 */
+  isExaminer: boolean;
+  /** 命题创作者专属编号（10 位零填充，前端补 # 前缀） */
+  creatorNumber: string;
 }
 
 /** 命题方预设 DTO（对外） */

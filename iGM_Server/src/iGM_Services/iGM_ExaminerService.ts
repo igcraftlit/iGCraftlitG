@@ -5,7 +5,7 @@
  * 模块：iGM_ExaminerService
  * 作用：命题创作者申请、准入状态与审核的业务逻辑
  * 内容：命题创作者业务错误类型、资格判定与强制校验、申请提交（含字数校验）、
- *       我的准入状态组装、管理端待审列表、审核（通过即授予资格 / 拒绝）
+ *       我的准入状态组装、命题者编号档案、管理端待审列表、审核（通过即授予资格 / 拒绝）
  * 说明：命题创作者资格审核通过后写入 iGM_Examiners；
  *       已被撤销（suspended）或未通过的用户不能上传 / 管理试卷
  */
@@ -35,6 +35,7 @@ import {
   type iGM_ExaminerApplicationRow,
   type iGM_ExaminerAppStatus,
   type iGM_ExaminerApplyInput,
+  type iGM_CreatorProfileDto,
   type iGM_ExaminerGateDto,
 } from "../iGM_Types/iGM_Examiner";
 
@@ -102,6 +103,24 @@ export async function iGM_RequireExaminer(userId: string): Promise<void> {
   if (!(await iGM_IsActiveExaminer(userId))) {
     throw new iGM_ExaminerError("尚无命题创作者资格", 403);
   }
+}
+
+/**
+ * 命题者编号档案：仅当用户存在「在册（active）且已分配编号」的创作者行时返回，
+ * 否则返回 null（访客、非命题创作者、已撤销或尚未编号的用户）
+ */
+export async function iGM_GetCreatorProfileService(
+  userId: string,
+): Promise<iGM_CreatorProfileDto | null> {
+  const examiner = await iGM_FindExaminerByUser(userId);
+  if (
+    !examiner ||
+    examiner.iGM_Status !== "active" ||
+    !examiner.iGM_CreatorNumber
+  ) {
+    return null;
+  }
+  return { isExaminer: true, creatorNumber: examiner.iGM_CreatorNumber };
 }
 
 /** 组装当前用户的准入状态（canReview 由路由层按角色判定后传入） */
@@ -260,6 +279,7 @@ export const iGM_ExaminerPresetNameLimit = iGM_ExaminerMaxPresetName;
 export default {
   iGM_IsActiveExaminer,
   iGM_RequireExaminer,
+  iGM_GetCreatorProfileService,
   iGM_GetExaminerGateService,
   iGM_ListMyExaminerApplicationsService,
   iGM_SubmitExaminerApplyService,

@@ -1,11 +1,11 @@
 /**
  * 文件路径：iGM_Server/src/iGM_Routes/G_Examiner.ts
  * 所属层：后端 / 路由层
- * 路由：/G_Examiner/*
+ * 路由：/G_Examiner/* 与 /api/exam/creator/profile（命题者编号档案）
  * 模块：G_Examiner
- * 作用：命题创作者申请、准入状态、命题方预设与审核接口集合
- * 内容：准入状态查询、申请提交、我的申请历史、可见预设列表、
- *       预设创建 / 编辑 / 删除（仅命题创作者）、管理端待审列表与审核、撤销资格
+ * 作用：命题创作者申请、准入状态、命题者编号档案、命题方预设与审核接口集合
+ * 内容：准入状态查询、申请提交、我的申请历史、命题者编号档案（/api/exam/creator/profile）、
+ *       可见预设列表、预设创建 / 编辑 / 删除（仅命题创作者）、管理端待审列表与审核、撤销资格
  * 约束：统一响应 { success, code, message, data }；除公开预设外均须登录；
  *       预设增删改与审核仅命题创作者 / 管理人员可执行
  */
@@ -26,6 +26,7 @@ import {
 } from "./iGM_RouteSupport";
 import {
   iGM_ExaminerError,
+  iGM_GetCreatorProfileService,
   iGM_GetExaminerGateService,
   iGM_ListExaminerApplicationsService,
   iGM_ListMyExaminerApplicationsService,
@@ -102,6 +103,24 @@ async function iGM_HandleStatus(ctx: iGM_RouteContext) {
     iGM_ListMyExaminerApplicationsService(user.iGM_Id),
   ]);
   return iGM_Ok({ ...gate, history });
+}
+
+/* ---------- 命题者编号档案（登录用户；非命题创作者返回 NOT_EXAMINER） ---------- */
+async function iGM_HandleCreatorProfile(ctx: iGM_RouteContext) {
+  const user = await iGM_CurrentUser(ctx);
+  const profile = user
+    ? await iGM_GetCreatorProfileService(user.iGM_Id)
+    : null;
+  // 未登录 / 非在册命题创作者：HTTP 200 + success:false + 字符串码，不抛错
+  if (!profile) {
+    return {
+      success: false as const,
+      code: "NOT_EXAMINER",
+      message: "当前账号不是命题创作者",
+      data: null,
+    };
+  }
+  return iGM_Ok(profile);
 }
 
 /* ---------- 提交命题创作者申请 ---------- */
@@ -212,6 +231,7 @@ async function iGM_HandleRevoke(ctx: iGM_RouteContext) {
  */
 export const G_Examiner = new Elysia({ name: "G_Examiner" })
   .get("/G_Examiner/status", iGM_HandleStatus as never)
+  .get("/api/exam/creator/profile", iGM_HandleCreatorProfile as never)
   .post("/G_Examiner/apply", iGM_HandleApply as never)
   .get("/G_Examiner/presets", iGM_HandlePresets as never)
   .post("/G_Examiner/presets", iGM_HandlePresetCreate as never)
