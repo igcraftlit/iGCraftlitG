@@ -1,0 +1,29 @@
+{
+  "id": "39b0aeaf-24c5-46c0-9780-ed404aa7e13e",
+  "code": "E-2026-011",
+  "title": "2026年7月浙江省普通高中学业水平学考考试",
+  "subject": "Minecraft",
+  "issuer": "kamisama",
+  "reviewer": "奇梦成真·工作室",
+  "duration": 60,
+  "totalScore": 100,
+  "questionCount": 18,
+  "notice": "",
+  "status": "published",
+  "convertStatus": "completed",
+  "fileSize": 1505500,
+  "createdAt": "2026-10-11T02:37:32.554Z",
+  "fileName": "2026.7学考试题.pdf",
+  "pageWidth": 773.89,
+  "pageHeight": 1094.47,
+  "htmlPath": "/exams/39b0aeaf-24c5-46c0-9780-ed404aa7e13e/index.html",
+  "images": [
+    "bg1.png",
+    "bg2.png",
+    "bg3.png",
+    "bg4.png",
+    "bg5.png",
+    "pdf2htmlEX-64x64.png"
+  ],
+  "answerPdfUrl": ""
+}
