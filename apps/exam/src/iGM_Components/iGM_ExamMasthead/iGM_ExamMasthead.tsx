@@ -54,6 +54,8 @@ const iGM_Exam_BuildDate = new Date(
 /** 导航项路由（文案由当前语言包提供） */
 const iGM_Exam_NavRoutes = [
   { href: "/", labelKey: "navExaminations" },
+  { href: "/bank", labelKey: "navQuestionBank" },
+  { href: "/editor", labelKey: "navQuestionEditor" },
   { href: "/admin/upload", labelKey: "navUpload" },
   { href: "/admin", labelKey: "navAdmin" },
   { href: "/apply", labelKey: "navApply" },

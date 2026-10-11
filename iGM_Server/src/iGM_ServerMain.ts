@@ -70,6 +70,9 @@ import { iGM_ExamError } from "./iGM_Services/iGM_ExamService";
 // 考试系统：命题创作者申请、准入与命题方预设
 import { G_Examiner } from "./iGM_Routes/G_Examiner";
 import { iGM_ExaminerError } from "./iGM_Services/iGM_ExaminerService";
+// 考试系统：题库与题目编辑器
+import { G_Question } from "./iGM_Routes/G_Question";
+import { iGM_QuestionError } from "./iGM_Services/iGM_QuestionService";
 import { iGM_EnsureExamStorageRoot } from "./iGM_Services/iGM_ExamIngestService";
 import { iGM_StartExamCleanup } from "./iGM_Services/iGM_ExamCleanupService";
 
@@ -179,6 +182,11 @@ const iGM_Server = new Elysia()
       set.status = error.status;
       return iGM_Fail(error.status, error.message);
     }
+    // 考试系统：题库题目业务错误（字段非法 / 越权 / 不存在）
+    if (error instanceof iGM_QuestionError) {
+      set.status = error.status;
+      return iGM_Fail(error.status, error.message);
+    }
     // 请求体解析失败等客户端错误（沿用模块二通用文案键）
     if (code === "PARSE" || code === "VALIDATION") {
       set.status = 400;
@@ -234,6 +242,8 @@ const iGM_Server = new Elysia()
   .use(G_Exam)
   // 考试系统：命题创作者申请、准入状态、命题方预设与审核（/G_Examiner/*）
   .use(G_Examiner)
+  // 考试系统：题库与题目编辑器（/api/question/*）
+  .use(G_Question)
   // 根路径占位
   .get("/", () => ({
     success: true,

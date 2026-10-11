@@ -349,6 +349,12 @@ export const iGM_Config: iGM_AppConfig = {
     examSubmit: { windowMs: 60 * 1000, max: 30 },
     // 全站搜索：聚合搜索公开读取——1 分钟内最多 60 次（按客户端 IP）
     search: { windowMs: 60 * 1000, max: 60 },
+    // 题库：公开列表 / 我的题库读取——1 分钟内最多 60 次（按客户端 IP）
+    questionRead: { windowMs: 60 * 1000, max: 60 },
+    // 题库：题目创建 / 更新 / 删除 / 发布——1 分钟内最多 20 次
+    questionWrite: { windowMs: 60 * 1000, max: 20 },
+    // 题库：AI 智能分析（触发本地模型）——1 分钟内最多 10 次
+    questionAnalyze: { windowMs: 60 * 1000, max: 10 },
   },
   mail: {
     // 163 邮箱 SMTP：465 端口隐式 SSL；密码使用客户端授权码（非登录密码），

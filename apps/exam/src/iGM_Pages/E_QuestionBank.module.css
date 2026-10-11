@@ -1,0 +1,328 @@
+/**
+ * 文件路径：apps/exam/src/iGM_Pages/E_QuestionBank.module.css
+ * 所属层：前端 / 页面样式层
+ * 路由：E_QuestionBank（/bank）
+ * 模块：iGM_QuestionBank
+ * 作用：题库页样式（页头、筛选工具条、题目卡片网格、加载 / 失败 / 空 / 无结果状态）
+ * 内容：页面容器、页头、工具条、卡片、状态区块、响应式
+ * 说明：沿用考试系统学术极简风格，配色取自全局 CSS 变量；桌面 3 列 / 平板 2 列 / 移动 1 列
+ */
+
+/* ============================= 页面容器 ============================= */
+.page {
+  max-width: var(--igm-maxw);
+  margin: 0 auto;
+  padding: 40px 28px 72px;
+}
+
+/* ============================= 页头 ============================= */
+.head {
+  max-width: 760px;
+  margin-bottom: 26px;
+  animation: igm-ink-in 0.5s ease both;
+}
+
+.headEyebrow {
+  margin: 0 0 10px;
+}
+
+.headTitle {
+  margin: 0 0 12px;
+  font-size: clamp(28px, 4.4vw, 42px);
+  font-weight: 700;
+  line-height: 1.14;
+  color: var(--igm-ink);
+}
+
+.headLead {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--igm-text-muted);
+}
+
+/* ============================= 工具条 ============================= */
+.toolRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--igm-line);
+}
+
+.filterField {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 14px;
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+  background: var(--igm-paper-raised);
+  transition: border-color 0.16s ease;
+}
+
+.filterField:focus-within {
+  border-color: var(--igm-copper);
+}
+
+.filterIcon {
+  flex-shrink: 0;
+  color: var(--igm-copper);
+}
+
+.filterLabel {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--igm-text-muted);
+  white-space: nowrap;
+}
+
+.filterSelect {
+  max-width: 260px;
+  padding: 10px 0;
+  border: none;
+  background: transparent;
+  color: var(--igm-ink);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  outline: none;
+  cursor: pointer;
+}
+
+.searchRow {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 10px 0 14px;
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+  background: var(--igm-paper-raised);
+  transition: border-color 0.16s ease;
+}
+
+.searchRow:focus-within {
+  border-color: var(--igm-copper);
+}
+
+.searchIcon {
+  flex-shrink: 0;
+  color: var(--igm-text-muted);
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 0;
+  border: none;
+  background: transparent;
+  color: var(--igm-ink);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--igm-text-muted);
+  letter-spacing: 0.08em;
+}
+
+.refresh {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: transparent;
+  border: none;
+  color: var(--igm-text-muted);
+  transition: color 0.16s ease;
+}
+
+.refresh:hover {
+  color: var(--igm-ink);
+}
+
+/* ============================= 卡片网格 ============================= */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 18px 16px;
+  background: var(--igm-paper-raised);
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+  transition: border-color 0.18s ease, transform 0.18s ease;
+  animation: igm-ink-in 0.42s ease both;
+}
+
+.card:hover {
+  border-color: var(--igm-copper);
+  transform: translateY(-2px);
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.cardTextbook {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--igm-copper);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardArrow {
+  flex-shrink: 0;
+  color: var(--igm-text-muted);
+}
+
+.cardStem {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.6;
+  color: var(--igm-ink);
+}
+
+.cardMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.metaTag {
+  padding: 3px 9px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+  color: var(--igm-text-muted);
+}
+
+.tagRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 6px;
+  border-top: 1px solid var(--igm-line-soft);
+}
+
+.tag {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--igm-text-muted);
+}
+
+.tag + .tag::before {
+  content: "· ";
+  color: var(--igm-copper);
+}
+
+/* ============================= 状态区块 ============================= */
+.state {
+  padding: 40px 0;
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: var(--igm-text-muted);
+}
+
+.errorBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 40px 0;
+}
+
+.errorText {
+  margin: 0;
+  color: var(--igm-cinnabar);
+  font-size: 12px;
+}
+
+.retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  background: transparent;
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+  color: var(--igm-ink);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.retry:hover {
+  border-color: var(--igm-copper);
+  background: color-mix(in srgb, var(--igm-gold) 12%, transparent);
+}
+
+.empty,
+.noResult {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 64px 0;
+  border-radius: var(--igm-radius);
+}
+
+.empty {
+  border: 1px solid var(--igm-line-soft);
+  background: color-mix(in srgb, var(--igm-paper-raised) 60%, transparent);
+}
+
+.noResult {
+  border: 1px dashed var(--igm-line-soft);
+}
+
+.emptyIcon,
+.noResultIcon {
+  color: var(--igm-copper);
+}
+
+.emptyText,
+.noResultText {
+  margin: 0;
+  font-size: 17px;
+  color: var(--igm-text-muted);
+}
+
+/* ============================= 响应式 ============================= */
+@media (max-width: 960px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 26px 16px 56px;
+  }
+
+  .toolRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
