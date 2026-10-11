@@ -1,6 +1,20 @@
 {
-  "generatedAt": "2026-10-11T00:12:39.253Z",
+  "generatedAt": "2026-10-11T00:13:26.868Z",
   "exams": [
+    {
+      "id": "f7c10f7d-63ce-48a7-9e52-6bda106e7824",
+      "code": "E-2026-005",
+      "title": "2026年iGCraftLit团队统一学业水平与团队建设能力测试",
+      "subject": "Minecraft (A)",
+      "issuer": "iGC&M教育考试研究院",
+      "duration": 150,
+      "totalScore": 110,
+      "questionCount": 23,
+      "status": "published",
+      "convertStatus": "completed",
+      "fileSize": 805654,
+      "createdAt": "2026-10-11T00:13:20.614Z"
+    },
     {
       "id": "312c7b41-85aa-43e0-a9f2-7fe4bc06fbdc",
       "code": "E-2026-004",
