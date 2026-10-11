@@ -26,7 +26,11 @@
       "sessionsEmpty": "会話履歴はまだありません",
       "sessionUntitled": "新しい会話",
       "capability": "サイト内の質問と一般知識に回答 · 外部サイトへのアクセス不可 · センシティブな話題には回答しません",
-      "accountIsolation": "この会話は現在のアカウントにのみ表示されます"
+      "accountIsolation": "この会話は現在のアカウントにのみ表示されます",
+      "modelStandard": "標準版",
+      "modelPro": "Pro 版",
+      "modelProHint": "より強力な推論",
+      "generatedBy": "{model}が生成"
     },
     "notice": {
       "timeout": "AI の応答がタイムアウトしました。生成された内容に応じて課金され、今回の回答は不完全です。",
@@ -1765,7 +1769,18 @@
         "calls": "呼び出し回数",
         "rangeDay": "日",
         "rangeWeek": "週",
-        "rangeMonth": "月"
+        "rangeMonth": "月",
+        "uqChannel": "UQ チャンネル",
+        "totalConsumedUq": "総消費 UQ",
+        "todayConsumedUq": "当日消費 UQ",
+        "topUqUsers": "UQ 消費ユーザー Top 10",
+        "coinChannel": "Coin チャンネル",
+        "totalConsumedCoin": "総消費 Coin",
+        "todayConsumedCoin": "当日消費 Coin",
+        "topCoinUsers": "Coin 消費ユーザー Top 10",
+        "modelUsage": "モデル呼び出し量",
+        "modelStandard": "標準版",
+        "modelPro": "Pro 版"
       }
     },
     "overview": {

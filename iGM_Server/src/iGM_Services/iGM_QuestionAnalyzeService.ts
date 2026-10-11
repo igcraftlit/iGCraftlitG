@@ -6,8 +6,9 @@
  * 作用：对题目做 AI 智能分析（难度、题型、标签、教材归属、建议），失败时回退关键词匹配
  * 内容：非流式上游调用（Ollama OpenAI 兼容端点）、严格 JSON 解析与字段归一、
  *       关键词分级回退、教材名称强制取自固定目录
- * 说明：本服务不复用 iGM_AIService（其为流式 + 计费通道）；任何异常都不向调用方抛出，
- *       始终返回带 source 标记的分析结果（ollama / keyword / keyword-default）
+ * 说明：本服务不复用 iGM_AIService（其为流式 + 计费通道）；固定使用 Pro 版底层模型
+ *       （iGM_Config.ai.channel.proModel，deepseek-r1:7b），不受主站模型切换影响；
+ *       任何异常都不向调用方抛出，始终返回带 source 标记的分析结果（ollama / keyword / keyword-default）
  */
 
 // 导入依赖 //
@@ -260,7 +261,8 @@ async function iGM_CallModel(
   );
   try {
     const body: Record<string, unknown> = {
-      model: iGM_Config.ai.channel.model,
+      // 考试站 AI 分析固定使用 Pro 版底层模型（deepseek-r1:7b），不受主站模型切换影响
+      model: iGM_Config.ai.channel.proModel,
       messages: [
         { role: "system", content: iGM_SystemPrompt },
         { role: "user", content: userText },

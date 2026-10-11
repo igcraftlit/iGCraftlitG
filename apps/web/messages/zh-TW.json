@@ -26,7 +26,11 @@
       "sessionsEmpty": "暫無歷史對話",
       "sessionUntitled": "新對話",
       "capability": "可回答站內問題與通用知識 · 無法訪問外部網站 · 不回答敏感話題",
-      "accountIsolation": "當前對話僅對當前帳號可見"
+      "accountIsolation": "當前對話僅對當前帳號可見",
+      "modelStandard": "標準版",
+      "modelPro": "Pro 版",
+      "modelProHint": "更強推理",
+      "generatedBy": "由 {model} 生成"
     },
     "notice": {
       "timeout": "AI 回應逾時，已依生成內容扣費，本次回答未完整輸出。",
@@ -1765,7 +1769,18 @@
         "calls": "呼叫次數",
         "rangeDay": "日",
         "rangeWeek": "週",
-        "rangeMonth": "月"
+        "rangeMonth": "月",
+        "uqChannel": "UQ 通道",
+        "totalConsumedUq": "總消耗 UQ",
+        "todayConsumedUq": "當日消耗 UQ",
+        "topUqUsers": "UQ 消耗排行 Top 10",
+        "coinChannel": "Coin 通道",
+        "totalConsumedCoin": "總消耗 Coin",
+        "todayConsumedCoin": "當日消耗 Coin",
+        "topCoinUsers": "Coin 消耗排行 Top 10",
+        "modelUsage": "模型呼叫量",
+        "modelStandard": "標準版",
+        "modelPro": "Pro 版"
       }
     },
     "overview": {

@@ -144,6 +144,57 @@ html[data-theme="dark"] .modal {
   text-align: center;
 }
 
+/* 模型选择器：标准版 / Pro 版胶囊按钮（当前项高亮，Pro 附更强推理小字提示） */
+.modelRow {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 14px 0;
+}
+
+.modelOption {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border: 1px solid var(--igm-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--igm-text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color var(--igm-motion-nav), color var(--igm-motion-nav),
+    background var(--igm-motion-nav);
+}
+
+.modelOption:hover {
+  border-color: var(--igm-border-strong);
+  color: var(--igm-text);
+}
+
+.modelOptionActive {
+  border-color: var(--igm-accent);
+  background: var(--igm-accent-soft);
+  color: var(--igm-accent);
+}
+
+.modelOptionLabel {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.modelOptionHint {
+  color: var(--igm-text-subtle);
+  font-size: 10.5px;
+}
+
+.modelOptionActive .modelOptionHint {
+  color: var(--igm-accent);
+  opacity: 0.75;
+}
+
 /* 通道切换 Tab：极简胶囊 + 滑动气泡（Free (UPR) / Premium (SPR)） */
 .channelTabs {
   position: relative;
@@ -506,6 +557,16 @@ html[data-theme="dark"] .code :global(.hljs-quote) {
 
 .bubbleNoticeTruncated {
   color: var(--igm-warning, #b8860b);
+}
+
+/* AI 回复气泡下方版本标注：由 标准版 / Pro 版 生成 */
+.bubbleMeta {
+  max-width: 84%;
+  margin: 0;
+  color: var(--igm-text-subtle);
+  font-size: 11px;
+  line-height: 1.5;
+  word-break: break-word;
 }
 
 /* 思考中：旋转指示图标（有实际加载语义，非装饰动画） */

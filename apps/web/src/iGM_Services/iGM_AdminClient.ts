@@ -95,7 +95,7 @@ export interface iGM_DeveloperCallStats {
 /** AI 赋能系统模块三：AI 调用统计时间范围（日 / 周 / 月） */
 export type iGM_AICallStatsRange = "day" | "week" | "month";
 
-/** AI 赋能系统模块三：单通道额度统计（UPR 聚合自 iGM_UPRTransactions，SPR 聚合自 iGM_SPRTransactions） */
+/** AI 赋能系统重构：单币种额度统计（UQ 聚合自 iGM_UQTransactions，Coin 聚合自 iGM_CoinTransactions） */
 export interface iGM_AICallStatsChannel {
   /** 时间范围内总调用次数 */
   totalCalls: number;
@@ -105,10 +105,12 @@ export interface iGM_AICallStatsChannel {
   todayConsumed: number;
 }
 
-/** SPR 通道统计：较 UPR 多收入口径（1 SPR = 1 元） */
-export interface iGM_AICallStatsSprChannel extends iGM_AICallStatsChannel {
-  /** 时间范围内总收入（元） */
-  totalRevenue: number;
+/** 双模型调用量（按 AI 回复所用底层模型归类） */
+export interface iGM_AICallStatsModels {
+  /** 标准版（qwen2.5:7b）回复条数 */
+  standard: number;
+  /** Pro 版（deepseek-r1:7b）回复条数 */
+  pro: number;
 }
 
 /** 消耗排行 Top 10 条目 */
@@ -120,15 +122,17 @@ export interface iGM_AICallStatsUser {
   calls: number;
 }
 
-/** AI 赋能系统模块三：AI 双通道调用统计（UPR / SPR） */
+/** AI 赋能系统重构：AI 双币种调用统计（UQ / Coin）+ 双模型调用量 */
 export interface iGM_AICallStats {
   range: iGM_AICallStatsRange;
-  upr: iGM_AICallStatsChannel;
-  spr: iGM_AICallStatsSprChannel;
-  /** UPR 消耗排行 Top 10 用户 */
-  topUprUsers: iGM_AICallStatsUser[];
-  /** SPR 消耗排行 Top 10 用户 */
-  topSprUsers: iGM_AICallStatsUser[];
+  uq: iGM_AICallStatsChannel;
+  coin: iGM_AICallStatsChannel;
+  /** UQ 消耗排行 Top 10 用户 */
+  topUqUsers: iGM_AICallStatsUser[];
+  /** Coin 消耗排行 Top 10 用户 */
+  topCoinUsers: iGM_AICallStatsUser[];
+  /** 双模型调用量（标准版 / Pro 版） */
+  models: iGM_AICallStatsModels;
 }
 
 /** 后台内容条目（帖子或评论统一形态） */

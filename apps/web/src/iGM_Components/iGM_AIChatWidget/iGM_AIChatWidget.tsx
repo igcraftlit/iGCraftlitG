@@ -3,10 +3,11 @@
  * 所属层：前端 / 通用组件层
  * 路由：全局（挂载于 iGM_Providers）
  * 模块：iGM_AIChatWidget
- * 作用：Chat iGM Nove V0.1 智能助手——右下角悬浮按钮，点击弹出屏幕居中模态框
- * 内容：居中模态框（约 600x600、半透明遮罩、玻璃态）、UQ/Coin 双余额与模型名展示、
- *       消息气泡列表、SSE 流式打字、模型信息按钮、余额不足拦截、会话持久化、
- *       未登录拦截、Markdown 代码块渲染、停止生成按钮、能力边界提示行；
+ * 作用：Chat iGM Nove V0.1 / V0.1 Pro 双模型智能助手——右下角悬浮按钮，点击弹出屏幕居中模态框
+ * 内容：居中模态框（约 600x600、半透明遮罩、玻璃态）、UQ/Coin 双余额展示、
+ *       模型选择器（标准版 / Pro 版，localStorage 记忆，切换不清空当前会话）、
+ *       消息气泡列表（AI 回复标注所用版本）、SSE 流式打字、模型信息按钮、余额不足拦截、
+ *       会话持久化、未登录拦截、Markdown 代码块渲染、停止生成按钮、能力边界提示行；
  *       点击 UQ / Coin 余额查看消耗流水（分页滚动加载）
  */
 
@@ -57,6 +58,12 @@ const iGM_AI_CONVERSATION_STORAGE_KEY = "iGM_AIConversationId";
 const iGM_AI_CONVERSATION_OWNER_STORAGE_KEY = "iGM_AIConversationOwner";
 const iGM_AI_MODEL_INFO_STORAGE_KEY = "iGM_AIModelInfoOpen";
 const iGM_AI_MESSAGE_MAX_LENGTH = 2000;
+/** 标准版底层模型 id（默认档位） */
+const iGM_AI_MODEL_STANDARD = "qwen2.5:7b";
+/** Pro 版底层模型 id（更强推理） */
+const iGM_AI_MODEL_PRO = "deepseek-r1:7b";
+/** 所选模型的本地记忆键（切换后记忆，登录 / 登出清缓存时一并清理） */
+const iGM_AI_MODEL_STORAGE_KEY = "iGM_AIModel";
 const iGM_AI_QUESTION_COST = 0.02;
 const iGM_AI_QUOTA_PAGE_SIZE = 20;
 
@@ -86,6 +93,8 @@ interface iGM_AIBubble {
   content: string;
   /** 异常提示：超时（红）或超字数截断（黄），显示在气泡下方 */
   notice?: iGM_AIStreamNotice;
+  /** 该条 AI 回复所用的底层模型 id（用于气泡下方标注 标准版 / Pro 版） */
+  modelUsed?: string | null;
 }
 
 /** 本地临时气泡序号（仅用于 React key，不参与业务） */
@@ -104,12 +113,26 @@ function iGM_ReadStoredConversationOwner(): string | null {
   return window.localStorage.getItem(iGM_AI_CONVERSATION_OWNER_STORAGE_KEY);
 }
 
-/** 清空全部 AI 本地缓存（会话 id / 归属账号 / 模型信息展开态；登录、登出、换号时调用） */
+/** 清空全部 AI 本地缓存（会话 id / 归属账号 / 模型信息展开态 / 所选模型；登录、登出、换号时调用） */
 function iGM_ClearAIChatStorage(): void {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(iGM_AI_CONVERSATION_STORAGE_KEY);
   window.localStorage.removeItem(iGM_AI_CONVERSATION_OWNER_STORAGE_KEY);
   window.localStorage.removeItem(iGM_AI_MODEL_INFO_STORAGE_KEY);
+  window.localStorage.removeItem(iGM_AI_MODEL_STORAGE_KEY);
+}
+
+/** 读取本地保存的模型选择（构建期无 window 或非法值一律回退标准版） */
+function iGM_ReadStoredModel(): string {
+  if (typeof window === "undefined") return iGM_AI_MODEL_STANDARD;
+  return window.localStorage.getItem(iGM_AI_MODEL_STORAGE_KEY) === iGM_AI_MODEL_PRO
+    ? iGM_AI_MODEL_PRO
+    : iGM_AI_MODEL_STANDARD;
+}
+
+/** 判断指定模型 id 是否为 Pro 版（用于气泡下方版本标签） */
+function iGM_IsProModel(modelUsed: string | null | undefined): boolean {
+  return (modelUsed ?? "").includes("deepseek");
 }
 
 /** 写入或清除本地会话 id 与归属账号（清除时二者一并移除，避免残留他人会话 id） */
@@ -147,7 +170,12 @@ function iGM_QuotaTypeLabel(type: string): string {
 
 /** 服务端消息转界面气泡 */
 function iGM_ToBubble(message: iGM_AIChatMessage): iGM_AIBubble {
-  return { id: message.id, role: message.role, content: message.content };
+  return {
+    id: message.id,
+    role: message.role,
+    content: message.content,
+    modelUsed: message.modelUsed,
+  };
 }
 
 /** 把任意错误归一化为可展示的文案键 */
@@ -204,6 +232,8 @@ export function iGM_AIChatWidget() {
   const [coinBalance, setCoinBalance] = useState<number | null>(null);
   const [modelName, setModelName] = useState<string | null>(null);
   const [modelInfoOpen, setModelInfoOpen] = useState(false);
+  // 所选模型档位（标准版 / Pro 版），默认标准版，localStorage 记忆
+  const [model, setModel] = useState<string>(iGM_AI_MODEL_STANDARD);
   const listRef = useRef<HTMLDivElement | null>(null);
   const streamAbortRef = useRef<AbortController | null>(null);
   const quotaLoadingRef = useRef(false);
@@ -271,6 +301,11 @@ export function iGM_AIChatWidget() {
     );
   }, []);
 
+  // 所选模型：读取本地持久化（默认标准版）
+  useEffect(() => {
+    setModel(iGM_ReadStoredModel());
+  }, []);
+
   // 会话记录目录展开态：移动端默认折叠，桌面端默认展开
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -326,6 +361,14 @@ export function iGM_AIChatWidget() {
     if (!list) return;
     list.scrollTo({ top: list.scrollHeight, behavior: "smooth" });
   }, [messages, sending, open, historyLoading]);
+
+  /** 切换模型档位：仅更新本地选择与持久化，不清空当前会话 */
+  const iGM_SelectModel = useCallback((next: string) => {
+    setModel(next);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(iGM_AI_MODEL_STORAGE_KEY, next);
+    }
+  }, []);
 
   /** 切换模型信息展开态并本地持久化 */
   const iGM_ToggleModelInfo = useCallback(() => {
@@ -471,7 +514,7 @@ export function iGM_AIChatWidget() {
     setMessages((prev) => [
       ...prev,
       userBubble,
-      { id: assistantId, role: "assistant", content: "" },
+      { id: assistantId, role: "assistant", content: "", modelUsed: model },
     ]);
     setSending(true);
     setStreamingId(assistantId);
@@ -485,6 +528,7 @@ export function iGM_AIChatWidget() {
       await iGM_ApiAIStreamChat(
         text,
         conversationId,
+        model,
         {
           onConversationId: (id: string) => {
             setConversationId(id);
@@ -554,6 +598,7 @@ export function iGM_AIChatWidget() {
     status,
     userId,
     conversationId,
+    model,
     uqBalance,
     coinBalance,
     iGM_RefreshInfo,
@@ -647,10 +692,35 @@ export function iGM_AIChatWidget() {
         {/* 账号专属提示 */}
         <p className={styles.accountTip}>{t("ai.widget.accountIsolation")}</p>
 
-        {/* 单通道提示（模型名） */}
+        {/* 模型选择器：标准版 / Pro 版（切换仅更新本地选择，不清空当前会话） */}
         <div className={styles.modelRow}>
-          <Cpu size={13} strokeWidth={1.8} aria-hidden />
-          {modelName ?? "Chat iGM Nove V0.1"}
+          <button
+            type="button"
+            className={`${styles.modelOption} ${
+              model === iGM_AI_MODEL_STANDARD ? styles.modelOptionActive : ""
+            }`}
+            onClick={() => iGM_SelectModel(iGM_AI_MODEL_STANDARD)}
+            aria-pressed={model === iGM_AI_MODEL_STANDARD}
+          >
+            <Cpu size={13} strokeWidth={1.8} aria-hidden />
+            {t("ai.widget.modelStandard")}
+          </button>
+          <button
+            type="button"
+            className={`${styles.modelOption} ${
+              model === iGM_AI_MODEL_PRO ? styles.modelOptionActive : ""
+            }`}
+            onClick={() => iGM_SelectModel(iGM_AI_MODEL_PRO)}
+            aria-pressed={model === iGM_AI_MODEL_PRO}
+          >
+            <Sparkles size={13} strokeWidth={1.8} aria-hidden />
+            <span className={styles.modelOptionLabel}>
+              {t("ai.widget.modelPro")}
+              <span className={styles.modelOptionHint}>
+                {t("ai.widget.modelProHint")}
+              </span>
+            </span>
+          </button>
         </div>
 
         {/* 会话记录目录 */}
@@ -755,6 +825,18 @@ export function iGM_AIChatWidget() {
                   )}
                 </div>
               )}
+              {/* 版本标注：AI 回复气泡内容下方（仅非流式且有内容时显示，避免闪烁） */}
+              {message.role === "assistant" &&
+                message.content.length > 0 &&
+                message.id !== streamingId && (
+                  <p className={styles.bubbleMeta}>
+                    {t("ai.widget.generatedBy", {
+                      model: iGM_IsProModel(message.modelUsed)
+                        ? t("ai.widget.modelPro")
+                        : t("ai.widget.modelStandard"),
+                    })}
+                  </p>
+                )}
               {/* 异常提示：超时（红）/ 超字数截断（黄），显示在气泡下方 */}
               {message.role === "assistant" && message.notice && (
                 <p

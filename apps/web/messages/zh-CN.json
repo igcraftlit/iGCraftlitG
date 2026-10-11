@@ -26,7 +26,11 @@
       "sessionsEmpty": "暂无历史会话",
       "sessionUntitled": "新会话",
       "capability": "可回答站内问题与通用知识 · 无法访问外部网站 · 不回答敏感话题",
-      "accountIsolation": "当前对话仅对当前账号可见"
+      "accountIsolation": "当前对话仅对当前账号可见",
+      "modelStandard": "标准版",
+      "modelPro": "Pro 版",
+      "modelProHint": "更强推理",
+      "generatedBy": "由 {model} 生成"
     },
     "notice": {
       "timeout": "AI 响应超时，已根据生成内容扣费，本次回答未完整输出。",
@@ -1765,7 +1769,18 @@
         "calls": "调用次数",
         "rangeDay": "日",
         "rangeWeek": "周",
-        "rangeMonth": "月"
+        "rangeMonth": "月",
+        "uqChannel": "UQ 通道",
+        "totalConsumedUq": "总消耗 UQ",
+        "todayConsumedUq": "当日消耗 UQ",
+        "topUqUsers": "UQ 消耗排行 Top 10",
+        "coinChannel": "Coin 通道",
+        "totalConsumedCoin": "总消耗 Coin",
+        "todayConsumedCoin": "当日消耗 Coin",
+        "topCoinUsers": "Coin 消耗排行 Top 10",
+        "modelUsage": "模型调用量",
+        "modelStandard": "标准版",
+        "modelPro": "Pro 版"
       }
     },
     "overview": {

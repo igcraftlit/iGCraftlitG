@@ -3,11 +3,12 @@
  * 所属层：前端 / 页面层
  * 路由：E_ExamDetail（/detail?id=xxx）
  * 模块：iGM_ExamDetail
- * 作用：试卷详情页，规格记录表 + 转换后 HTML 高保真预览（A4 版面 iframe + 缩放）+ 实验计时器 + 盖章交卷
+ * 作用：试卷详情页，规格记录表 + 转换后 HTML 高保真预览（A4 版面 iframe + 缩放 / 全屏浏览）+ 实验计时器 + 盖章交卷
  * 内容：顶部信息栏（题数 / 限时 / 总分）、规格信息表、右上固定计时器、
- *       试卷预览（按真实页宽适配、默认适应宽度 / 手动缩放）、占用空间、交卷区、加载/失败/缺失状态
+ *       试卷预览（按真实页宽适配、默认适应宽度 / 手动缩放 / 全屏浏览覆盖层）、占用空间、交卷区、加载/失败/缺失状态
  * 说明：静态导出下通过 useSearchParams 读取 id；由路由壳提供 Suspense 边界；
- *       正文直接内嵌 pdf2htmlEX 生成的 HTML（自带分页与原始排版）；文案取自当前语言包
+ *       正文直接内嵌 pdf2htmlEX 生成的 HTML（自带分页与原始排版）；文案取自当前语言包；
+ *       全屏浏览以 fixed 覆盖层复用同一 iframe 与 zoom 状态，进入时锁定 body 滚动、ESC / 按钮退出
  */
 
 // 导入依赖 //
@@ -16,7 +17,15 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, FileText, Maximize2, RefreshCw, ZoomIn, ZoomOut } from "lucide-react";
+import {
+  ArrowLeft,
+  FileText,
+  Maximize2,
+  Minimize2,
+  RefreshCw,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react";
 import {
   iGM_Exam_FormatSizeMb,
   iGM_ExamRequestError,
@@ -51,6 +60,9 @@ const iGM_Exam_MinZoom = 0.35;
 const iGM_Exam_MaxZoom = 2;
 const iGM_Exam_ZoomStep = 0.1;
 
+/** 「适应宽度」时预留的舞台左右内边距与边框（约 24px），避免版面贴边 */
+const iGM_Exam_StageGutter = 24;
+
 /** 空值占位符 */
 const iGM_Exam_Empty = "--";
 
@@ -71,7 +83,9 @@ export function E_ExamDetail() {
   const [state, setState] = useState<iGM_Exam_DetailState>("loading");
   const [message, setMessage] = useState("");
   const [zoom, setZoom] = useState(1);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const stageRef = useRef<HTMLDivElement | null>(null);
+  const fullscreenStageRef = useRef<HTMLDivElement | null>(null);
 
   // 版面基准尺寸：优先使用后端上报的真实 PDF 页尺寸，回退 A4
   const sheetWidth =
@@ -81,16 +95,25 @@ export function E_ExamDetail() {
 
   /**
    * 按可用宽度计算「适应宽度」缩放
-   * 预留 stage 左右内边距与边框（约 24px），并封顶 100%（不放大），
-   * 确保默认视图下版面宽度不超过可视区，只保留纵向滚动
+   * @param target 计算基准元素（普通视图取试卷舞台，全屏取覆盖层舞台）
+   * @param allowScaleUp 是否允许放大超过 100%（全屏下按覆盖层宽度自适应）
+   * 普通视图预留左右内边距并封顶 100%，保证版面不超出可视区、只保留纵向滚动；
+   * 全屏视图按覆盖层可用宽度自适应，允许放大以填满宽度（仍受 MaxZoom 上限约束）
    */
-  const iGM_Exam_FitZoom = useCallback((): number => {
-    const el = stageRef.current;
-    const available = el ? el.clientWidth : iGM_Exam_MaxSheetWidth;
-    const target = Math.min(available - 24, iGM_Exam_MaxSheetWidth);
-    const raw = target / sheetWidth;
-    return Math.min(1, Math.max(iGM_Exam_MinZoom, raw));
-  }, [sheetWidth]);
+  const iGM_Exam_FitZoom = useCallback(
+    (target: HTMLElement | null, allowScaleUp: boolean): number => {
+      const el = target ?? stageRef.current;
+      const available = el ? el.clientWidth : iGM_Exam_MaxSheetWidth;
+      const usable = available - iGM_Exam_StageGutter;
+      const base = allowScaleUp ? usable : Math.min(usable, iGM_Exam_MaxSheetWidth);
+      const raw = base / sheetWidth;
+      const capped = allowScaleUp ? raw : Math.min(1, raw);
+      return Number(
+        Math.min(iGM_Exam_MaxZoom, Math.max(iGM_Exam_MinZoom, capped)).toFixed(3),
+      );
+    },
+    [sheetWidth],
+  );
 
   const load = useCallback(async () => {
     if (!examId) {
@@ -118,15 +141,36 @@ export function E_ExamDetail() {
     void load();
   }, [load]);
 
-  // 试卷预览可用时：默认适应屏幕宽度，并在窗口尺寸变化时重新适配
+  // 试卷预览可用时：按当前激活容器（普通 / 全屏）默认适应宽度，窗口尺寸变化时重算
   const hasPreview = Boolean(exam?.htmlPath);
   useEffect(() => {
     if (!hasPreview) return;
-    setZoom(iGM_Exam_FitZoom());
-    const onResize = (): void => setZoom(iGM_Exam_FitZoom());
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, [hasPreview, iGM_Exam_FitZoom]);
+    const fitActive = (): void => {
+      setZoom(
+        isFullscreen
+          ? iGM_Exam_FitZoom(fullscreenStageRef.current, true)
+          : iGM_Exam_FitZoom(stageRef.current, false),
+      );
+    };
+    fitActive();
+    window.addEventListener("resize", fitActive);
+    return () => window.removeEventListener("resize", fitActive);
+  }, [hasPreview, isFullscreen, iGM_Exam_FitZoom]);
+
+  // 全屏浏览：锁定 body 滚动并监听 ESC 退出；退出时恢复原滚动状态与监听
+  useEffect(() => {
+    if (!isFullscreen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.key === "Escape") setIsFullscreen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isFullscreen]);
 
   /** 手动缩放（限制在缩放区间内） */
   function iGM_Exam_ZoomBy(delta: number): void {
@@ -273,7 +317,7 @@ export function E_ExamDetail() {
               <button
                 type="button"
                 className={styles.zoomBtn}
-                onClick={() => setZoom(iGM_Exam_FitZoom())}
+                onClick={() => setZoom(iGM_Exam_FitZoom(stageRef.current, false))}
                 aria-label={t("paperZoomFit")}
                 title={t("paperZoomFit")}
               >
@@ -292,6 +336,22 @@ export function E_ExamDetail() {
               <span className={`igm-mono ${styles.zoomValue}`}>
                 {Math.round(zoom * 100)}%
               </span>
+              <button
+                type="button"
+                className={styles.zoomBtn}
+                onClick={() => setIsFullscreen((current) => !current)}
+                aria-label={isFullscreen ? t("detailFullscreenExit") : t("detailFullscreen")}
+                title={isFullscreen ? t("detailFullscreenExit") : t("detailFullscreen")}
+              >
+                {isFullscreen ? (
+                  <Minimize2 size={14} strokeWidth={1.8} />
+                ) : (
+                  <Maximize2 size={14} strokeWidth={1.8} />
+                )}
+                <span className="igm-mono">
+                  {isFullscreen ? t("detailFullscreenExit") : t("detailFullscreen")}
+                </span>
+              </button>
             </div>
           )}
         </div>
@@ -366,6 +426,86 @@ export function E_ExamDetail() {
         <p className={styles.submitLead}>{t("detailSubmitLead")}</p>
         <IGM_StampButton examId={exam.id} />
       </section>
+
+      {/* 全屏浏览覆盖层：复用同一试卷 iframe 与 zoom 状态，仅当存在正文时可用 */}
+      {exam.htmlPath && isFullscreen && (
+        <div
+          className={styles.fullscreenOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-label={t("detailPaperTitle")}
+        >
+          <div className={styles.fullscreenBar}>
+            <span className={`igm-mono ${styles.fullscreenTitle}`}>
+              {t("detailPaperTitle")}
+            </span>
+            <div className={styles.zoomBar}>
+              <button
+                type="button"
+                className={styles.zoomBtn}
+                onClick={() => iGM_Exam_ZoomBy(-iGM_Exam_ZoomStep)}
+                aria-label={t("paperZoomOut")}
+                title={t("paperZoomOut")}
+              >
+                <ZoomOut size={14} strokeWidth={1.8} />
+              </button>
+              <button
+                type="button"
+                className={styles.zoomBtn}
+                onClick={() =>
+                  setZoom(iGM_Exam_FitZoom(fullscreenStageRef.current, true))
+                }
+                aria-label={t("paperZoomFit")}
+                title={t("paperZoomFit")}
+              >
+                <Maximize2 size={14} strokeWidth={1.8} />
+                <span className="igm-mono">{t("paperZoomFit")}</span>
+              </button>
+              <button
+                type="button"
+                className={styles.zoomBtn}
+                onClick={() => iGM_Exam_ZoomBy(iGM_Exam_ZoomStep)}
+                aria-label={t("paperZoomIn")}
+                title={t("paperZoomIn")}
+              >
+                <ZoomIn size={14} strokeWidth={1.8} />
+              </button>
+              <span className={`igm-mono ${styles.zoomValue}`}>
+                {Math.round(zoom * 100)}%
+              </span>
+              <button
+                type="button"
+                className={styles.zoomBtn}
+                onClick={() => setIsFullscreen(false)}
+                aria-label={t("detailFullscreenExit")}
+                title={t("detailFullscreenExit")}
+              >
+                <Minimize2 size={14} strokeWidth={1.8} />
+                <span className="igm-mono">{t("detailFullscreenExit")}</span>
+              </button>
+            </div>
+          </div>
+          <div className={styles.fullscreenStage} ref={fullscreenStageRef}>
+            <div
+              className={styles.paperSheet}
+              style={
+                {
+                  "--igm-zoom": zoom,
+                  "--igm-page-w": `${sheetWidth}px`,
+                  "--igm-page-h": `${sheetHeight}px`,
+                } as CSSProperties
+              }
+            >
+              <iframe
+                key={exam.htmlPath}
+                className={styles.htmlFrame}
+                src={exam.htmlPath}
+                title={exam.title || exam.fileName}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

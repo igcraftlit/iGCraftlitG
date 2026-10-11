@@ -3,10 +3,10 @@
  * 所属层：前端 / 基础服务层
  * 路由：调用后端 /G_AI/*
  * 模块：iGM_AIClient
- * 作用：AI 助手接口前端调用出口（单通道 Chat iGM Nove V0.1 + UQ/Coin 双币种）
- * 内容：UQ/Coin 双余额与模型信息查询、SSE 流式提问、会话历史、会话列表、
+ * 作用：AI 助手接口前端调用出口（双模型 Chat iGM Nove V0.1 / V0.1 Pro + UQ/Coin 双币种）
+ * 内容：UQ/Coin 双余额与模型信息查询、SSE 流式提问（携带所选模型）、会话历史、会话列表、
  *       UQ / Coin 流水查询（需登录）
- * 约束：大模型响应慢，超时放宽到 90 秒
+ * 约束：大模型响应慢，超时按模型自适应（标准版 90 秒 / Pro 版 120 秒）
  */
 
 // 导入依赖 //
@@ -32,8 +32,10 @@ export interface iGM_AIInfo {
   uqBalance: number;
   /** Coin 余额（3 位小数） */
   coinBalance: number;
-  /** 对外展示模型名 */
+  /** 标准版对外展示模型名 */
   modelName: string;
+  /** Pro 版对外展示模型名 */
+  proModelName: string;
 }
 
 /** 消息条目 */
@@ -41,6 +43,8 @@ export interface iGM_AIChatMessage {
   id: string;
   role: iGM_AIChatRole;
   content: string;
+  /** 回复所用的底层模型 id（前端据此标注 标准版 / Pro 版） */
+  modelUsed: string | null;
   createdAt: string;
 }
 
@@ -104,7 +108,10 @@ function iGM_IsAIStreamNotice(value: unknown): value is iGM_AIStreamNotice {
 }
 
 // 核心逻辑 //
+/** 标准版超时（90 秒） */
 const iGM_AI_CHAT_TIMEOUT_MS = 90000;
+/** Pro 版（推理模型）超时（120 秒） */
+const iGM_AI_CHAT_PRO_TIMEOUT_MS = 120000;
 
 /** 查询 UQ / Coin 双余额与模型信息（需登录） */
 export function iGM_ApiAIInfo(): Promise<iGM_ApiResponse<iGM_AIInfo>> {
@@ -143,19 +150,25 @@ export function iGM_ApiAIQuotaTransactions(
 
 /**
  * 流式提问（SSE）：fetch + ReadableStream 逐块解析 `data: {...}` 帧。
- * 不再需要通道参数（单通道）。
+ * model 为所选模型 id（标准版 / Pro 版），后端据此选择底层模型与超时。
  */
 export async function iGM_ApiAIStreamChat(
   message: string,
   conversationId: string | null,
+  model: string,
   handlers: iGM_AIStreamHandlers,
   signal?: AbortSignal,
 ): Promise<void> {
   const params = new URLSearchParams({ message });
   if (conversationId) params.set("conversationId", conversationId);
+  params.set("model", model);
 
+  // 超时按模型自适应：Pro 版（deepseek 推理模型）更慢
+  const timeoutMs = model.includes("deepseek")
+    ? iGM_AI_CHAT_PRO_TIMEOUT_MS
+    : iGM_AI_CHAT_TIMEOUT_MS;
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), iGM_AI_CHAT_TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   const relayAbort = (): void => controller.abort();
   signal?.addEventListener("abort", relayAbort);
 

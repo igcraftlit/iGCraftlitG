@@ -54,8 +54,10 @@ export interface iGM_AIInfoResult {
   uqBalance: number;
   /** Coin 余额 */
   coinBalance: number;
-  /** 当前对外模型名（Chat iGM Nove V0.1） */
+  /** 标准版对外模型名（Chat iGM Nove V0.1） */
   modelName: string;
+  /** Pro 版对外模型名（Chat iGM Nove V0.1 Pro） */
+  proModelName: string;
 }
 
 /** 流水 DTO（numeric 列已转数字，保留 3 位小数） */
@@ -104,6 +106,14 @@ export interface iGM_AICallStatsUser {
   calls: number;
 }
 
+/** 双模型调用量（按 AI 回复所用底层模型归类） */
+export interface iGM_AICallStatsModels {
+  /** 标准版（qwen2.5:7b）回复条数 */
+  standard: number;
+  /** Pro 版（deepseek-r1:7b）回复条数 */
+  pro: number;
+}
+
 /** 管理后台双币种统计结果 */
 export interface iGM_AICallStatsResult {
   range: iGM_AICallStatsRange;
@@ -111,6 +121,8 @@ export interface iGM_AICallStatsResult {
   coin: iGM_AICallStatsChannel;
   topUqUsers: iGM_AICallStatsUser[];
   topCoinUsers: iGM_AICallStatsUser[];
+  /** 双模型调用量（标准版 / Pro 版） */
+  models: iGM_AICallStatsModels;
 }
 
 // 核心逻辑 //

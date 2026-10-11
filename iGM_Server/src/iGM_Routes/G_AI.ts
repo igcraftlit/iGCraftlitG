@@ -51,6 +51,7 @@ async function iGM_HandleChat(ctx: iGM_RouteContext) {
     {
       message: iGM_Query(ctx.query, "message"),
       conversationId: iGM_Query(ctx.query, "conversationId") || null,
+      model: iGM_Query(ctx.query, "model") || null,
     },
     ctx.request.signal,
   );
@@ -63,6 +64,7 @@ async function iGM_HandleBalance(ctx: iGM_RouteContext) {
     uqBalance: await iGM_GetAIInfoService(user.iGM_Id, "uq"),
     coinBalance: await iGM_GetAIInfoService(user.iGM_Id, "coin"),
     modelName: iGM_Config.ai.channel.displayName,
+    proModelName: iGM_Config.ai.channel.proDisplayName,
   });
 }
 

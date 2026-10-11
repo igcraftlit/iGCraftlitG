@@ -3,10 +3,11 @@
  * 所属层：前端 / 页面样式层
  * 路由：E_ExamDetail（/detail?id=xxx）
  * 模块：iGM_ExamDetail
- * 作用：试卷详情页样式（实验记录表、计时器侧栏、A4 版面试卷预览、交卷区）
+ * 作用：试卷详情页样式（实验记录表、计时器侧栏、A4 版面试卷预览、全屏浏览覆盖层、交卷区）
  * 内容：页面容器、返回条、标题块、顶部信息栏（题数 / 限时 / 总分）、元数据布局、记录表、通知、
- *       试卷预览（缩放工具条 / 纸张 / iframe，尺寸取自真实 PDF 页尺寸）、交卷
- * 说明：桌面左右分栏，平板起上下堆叠
+ *       试卷预览（缩放工具条 / 纸张 / iframe，尺寸取自真实 PDF 页尺寸）、
+ *       全屏浏览覆盖层（fixed 舞台 + 缩放工具条）、交卷、移动端适配
+ * 说明：桌面左右分栏，平板起上下堆叠；移动端以 768px 为主断点，试卷正文靠缩放 / 全屏提升可读性
  */
 
 /* ============================= 页面容器 ============================= */
@@ -371,6 +372,48 @@
   background: #ffffff;
 }
 
+/* ============================= 全屏浏览覆盖层 ============================= */
+/* 覆盖 masthead / footer / 侧栏（现有最高层级为 60），铺满视口并锁定内部滚动 */
+.fullscreenOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  background: var(--igm-paper-sink);
+}
+
+/* 覆盖层工具条：缩小 / 适应宽度 / 放大 / 百分比 / 退出全屏 */
+.fullscreenBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  padding: 10px 16px;
+  background: var(--igm-paper-raised);
+  border-bottom: 1px solid var(--igm-line);
+}
+
+.fullscreenTitle {
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  color: var(--igm-text-muted);
+}
+
+/* 覆盖层舞台：占满剩余高度，仅纵向滚动（适应宽度下左右不溢出） */
+.fullscreenStage {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 18px 12px 26px;
+}
+
 /* ============================= 交卷 ============================= */
 .submitLead {
   max-width: 620px;
@@ -438,20 +481,58 @@
   }
 }
 
-@media (max-width: 640px) {
+/* 移动端主断点：减少留白、放大父页面正文可读性；试卷正文靠缩放 / 全屏解决 */
+@media (max-width: 768px) {
   .page {
-    padding: 22px 16px 60px;
+    padding: 20px 14px 60px;
   }
 
   .statItem {
-    padding: 12px;
+    padding: 10px 12px;
   }
 
   .statValue {
     font-size: 17px;
   }
 
+  .recordValue {
+    font-size: 17px;
+  }
+
+  .notice {
+    font-size: 15px;
+  }
+
   .recordGrid {
     grid-template-columns: 1fr;
+  }
+
+  .paperStage {
+    padding: 12px 6px 20px;
+    overflow-x: hidden;
+  }
+
+  .submitLead,
+  .answerLead {
+    font-size: 15px;
+  }
+
+  .paperHead {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 18px 12px 56px;
+  }
+
+  .statItem {
+    padding: 10px 12px;
+  }
+
+  .statValue {
+    font-size: 17px;
   }
 }

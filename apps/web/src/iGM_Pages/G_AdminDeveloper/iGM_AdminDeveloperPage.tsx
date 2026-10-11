@@ -295,7 +295,7 @@ function iGM_DeveloperCallStatsInner() {
         </>
       )}
 
-      {/* AI 赋能系统模块三：AI 双通道调用统计（UPR / SPR，独立数据源与时间范围） */}
+      {/* AI 赋能系统重构：AI 双币种调用统计（UQ / Coin）+ 双模型调用量，独立数据源与时间范围 */}
       <IGM_AICallStatsInner />
     </div>
   );
@@ -309,10 +309,10 @@ const iGM_AIRangeLabelKeys: Record<iGM_AICallStatsRange, string> = {
 };
 
 /**
- * AI 赋能系统模块三：AI 双通道调用统计面板
- * 数据聚合自 iGM_UPRTransactions（Free）与 iGM_SPRTransactions（Premium）：
- * UPR 组（总调用次数 / 总消耗 / 当日消耗）、SPR 组（另加总收入）
- * 以及两组消耗排行 Top 10
+ * AI 赋能系统重构：AI 双币种调用统计面板
+ * 数据聚合自 iGM_UQTransactions（常规额度）与 iGM_CoinTransactions（社区币）：
+ * UQ 组（总调用次数 / 总消耗 / 当日消耗）、Coin 组（同口径）
+ * 以及两组消耗排行 Top 10，另加双模型（标准版 / Pro 版）调用量
  */
 function iGM_AICallStatsInner() {
   const t = useTranslations();
@@ -376,88 +376,99 @@ function iGM_AICallStatsInner() {
         </div>
       ) : (
         <>
-          {/* UPR 通道（Free：本地 Qwen）：总调用次数 / 总消耗 / 当日消耗 */}
+          {/* UQ 通道（常规额度）：总调用次数 / 总消耗 / 当日消耗 */}
           <h3 className={styles.aiChannelTitle}>
-            {t("admin.developer.aiStats.uprChannel")}
+            {t("admin.developer.aiStats.uqChannel")}
           </h3>
           <div className={styles.statsGrid}>
             <div className={tileStyles.statTile}>
               <span className={tileStyles.statLabel}>
                 {t("admin.developer.aiStats.totalCalls")}
               </span>
-              <span className={tileStyles.statValue}>{stats.upr.totalCalls}</span>
+              <span className={tileStyles.statValue}>{stats.uq.totalCalls}</span>
             </div>
             <div className={tileStyles.statTile}>
               <span className={tileStyles.statLabel}>
-                {t("admin.developer.aiStats.totalConsumedUpr")}
+                {t("admin.developer.aiStats.totalConsumedUq")}
               </span>
               <span className={tileStyles.statValue}>
-                {iGM_FormatQuota(stats.upr.totalConsumed)}
+                {iGM_FormatQuota(stats.uq.totalConsumed)}
               </span>
             </div>
             <div className={tileStyles.statTile}>
               <span className={tileStyles.statLabel}>
-                {t("admin.developer.aiStats.todayConsumedUpr")}
+                {t("admin.developer.aiStats.todayConsumedUq")}
               </span>
               <span className={tileStyles.statValue}>
-                {iGM_FormatQuota(stats.upr.todayConsumed)}
+                {iGM_FormatQuota(stats.uq.todayConsumed)}
               </span>
             </div>
           </div>
 
           <h3 className={styles.aiTopTitle}>
-            {t("admin.developer.aiStats.topUprUsers")}
+            {t("admin.developer.aiStats.topUqUsers")}
           </h3>
-          <IGM_AITopList users={stats.topUprUsers} unit="UPR" />
+          <IGM_AITopList users={stats.topUqUsers} unit="UQ" />
 
-          {/* SPR 通道（Premium：DeepSeek Flash）：较 UPR 多总收入口径 */}
+          {/* Coin 通道（社区币）：总调用次数 / 总消耗 / 当日消耗 */}
           <h3 className={styles.aiChannelTitle}>
-            {t("admin.developer.aiStats.sprChannel")}
+            {t("admin.developer.aiStats.coinChannel")}
           </h3>
           <div className={styles.statsGrid}>
             <div className={tileStyles.statTile}>
               <span className={tileStyles.statLabel}>
                 {t("admin.developer.aiStats.totalCalls")}
               </span>
-              <span className={tileStyles.statValue}>{stats.spr.totalCalls}</span>
+              <span className={tileStyles.statValue}>{stats.coin.totalCalls}</span>
             </div>
             <div className={tileStyles.statTile}>
               <span className={tileStyles.statLabel}>
-                {t("admin.developer.aiStats.totalConsumedSpr")}
+                {t("admin.developer.aiStats.totalConsumedCoin")}
               </span>
               <span className={tileStyles.statValue}>
-                {iGM_FormatQuota(stats.spr.totalConsumed)}
-              </span>
-            </div>
-            <div className={tileStyles.statTile}>
-              <span className={tileStyles.statLabel}>
-                {t("admin.developer.aiStats.todayConsumedSpr")}
-              </span>
-              <span className={tileStyles.statValue}>
-                {iGM_FormatQuota(stats.spr.todayConsumed)}
+                {iGM_FormatQuota(stats.coin.totalConsumed)}
               </span>
             </div>
             <div className={tileStyles.statTile}>
               <span className={tileStyles.statLabel}>
-                {t("admin.developer.aiStats.totalRevenue")}
+                {t("admin.developer.aiStats.todayConsumedCoin")}
               </span>
               <span className={tileStyles.statValue}>
-                {iGM_FormatQuota(stats.spr.totalRevenue)}
+                {iGM_FormatQuota(stats.coin.todayConsumed)}
               </span>
             </div>
           </div>
 
           <h3 className={styles.aiTopTitle}>
-            {t("admin.developer.aiStats.topSprUsers")}
+            {t("admin.developer.aiStats.topCoinUsers")}
           </h3>
-          <IGM_AITopList users={stats.topSprUsers} unit="SPR" />
+          <IGM_AITopList users={stats.topCoinUsers} unit="Coin" />
+
+          {/* 双模型调用量：标准版（qwen2.5:7b）/ Pro 版（deepseek-r1:7b） */}
+          <h3 className={styles.aiChannelTitle}>
+            {t("admin.developer.aiStats.modelUsage")}
+          </h3>
+          <div className={styles.statsGrid}>
+            <div className={tileStyles.statTile}>
+              <span className={tileStyles.statLabel}>
+                {t("admin.developer.aiStats.modelStandard")}
+              </span>
+              <span className={tileStyles.statValue}>{stats.models.standard}</span>
+            </div>
+            <div className={tileStyles.statTile}>
+              <span className={tileStyles.statLabel}>
+                {t("admin.developer.aiStats.modelPro")}
+              </span>
+              <span className={tileStyles.statValue}>{stats.models.pro}</span>
+            </div>
+          </div>
         </>
       )}
     </section>
   );
 }
 
-/** 双通道共用的消耗排行 Top 10 列表 */
+/** 双币种共用的消耗排行 Top 10 列表 */
 function iGM_AITopList({ users, unit }: { users: iGM_AICallStatsUser[]; unit: string }) {
   const t = useTranslations();
 

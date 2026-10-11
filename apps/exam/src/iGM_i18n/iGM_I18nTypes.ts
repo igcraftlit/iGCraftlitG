@@ -71,6 +71,10 @@ export interface iGM_I18nDict {
   paperZoomOut: string;
   paperZoomFit: string;
   paperZoomIn: string;
+  /** 试卷正文：进入全屏浏览 */
+  detailFullscreen: string;
+  /** 试卷正文：退出全屏浏览 */
+  detailFullscreenExit: string;
   detailSubmitTitle: string;
   detailSubmitLead: string;
   fieldSubject: string;

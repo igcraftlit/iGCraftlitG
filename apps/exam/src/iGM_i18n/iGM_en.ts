@@ -66,6 +66,8 @@ export const iGM_en: iGM_I18nDict = {
   paperZoomOut: "Zoom out",
   paperZoomFit: "Fit width",
   paperZoomIn: "Zoom in",
+  detailFullscreen: "Fullscreen",
+  detailFullscreenExit: "Exit fullscreen",
   detailSubmitTitle: "Declaration of Submission",
   detailSubmitLead:
     "By submitting, you confirm that this session has been completed. The record is stored for institutional review.",

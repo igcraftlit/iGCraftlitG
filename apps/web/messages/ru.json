@@ -26,7 +26,11 @@
       "sessionsEmpty": "Истории диалогов пока нет",
       "sessionUntitled": "Новый диалог",
       "capability": "Отвечает на вопросы о сайте и общие знания · Нет доступа к внешним сайтам · Не отвечает на чувствительные темы",
-      "accountIsolation": "Этот диалог виден только с вашего аккаунта"
+      "accountIsolation": "Этот диалог виден только с вашего аккаунта",
+      "modelStandard": "Стандартная",
+      "modelPro": "Pro",
+      "modelProHint": "Улучшенные рассуждения",
+      "generatedBy": "Создано {model}"
     },
     "notice": {
       "timeout": "AI не ответил вовремя. Списание произведено за сгенерированный текст, ответ неполный.",
@@ -1765,7 +1769,18 @@
         "calls": "Вызовов",
         "rangeDay": "День",
         "rangeWeek": "Неделя",
-        "rangeMonth": "Месяц"
+        "rangeMonth": "Месяц",
+        "uqChannel": "Канал UQ",
+        "totalConsumedUq": "Всего потрачено UQ",
+        "todayConsumedUq": "Потрачено UQ сегодня",
+        "topUqUsers": "Топ-10 по UQ",
+        "coinChannel": "Канал Coin",
+        "totalConsumedCoin": "Всего потрачено Coin",
+        "todayConsumedCoin": "Потрачено Coin сегодня",
+        "topCoinUsers": "Топ-10 по Coin",
+        "modelUsage": "Использование моделей",
+        "modelStandard": "Стандартная",
+        "modelPro": "Pro"
       }
     },
     "overview": {

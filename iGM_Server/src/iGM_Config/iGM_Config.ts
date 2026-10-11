@@ -9,7 +9,8 @@
  *       模块四本地文件上传存储配置、模块十七 Minecraft 本体下载配置、
  *       模块二十第三方资源（Modrinth）接入配置、
  *       AI 赋能系统模块一 DeepSeek 对话配置、
- *       AI 赋能系统模块三双通道（本地 Qwen / DeepSeek）+ UPR / SPR 双额度配置
+ *       AI 赋能系统模块三双通道（本地 Qwen / DeepSeek）+ UPR / SPR 双额度配置、
+ *       AI 助手双模型（标准版 qwen2.5:7b / Pro 版 deepseek-r1:7b）档位解析
  */
 
 // 导入依赖 //
@@ -159,16 +160,22 @@ export interface iGM_OAuthConfig {
   allowHttpRedirect: boolean;
 }
 
-/** 本地 AI 模型通道：Ollama 部署，OpenAI 兼容端点 */
+/** 本地 AI 模型通道：Ollama 部署，OpenAI 兼容端点（标准版 + Pro 版双模型） */
 export interface iGM_AIChannelConfig {
   /** OpenAI 兼容基础地址（含 /v1，不含结尾斜杠） */
   apiBase: string;
-  /** 底层 Ollama 实际模型名（如 qwen2.5:7b） */
+  /** 标准版底层 Ollama 实际模型名（如 qwen2.5:7b） */
   model: string;
-  /** 对外展示模型名（Chat iGM Nove V0.1） */
+  /** 标准版对外展示模型名（Chat iGM Nove V0.1） */
   displayName: string;
-  /** 单次上游请求超时（毫秒），本地模型冷启动较慢，默认 90 秒 */
+  /** 标准版单次上游请求超时（毫秒），本地模型冷启动较慢，默认 90 秒 */
   timeoutMs: number;
+  /** Pro 版底层 Ollama 实际模型名（如 deepseek-r1:7b） */
+  proModel: string;
+  /** Pro 版对外展示模型名（Chat iGM Nove V0.1 Pro） */
+  proDisplayName: string;
+  /** Pro 版单次上游请求超时（毫秒），推理模型更慢，默认 120 秒 */
+  proTimeoutMs: number;
 }
 
 /**
@@ -476,6 +483,9 @@ export const iGM_Config: iGM_AppConfig = {
       model: process.env.OLLAMA_MODEL ?? "qwen2.5:7b",
       displayName: "Chat iGM Nove V0.1",
       timeoutMs: Number(process.env.OLLAMA_TIMEOUT_MS ?? 90000),
+      proModel: process.env.OLLAMA_PRO_MODEL ?? "deepseek-r1:7b",
+      proDisplayName: "Chat iGM Nove V0.1 Pro",
+      proTimeoutMs: Number(process.env.OLLAMA_PRO_TIMEOUT_MS ?? 120000),
     },
     maxHistoryMessages: Number(process.env.IGM_AI_MAX_HISTORY ?? 20),
     maxMessageLength: Number(process.env.IGM_AI_MAX_MESSAGE_LENGTH ?? 2000),
@@ -487,6 +497,41 @@ export const iGM_Config: iGM_AppConfig = {
     questionFixedCost: 0.02,
   },
 };
+
+/** AI 模型档位键：标准版 / Pro 版 */
+export type iGM_AIModelKey = "standard" | "pro";
+
+/** AI 模型档位档案（底层模型名 + 对外展示名 + 超时） */
+export interface iGM_AIModelProfile {
+  key: iGM_AIModelKey;
+  model: string;
+  displayName: string;
+  timeoutMs: number;
+}
+
+/**
+ * 按前端传入的模型参数解析实际使用的模型档位：
+ * 命中 Pro 底层模型名或 "pro" 别名时走 Pro 版，其余（含空值）一律走标准版
+ */
+export function iGM_ResolveAIModel(
+  requested?: string | null,
+): iGM_AIModelProfile {
+  const ch = iGM_Config.ai.channel;
+  const isPro = requested === ch.proModel || requested === "pro";
+  return isPro
+    ? {
+        key: "pro",
+        model: ch.proModel,
+        displayName: ch.proDisplayName,
+        timeoutMs: ch.proTimeoutMs,
+      }
+    : {
+        key: "standard",
+        model: ch.model,
+        displayName: ch.displayName,
+        timeoutMs: ch.timeoutMs,
+      };
+}
 
 // 导出 //
 export default iGM_Config;

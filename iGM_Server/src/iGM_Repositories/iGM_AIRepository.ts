@@ -5,7 +5,8 @@
  * 模块：iGM_AIRepository
  * 作用：AI 会话表（iGM_AIConversations）与消息表（iGM_AIMessages）的唯一数据访问出口
  * 内容：新建/查询会话、按用户列出与统计会话、取最早会话、删除会话及其消息、
- *       读取最近上下文消息、读取全量历史消息、写入消息、刷新会话时间
+ *       读取最近上下文消息、读取全量历史消息、写入消息（含所用模型 id）、
+ *       按模型统计回复调用量、刷新会话时间
  * 说明：消息按 iGM_CreatedAt 正序返回；同一会话内提问与回复的时间戳
  *       在业务层保证先后（回复落库时刻晚于提问时刻），排序结果稳定；
  *       会话列表按 iGM_CreatedAt 倒序（最新创建在前），上限判定与最早会话
@@ -155,25 +156,45 @@ export async function iGM_ListRecentAIMessages(
     .all(conversationId, userId, limit)) as iGM_AIMessageRow[];
 }
 
-/** 写入一条消息（createdAt 缺省取当前时刻） */
+/** 写入一条消息（createdAt 缺省取当前时刻；modelUsed 仅 AI 回复记录实际使用的模型 id） */
 export async function iGM_InsertAIMessage(
   conversationId: string,
   role: iGM_AIRole,
   content: string,
   createdAt?: string,
+  modelUsed?: string | null,
 ): Promise<void> {
   await iGM_Db.run(
     `INSERT INTO iGM_AIMessages
-       (iGM_Id, iGM_ConversationId, iGM_Role, iGM_Content, iGM_CreatedAt)
-     VALUES (?, ?, ?, ?, ?)`,
+       (iGM_Id, iGM_ConversationId, iGM_Role, iGM_Content, iGM_ModelUsed, iGM_CreatedAt)
+     VALUES (?, ?, ?, ?, ?, ?)`,
     [
       iGM_RandomUuid(),
       conversationId,
       role,
       content,
+      modelUsed ?? null,
       createdAt ?? new Date().toISOString(),
     ],
   );
+}
+
+/**
+ * 按时间范围统计 AI 回复（assistant）所用的底层模型调用量，
+ * 按 iGM_ModelUsed 分组返回；iGM_ModelUsed 为空的历史行归入 null 分组
+ */
+export async function iGM_CountAssistantMessagesByModelSince(
+  sinceIso: string,
+): Promise<Array<{ iGM_ModelUsed: string | null; iGM_Count: number }>> {
+  return (await iGM_Db
+    .query(
+      `SELECT iGM_ModelUsed, COUNT(*) AS iGM_Count
+         FROM iGM_AIMessages
+        WHERE iGM_Role = 'assistant'
+          AND iGM_CreatedAt >= ?
+        GROUP BY iGM_ModelUsed`,
+    )
+    .all(sinceIso)) as Array<{ iGM_ModelUsed: string | null; iGM_Count: number }>;
 }
 
 /** 刷新会话更新时间（有新消息时调用；账号级隔离，仅本人会话可更新） */
@@ -199,5 +220,6 @@ export default {
   iGM_DeleteAIConversation,
   iGM_ListRecentAIMessages,
   iGM_InsertAIMessage,
+  iGM_CountAssistantMessagesByModelSince,
   iGM_TouchAIConversation,
 };

@@ -31,6 +31,8 @@ export interface iGM_AIMessageRow {
   iGM_ConversationId: string;
   iGM_Role: string;
   iGM_Content: string;
+  /** 回复落库时实际使用的底层模型 id（提问 / 历史遗留行为 null） */
+  iGM_ModelUsed: string | null;
   iGM_CreatedAt: string;
 }
 
@@ -47,6 +49,8 @@ export interface iGM_AIMessageDto {
   id: string;
   role: iGM_AIRole;
   content: string;
+  /** 回复所用的底层模型 id（用于前端标注 标准版 / Pro 版） */
+  modelUsed: string | null;
   createdAt: string;
 }
 
@@ -54,6 +58,8 @@ export interface iGM_AIMessageDto {
 export interface iGM_AIChatStreamInput {
   message: string;
   conversationId?: string | null;
+  /** 所选模型 id：命中 Pro 底层模型名走 Pro 版，缺省走标准版 */
+  model?: string | null;
 }
 
 /** GET /G_AI/messages 返回数据 */
@@ -92,6 +98,7 @@ export function iGM_ToAIMessageDto(row: iGM_AIMessageRow): iGM_AIMessageDto {
     id: row.iGM_Id,
     role: iGM_IsAIRole(row.iGM_Role) ? row.iGM_Role : "assistant",
     content: row.iGM_Content,
+    modelUsed: row.iGM_ModelUsed ?? null,
     createdAt: row.iGM_CreatedAt,
   };
 }

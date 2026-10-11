@@ -34,6 +34,7 @@ import {
   iGM_ListTopQuotaUsers,
   iGM_SumQuotaConsumedSince,
 } from "../iGM_Repositories/iGM_QuotaRepository";
+import { iGM_CountAssistantMessagesByModelSince } from "../iGM_Repositories/iGM_AIRepository";
 
 // 类型定义 //
 /** 额度业务错误：message 为前端 i18n 文案键，status 为 HTTP 状态码 */
@@ -224,7 +225,7 @@ export async function iGM_GetAdminStats(
   const sinceIso = since.toISOString();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
 
-  const [uqCalls, uqConsumed, uqToday, coinCalls, coinConsumed, coinToday, topUq, topCoin] = await Promise.all([
+  const [uqCalls, uqConsumed, uqToday, coinCalls, coinConsumed, coinToday, topUq, topCoin, modelRows] = await Promise.all([
     iGM_CountQuotaCallsSince("uq", sinceIso),
     iGM_SumQuotaConsumedSince("uq", sinceIso),
     iGM_SumQuotaConsumedSince("uq", todayStart),
@@ -233,7 +234,19 @@ export async function iGM_GetAdminStats(
     iGM_SumQuotaConsumedSince("coin", todayStart),
     iGM_ListTopQuotaUsers("uq", sinceIso, 10),
     iGM_ListTopQuotaUsers("coin", sinceIso, 10),
+    iGM_CountAssistantMessagesByModelSince(sinceIso),
   ]);
+
+  // 双模型调用量：按回复所用底层模型 id 归入标准版 / Pro 版（历史空值归标准版）
+  const models = { standard: 0, pro: 0 };
+  for (const row of modelRows) {
+    const count = Number(row.iGM_Count) || 0;
+    if (row.iGM_ModelUsed === iGM_Config.ai.channel.proModel) {
+      models.pro += count;
+    } else {
+      models.standard += count;
+    }
+  }
 
   return {
     range,
@@ -247,6 +260,7 @@ export async function iGM_GetAdminStats(
       userId: r.iGM_UserId, username: r.iGM_Username, displayName: r.iGM_DisplayName,
       consumed: iGM_Round3(Number(r.iGM_Consumed)), calls: r.iGM_Calls,
     })),
+    models,
   };
 }
 

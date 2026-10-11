@@ -3,11 +3,13 @@
  * 所属层：后端 / 业务服务层
  * 路由：G_AI
  * 模块：iGM_AIService
- * 作用：AI 助手业务——本地 Ollama 单通道流式对话（Chat iGM Nove V0.1）、
+ * 作用：AI 助手业务——本地 Ollama 双模型流式对话（标准版 Chat iGM Nove V0.1 /
+ *       Pro 版 Chat iGM Nove V0.1 Pro）、
  *       会话维护（最多保留 3 个，超限自动删除最早创建的一条）、上下文拼接、
- *       SSE 代理 Ollama、流结束落库并按 UQ/Coin 双币种计费（高峰/非高峰时段）
+ *       SSE 代理 Ollama、流结束落库（记录实际所用模型）并按 UQ/Coin 双币种计费（高峰/非高峰时段）
  * 说明：
- *   - 仅保留本地 Ollama 单通道（原 UPR/SPR/DeepSeek/Free/Premium 全部废弃）；
+ *   - 仅保留本地 Ollama 单通道，双模型按前端所选参数切换（标准版 qwen2.5:7b / Pro 版 deepseek-r1:7b）；
+ *     Pro 版忽略 reasoning_content，仅取 content；
  *   - 计费规则：优先扣 UQ（免费额度 10/注册赠送），UQ 不足自动扣 Coin（社区币 5/注册赠送）；
  *   - Coin 时段：非高峰 3/8 Coin 每百万 token（输入/输出），高峰 4.5/12（非高峰 × 1.5）；
  *   - 90 秒超时 / 5000 字截断 / 用户手动停止 → 均按已生成内容照常扣费；
@@ -18,7 +20,7 @@
 // 导入依赖 //
 import { appendFileSync, mkdirSync } from "node:fs";
 import { resolve } from "node:path";
-import { iGM_Config } from "../iGM_Config/iGM_Config";
+import { iGM_Config, iGM_ResolveAIModel } from "../iGM_Config/iGM_Config";
 import { iGM_Db } from "../iGM_Database/iGM_Database";
 import {
   iGM_CountAIConversations,
@@ -192,6 +194,8 @@ async function iGM_FinalizeStream(params: {
   promptTokens: number;
   completionTokens: number;
   reason: iGM_AIChargeReason;
+  /** 本次回复实际使用的底层模型 id（落库到 assistant 消息的 iGM_ModelUsed） */
+  modelUsed: string;
 }): Promise<void> {
   const reply = params.assistantText.trim();
   // 未产出任何回复内容：不落库（提问扣费已计），用户可重新提问
@@ -209,6 +213,7 @@ async function iGM_FinalizeStream(params: {
       "assistant",
       reply,
       params.repliedAt,
+      params.modelUsed,
     );
     await iGM_TouchAIConversation(params.conversationId, params.userId, params.repliedAt);
     // 单通道：统一走 iGM_Charge（优先 UQ，不足 Coin，高峰/非高峰时段自动计算）
@@ -284,8 +289,12 @@ export async function iGM_StreamAIService(
     { role: "user", content: message },
   ];
 
-  // 单通道配置：本地 Ollama
-  const { apiBase, model, timeoutMs } = iGM_Config.ai.channel;
+  // 按前端所选模型解析档位（标准版 / Pro 版），缺省为标准版
+  const profile = iGM_ResolveAIModel(input.model);
+
+  // 单通道配置：本地 Ollama（apiBase 共用，模型名与超时按档位取用）
+  const { apiBase } = iGM_Config.ai.channel;
+  const { model, timeoutMs } = profile;
 
   // 上游请求头：本地模型无鉴权
   const upstreamHeaders: Record<string, string> = {
@@ -501,6 +510,7 @@ export async function iGM_StreamAIService(
           promptTokens: effectivePromptTokens,
           completionTokens: effectiveCompletionTokens,
           reason,
+          modelUsed: profile.model,
         });
       } catch (error) {
         iGM_AILog(`流式收尾失败：${iGM_Truncate(String(error))}`);

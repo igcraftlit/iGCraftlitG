@@ -65,6 +65,8 @@ export const iGM_zhCN: iGM_I18nDict = {
   paperZoomOut: "缩小",
   paperZoomFit: "适应宽度",
   paperZoomIn: "放大",
+  detailFullscreen: "全屏浏览",
+  detailFullscreenExit: "退出全屏",
   detailSubmitTitle: "交卷声明",
   detailSubmitLead: "点击交卷即表示本次考试已完成，记录将留存供学院复核。",
   fieldSubject: "科目",
