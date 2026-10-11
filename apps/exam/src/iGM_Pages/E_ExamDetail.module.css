@@ -190,11 +190,13 @@
 
 /* ============================= 解析正文 ============================= */
 .paperSection,
+.answerSection,
 .submitSection {
   margin-bottom: 40px;
 }
 
 .paperHead,
+.answerHead,
 .submitHead {
   display: flex;
   align-items: baseline;
@@ -205,6 +207,7 @@
 }
 
 .paperNum,
+.answerNum,
 .submitNum {
   font-size: 13px;
   font-weight: 700;
@@ -212,12 +215,58 @@
 }
 
 .paperTitle,
+.answerTitle,
 .submitTitle {
   margin: 0;
   flex: 1;
   font-size: 19px;
   font-weight: 600;
   color: var(--igm-ink);
+}
+
+/* ============================= 参考答案 ============================= */
+.answerBody {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 20px 22px;
+  border: 1px solid var(--igm-line-soft);
+  border-radius: var(--igm-radius);
+  background: var(--igm-paper-raised);
+}
+
+.answerFile {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--igm-copper);
+  word-break: break-all;
+}
+
+.answerLead {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+.answerBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 20px;
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+  color: var(--igm-ink);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.answerBtn:hover {
+  border-color: var(--igm-copper);
+  background: color-mix(in srgb, var(--igm-gold) 12%, transparent);
 }
 
 .paperEmpty {

@@ -63,6 +63,8 @@ export interface iGM_ExamRow {
   iGM_Notice: string | null;
   /** 转换生成的 HTML 目录（相对存储根目录，不对外暴露） */
   iGM_HtmlPath: string | null;
+  /** 答案附件 PDF 路径（相对存储根目录，不对外暴露）；未上传时为 null */
+  iGM_AnswerPdfPath: string | null;
   /** 转换产物（HTML 目录及其中资源）实际占用字节数 */
   iGM_FileSize: number | null;
   iGM_ParseStatus: string;
@@ -138,6 +140,10 @@ export interface iGM_ExamDetailDto extends iGM_ExamListItemDto {
   fileName: string;
   /** 原始文件格式（本模块固定 pdf） */
   fileType: string;
+  /** 答案附件下载 / 预览接口地址；未上传时为空串 */
+  answerApiPath: string;
+  /** 答案附件文件名（仅用于展示）；未上传时为空串 */
+  answerFileName: string;
 }
 
 /** 交卷结果 */

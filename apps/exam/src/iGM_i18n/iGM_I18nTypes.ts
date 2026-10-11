@@ -45,6 +45,8 @@ export interface iGM_I18nDict {
   listRetrieving: string;
   listEmpty: string;
   listError: string;
+  listSearchPlaceholder: string;
+  listSearchNoResult: string;
   actionRefresh: string;
   actionRetry: string;
   // 档案卡片
@@ -82,6 +84,10 @@ export interface iGM_I18nDict {
   /** 题数单位（题 / items） */
   unitQuestions: string;
   noticeTag: string;
+  // 答案附件
+  answerSectionTitle: string;
+  answerSectionLead: string;
+  answerView: string;
   // 计时器
   timerTitle: string;
   timerPause: string;
@@ -117,6 +123,24 @@ export interface iGM_I18nDict {
   adminPlaceholderIssuer: string;
   adminPlaceholderReviewer: string;
   adminPlaceholderNotice: string;
+  // 管理端：信息修改
+  adminEditInfo: string;
+  adminEditSpec: string;
+  adminSaveMeta: string;
+  adminSaveMetaDone: string;
+  adminSaveMetaFailed: string;
+  adminSaveMetaRequired: string;
+  // 管理端：答案附件
+  adminAnswerLabel: string;
+  adminAnswerUpload: string;
+  adminAnswerReplace: string;
+  adminAnswerNone: string;
+  adminAnswerUploading: string;
+  adminAnswerOnlyPdf: string;
+  adminAnswerTooLarge: string;
+  adminAnswerFailed: string;
+  adminAnswerUploaded: string;
+  adminAnswerView: string;
   adminReparse: string;
   adminDelete: string;
   adminCancel: string;

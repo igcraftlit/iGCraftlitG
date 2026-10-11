@@ -6,8 +6,10 @@
  * 作用：iGC&M 教育考试系统的试卷业务逻辑与 DTO 组装
  * 内容：编号生成（E-YYYY-NNN）、列表（公开/管理端）、详情、
  *       上传（管理员填写元数据 + PDF，校验通过直接发布）并后台 pdf2htmlEX 转换为 HTML、
- *       转换进度查询、HTML 资源读取、重新转换、删除、交卷记录、原始文件读取
+ *       答案附件上传与读取、元数据修改、转换进度查询、HTML 资源读取、重新转换、删除、
+ *       交卷记录、原始文件读取
  * 说明：上传即发布，不再有自动解析与审查校对流程；
+ *       答案附件与元数据修改会重新导出静态数据并推送，触发 Pages 重建；
  *       转换在后台异步执行，转换成功且试卷已发布时导出静态数据并推送；
  *       转换成功后立即删除原始 PDF，仅保留 HTML 目录；转换失败保留 PDF 供重新转换；
  *       磁盘路径绝不出现在对外 DTO
@@ -32,23 +34,29 @@ import {
   iGM_SetExamFileConvertStatus,
   iGM_SetExamFileSize,
   iGM_SetExamHtmlPath,
+  iGM_SetExamAnswerPath,
   iGM_SetExamParseStatus,
+  iGM_UpdateExamFields,
   type iGM_ExamWriteFields,
 } from "../iGM_Repositories/iGM_ExamRepository";
 import {
   iGM_ExamError,
   iGM_ApplyExamHtmlOverrides,
   iGM_EnsureExamHtmlDir,
+  iGM_ExamAnswerApiPath,
+  iGM_ExamAnswerFileName,
   iGM_ExamHtmlApiPath,
   iGM_ExamHtmlDir,
   iGM_ExamHtmlRelativePath,
   iGM_ExamTempAbsolutePath,
   iGM_MeasureExamUsage,
+  iGM_ReadExamAnswerFile,
   iGM_ReadExamHtmlAsset,
   iGM_ReadExamPageSize,
   iGM_ReadExamTempFile,
   iGM_RemoveExamHtmlDir,
   iGM_RemoveExamTempFile,
+  iGM_StoreExamAnswerFile,
   iGM_StoreExamTempFile,
 } from "./iGM_ExamIngestService";
 import { iGM_RunPdf2HtmlEx } from "./iGM_ExamConvertService";
@@ -87,6 +95,24 @@ export interface iGM_ExamFileContent {
   bytes: Uint8Array;
   fileName: string;
   fileType: string;
+}
+
+/** 试卷元数据修改入参（管理端在预览页编辑规格） */
+export interface iGM_ExamMetaInput {
+  title: string;
+  subject: string;
+  issuer: string;
+  reviewer: string;
+  duration: number | null;
+  totalScore: number | null;
+  questionCount: number | null;
+  notice: string;
+}
+
+/** 答案附件读取结果 */
+export interface iGM_ExamAnswerContent {
+  bytes: Uint8Array;
+  fileName: string;
 }
 
 /** HTML 资源读取结果 */
@@ -265,17 +291,23 @@ export async function iGM_GetExamDetailService(
       : "",
     fileName: fileRow?.iGM_FileName ?? "",
     fileType: fileRow?.iGM_FileType ?? "",
+    answerApiPath: row.iGM_AnswerPdfPath
+      ? iGM_ExamAnswerApiPath(row.iGM_Id)
+      : "",
+    answerFileName: row.iGM_AnswerPdfPath
+      ? iGM_ExamAnswerFileName(row.iGM_AnswerPdfPath)
+      : "",
   };
 }
 
 /**
- * 导出已发布试卷的静态数据并推送，触发 Cloudflare Pages 重新构建
- * 失败仅告警，不阻断转换与发布流程
+ * 导出试卷静态数据并推送，触发 Cloudflare Pages 重新构建
+ * 单份导出在试卷未完成转换时为无操作；索引始终重建，以同步元数据修改
+ * 失败仅告警，不阻断业务流程
  */
-async function iGM_ExportPublishedExamStatic(examId: string): Promise<void> {
+async function iGM_ExportExamStatic(examId: string): Promise<void> {
   try {
-    const exported = await iGM_GenerateExamStaticFile(examId);
-    if (!exported) return;
+    await iGM_GenerateExamStaticFile(examId);
     await iGM_RebuildExamStaticIndex();
     await iGM_CommitExamStaticFiles();
   } catch (error) {
@@ -324,7 +356,7 @@ export async function iGM_RunExamConvertService(
 
     // 上传即发布：转换完成后导出静态数据并推送，使试卷出现在线上目录
     if (row.iGM_Status === "published") {
-      await iGM_ExportPublishedExamStatic(examId);
+      await iGM_ExportExamStatic(examId);
     }
   } catch (error) {
     const message =
@@ -336,19 +368,36 @@ export async function iGM_RunExamConvertService(
 }
 
 /**
- * 校验管理员在上传时填写的必填元数据
- * 任一文本字段为空、任一数值字段非正整数或未选择文件，一律提示「请填写完整信息」并返回 400
+ * 校验元数据完整性：文本字段非空，数值字段均为正整数
+ * 任一不满足一律提示「请填写完整信息」并返回 400
  */
-function iGM_AssertPublishInput(input: iGM_ExamPublishInput): void {
+function iGM_AssertMetaFields(input: {
+  title: string;
+  subject: string;
+  issuer: string;
+  reviewer: string;
+  duration: number | null;
+  totalScore: number | null;
+  questionCount: number | null;
+}): void {
   const texts = [input.title, input.subject, input.issuer, input.reviewer];
   const numbers = [input.duration, input.totalScore, input.questionCount];
   const textIncomplete = texts.some((value) => value.trim().length === 0);
   const numberIncomplete = numbers.some(
     (value) => value === null || !Number.isInteger(value) || value <= 0,
   );
-  if (!input.file || textIncomplete || numberIncomplete) {
+  if (textIncomplete || numberIncomplete) {
     throw new iGM_ExamError("请填写完整信息", 400);
   }
+}
+
+/**
+ * 校验管理员在上传时填写的必填元数据与文件
+ * 未选择文件或元数据不完整，一律提示「请填写完整信息」并返回 400
+ */
+function iGM_AssertPublishInput(input: iGM_ExamPublishInput): void {
+  if (!input.file) throw new iGM_ExamError("请填写完整信息", 400);
+  iGM_AssertMetaFields(input);
 }
 
 /**
@@ -380,6 +429,54 @@ export async function iGM_UploadExamService(
   // 后台转换：不阻塞发布响应
   void iGM_RunExamConvertService(examId, stored.relativePath);
   return await iGM_GetExamDetailService(examId, { publicOnly: false });
+}
+
+/**
+ * 上传答案附件（PDF，≤20MB）并落盘、登记路径
+ * 上传成功后重新导出该试卷静态数据与索引并推送，使线上详情页展示答案入口
+ */
+export async function iGM_UploadAnswerService(
+  examId: string,
+  file: File | null,
+): Promise<iGM_ExamDetailDto> {
+  const row = await iGM_FindExamById(examId);
+  if (!row) throw new iGM_ExamError("试卷不存在", 404);
+  if (!file) throw new iGM_ExamError("请选择答案 PDF 文件", 400);
+
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const stored = await iGM_StoreExamAnswerFile(examId, file.name, bytes);
+  await iGM_SetExamAnswerPath(examId, stored.relativePath);
+  await iGM_ExportExamStatic(examId);
+  return await iGM_GetExamDetailService(examId, { publicOnly: false });
+}
+
+/**
+ * 修改试卷元数据（管理端在预览页编辑规格）
+ * 校验通过后更新数据库，并重新导出静态数据与索引、推送触发重建
+ */
+export async function iGM_UpdateExamMetaService(
+  examId: string,
+  input: iGM_ExamMetaInput,
+): Promise<iGM_ExamDetailDto> {
+  const row = await iGM_FindExamById(examId);
+  if (!row) throw new iGM_ExamError("试卷不存在", 404);
+  iGM_AssertMetaFields(input);
+  await iGM_UpdateExamFields(examId, iGM_ToWriteFields(input));
+  await iGM_ExportExamStatic(examId);
+  return await iGM_GetExamDetailService(examId, { publicOnly: false });
+}
+
+/** 读取答案附件字节与文件名（后端可用时下载 / 预览） */
+export async function iGM_ReadExamAnswerService(
+  examId: string,
+): Promise<iGM_ExamAnswerContent> {
+  const row = await iGM_FindExamById(examId);
+  if (!row) throw new iGM_ExamError("试卷不存在", 404);
+  if (!row.iGM_AnswerPdfPath) {
+    throw new iGM_ExamError("答案附件不存在", 404);
+  }
+  const bytes = await iGM_ReadExamAnswerFile(row.iGM_AnswerPdfPath);
+  return { bytes, fileName: iGM_ExamAnswerFileName(row.iGM_AnswerPdfPath) };
 }
 
 /** 查询试卷转换进度（前端转换中轮询） */
@@ -475,6 +572,9 @@ export default {
   iGM_ListAdminExamsService,
   iGM_GetExamDetailService,
   iGM_UploadExamService,
+  iGM_UploadAnswerService,
+  iGM_UpdateExamMetaService,
+  iGM_ReadExamAnswerService,
   iGM_RunExamConvertService,
   iGM_GetExamConvertProgressService,
   iGM_ReparseExamService,

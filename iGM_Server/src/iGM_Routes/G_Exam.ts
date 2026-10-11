@@ -3,10 +3,11 @@
  * 所属层：后端 / 路由层
  * 路由：/api/exam/* 与 /uploads/exams/*
  * 模块：G_Exam
- * 作用：iGC&M 教育考试系统路由集合（试卷列表 / 详情 / 原文下载 / 转换 HTML 静态资源 /
- *       转换进度 / 上传即发布 / 重新转换 / 删除 / 交卷）
- * 内容：公开列表与详情、管理端列表与详情、原始 PDF 内联预览、转换后 HTML 目录静态服务、
- *       转换进度查询、上传（管理员填写元数据 + PDF）直接发布、重新转换、删除、交卷记录
+ * 作用：iGC&M 教育考试系统路由集合（试卷列表 / 详情 / 原文下载 / 答案附件 / 转换 HTML 静态资源 /
+ *       转换进度 / 上传即发布 / 答案上传 / 元数据修改 / 重新转换 / 删除 / 交卷）
+ * 内容：公开列表与详情、管理端列表与详情、原始 PDF 与答案 PDF 内联预览、转换后 HTML 目录静态服务、
+ *       转换进度查询、上传（管理员填写元数据 + PDF）直接发布、答案附件上传、
+ *       元数据修改、重新转换、删除、交卷记录
  * 约束：统一响应 { success, code, message, data }；二进制流不套统一响应结构；
  *       本模块暂不做登录与权限校验
  */
@@ -30,10 +31,13 @@ import {
   iGM_GetExamDetailService,
   iGM_ListAdminExamsService,
   iGM_ListPublicExamsService,
+  iGM_ReadExamAnswerService,
   iGM_ReadExamFileService,
   iGM_ReadExamHtmlAssetService,
   iGM_ReparseExamService,
   iGM_SubmitExamService,
+  iGM_UpdateExamMetaService,
+  iGM_UploadAnswerService,
   iGM_UploadExamService,
 } from "../iGM_Services/iGM_ExamService";
 
@@ -206,6 +210,56 @@ async function iGM_HandleDelete(ctx: iGM_RouteContext) {
   return iGM_Ok({ deleted: true }, "试卷已删除");
 }
 
+/* ---------- 管理端：上传答案附件（PDF，≤20MB） ---------- */
+async function iGM_HandleUploadAnswer(ctx: iGM_RouteContext) {
+  const ip = iGM_ClientIp(ctx);
+  iGM_EnforceRateLimit(ctx, "examUpload", `ip:${ip}`);
+  const body = ctx.body;
+  const examId = iGM_FormField(body, "examId").trim();
+  if (!examId) throw new iGM_ExamError("缺少试卷 ID", 400);
+  const exam = await iGM_UploadAnswerService(
+    examId,
+    iGM_ExtractUploadFile(body),
+  );
+  return iGM_Ok({ exam }, "答案已上传，正在部署");
+}
+
+/* ---------- 管理端：修改试卷元数据 ---------- */
+async function iGM_HandleUpdateMeta(ctx: iGM_RouteContext) {
+  const ip = iGM_ClientIp(ctx);
+  iGM_EnforceRateLimit(ctx, "examUpload", `ip:${ip}`);
+  const body = ctx.body;
+  const examId = iGM_FormField(body, "examId").trim();
+  if (!examId) throw new iGM_ExamError("缺少试卷 ID", 400);
+  const exam = await iGM_UpdateExamMetaService(examId, {
+    title: iGM_FormField(body, "title"),
+    subject: iGM_FormField(body, "subject"),
+    issuer: iGM_FormField(body, "issuer"),
+    reviewer: iGM_FormField(body, "reviewer"),
+    duration: iGM_NumberField(body, "duration"),
+    totalScore: iGM_NumberField(body, "totalScore"),
+    questionCount: iGM_NumberField(body, "questionCount"),
+    notice: iGM_FormField(body, "notice"),
+  });
+  return iGM_Ok({ exam }, "修改已保存，正在部署");
+}
+
+/* ---------- 答案附件：PDF 内联预览 / 下载（后端可用时） ---------- */
+async function iGM_HandleAnswer(ctx: iGM_RouteContext) {
+  const examId = iGM_RequireExamId(ctx);
+  const { bytes, fileName } = await iGM_ReadExamAnswerService(examId);
+  const encodedName = encodeURIComponent(fileName);
+  ctx.set.headers["Content-Type"] = "application/pdf";
+  ctx.set.headers["Content-Disposition"] = `inline; filename*=UTF-8''${encodedName}`;
+  ctx.set.headers["Content-Length"] = String(bytes.byteLength);
+  ctx.set.headers["Cache-Control"] = "no-store";
+  ctx.set.headers["X-Content-Type-Options"] = "nosniff";
+  return new Response(iGM_BinaryBody(bytes), {
+    status: 200,
+    headers: ctx.set.headers,
+  });
+}
+
 /* ---------- 公开：交卷 ---------- */
 async function iGM_HandleSubmit(ctx: iGM_RouteContext) {
   const ip = iGM_ClientIp(ctx);
@@ -228,11 +282,14 @@ export const G_Exam = new Elysia({ name: "G_Exam" })
   .get("/api/exam/list", iGM_HandlePublicList as never)
   .get("/api/exam/detail", iGM_HandleDetail as never)
   .get("/api/exam/file", iGM_HandleFile as never)
+  .get("/api/exam/answer", iGM_HandleAnswer as never)
   .get("/uploads/exams/:examId/html/:name", iGM_HandleHtmlAsset as never)
   .get("/api/exam/admin/list", iGM_HandleAdminList as never)
   .get("/api/exam/admin/detail", iGM_HandleAdminDetail as never)
   .get("/api/exam/admin/progress", iGM_HandleProgress as never)
   .post("/api/exam/upload", iGM_HandleUpload as never)
+  .post("/api/exam/upload-answer", iGM_HandleUploadAnswer as never)
+  .post("/api/exam/update-meta", iGM_HandleUpdateMeta as never)
   .post("/api/exam/reparse", iGM_HandleReparse as never)
   .post("/api/exam/delete", iGM_HandleDelete as never)
   .post("/api/exam/submit", iGM_HandleSubmit as never);

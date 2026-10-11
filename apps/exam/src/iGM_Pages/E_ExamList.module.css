@@ -121,6 +121,65 @@
   background: color-mix(in srgb, var(--igm-gold) 12%, transparent);
 }
 
+/* ============================= 搜索 ============================= */
+.searchRow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 22px;
+  padding: 0 14px;
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+  background: var(--igm-paper-raised);
+  transition: border-color 0.16s ease;
+}
+
+.searchRow:focus-within {
+  border-color: var(--igm-copper);
+}
+
+.searchIcon {
+  flex-shrink: 0;
+  color: var(--igm-text-muted);
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 0;
+  border: none;
+  background: transparent;
+  color: var(--igm-ink);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--igm-text-muted);
+  letter-spacing: 0.08em;
+}
+
+.noResult {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 56px 0;
+  border: 1px dashed var(--igm-line-soft);
+  border-radius: var(--igm-radius);
+}
+
+.noResultIcon {
+  color: var(--igm-copper);
+}
+
+.noResultText {
+  margin: 0;
+  font-size: 16px;
+  color: var(--igm-text-muted);
+}
+
 /* ============================= 网格 ============================= */
 .grid {
   display: grid;

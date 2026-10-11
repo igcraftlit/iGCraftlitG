@@ -11,8 +11,8 @@
 // 导入依赖 //
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { FileSearch, RefreshCw } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { FileSearch, RefreshCw, Search } from "lucide-react";
 import {
   iGM_Exam_FetchStaticIndex,
 } from "../iGM_Services/iGM_ExamStaticClient";
@@ -34,6 +34,7 @@ export function E_ExamList() {
   const [exams, setExams] = useState<iGM_ExamListItem[]>([]);
   const [state, setState] = useState<iGM_Exam_LoadState>("loading");
   const [message, setMessage] = useState("");
+  const [query, setQuery] = useState("");
 
   const load = useCallback(async () => {
     setState("loading");
@@ -54,6 +55,15 @@ export function E_ExamList() {
   }, [load]);
 
   const totalItems = exams.reduce((sum, e) => sum + (e.questionCount ?? 0), 0);
+
+  // 按标题模糊过滤（大小写不敏感，忽略首尾空白）
+  const visibleExams = useMemo(() => {
+    const keyword = query.trim().toLowerCase();
+    if (!keyword) return exams;
+    return exams.filter((exam) =>
+      (exam.title ?? "").toLowerCase().includes(keyword),
+    );
+  }, [exams, query]);
 
   return (
     <main className={styles.page}>
@@ -101,6 +111,20 @@ export function E_ExamList() {
           </button>
         </header>
 
+        {state === "ready" && exams.length > 0 && (
+          <div className={styles.searchRow}>
+            <Search size={15} strokeWidth={1.8} className={styles.searchIcon} />
+            <input
+              type="search"
+              className={`igm-mono ${styles.searchInput}`}
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={t("listSearchPlaceholder")}
+              aria-label={t("listSearchPlaceholder")}
+            />
+          </div>
+        )}
+
         {state === "loading" && (
           <p className={`igm-mono ${styles.state}`}>{t("listRetrieving")}</p>
         )}
@@ -124,9 +148,18 @@ export function E_ExamList() {
           </div>
         )}
 
-        {state === "ready" && exams.length > 0 && (
+        {state === "ready" && exams.length > 0 && visibleExams.length === 0 && (
+          <div className={styles.noResult}>
+            <Search size={26} strokeWidth={1.4} className={styles.noResultIcon} />
+            <p className={`igm-serif ${styles.noResultText}`}>
+              {t("listSearchNoResult")}
+            </p>
+          </div>
+        )}
+
+        {state === "ready" && visibleExams.length > 0 && (
           <div className={styles.grid}>
-            {exams.map((exam, index) => (
+            {visibleExams.map((exam, index) => (
               <IGM_ExamCard key={exam.id} exam={exam} index={index} />
             ))}
           </div>

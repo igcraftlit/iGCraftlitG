@@ -28,6 +28,9 @@ import {
   iGM_ListExamsByStatus,
 } from "../iGM_Repositories/iGM_ExamRepository";
 import {
+  iGM_ExamAnswerAbsolutePath,
+  iGM_ExamAnswerFileName,
+  iGM_ExamAnswerStaticPath,
   iGM_ExamHtmlDir,
   iGM_ReadExamPageSize,
 } from "./iGM_ExamIngestService";
@@ -57,6 +60,8 @@ export interface iGM_ExamStaticDetail {
   htmlPath: string;
   /** 图片文件名列表（与正文同级，保持原始格式） */
   images: string[];
+  /** 答案附件静态地址（站点根相对路径）；未上传时为空串 */
+  answerPdfUrl: string;
 }
 
 /** 索引 JSON（index.json）中的列表项 */
@@ -145,6 +150,25 @@ export async function iGM_GenerateExamStaticFile(examId: string): Promise<boolea
   await mkdir(examDir, { recursive: true });
   await cp(iGM_ExamHtmlDir(examId), examDir, { recursive: true });
 
+  // 复制答案附件（若有）到静态目录，使详情页在后端不启动时仍可查看
+  let answerPdfUrl = "";
+  if (row.iGM_AnswerPdfPath) {
+    const answerName = iGM_ExamAnswerFileName(row.iGM_AnswerPdfPath);
+    try {
+      const answerDestDir = join(examDir, "answer");
+      await mkdir(answerDestDir, { recursive: true });
+      await cp(
+        iGM_ExamAnswerAbsolutePath(row.iGM_AnswerPdfPath),
+        join(answerDestDir, answerName),
+      );
+      answerPdfUrl = iGM_ExamAnswerStaticPath(examId, answerName);
+    } catch (error) {
+      console.warn(
+        `[iGM_ExamStaticService] 复制答案附件失败：${examId}：${String(error)}`,
+      );
+    }
+  }
+
   const [codeMap, fileRow, pageSize, images] = await Promise.all([
     iGM_BuildExamCodeMap(),
     iGM_FindExamFileByExamId(examId),
@@ -172,6 +196,7 @@ export async function iGM_GenerateExamStaticFile(examId: string): Promise<boolea
     pageHeight: pageSize?.height ?? null,
     htmlPath: `/exams/${examId}/index.html`,
     images,
+    answerPdfUrl,
   };
   await iGM_WriteJson(join(root, `${examId}.json`), detail);
   return true;

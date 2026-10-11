@@ -36,6 +36,8 @@ export interface iGM_ExamStaticDetail {
   htmlPath: string;
   /** 图片文件名列表（与正文同级，保持原始格式） */
   images: string[];
+  /** 答案附件静态地址（站点根相对路径）；未上传时为空串 */
+  answerPdfUrl: string;
 }
 
 /** 索引文件结构（public/exams/index.json） */

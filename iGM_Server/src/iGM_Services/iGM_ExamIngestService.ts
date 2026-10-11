@@ -3,18 +3,19 @@
  * 所属层：后端 / 业务服务层
  * 路由：G_Exam（/api/exam/upload、/api/exam/reparse 内部调用）
  * 模块：iGM_ExamIngestService
- * 作用：试卷 PDF 落盘临时目录、转换 HTML 目录管理与 HTML 资源读取
- * 内容：iGM_ExamError 业务错误类型、存储根 / 临时目录 / HTML 目录 / 日志目录解析与路径安全校验、
- *       PDF 格式校验与落盘（随机名）、临时文件读写删除、HTML 资源读取、
+ * 作用：试卷 PDF 落盘临时目录、转换 HTML 目录管理、HTML 资源读取与答案附件存取
+ * 内容：iGM_ExamError 业务错误类型、存储根 / 临时目录 / HTML 目录 / 答案目录 / 日志目录解析与路径安全校验、
+ *       PDF 格式校验与落盘（随机名）、临时文件读写删除、HTML 资源读取、答案附件存取删除、
  *       转换产物目录占用统计、页面基准尺寸解析、禁止横向溢出样式注入
  * 说明：本模块仅支持 PDF；转换成功后由业务层删除原始 PDF；
+ *       答案附件独立存放于 <根>/<examId>/answer/，同样仅支持 PDF（≤20MB）；
  *       试卷元数据由管理员手工填写，不在此层做任何正则识别；
  *       磁盘绝对路径绝不出现在对外 DTO
  */
 
 // 导入依赖 //
 import { mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
-import { join, resolve, sep } from "node:path";
+import { basename, join, resolve, sep } from "node:path";
 import { iGM_Config } from "../iGM_Config/iGM_Config";
 import { iGM_RandomUuid } from "./iGM_SecurityService";
 import { iGM_SanitizeOriginalName } from "./iGM_StorageService";
@@ -51,6 +52,11 @@ export interface iGM_ExamStoredFile {
 /** 试卷文档允许的最大体积（字节），默认 50MB */
 const iGM_ExamMaxFileSize = Number(
   process.env.IGM_EXAM_MAX_FILE_SIZE ?? 50 * 1024 * 1024,
+);
+
+/** 答案附件允许的最大体积（字节），默认 20MB */
+const iGM_ExamMaxAnswerSize = Number(
+  process.env.IGM_EXAM_MAX_ANSWER_SIZE ?? 20 * 1024 * 1024,
 );
 
 /** 试卷标识白名单：uuid 主名，杜绝路径穿越 */
@@ -264,6 +270,107 @@ export async function iGM_RemoveExamTempFile(
   }
 }
 
+/** 答案附件目录绝对路径：<根>/<examId>/answer */
+export function iGM_ExamAnswerDir(examId: string): string {
+  return join(iGM_ExamStorageRoot(), examId, "answer");
+}
+
+/** 答案附件下载 / 预览接口地址（后端可用时） */
+export function iGM_ExamAnswerApiPath(examId: string): string {
+  return `/api/exam/answer?examId=${encodeURIComponent(examId)}`;
+}
+
+/** 答案附件静态地址（随前端部署，如 /exams/<examId>/answer/<name>） */
+export function iGM_ExamAnswerStaticPath(
+  examId: string,
+  fileName: string,
+): string {
+  return `/exams/${examId}/answer/${fileName}`;
+}
+
+/** 把相对路径解析为绝对路径，并强制校验仍位于试卷存储根目录内 */
+function iGM_ResolveExamStoragePath(relativePath: string): string {
+  const root = resolve(iGM_ExamStorageRoot());
+  const target = resolve(root, relativePath);
+  if (target !== root && !target.startsWith(root + sep)) {
+    throw new iGM_ExamError("试卷文件路径非法", 400);
+  }
+  return target;
+}
+
+/** 答案附件的绝对路径（相对存储根目录，形如 <examId>/answer/<name>） */
+export function iGM_ExamAnswerAbsolutePath(relativePath: string): string {
+  return iGM_ResolveExamStoragePath(relativePath);
+}
+
+/** 答案附件展示用文件名（取相对路径最后一段） */
+export function iGM_ExamAnswerFileName(relativePath: string): string {
+  return basename(relativePath);
+}
+
+/**
+ * 保存答案附件 PDF：清空旧附件后写入 <根>/<examId>/answer/<原名>
+ * 非 PDF 或超过 20MB 一律拒绝
+ */
+export async function iGM_StoreExamAnswerFile(
+  examId: string,
+  originalName: string,
+  bytes: Uint8Array,
+): Promise<{ relativePath: string; fileName: string; fileSize: number }> {
+  if (!iGM_ExamIdPattern.test(examId)) {
+    throw new iGM_ExamError("试卷标识非法", 400);
+  }
+  const fileName = iGM_SanitizeOriginalName(originalName);
+  if (!iGM_ResolveExamFileType(fileName)) {
+    throw new iGM_ExamError("答案附件仅支持 PDF 格式", 422);
+  }
+  if (bytes.byteLength <= 0) {
+    throw new iGM_ExamError("上传的答案附件为空", 422);
+  }
+  if (bytes.byteLength > iGM_ExamMaxAnswerSize) {
+    throw new iGM_ExamError("答案附件超过 20MB 上限", 413);
+  }
+  if (!iGM_HasMagic(bytes, iGM_ExamPdfMagic)) {
+    throw new iGM_ExamError("答案附件内容不是有效的 PDF", 422);
+  }
+
+  await iGM_RemoveExamAnswerDir(examId);
+  const dir = iGM_ExamAnswerDir(examId);
+  try {
+    await mkdir(dir, { recursive: true });
+    await writeFile(join(dir, fileName), bytes);
+  } catch {
+    throw new iGM_ExamError("答案附件保存失败", 500);
+  }
+  return {
+    relativePath: `${examId}/answer/${fileName}`,
+    fileName,
+    fileSize: bytes.byteLength,
+  };
+}
+
+/** 读取答案附件字节（后端可用时下载 / 预览） */
+export async function iGM_ReadExamAnswerFile(
+  relativePath: string,
+): Promise<Uint8Array> {
+  try {
+    const buffer = await readFile(iGM_ResolveExamStoragePath(relativePath));
+    return new Uint8Array(buffer);
+  } catch {
+    throw new iGM_ExamError("答案附件不存在", 404);
+  }
+}
+
+/** 删除答案附件目录（重新上传前 / 试卷删除时调用，失败不抛出） */
+export async function iGM_RemoveExamAnswerDir(examId: string): Promise<void> {
+  if (!iGM_ExamIdPattern.test(examId)) return;
+  try {
+    await rm(iGM_ExamAnswerDir(examId), { recursive: true, force: true });
+  } catch {
+    console.warn(`[iGM_ExamIngestService] 删除答案附件目录失败：${examId}`);
+  }
+}
+
 /** 读取转换后试卷目录内的任意资源字节（字体 / 图片 / CSS / JS） */
 export async function iGM_ReadExamHtmlAsset(
   examId: string,
@@ -415,6 +522,14 @@ export default {
   iGM_StoreExamTempFile,
   iGM_ReadExamTempFile,
   iGM_RemoveExamTempFile,
+  iGM_ExamAnswerDir,
+  iGM_ExamAnswerApiPath,
+  iGM_ExamAnswerStaticPath,
+  iGM_ExamAnswerAbsolutePath,
+  iGM_ExamAnswerFileName,
+  iGM_StoreExamAnswerFile,
+  iGM_ReadExamAnswerFile,
+  iGM_RemoveExamAnswerDir,
   iGM_ReadExamHtmlAsset,
   iGM_ApplyExamHtmlOverrides,
   iGM_ReadExamPageSize,

@@ -153,6 +153,44 @@ export async function iGM_SetExamFileSize(
   );
 }
 
+/** 写入答案附件 PDF 路径（相对存储根目录）；未上传时传 null 表示清除 */
+export async function iGM_SetExamAnswerPath(
+  examId: string,
+  answerPath: string | null,
+): Promise<void> {
+  await iGM_Db.run(
+    `UPDATE iGM_Exams SET iGM_AnswerPdfPath = ?, iGM_UpdatedAt = ?
+      WHERE iGM_Id = ?`,
+    [answerPath, new Date().toISOString(), examId],
+  );
+}
+
+/** 更新试卷元数据（管理端在预览页修改规格后调用） */
+export async function iGM_UpdateExamFields(
+  examId: string,
+  fields: iGM_ExamWriteFields,
+): Promise<void> {
+  await iGM_Db.run(
+    `UPDATE iGM_Exams SET
+       iGM_Title = ?, iGM_Subject = ?, iGM_Issuer = ?, iGM_Reviewer = ?,
+       iGM_Duration = ?, iGM_TotalScore = ?, iGM_QuestionCount = ?,
+       iGM_Notice = ?, iGM_UpdatedAt = ?
+     WHERE iGM_Id = ?`,
+    [
+      fields.title,
+      fields.subject,
+      fields.issuer,
+      fields.reviewer,
+      fields.duration,
+      fields.totalScore,
+      fields.questionCount,
+      fields.notice,
+      new Date().toISOString(),
+      examId,
+    ],
+  );
+}
+
 /** 更新试卷转换状态（pending / converting / completed / failed） */
 export async function iGM_SetExamParseStatus(
   examId: string,
@@ -320,6 +358,8 @@ export default {
   iGM_InsertExam,
   iGM_SetExamHtmlPath,
   iGM_SetExamFileSize,
+  iGM_SetExamAnswerPath,
+  iGM_UpdateExamFields,
   iGM_SetExamParseStatus,
   iGM_MarkExamFileCompleted,
   iGM_SetExamFileConvertStatus,

@@ -5,7 +5,8 @@
  * 模块：iGM_ExamClient
  * 作用：iGC&M 教育考试系统唯一的后端访问出口
  * 内容：统一响应解包、列表 / 详情 / 管理端列表与详情、上传（元数据 + PDF）即发布、
- *       转换进度轮询、转换后 HTML 地址构造、占用空间格式化、重新转换、删除、交卷记录
+ *       元数据修改、答案附件上传（带进度）、转换进度轮询、转换后 HTML 地址构造、
+ *       占用空间格式化、重新转换、删除、交卷记录
  * 说明：统一响应结构 { success, code, message, data }；错误归一化后抛出可读信息；
  *       本模块仅支持 PDF，转换由后端 pdf2htmlEX 产出自包含 HTML 目录
  */
@@ -86,6 +87,10 @@ export interface iGM_ExamDetail extends iGM_ExamListItem {
   fileName: string;
   /** 原始文件格式（本模块固定 pdf） */
   fileType: string;
+  /** 答案附件下载 / 预览接口地址；未上传时为空串 */
+  answerApiPath: string;
+  /** 答案附件文件名（仅用于展示）；未上传时为空串 */
+  answerFileName: string;
 }
 
 /** 上传发布入参：管理员手工填写的元数据（数值字段均为正整数） */
@@ -278,6 +283,80 @@ export async function iGM_Exam_Reparse(examId: string): Promise<void> {
   await iGM_Exam_Post<{ reparsed: boolean }>("/api/exam/reparse", { examId });
 }
 
+/** 修改试卷元数据（管理端预览页保存规格） */
+export async function iGM_Exam_UpdateMeta(
+  examId: string,
+  meta: iGM_ExamPublishMeta,
+): Promise<iGM_ExamDetail> {
+  const data = await iGM_Exam_Post<{ exam: iGM_ExamDetail }>(
+    "/api/exam/update-meta",
+    { examId, ...meta },
+  );
+  return data.exam;
+}
+
+/**
+ * 上传答案附件（PDF，≤20MB）
+ * 采用 XMLHttpRequest 以便回调上传进度；成功返回更新后的试卷详情
+ */
+export function iGM_Exam_UploadAnswer(
+  examId: string,
+  file: File,
+  onProgress?: (percent: number) => void,
+): Promise<iGM_ExamDetail> {
+  return new Promise<iGM_ExamDetail>((resolve, reject) => {
+    const form = new FormData();
+    form.append("examId", examId);
+    form.append("file", file);
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${iGM_ExamConfig.apiBase}/api/exam/upload-answer`);
+    xhr.setRequestHeader("Accept", "application/json");
+    xhr.upload.onprogress = (event) => {
+      if (!onProgress || !event.lengthComputable) return;
+      onProgress(Math.round((event.loaded / event.total) * 100));
+    };
+    xhr.onload = () => {
+      let payload: iGM_ExamEnvelope<{ exam: iGM_ExamDetail }> | null = null;
+      try {
+        payload = JSON.parse(xhr.responseText) as iGM_ExamEnvelope<{
+          exam: iGM_ExamDetail;
+        }>;
+      } catch {
+        reject(
+          new iGM_ExamRequestError(
+            `Unexpected response from the examination service (HTTP ${xhr.status}).`,
+            xhr.status,
+          ),
+        );
+        return;
+      }
+      if (
+        xhr.status < 200 ||
+        xhr.status >= 300 ||
+        !payload.success ||
+        payload.data === null
+      ) {
+        reject(
+          new iGM_ExamRequestError(
+            payload.message || `HTTP ${xhr.status}`,
+            payload.code ?? xhr.status,
+          ),
+        );
+        return;
+      }
+      resolve(payload.data.exam);
+    };
+    xhr.onerror = () => {
+      reject(
+        new iGM_ExamRequestError(
+          "Unable to reach the examination service. Please try again later.",
+        ),
+      );
+    };
+    xhr.send(form);
+  });
+}
+
 /** 删除试卷及关联原始文件与 HTML 目录 */
 export async function iGM_Exam_Delete(examId: string): Promise<void> {
   await iGM_Exam_Post<{ deleted: boolean }>("/api/exam/delete", { examId });
@@ -292,6 +371,8 @@ export default {
   iGM_Exam_FetchAdminDetail,
   iGM_Exam_Upload,
   iGM_Exam_FetchProgress,
+  iGM_Exam_UpdateMeta,
+  iGM_Exam_UploadAnswer,
   iGM_Exam_Reparse,
   iGM_Exam_Delete,
 };

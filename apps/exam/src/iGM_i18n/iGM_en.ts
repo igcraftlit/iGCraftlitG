@@ -40,6 +40,8 @@ export const iGM_en: iGM_I18nDict = {
   listRetrieving: "RETRIEVING ARCHIVE…",
   listEmpty: "No published examinations available.",
   listError: "Unable to load examinations.",
+  listSearchPlaceholder: "Search by title...",
+  listSearchNoResult: "No matching papers found.",
   actionRefresh: "Refresh",
   actionRetry: "Retry",
   // 档案卡片
@@ -76,6 +78,11 @@ export const iGM_en: iGM_I18nDict = {
   statDuration: "TIME LIMIT",
   unitQuestions: " items",
   noticeTag: "NOTICE",
+  // 答案附件
+  answerSectionTitle: "Reference Answer",
+  answerSectionLead:
+    "The reference answer provided by the issuing authority, for consultation only.",
+  answerView: "View answer",
   // 计时器
   timerTitle: "SESSION TIMER",
   timerPause: "Pause",
@@ -113,6 +120,24 @@ export const iGM_en: iGM_I18nDict = {
   adminPlaceholderIssuer: "Issuer",
   adminPlaceholderReviewer: "Reviewer",
   adminPlaceholderNotice: "Instructions shown to candidates (optional)",
+  // 管理端：信息修改
+  adminEditInfo: "Edit details",
+  adminEditSpec: "Edit paper details",
+  adminSaveMeta: "SAVE CHANGES",
+  adminSaveMetaDone: "Changes saved and deploying; please wait a few minutes",
+  adminSaveMetaFailed: "Saving failed. Please try again.",
+  adminSaveMetaRequired: "Complete every field before saving.",
+  // 管理端：答案附件
+  adminAnswerLabel: "ANSWER KEY",
+  adminAnswerUpload: "UPLOAD ANSWER",
+  adminAnswerReplace: "REPLACE ANSWER",
+  adminAnswerNone: "No answer key uploaded yet.",
+  adminAnswerUploading: "UPLOADING ANSWER…",
+  adminAnswerOnlyPdf: "Only PDF files are accepted. Please choose again.",
+  adminAnswerTooLarge: "The answer file exceeds the 20 MB limit. Please compress it and retry.",
+  adminAnswerFailed: "Answer upload failed. Please try again.",
+  adminAnswerUploaded: "The answer has been uploaded and is deploying; please wait a few minutes",
+  adminAnswerView: "View answer",
   adminReparse: "RECONVERT",
   adminDelete: "DELETE PAPER",
   adminCancel: "CANCEL",

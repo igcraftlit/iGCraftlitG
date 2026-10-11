@@ -16,7 +16,7 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, Maximize2, RefreshCw, ZoomIn, ZoomOut } from "lucide-react";
+import { ArrowLeft, FileText, Maximize2, RefreshCw, ZoomIn, ZoomOut } from "lucide-react";
 import {
   iGM_Exam_FormatSizeMb,
   iGM_ExamRequestError,
@@ -189,6 +189,11 @@ export function E_ExamDetail() {
   // 转换产物占用空间（MB，保留一位小数）
   const sizeText = iGM_Exam_FormatSizeMb(exam.fileSize);
 
+  // 答案附件展示用文件名（取静态地址最后一段）
+  const answerFileName = exam.answerPdfUrl
+    ? decodeURIComponent(exam.answerPdfUrl.split("/").pop() ?? "")
+    : "";
+
   return (
     <main className={styles.page}>
       {/* 返回 + 编号 */}
@@ -325,10 +330,37 @@ export function E_ExamDetail() {
         )}
       </section>
 
+      {/* 参考答案（仅在命题方上传后展示） */}
+      {exam.answerPdfUrl && (
+        <section className={styles.answerSection} aria-label={t("answerSectionTitle")}>
+          <div className={styles.answerHead}>
+            <span className={`igm-mono ${styles.answerNum}`}>§ 3</span>
+            <h2 className={`igm-serif ${styles.answerTitle}`}>
+              {t("answerSectionTitle")}
+            </h2>
+          </div>
+          <div className={styles.answerBody}>
+            <p className={`igm-mono ${styles.answerFile}`}>{answerFileName}</p>
+            <p className={styles.answerLead}>{t("answerSectionLead")}</p>
+            <a
+              className={styles.answerBtn}
+              href={exam.answerPdfUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <FileText size={14} strokeWidth={1.8} />
+              <span className="igm-mono">{t("answerView")}</span>
+            </a>
+          </div>
+        </section>
+      )}
+
       {/* 交卷 */}
       <section className={styles.submitSection} aria-label={t("detailSubmitTitle")}>
         <div className={styles.submitHead}>
-          <span className={`igm-mono ${styles.submitNum}`}>§ 3</span>
+          <span className={`igm-mono ${styles.submitNum}`}>
+            {exam.answerPdfUrl ? "§ 4" : "§ 3"}
+          </span>
           <h2 className={`igm-serif ${styles.submitTitle}`}>{t("detailSubmitTitle")}</h2>
         </div>
         <p className={styles.submitLead}>{t("detailSubmitLead")}</p>
