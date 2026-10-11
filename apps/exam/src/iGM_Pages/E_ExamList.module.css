@@ -121,8 +121,50 @@
   background: color-mix(in srgb, var(--igm-gold) 12%, transparent);
 }
 
+/* ============================= 筛选工具条 ============================= */
+.filterBar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.filterField {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 14px;
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+  background: var(--igm-paper-raised);
+  transition: border-color 0.16s ease;
+}
+
+.filterField:focus-within {
+  border-color: var(--igm-copper);
+}
+
+.filterLabel {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--igm-text-muted);
+  white-space: nowrap;
+}
+
+.filterSelect {
+  padding: 10px 0;
+  border: none;
+  background: transparent;
+  color: var(--igm-ink);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  outline: none;
+  cursor: pointer;
+}
+
 /* ============================= 搜索 ============================= */
 .searchRow {
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 9px;
@@ -132,6 +174,10 @@
   border-radius: var(--igm-radius);
   background: var(--igm-paper-raised);
   transition: border-color 0.16s ease;
+}
+
+.filterBar .searchRow {
+  margin-bottom: 0;
 }
 
 .searchRow:focus-within {

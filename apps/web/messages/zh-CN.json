@@ -102,6 +102,7 @@
     "developerApply": "开发者申请",
     "developerStatus": "申请状态",
     "developerReview": "申请审核",
+    "examinerReview": "命题创作者审核",
     "userAgreement": "用户管理规定",
     "levels": "等级与考核",
     "tasks": "任务中心",
@@ -357,6 +358,10 @@
     "developerReview": {
       "title": "开发者申请审核",
       "description": "审核开发者申请，通过或拒绝并填写审核意见；通过后申请人即可进入开发者接入界面"
+    },
+    "examinerReview": {
+      "title": "命题创作者申请审核",
+      "description": "审核命题创作者申请，通过或拒绝并填写审核意见；通过后申请人即获得命题创作者资格"
     },
     "userAgreement": {
       "title": "用户管理规定",
@@ -1643,6 +1648,34 @@
       "applyReviewed": "该申请已被审核，无法重复处理",
       "notReapplyable": "当前申请状态不支持重新申请",
       "withdrawNotAllowed": "仅待审核的申请可以撤回"
+    }
+  },
+  "examiner": {
+    "review": {
+      "status": {
+        "pending": "待审核",
+        "approved": "已通过",
+        "rejected": "已拒绝"
+      },
+      "all": "全部",
+      "empty": "没有匹配的申请",
+      "loadFailed": "申请列表加载失败，请稍后重试",
+      "email": "邮箱",
+      "realName": "真实姓名",
+      "contact": "联系方式",
+      "bio": "个人简介",
+      "directions": "命题方向",
+      "reason": "申请理由",
+      "reviewComment": "审核意见",
+      "submittedAt": "提交时间",
+      "commentPlaceholder": "审核意见（可选，最多 500 字）",
+      "approve": "通过",
+      "reject": "拒绝",
+      "selfTip": "不能审核自己的申请",
+      "messages": {
+        "approved": "申请已通过",
+        "rejected": "申请已被拒绝"
+      }
     }
   },
   "agreement": {

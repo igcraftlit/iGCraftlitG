@@ -71,6 +71,8 @@ export interface iGM_ExamRow {
   iGM_OriginalFileDeleted: boolean;
   iGM_Status: string;
   iGM_CreatedBy: string | null;
+  /** 关键词归档命中的命题方预设 ID；无匹配时为 null */
+  iGM_PresetId: string | null;
   iGM_CreatedAt: string;
   iGM_UpdatedAt: string;
 }

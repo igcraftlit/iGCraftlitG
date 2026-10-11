@@ -1,0 +1,71 @@
+/* 文件路径：apps/web/src/iGM_Pages/G_ExaminerReview/iGM_ExaminerReviewPage.module.css
+   所属层：前端 / 页面样式（CSS Modules）
+   路由：G_ExaminerReview
+   模块：iGM_ExaminerReviewPage.module.css
+   作用：命题创作者申请审核页面的专用样式
+   内容：申请人标识行、命题方向标签、作品链接、审核意见输入框
+   说明：通用页面框架/卡片/徽标/按钮复用 iGM_Page.module.css、
+         iGM_Module4.module.css、iGM_Admin.module.css、iGM_Points.module.css */
+
+/* ===== 申请人标识行 ===== */
+.applicantRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* 次要元信息行（UID / 邮箱 / 提交时间） */
+.metaLine {
+  font-size: 12px;
+  color: var(--igm-text-subtle);
+}
+
+/* ===== 命题方向标签组 ===== */
+.directionList {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.directionTag {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border-strong);
+  background: var(--igm-surface-subtle);
+  font-size: 11px;
+  color: var(--igm-text-muted);
+}
+
+/* 作品链接 */
+.portfolioLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--igm-accent);
+  text-decoration: none;
+}
+
+.portfolioLink:hover {
+  text-decoration: underline;
+}
+
+/* 审核意见输入框：行内紧凑 */
+.commentInput {
+  width: 220px;
+  padding: 5px 8px;
+  font-size: 12px;
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-border-strong);
+  background: var(--igm-surface);
+  color: var(--igm-text);
+}
+
+.commentInput:focus {
+  outline: none;
+  border-color: var(--igm-accent);
+}

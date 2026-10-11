@@ -15,6 +15,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { FileSearch, RefreshCw, Search } from "lucide-react";
 import {
   iGM_Exam_FetchStaticIndex,
+  iGM_Exam_FetchStaticIssuers,
 } from "../iGM_Services/iGM_ExamStaticClient";
 import {
   iGM_ExamRequestError,
@@ -32,9 +33,12 @@ type iGM_Exam_LoadState = "loading" | "ready" | "error";
 export function E_ExamList() {
   const { t } = useI18n();
   const [exams, setExams] = useState<iGM_ExamListItem[]>([]);
+  const [issuers, setIssuers] = useState<string[]>([]);
   const [state, setState] = useState<iGM_Exam_LoadState>("loading");
   const [message, setMessage] = useState("");
   const [query, setQuery] = useState("");
+  /** 命题方筛选值；空串表示全部 */
+  const [issuerFilter, setIssuerFilter] = useState("");
 
   const load = useCallback(async () => {
     setState("loading");
@@ -48,6 +52,13 @@ export function E_ExamList() {
       setMessage(err instanceof iGM_ExamRequestError ? err.message : "");
       setState("error");
     }
+    try {
+      const names = await iGM_Exam_FetchStaticIssuers();
+      setIssuers(names);
+    } catch {
+      // 命题方索引不可用（如字段缺失）：筛选下拉降级为仅「全部」
+      setIssuers([]);
+    }
   }, []);
 
   useEffect(() => {
@@ -56,14 +67,17 @@ export function E_ExamList() {
 
   const totalItems = exams.reduce((sum, e) => sum + (e.questionCount ?? 0), 0);
 
-  // 按标题模糊过滤（大小写不敏感，忽略首尾空白）
+  // 先按命题方过滤，再按标题模糊过滤（大小写不敏感，忽略首尾空白）
   const visibleExams = useMemo(() => {
+    const byIssuer = issuerFilter
+      ? exams.filter((exam) => exam.issuer === issuerFilter)
+      : exams;
     const keyword = query.trim().toLowerCase();
-    if (!keyword) return exams;
-    return exams.filter((exam) =>
+    if (!keyword) return byIssuer;
+    return byIssuer.filter((exam) =>
       (exam.title ?? "").toLowerCase().includes(keyword),
     );
-  }, [exams, query]);
+  }, [exams, issuerFilter, query]);
 
   return (
     <main className={styles.page}>
@@ -112,16 +126,36 @@ export function E_ExamList() {
         </header>
 
         {state === "ready" && exams.length > 0 && (
-          <div className={styles.searchRow}>
-            <Search size={15} strokeWidth={1.8} className={styles.searchIcon} />
-            <input
-              type="search"
-              className={`igm-mono ${styles.searchInput}`}
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={t("listSearchPlaceholder")}
-              aria-label={t("listSearchPlaceholder")}
-            />
+          <div className={styles.filterBar}>
+            <label className={styles.filterField}>
+              <span className={`igm-mono ${styles.filterLabel}`}>
+                {t("listFilterIssuer")}
+              </span>
+              <select
+                className={`igm-mono ${styles.filterSelect}`}
+                value={issuerFilter}
+                onChange={(event) => setIssuerFilter(event.target.value)}
+                aria-label={t("listFilterIssuer")}
+              >
+                <option value="">{t("listFilterAll")}</option>
+                {issuers.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className={styles.searchRow}>
+              <Search size={15} strokeWidth={1.8} className={styles.searchIcon} />
+              <input
+                type="search"
+                className={`igm-mono ${styles.searchInput}`}
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={t("listSearchPlaceholder")}
+                aria-label={t("listSearchPlaceholder")}
+              />
+            </div>
           </div>
         )}
 

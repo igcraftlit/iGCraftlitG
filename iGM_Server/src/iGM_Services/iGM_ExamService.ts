@@ -27,6 +27,7 @@ import {
   iGM_InsertSubmission,
   iGM_ListAllExams,
   iGM_ListExamIdCreatedPairs,
+  iGM_ListExamsByCreator,
   iGM_ListExamsByStatus,
   iGM_MarkExamFileCompleted,
   iGM_MarkExamFileFailed,
@@ -35,10 +36,15 @@ import {
   iGM_SetExamFileSize,
   iGM_SetExamHtmlPath,
   iGM_SetExamAnswerPath,
+  iGM_SetExamPresetId,
   iGM_SetExamParseStatus,
   iGM_UpdateExamFields,
   type iGM_ExamWriteFields,
 } from "../iGM_Repositories/iGM_ExamRepository";
+import {
+  iGM_LoadVisiblePresetRows,
+  iGM_ResolveIssuerPresetId,
+} from "./iGM_IssuerPresetService";
 import {
   iGM_ExamError,
   iGM_ApplyExamHtmlOverrides,
@@ -119,6 +125,12 @@ export interface iGM_ExamAnswerContent {
 export interface iGM_ExamHtmlAssetContent {
   bytes: Uint8Array;
   contentType: string;
+}
+
+/** 试卷操作者：命题创作者本人或管理员（管理员可管理全部试卷） */
+export interface iGM_ExamActor {
+  userId: string;
+  isAdmin: boolean;
 }
 
 // 核心逻辑 //
@@ -241,12 +253,12 @@ export async function iGM_ListPublicExamsService(): Promise<
   return rows.map((row) => iGM_ToListItem(row, codeMap.get(row.iGM_Id) ?? ""));
 }
 
-/** 列表（管理端）：全部状态与交卷数 */
-export async function iGM_ListAdminExamsService(): Promise<
-  (iGM_ExamListItemDto & { submissionCount: number })[]
-> {
+/** 列表（管理端）：命题创作者仅见本人试卷，管理员见全部，附交卷数 */
+export async function iGM_ListAdminExamsService(
+  actor: iGM_ExamActor,
+): Promise<(iGM_ExamListItemDto & { submissionCount: number })[]> {
   const [rows, codeMap] = await Promise.all([
-    iGM_ListAllExams(),
+    actor.isAdmin ? iGM_ListAllExams() : iGM_ListExamsByCreator(actor.userId),
     iGM_BuildExamCodeMap(),
   ]);
   const counts = await Promise.all(
@@ -256,6 +268,22 @@ export async function iGM_ListAdminExamsService(): Promise<
     ...iGM_ToListItem(row, codeMap.get(row.iGM_Id) ?? ""),
     submissionCount: counts[index],
   }));
+}
+
+/**
+ * 按操作者加载试卷并校验归属：管理员可访问全部，命题创作者仅限本人试卷
+ * 不存在抛 404，越权抛 403
+ */
+export async function iGM_AssertExamAccessService(
+  examId: string,
+  actor: iGM_ExamActor,
+): Promise<iGM_ExamRow> {
+  const row = await iGM_FindExamById(examId);
+  if (!row) throw new iGM_ExamError("试卷不存在", 404);
+  if (!actor.isAdmin && row.iGM_CreatedBy !== actor.userId) {
+    throw new iGM_ExamError("无权操作该试卷", 403);
+  }
+  return row;
 }
 
 /** 详情：公开访问不允许草稿 */
@@ -413,12 +441,17 @@ export async function iGM_UploadExamService(
   const file = input.file as File;
   const bytes = new Uint8Array(await file.arrayBuffer());
   const stored = await iGM_StoreExamTempFile(file.name, bytes);
+  const fields = iGM_ToWriteFields(input);
   const examId = await iGM_InsertExam(
-    iGM_ToWriteFields(input),
+    fields,
     "published",
     "converting",
     createdBy,
   );
+  // 关键词归档：命题方文本命中可见预设时记录预设 ID，便于目录按预设筛选
+  const presets = await iGM_LoadVisiblePresetRows(createdBy);
+  const presetId = iGM_ResolveIssuerPresetId(createdBy, fields.issuer, presets);
+  if (presetId) await iGM_SetExamPresetId(examId, presetId);
   await iGM_InsertExamFile(examId, {
     fileName: stored.fileName,
     fileType: stored.fileType,
@@ -438,9 +471,9 @@ export async function iGM_UploadExamService(
 export async function iGM_UploadAnswerService(
   examId: string,
   file: File | null,
+  actor: iGM_ExamActor,
 ): Promise<iGM_ExamDetailDto> {
-  const row = await iGM_FindExamById(examId);
-  if (!row) throw new iGM_ExamError("试卷不存在", 404);
+  await iGM_AssertExamAccessService(examId, actor);
   if (!file) throw new iGM_ExamError("请选择答案 PDF 文件", 400);
 
   const bytes = new Uint8Array(await file.arrayBuffer());
@@ -451,27 +484,39 @@ export async function iGM_UploadAnswerService(
 }
 
 /**
- * 修改试卷元数据（管理端在预览页编辑规格）
- * 校验通过后更新数据库，并重新导出静态数据与索引、推送触发重建
+ * 修改试卷元数据（命题创作者在预览页编辑规格）
+ * 校验通过后更新数据库；若命题方变化则重新解析预设归档；
+ * 随后重新导出静态数据与索引、推送触发重建
  */
 export async function iGM_UpdateExamMetaService(
   examId: string,
   input: iGM_ExamMetaInput,
+  actor: iGM_ExamActor,
 ): Promise<iGM_ExamDetailDto> {
-  const row = await iGM_FindExamById(examId);
-  if (!row) throw new iGM_ExamError("试卷不存在", 404);
+  await iGM_AssertExamAccessService(examId, actor);
   iGM_AssertMetaFields(input);
-  await iGM_UpdateExamFields(examId, iGM_ToWriteFields(input));
+  const fields = iGM_ToWriteFields(input);
+  await iGM_UpdateExamFields(examId, fields);
+  // 命题方可能被改动：重新解析关键词归档
+  const presets = await iGM_LoadVisiblePresetRows(
+    actor.isAdmin ? null : actor.userId,
+  );
+  const presetId = iGM_ResolveIssuerPresetId(
+    actor.isAdmin ? null : actor.userId,
+    fields.issuer,
+    presets,
+  );
+  await iGM_SetExamPresetId(examId, presetId);
   await iGM_ExportExamStatic(examId);
   return await iGM_GetExamDetailService(examId, { publicOnly: false });
 }
 
-/** 读取答案附件字节与文件名（后端可用时下载 / 预览） */
+/** 读取答案附件字节与文件名（命题创作者预览；管理员亦可） */
 export async function iGM_ReadExamAnswerService(
   examId: string,
+  actor: iGM_ExamActor,
 ): Promise<iGM_ExamAnswerContent> {
-  const row = await iGM_FindExamById(examId);
-  if (!row) throw new iGM_ExamError("试卷不存在", 404);
+  const row = await iGM_AssertExamAccessService(examId, actor);
   if (!row.iGM_AnswerPdfPath) {
     throw new iGM_ExamError("答案附件不存在", 404);
   }
@@ -490,9 +535,11 @@ export async function iGM_GetExamConvertProgressService(
 }
 
 /** 使用临时目录中的原始 PDF 重新转换（清除旧 HTML 产物后后台重新转换） */
-export async function iGM_ReparseExamService(examId: string): Promise<void> {
-  const row = await iGM_FindExamById(examId);
-  if (!row) throw new iGM_ExamError("试卷不存在", 404);
+export async function iGM_ReparseExamService(
+  examId: string,
+  actor: iGM_ExamActor,
+): Promise<void> {
+  await iGM_AssertExamAccessService(examId, actor);
   const fileRow = await iGM_FindExamFileByExamId(examId);
   if (!fileRow?.iGM_TempPath) {
     throw new iGM_ExamError("原始文件已删除，无法重新转换", 422);
@@ -503,9 +550,11 @@ export async function iGM_ReparseExamService(examId: string): Promise<void> {
 }
 
 /** 删除试卷：同时删除临时目录中的原始文件与 HTML 转换目录 */
-export async function iGM_DeleteExamService(examId: string): Promise<void> {
-  const row = await iGM_FindExamById(examId);
-  if (!row) throw new iGM_ExamError("试卷不存在", 404);
+export async function iGM_DeleteExamService(
+  examId: string,
+  actor: iGM_ExamActor,
+): Promise<void> {
+  await iGM_AssertExamAccessService(examId, actor);
   const fileRow = await iGM_FindExamFileByExamId(examId);
   if (fileRow?.iGM_TempPath) {
     await iGM_RemoveExamTempFile(fileRow.iGM_TempPath);
@@ -538,10 +587,10 @@ export async function iGM_SubmitExamService(
  */
 export async function iGM_ReadExamFileService(
   examId: string,
+  actor: iGM_ExamActor,
 ): Promise<iGM_ExamFileContent> {
-  const row = await iGM_FindExamById(examId);
-  if (!row) throw new iGM_ExamError("试卷不存在", 404);
-  const fileRow = await iGM_FindExamFileByExamId(examId);
+  const row = await iGM_AssertExamAccessService(examId, actor);
+  const fileRow = await iGM_FindExamFileByExamId(row.iGM_Id);
   if (!fileRow?.iGM_TempPath) {
     throw new iGM_ExamError("原始文件已删除，仅保留转换后的内容", 404);
   }
@@ -570,6 +619,7 @@ export default {
   iGM_ExamError,
   iGM_ListPublicExamsService,
   iGM_ListAdminExamsService,
+  iGM_AssertExamAccessService,
   iGM_GetExamDetailService,
   iGM_UploadExamService,
   iGM_UploadAnswerService,

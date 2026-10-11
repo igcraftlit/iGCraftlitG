@@ -342,6 +342,14 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
             labelKey: "nav.adminDeveloper",
             staffOnly: true,
           },
+          {
+            // 命题创作者申请审核：与开发者申请审核同级；
+            // 仅管理员 / 信任组织负责人可访问（后端 iGM_RequireStaff 强制）
+            href: "/G_ExaminerReview",
+            icon: ClipboardList,
+            labelKey: "nav.examinerReview",
+            staffOnly: true,
+          },
         ],
       },
     ],

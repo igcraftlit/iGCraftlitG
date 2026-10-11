@@ -155,6 +155,7 @@ async function iGM_Exam_Get<T>(path: string): Promise<T> {
   try {
     const response = await fetch(`${iGM_ExamConfig.apiBase}${path}`, {
       headers: { Accept: "application/json" },
+      credentials: "include",
     });
     return await iGM_Exam_Unwrap<T>(response);
   } catch (error) {
@@ -172,6 +173,7 @@ async function iGM_Exam_Post<T>(path: string, body: unknown): Promise<T> {
       method: "POST",
       headers: { Accept: "application/json", "Content-Type": "application/json" },
       body: JSON.stringify(body),
+      credentials: "include",
     });
     return await iGM_Exam_Unwrap<T>(response);
   } catch (error) {
@@ -189,6 +191,7 @@ async function iGM_Exam_PostForm<T>(path: string, form: FormData): Promise<T> {
       method: "POST",
       headers: { Accept: "application/json" },
       body: form,
+      credentials: "include",
     });
     return await iGM_Exam_Unwrap<T>(response);
   } catch (error) {
@@ -310,6 +313,7 @@ export function iGM_Exam_UploadAnswer(
     form.append("file", file);
     const xhr = new XMLHttpRequest();
     xhr.open("POST", `${iGM_ExamConfig.apiBase}/api/exam/upload-answer`);
+    xhr.withCredentials = true;
     xhr.setRequestHeader("Accept", "application/json");
     xhr.upload.onprogress = (event) => {
       if (!onProgress || !event.lengthComputable) return;

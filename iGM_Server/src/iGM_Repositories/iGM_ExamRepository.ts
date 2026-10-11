@@ -65,6 +65,19 @@ export async function iGM_ListAllExams(): Promise<iGM_ExamRow[]> {
     .all()) as iGM_ExamRow[];
 }
 
+/** 按上传者列出试卷（命题创作者管理端隔离，创建时间倒序） */
+export async function iGM_ListExamsByCreator(
+  creatorId: string,
+): Promise<iGM_ExamRow[]> {
+  return (await iGM_Db
+    .query(
+      `SELECT * FROM iGM_Exams
+        WHERE iGM_CreatedBy = ?
+        ORDER BY iGM_CreatedAt DESC, iGM_Id DESC`,
+    )
+    .all(creatorId)) as iGM_ExamRow[];
+}
+
 /** 按 ID 读取试卷行 */
 export async function iGM_FindExamById(
   examId: string,
@@ -162,6 +175,18 @@ export async function iGM_SetExamAnswerPath(
     `UPDATE iGM_Exams SET iGM_AnswerPdfPath = ?, iGM_UpdatedAt = ?
       WHERE iGM_Id = ?`,
     [answerPath, new Date().toISOString(), examId],
+  );
+}
+
+/** 写入试卷归档的命题方预设 ID（关键词命中时归档）；无匹配时传 null */
+export async function iGM_SetExamPresetId(
+  examId: string,
+  presetId: string | null,
+): Promise<void> {
+  await iGM_Db.run(
+    `UPDATE iGM_Exams SET iGM_PresetId = ?, iGM_UpdatedAt = ?
+      WHERE iGM_Id = ?`,
+    [presetId, new Date().toISOString(), examId],
   );
 }
 
@@ -353,12 +378,14 @@ export async function iGM_CountSubmissions(examId: string): Promise<number> {
 export default {
   iGM_ListExamsByStatus,
   iGM_ListAllExams,
+  iGM_ListExamsByCreator,
   iGM_FindExamById,
   iGM_ListExamIdCreatedPairs,
   iGM_InsertExam,
   iGM_SetExamHtmlPath,
   iGM_SetExamFileSize,
   iGM_SetExamAnswerPath,
+  iGM_SetExamPresetId,
   iGM_UpdateExamFields,
   iGM_SetExamParseStatus,
   iGM_MarkExamFileCompleted,

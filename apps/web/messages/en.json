@@ -102,6 +102,7 @@
     "developerApply": "Developer Application",
     "developerStatus": "Application Status",
     "developerReview": "Application Review",
+    "examinerReview": "Item Author Review",
     "userAgreement": "User Agreement",
     "levels": "Levels & Exams",
     "tasks": "Task Center",
@@ -357,6 +358,10 @@
     "developerReview": {
       "title": "Developer Application Review",
       "description": "Review developer applications, approve or reject with a comment; once approved, the applicant can enter the developer console"
+    },
+    "examinerReview": {
+      "title": "Item Author Application Review",
+      "description": "Review item author applications, approve or reject with a comment; once approved, the applicant gains item author eligibility"
     },
     "userAgreement": {
       "title": "User Agreement",
@@ -1643,6 +1648,34 @@
       "applyReviewed": "This application has already been reviewed and cannot be processed again",
       "notReapplyable": "The current application status does not allow reapplying",
       "withdrawNotAllowed": "Only pending applications can be withdrawn"
+    }
+  },
+  "examiner": {
+    "review": {
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "all": "All",
+      "empty": "No matching applications",
+      "loadFailed": "Failed to load applications, please try again later",
+      "email": "Email",
+      "realName": "Real Name",
+      "contact": "Contact",
+      "bio": "Bio",
+      "directions": "Item Directions",
+      "reason": "Reason",
+      "reviewComment": "Review Comment",
+      "submittedAt": "Submitted At",
+      "commentPlaceholder": "Review comment (optional, up to 500 characters)",
+      "approve": "Approve",
+      "reject": "Reject",
+      "selfTip": "You cannot review your own application",
+      "messages": {
+        "approved": "Application approved",
+        "rejected": "Application rejected"
+      }
     }
   },
   "agreement": {

@@ -41,6 +41,88 @@
   color: var(--igm-text-muted);
 }
 
+/* ============================= 准入提示 ============================= */
+.gateSection {
+  padding: 20px 0 22px;
+  margin-bottom: 6px;
+}
+
+.gateTitle {
+  margin: 0 0 10px;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--igm-ink);
+}
+
+.gateLead {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--igm-text-muted);
+}
+
+.gateStatus {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.gateTag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-line);
+  color: var(--igm-text-muted);
+}
+
+.gate_none {
+  color: var(--igm-text-muted);
+}
+
+.gate_pending {
+  color: var(--igm-copper);
+  border-color: var(--igm-copper);
+}
+
+.gate_approved {
+  color: var(--igm-ink);
+  border-color: var(--igm-copper);
+  background: color-mix(in srgb, var(--igm-gold) 14%, transparent);
+}
+
+.gate_rejected,
+.gate_suspended {
+  color: var(--igm-cinnabar);
+  border-color: var(--igm-cinnabar);
+}
+
+.gateComment {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--igm-text);
+}
+
+.gateLink {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--igm-copper);
+}
+
+.state {
+  padding: 32px 0;
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  color: var(--igm-text-muted);
+}
+
 /* ============================= 小节 ============================= */
 .section {
   margin-bottom: 30px;
@@ -122,6 +204,18 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
+}
+
+/* 命题方：预设下拉 + 自定义输入 */
+.issuerRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.issuerRow .input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* ============================= 文件拖拽区 ============================= */

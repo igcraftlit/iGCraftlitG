@@ -44,6 +44,8 @@ export interface iGM_ExamStaticDetail {
 interface iGM_ExamStaticIndex {
   generatedAt: string;
   exams: iGM_ExamListItem[];
+  /** 全部命题方名称（去重，供目录页筛选；缺省时为空数组） */
+  issuers: string[];
 }
 
 // 核心逻辑 //
@@ -89,6 +91,12 @@ export async function iGM_Exam_FetchStaticIndex(): Promise<iGM_ExamListItem[]> {
   return Array.isArray(data.exams) ? data.exams : [];
 }
 
+/** 全部命题方名称（静态索引 issuers 字段；缺省时为空数组） */
+export async function iGM_Exam_FetchStaticIssuers(): Promise<string[]> {
+  const data = await iGM_Exam_FetchStaticJson<iGM_ExamStaticIndex>("/index.json");
+  return Array.isArray(data.issuers) ? data.issuers : [];
+}
+
 /** 单份试卷详情（静态） */
 export async function iGM_Exam_FetchStaticDetail(
   examId: string,
@@ -118,6 +126,7 @@ export async function iGM_Exam_FetchOnlineIndexIds(): Promise<Set<string>> {
 // 导出 //
 export default {
   iGM_Exam_FetchStaticIndex,
+  iGM_Exam_FetchStaticIssuers,
   iGM_Exam_FetchStaticDetail,
   iGM_Exam_FetchOnlineIndexIds,
 };

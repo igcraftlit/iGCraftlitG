@@ -102,6 +102,7 @@
     "developerApply": "開發者申請",
     "developerStatus": "申請狀態",
     "developerReview": "申請審核",
+    "examinerReview": "命題創作者審核",
     "userAgreement": "使用者管理規定",
     "levels": "等級與考核",
     "tasks": "任務中心",
@@ -357,6 +358,10 @@
     "developerReview": {
       "title": "開發者申請審核",
       "description": "審核開發者申請，通過或拒絕並填寫審核意見；通過後申請人即可進入開發者接入介面"
+    },
+    "examinerReview": {
+      "title": "命題創作者申請審核",
+      "description": "審核命題創作者申請，通過或拒絕並填寫審核意見；通過後申請人即獲得命題創作者資格"
     },
     "userAgreement": {
       "title": "使用者管理規定",
@@ -1643,6 +1648,34 @@
       "applyReviewed": "該申請已被審核，無法重複處理",
       "notReapplyable": "當前申請狀態不支援重新申請",
       "withdrawNotAllowed": "僅待審核的申請可以撤回"
+    }
+  },
+  "examiner": {
+    "review": {
+      "status": {
+        "pending": "待審核",
+        "approved": "已通過",
+        "rejected": "已拒絕"
+      },
+      "all": "全部",
+      "empty": "沒有符合的申請",
+      "loadFailed": "申請列表載入失敗，請稍後重試",
+      "email": "信箱",
+      "realName": "真實姓名",
+      "contact": "聯絡方式",
+      "bio": "個人簡介",
+      "directions": "命題方向",
+      "reason": "申請理由",
+      "reviewComment": "審核意見",
+      "submittedAt": "提交時間",
+      "commentPlaceholder": "審核意見（選填，最多 500 字）",
+      "approve": "通過",
+      "reject": "拒絕",
+      "selfTip": "不能審核自己的申請",
+      "messages": {
+        "approved": "申請已通過",
+        "rejected": "申請已被拒絕"
+      }
     }
   },
   "agreement": {

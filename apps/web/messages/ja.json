@@ -102,6 +102,7 @@
     "developerApply": "開発者申請",
     "developerStatus": "申請状況",
     "developerReview": "申請審査",
+    "examinerReview": "出題者審査",
     "userAgreement": "利用規約",
     "levels": "レベルと審査",
     "tasks": "タスクセンター",
@@ -357,6 +358,10 @@
     "developerReview": {
       "title": "開発者申請の審査",
       "description": "開発者申請を審査し、コメント付きで承認または却下します。承認後、申請者は開発者コンソールにアクセスできます"
+    },
+    "examinerReview": {
+      "title": "出題者申請の審査",
+      "description": "出題者申請を審査し、コメント付きで承認または却下します。承認後、申請者は出題者の資格を取得します"
     },
     "userAgreement": {
       "title": "利用規約",
@@ -1643,6 +1648,34 @@
       "applyReviewed": "この申請は審査済みのため、再度処理できません",
       "notReapplyable": "現在の申請状況では再申請できません",
       "withdrawNotAllowed": "審査中の申請のみ取り下げできます"
+    }
+  },
+  "examiner": {
+    "review": {
+      "status": {
+        "pending": "審査待ち",
+        "approved": "承認済み",
+        "rejected": "却下"
+      },
+      "all": "すべて",
+      "empty": "該当する申請はありません",
+      "loadFailed": "申請一覧の読み込みに失敗しました。後でもう一度お試しください",
+      "email": "メール",
+      "realName": "本名",
+      "contact": "連絡先",
+      "bio": "プロフィール",
+      "directions": "出題分野",
+      "reason": "申請理由",
+      "reviewComment": "審査コメント",
+      "submittedAt": "提出日時",
+      "commentPlaceholder": "審査コメント（任意、最大 500 文字）",
+      "approve": "承認",
+      "reject": "却下",
+      "selfTip": "自分の申請は審査できません",
+      "messages": {
+        "approved": "申請を承認しました",
+        "rejected": "申請を却下しました"
+      }
     }
   },
   "agreement": {

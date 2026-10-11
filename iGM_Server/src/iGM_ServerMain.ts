@@ -67,6 +67,9 @@ import { G_Search } from "./iGM_Routes/G_Search";
 // iGC&M 教育考试系统：试卷业务错误（上传/识别/发布等）
 import { G_Exam } from "./iGM_Routes/G_Exam";
 import { iGM_ExamError } from "./iGM_Services/iGM_ExamService";
+// 考试系统：命题创作者申请、准入与命题方预设
+import { G_Examiner } from "./iGM_Routes/G_Examiner";
+import { iGM_ExaminerError } from "./iGM_Services/iGM_ExaminerService";
 import { iGM_EnsureExamStorageRoot } from "./iGM_Services/iGM_ExamIngestService";
 import { iGM_StartExamCleanup } from "./iGM_Services/iGM_ExamCleanupService";
 
@@ -171,6 +174,11 @@ const iGM_Server = new Elysia()
       set.status = error.status;
       return iGM_Fail(error.status, error.message);
     }
+    // 考试系统：命题创作者申请 / 资格 / 预设业务错误
+    if (error instanceof iGM_ExaminerError) {
+      set.status = error.status;
+      return iGM_Fail(error.status, error.message);
+    }
     // 请求体解析失败等客户端错误（沿用模块二通用文案键）
     if (code === "PARSE" || code === "VALIDATION") {
       set.status = 400;
@@ -224,6 +232,8 @@ const iGM_Server = new Elysia()
   .use(G_Search)
   // iGC&M 教育考试系统：试卷列表 / 详情 / 上传识别 / 校对 / 发布（/api/exam/*）
   .use(G_Exam)
+  // 考试系统：命题创作者申请、准入状态、命题方预设与审核（/G_Examiner/*）
+  .use(G_Examiner)
   // 根路径占位
   .get("/", () => ({
     success: true,

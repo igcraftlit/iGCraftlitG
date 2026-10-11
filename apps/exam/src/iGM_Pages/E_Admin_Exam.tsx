@@ -27,6 +27,7 @@ import {
   Pencil,
   RotateCcw,
   Save,
+  Tag,
   Trash2,
   Upload,
 } from "lucide-react";
@@ -48,6 +49,13 @@ import {
   type iGM_ExamStatus,
 } from "../iGM_Services/iGM_ExamClient";
 import { iGM_Exam_FetchOnlineIndexIds } from "../iGM_Services/iGM_ExamStaticClient";
+import {
+  iGM_Examiner_FetchMe,
+  iGM_Examiner_FetchStatus,
+  type iGM_ExaminerGate,
+  type iGM_ExaminerStatus,
+} from "../iGM_Services/iGM_ExaminerClient";
+import { iGM_ExaminerApplyForm as IGM_ExaminerApplyForm } from "../iGM_Components/iGM_ExaminerApplyForm/iGM_ExaminerApplyForm";
 import { useI18n } from "../iGM_i18n/iGM_I18nContext";
 import type { iGM_I18nKey } from "../iGM_i18n/iGM_I18nTypes";
 import styles from "./E_Admin_Exam.module.css";
@@ -104,6 +112,15 @@ const iGM_Exam_ConvertKeys: Record<iGM_ExamConvertStatus, iGM_I18nKey> = {
   converting: "convertStatusConverting",
   completed: "convertStatusCompleted",
   failed: "convertStatusFailed",
+};
+
+/** 准入状态 → 语言包键 */
+const iGM_Examiner_GateKeys: Record<iGM_ExaminerGate, iGM_I18nKey> = {
+  none: "examinerStatusNone",
+  pending: "examinerStatusPending",
+  approved: "examinerStatusApproved",
+  rejected: "examinerStatusRejected",
+  suspended: "examinerStatusSuspended",
 };
 
 /** 轮询间隔（毫秒） */
@@ -254,6 +271,10 @@ export function iGM_ExamAdmin() {
   /** 答案附件上传进度（0-100；null 表示未在上传） */
   const [answerProgress, setAnswerProgress] = useState<number | null>(null);
   const answerInputRef = useRef<HTMLInputElement | null>(null);
+  /** 命题创作者准入状态；null 表示尚未读取 */
+  const [gate, setGate] = useState<iGM_ExaminerGate | null>(null);
+  /** 准入状态详情（含最近申请与审核意见） */
+  const [gateStatus, setGateStatus] = useState<iGM_ExaminerStatus | null>(null);
 
   /** 已发布但尚未出现在线上索引中的试卷：状态显示为"部署中" */
   const deployingIds = useMemo(() => {
@@ -264,6 +285,29 @@ export function iGM_ExamAdmin() {
     }
     return set;
   }, [exams, onlineIds]);
+
+  /** 读取准入状态；未登录（401）或读取失败时按未准入处理 */
+  const refreshGate = useCallback(async (): Promise<void> => {
+    try {
+      await iGM_Examiner_FetchMe();
+    } catch {
+      setGateStatus(null);
+      setGate("none");
+      return;
+    }
+    try {
+      const status = await iGM_Examiner_FetchStatus();
+      setGateStatus(status);
+      setGate(status.gate);
+    } catch {
+      setGateStatus(null);
+      setGate("none");
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshGate();
+  }, [refreshGate]);
 
   const load = useCallback(async () => {
     setState("loading");
@@ -278,12 +322,15 @@ export function iGM_ExamAdmin() {
     }
   }, []);
 
+  // 仅通过审核的命题创作者才加载试卷台账
   useEffect(() => {
+    if (gate !== "approved") return;
     void load();
-  }, [load]);
+  }, [gate, load]);
 
   // 拉取线上索引：判断哪些已发布试卷仍在部署中（失败时降级，不影响台账）
   useEffect(() => {
+    if (gate !== "approved") return;
     let cancelled = false;
     void (async () => {
       try {
@@ -296,7 +343,7 @@ export function iGM_ExamAdmin() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [gate]);
 
   /** 统一错误信息提取 */
   function iGM_Exam_ReadError(err: unknown, fallback: string): string {
@@ -310,14 +357,15 @@ export function iGM_ExamAdmin() {
     setPreviewKey((k) => k + 1);
   }, []);
 
-  // 支持通过 ?examId= 直接打开某试卷预览
+  // 支持通过 ?examId= 直接打开某试卷预览（仅准入通过后）
   useEffect(() => {
+    if (gate !== "approved") return;
     if (initialExamIdRef.current) return;
     const examId = new URLSearchParams(window.location.search).get("examId") ?? "";
     if (!examId) return;
     initialExamIdRef.current = examId;
     void refreshDraft(examId).catch(() => undefined);
-  }, [refreshDraft]);
+  }, [gate, refreshDraft]);
 
   // 转换中：轮询进度接口，完成后回填并刷新台账
   const convertingExamId =
@@ -517,6 +565,60 @@ export function iGM_ExamAdmin() {
     return { key: iGM_Exam_StatusKeys[item.status], cls: `st_${item.status}` };
   }
 
+  // 未通过准入（含未登录）：仅展示准入提示与命题创作者申请表单
+  if (gate !== "approved") {
+    return (
+      <main className={styles.page}>
+        {/* 页头 */}
+        <header className={styles.head}>
+          <p className={`igm-eyebrow ${styles.headEyebrow}`}>{t("adminEyebrow")}</p>
+          <h1 className={`igm-serif ${styles.headTitle}`}>{t("adminTitle")}</h1>
+          <p className={styles.headLead}>{t("adminLead")}</p>
+        </header>
+
+        {gate === null ? (
+          <p className={`igm-mono ${styles.state}`}>
+            {t("examinerStatusLoading")}
+          </p>
+        ) : (
+          <>
+            <section
+              className={`igm-double-rule ${styles.gateSection}`}
+              aria-label={t("examinerGateTitle")}
+            >
+              <h2 className={`igm-serif ${styles.gateTitle}`}>
+                {t("examinerGateTitle")}
+              </h2>
+              <p className={styles.gateLead}>{t("examinerGateLead")}</p>
+              {gateStatus && gateStatus.gate !== "none" && (
+                <div className={styles.gateStatus}>
+                  <span
+                    className={`igm-mono ${styles.gateTag} ${
+                      styles[`gate_${gateStatus.gate}`]
+                    }`}
+                  >
+                    {t(iGM_Examiner_GateKeys[gateStatus.gate])}
+                  </span>
+                  {gateStatus.application?.reviewComment && (
+                    <p className={`igm-mono ${styles.gateComment}`}>
+                      {t("examinerStatusReviewComment")}：
+                      {gateStatus.application.reviewComment}
+                    </p>
+                  )}
+                  <Link href="/status" className={styles.gateLink}>
+                    <span className="igm-mono">{t("examinerStatusTitle")}</span>
+                  </Link>
+                </div>
+              )}
+            </section>
+
+            <IGM_ExaminerApplyForm onSubmitted={() => void refreshGate()} />
+          </>
+        )}
+      </main>
+    );
+  }
+
   return (
     <main className={styles.page}>
       {/* 页头 */}
@@ -525,6 +627,14 @@ export function iGM_ExamAdmin() {
         <h1 className={`igm-serif ${styles.headTitle}`}>{t("adminTitle")}</h1>
         <p className={styles.headLead}>{t("adminLead")}</p>
       </header>
+
+      {/* 命题方预设入口 */}
+      <div className={styles.headActions}>
+        <Link href="/presets" className={styles.presetsBtn}>
+          <Tag size={14} strokeWidth={1.8} />
+          <span className="igm-mono">{t("examinerGateGotoPresets")}</span>
+        </Link>
+      </div>
 
       {/* 发布入口 */}
       <section
