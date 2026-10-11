@@ -120,6 +120,8 @@ export interface iGM_CreatorProfileDto {
   isExaminer: boolean;
   /** 命题创作者专属编号（10 位零填充，前端补 # 前缀） */
   creatorNumber: string;
+  /** 准入状态（仅在册命题创作者会返回，固定为 approved） */
+  status: iGM_ExaminerStatus | "approved";
 }
 
 /** 命题方预设 DTO（对外） */

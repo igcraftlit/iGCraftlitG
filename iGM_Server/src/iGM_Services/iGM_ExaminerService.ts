@@ -120,7 +120,11 @@ export async function iGM_GetCreatorProfileService(
   ) {
     return null;
   }
-  return { isExaminer: true, creatorNumber: examiner.iGM_CreatorNumber };
+  return {
+    isExaminer: true,
+    creatorNumber: examiner.iGM_CreatorNumber,
+    status: "approved",
+  };
 }
 
 /** 组装当前用户的准入状态（canReview 由路由层按角色判定后传入） */

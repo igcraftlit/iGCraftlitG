@@ -75,6 +75,8 @@ export interface iGM_IssuerPresetDto {
 export interface iGM_CreatorProfile {
   isExaminer: boolean;
   creatorNumber: string;
+  /** 准入状态（现仅 approved） */
+  status: string;
 }
 
 /** 当前登录用户（/G_Auth/me 返回的 user 字段） */
@@ -218,7 +220,11 @@ export async function iGM_Examiner_FetchCreatorProfile(): Promise<iGM_CreatorPro
     if (!payload.success || payload.code === "NOT_EXAMINER" || !payload.data) {
       return null;
     }
-    return { isExaminer: true, creatorNumber: payload.data.creatorNumber };
+    return {
+      isExaminer: true,
+      creatorNumber: payload.data.creatorNumber,
+      status: payload.data.status ?? "approved",
+    };
   } catch {
     return null;
   }

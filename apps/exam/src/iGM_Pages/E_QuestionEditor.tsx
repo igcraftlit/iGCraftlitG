@@ -8,6 +8,7 @@
  *       AI 辅助判断、必填教材校验（未选教材禁止提交）、我的题目清单、部署提示
  * 说明：准入闸门与 E_Admin_Upload 一致（iGM_Examiner_FetchMe + FetchStatus）；
  *       记录 AI 建议教材（aiTextbookCode / aiSource）随创建请求提交；文案取自当前语言包
+ *       权限互斥：准入通过仅渲染命题面板、绝不渲染申请表单；未通过按状态渲染申请表单或状态提示
  */
 
 // 导入依赖 //
@@ -20,6 +21,7 @@ import {
   CheckCircle2,
   Loader2,
   Plus,
+  RotateCcw,
   Send,
   Sparkles,
   Trash2,
@@ -140,6 +142,8 @@ export function E_QuestionEditor() {
 
   const [gate, setGate] = useState<iGM_ExaminerGate | null>(null);
   const [gateStatus, setGateStatus] = useState<iGM_ExaminerStatus | null>(null);
+  /** 被拒绝后是否展开重新申请表单 */
+  const [reapplyOpen, setReapplyOpen] = useState(false);
 
   const [form, setForm] = useState<iGM_Question_Form>(iGM_Question_EmptyForm);
   /** 最近一次 AI 建议的教材代码（可为空） */
@@ -398,7 +402,39 @@ export function E_QuestionEditor() {
               )}
             </section>
 
-            <IGM_ExaminerApplyForm onSubmitted={() => void refreshGate()} />
+            {/* 权限互斥：未申请展示申请表单；待审核 / 已撤销仅展示状态；
+                已拒绝展示原因与「重新申请」按钮（点击后展开表单）；已通过绝不渲染申请组件 */}
+            {gate === "none" && (
+              <IGM_ExaminerApplyForm onSubmitted={() => void refreshGate()} />
+            )}
+            {gate === "pending" && (
+              <p className={`igm-mono ${styles.gateLead}`}>
+                {t("examinerGatePendingLead")}
+              </p>
+            )}
+            {gate === "suspended" && (
+              <p className={`igm-mono ${styles.gateLead}`}>
+                {t("examinerGateSuspendedLead")}
+              </p>
+            )}
+            {gate === "rejected" &&
+              (reapplyOpen ? (
+                <IGM_ExaminerApplyForm onSubmitted={() => void refreshGate()} />
+              ) : (
+                <>
+                  <p className={`igm-mono ${styles.gateLead}`}>
+                    {t("examinerGateRejectedLead")}
+                  </p>
+                  <button
+                    type="button"
+                    className={styles.reapplyBtn}
+                    onClick={() => setReapplyOpen(true)}
+                  >
+                    <RotateCcw size={14} strokeWidth={1.8} />
+                    <span className="igm-mono">{t("examinerReapply")}</span>
+                  </button>
+                </>
+              ))}
           </>
         )}
       </main>

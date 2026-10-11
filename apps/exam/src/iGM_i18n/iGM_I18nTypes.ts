@@ -245,6 +245,10 @@ export interface iGM_I18nDict {
   examinerGateTitle: string;
   examinerGateLead: string;
   examinerGateGotoPresets: string;
+  examinerGatePendingLead: string;
+  examinerGateRejectedLead: string;
+  examinerGateSuspendedLead: string;
+  examinerReapply: string;
   // 命题创作者：命题者编号徽标
   creatorBadgeLabel: string;
   creatorBadgeCopy: string;

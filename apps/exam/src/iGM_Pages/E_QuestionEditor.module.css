@@ -114,6 +114,24 @@
   color: var(--igm-copper);
 }
 
+.reapplyBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 16px;
+  padding: 8px 16px;
+  border: 1px solid var(--igm-cinnabar);
+  border-radius: var(--igm-radius);
+  background: transparent;
+  color: var(--igm-cinnabar);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.reapplyBtn:hover {
+  background: color-mix(in srgb, var(--igm-cinnabar) 12%, transparent);
+}
+
 /* ============================= 部署条 ============================= */
 .deployBanner {
   display: flex;

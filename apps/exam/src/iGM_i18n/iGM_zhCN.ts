@@ -241,6 +241,10 @@ export const iGM_zhCN: iGM_I18nDict = {
   examinerGateTitle: "命题创作者权限",
   examinerGateLead: "考试管理仅对通过审核的命题创作者开放。",
   examinerGateGotoPresets: "命题方预设",
+  examinerGatePendingLead: "申请审核中，请耐心等待审核结果。",
+  examinerGateRejectedLead: "申请未通过，可修改后重新提交申请。",
+  examinerGateSuspendedLead: "命题创作者资格已被撤销。",
+  examinerReapply: "重新申请",
   // 命题创作者：命题者编号徽标
   creatorBadgeLabel: "命题创作者",
   creatorBadgeCopy: "复制编号",

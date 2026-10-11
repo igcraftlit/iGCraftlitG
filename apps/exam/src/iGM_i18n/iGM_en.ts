@@ -246,6 +246,11 @@ export const iGM_en: iGM_I18nDict = {
   examinerGateTitle: "Examiner Access",
   examinerGateLead: "Examination management is available to approved examiners only.",
   examinerGateGotoPresets: "Issuer Presets",
+  examinerGatePendingLead: "Your application is under review. Please wait.",
+  examinerGateRejectedLead:
+    "Your application was rejected. You may revise and reapply.",
+  examinerGateSuspendedLead: "Your examiner access has been suspended.",
+  examinerReapply: "Reapply",
   // 命题创作者：命题者编号徽标
   creatorBadgeLabel: "Question Creator",
   creatorBadgeCopy: "Copy number",
