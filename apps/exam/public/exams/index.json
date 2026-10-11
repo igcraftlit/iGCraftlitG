@@ -1,6 +1,7 @@
 {
-  "generatedAt": "2026-10-11T02:37:44.842Z",
+  "generatedAt": "2026-10-11T02:41:09.655Z",
   "issuers": [
+    "启蒙特警",
     "章兰宿海滨",
     "iGC&M 教育考试研究院",
     "iGC&M教育考试研究院",
@@ -9,6 +10,20 @@
     "XinChen、CaYiHou"
   ],
   "exams": [
+    {
+      "id": "343e916d-ac85-4a88-b424-91c7dfd497c8",
+      "code": "E-2026-012",
+      "title": "2026 年 度 选 择 性 考 试",
+      "subject": "Minecraft",
+      "issuer": "启蒙特警",
+      "duration": 90,
+      "totalScore": 100,
+      "questionCount": 20,
+      "status": "published",
+      "convertStatus": "completed",
+      "fileSize": 3112353,
+      "createdAt": "2026-10-11T02:40:52.086Z"
+    },
     {
       "id": "39b0aeaf-24c5-46c0-9780-ed404aa7e13e",
       "code": "E-2026-011",

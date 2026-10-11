@@ -1,0 +1,32 @@
+{
+  "id": "343e916d-ac85-4a88-b424-91c7dfd497c8",
+  "code": "E-2026-012",
+  "title": "2026 年 度 选 择 性 考 试",
+  "subject": "Minecraft",
+  "issuer": "启蒙特警",
+  "reviewer": "奇梦成真·工作室",
+  "duration": 90,
+  "totalScore": 100,
+  "questionCount": 20,
+  "notice": "",
+  "status": "published",
+  "convertStatus": "completed",
+  "fileSize": 3112353,
+  "createdAt": "2026-10-11T02:40:52.086Z",
+  "fileName": "2026年MC选考题 .pdf",
+  "pageWidth": 773.89,
+  "pageHeight": 1094.47,
+  "htmlPath": "/exams/343e916d-ac85-4a88-b424-91c7dfd497c8/index.html",
+  "images": [
+    "bg1.png",
+    "bg2.png",
+    "bg3.png",
+    "bg4.png",
+    "bg5.png",
+    "bg6.png",
+    "bg7.png",
+    "bg8.png",
+    "pdf2htmlEX-64x64.png"
+  ],
+  "answerPdfUrl": ""
+}
