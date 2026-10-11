@@ -1,5 +1,12 @@
 {
-  "generatedAt": "2026-10-11T00:32:26.137Z",
+  "generatedAt": "2026-10-11T01:11:40.380Z",
+  "issuers": [
+    "章兰宿海滨",
+    "iGC&M 教育考试研究院",
+    "iGC&M教育考试研究院",
+    "iGCraftLit 命题组",
+    "XinChen、CaYiHou"
+  ],
   "exams": [
     {
       "id": "8c23a844-f399-4dcd-bd37-c1a629165a1b",
