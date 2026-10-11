@@ -4,9 +4,9 @@
  * 路由：/api/exam/* 与 /uploads/exams/*
  * 模块：G_Exam
  * 作用：iGC&M 教育考试系统路由集合（试卷列表 / 详情 / 原文下载 / 转换 HTML 静态资源 /
- *       转换进度 / 上传转换 / 校对 / 确认发布 / 重新转换 / 删除 / 交卷）
+ *       转换进度 / 上传即发布 / 重新转换 / 删除 / 交卷）
  * 内容：公开列表与详情、管理端列表与详情、原始 PDF 内联预览、转换后 HTML 目录静态服务、
- *       转换进度查询、上传后台转换建档、校对更新、确认发布、重新转换、删除、交卷记录
+ *       转换进度查询、上传（管理员填写元数据 + PDF）直接发布、重新转换、删除、交卷记录
  * 约束：统一响应 { success, code, message, data }；二进制流不套统一响应结构；
  *       本模块暂不做登录与权限校验
  */
@@ -30,20 +30,12 @@ import {
   iGM_GetExamDetailService,
   iGM_ListAdminExamsService,
   iGM_ListPublicExamsService,
-  iGM_PublishExamService,
   iGM_ReadExamFileService,
   iGM_ReadExamHtmlAssetService,
-  iGM_ReRecognizeExamMetaService,
   iGM_ReparseExamService,
   iGM_SubmitExamService,
-  iGM_UpdateExamService,
   iGM_UploadExamService,
 } from "../iGM_Services/iGM_ExamService";
-import {
-  iGM_CommitExamStaticFiles,
-  iGM_GenerateExamStaticFile,
-  iGM_RebuildExamStaticIndex,
-} from "../iGM_Services/iGM_ExamStaticService";
 
 // 类型定义 //
 /** 原始文件 MIME 与是否可内联预览（本模块仅 PDF） */
@@ -55,9 +47,18 @@ const iGM_ExamFileHeaders: Record<
 };
 
 // 核心逻辑 //
+/** 读取字符串字段（兼容 multipart FormData 与 JSON 对象两种请求体） */
+function iGM_FormField(body: unknown, key: string): string {
+  if (typeof FormData !== "undefined" && body instanceof FormData) {
+    const value = body.get(key);
+    return typeof value === "string" ? value : "";
+  }
+  return iGM_Field(body, key);
+}
+
 /** 从请求体读取可选整数：空串/非法一律为 null */
 function iGM_NumberField(body: unknown, key: string): number | null {
-  const raw = iGM_Field(body, key);
+  const raw = iGM_FormField(body, key).trim();
   if (raw.length === 0) return null;
   const value = Number(raw);
   return Number.isFinite(value) ? value : null;
@@ -165,54 +166,28 @@ async function iGM_HandleAdminList(ctx: iGM_RouteContext) {
   return iGM_Ok({ exams: await iGM_ListAdminExamsService() });
 }
 
-/* ---------- 管理端：上传 PDF 并后台转换建档 ---------- */
+/* ---------- 管理端：上传 PDF 并直接发布（管理员填写元数据） ---------- */
 async function iGM_HandleUpload(ctx: iGM_RouteContext) {
   const ip = iGM_ClientIp(ctx);
   iGM_EnforceRateLimit(ctx, "examUpload", `ip:${ip}`);
   const user = await iGM_CurrentUser(ctx);
-  const file = iGM_ExtractUploadFile(ctx.body);
-  const exam = await iGM_UploadExamService(file, user?.iGM_Id ?? null);
-  ctx.set.status = 201;
-  return iGM_Ok({ exam }, "试卷已上传，正在后台转换");
-}
-
-/* ---------- 管理端：校对更新元数据 ---------- */
-async function iGM_HandleUpdate(ctx: iGM_RouteContext) {
   const body = ctx.body;
-  const examId = iGM_RequireExamIdBody(ctx);
-  await iGM_UpdateExamService(examId, {
-    title: iGM_Field(body, "title"),
-    subject: iGM_Field(body, "subject"),
-    issuer: iGM_Field(body, "issuer"),
-    reviewer: iGM_Field(body, "reviewer"),
-    duration: iGM_NumberField(body, "duration"),
-    totalScore: iGM_NumberField(body, "totalScore"),
-    questionCount: iGM_NumberField(body, "questionCount"),
-    notice: iGM_Field(body, "notice"),
-  });
-  return iGM_Ok({ updated: true }, "试卷信息已保存");
-}
-
-/* ---------- 管理端：确认并发布 ---------- */
-async function iGM_HandleConfirm(ctx: iGM_RouteContext) {
-  const ip = iGM_ClientIp(ctx);
-  iGM_EnforceRateLimit(ctx, "examUpload", `ip:${ip}`);
-  const examId = iGM_RequireExamIdBody(ctx);
-  await iGM_PublishExamService(examId);
-  // 发布后导出静态数据、重建索引并推送，触发 Cloudflare Pages 重新构建（失败不阻断发布）
-  let deploying = false;
-  try {
-    deploying = await iGM_GenerateExamStaticFile(examId);
-    if (deploying) {
-      await iGM_RebuildExamStaticIndex();
-      await iGM_CommitExamStaticFiles();
-    }
-  } catch (error) {
-    console.warn(
-      `[G_Exam] 生成试卷静态数据失败：${examId}：${String(error)}`,
-    );
-  }
-  return iGM_Ok({ confirmed: true, deploying }, "试卷已发布");
+  const exam = await iGM_UploadExamService(
+    {
+      file: iGM_ExtractUploadFile(body),
+      title: iGM_FormField(body, "title"),
+      subject: iGM_FormField(body, "subject"),
+      issuer: iGM_FormField(body, "issuer"),
+      reviewer: iGM_FormField(body, "reviewer"),
+      duration: iGM_NumberField(body, "duration"),
+      totalScore: iGM_NumberField(body, "totalScore"),
+      questionCount: iGM_NumberField(body, "questionCount"),
+      notice: iGM_FormField(body, "notice"),
+    },
+    user?.iGM_Id ?? null,
+  );
+  ctx.set.status = 201;
+  return iGM_Ok({ exam, deploying: true }, "试卷已发布，正在转换并部署");
 }
 
 /* ---------- 管理端：使用原始 PDF 重新转换 ---------- */
@@ -222,15 +197,6 @@ async function iGM_HandleReparse(ctx: iGM_RouteContext) {
   const examId = iGM_RequireExamIdBody(ctx);
   await iGM_ReparseExamService(examId);
   return iGM_Ok({ reparsed: true }, "已按原始文件重新转换");
-}
-
-/* ---------- 管理端：基于已存 HTML 重新识别并回填元数据 ---------- */
-async function iGM_HandleRecognize(ctx: iGM_RouteContext) {
-  const ip = iGM_ClientIp(ctx);
-  iGM_EnforceRateLimit(ctx, "examUpload", `ip:${ip}`);
-  const examId = iGM_RequireExamIdBody(ctx);
-  await iGM_ReRecognizeExamMetaService(examId);
-  return iGM_Ok({ recognized: true }, "已重新识别试卷信息");
 }
 
 /* ---------- 管理端：删除试卷及其原始文件与 HTML 目录 ---------- */
@@ -267,10 +233,7 @@ export const G_Exam = new Elysia({ name: "G_Exam" })
   .get("/api/exam/admin/detail", iGM_HandleAdminDetail as never)
   .get("/api/exam/admin/progress", iGM_HandleProgress as never)
   .post("/api/exam/upload", iGM_HandleUpload as never)
-  .post("/api/exam/update", iGM_HandleUpdate as never)
-  .post("/api/exam/confirm", iGM_HandleConfirm as never)
   .post("/api/exam/reparse", iGM_HandleReparse as never)
-  .post("/api/exam/recognize", iGM_HandleRecognize as never)
   .post("/api/exam/delete", iGM_HandleDelete as never)
   .post("/api/exam/submit", iGM_HandleSubmit as never);
 

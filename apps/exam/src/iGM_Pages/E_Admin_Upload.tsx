@@ -3,10 +3,12 @@
  * 所属层：前端 / 页面层
  * 路由：E_Admin_Upload（/admin/upload）
  * 模块：iGM_ExamUpload
- * 作用：试卷上传页，仅接受 PDF（最大 50 MB），上传后轮询转换进度，
- *       展示「上传中 → 转换中 → 完成」阶段，转换完成自动跳转至校对预览
- * 内容：拖拽 / 选择文件区、阶段指示、转换进度条、错误提示、完成跳转
- * 说明：纯静态导出，客户端直连后端；文件名与大小在本地先校验；文案取自当前语言包
+ * 作用：试卷发布页，管理员手工填写规格并选择 PDF（最大 50 MB）后直接发布；
+ *       规格任一缺失或数值非法时提交按钮置灰，无法提交
+ * 内容：发布信息表单（名称 / 科目 / 命题方 / 审题方 / 时长 / 总分 / 题数 / 须知）、
+ *       试卷文件拖拽选择区、必填与正整数校验、发布后部署状态提示弹窗
+ * 说明：发布即写入数据库并转为已发布状态，转换在后台异步执行；
+ *       提交后弹出部署提示并轮询线上索引，构建完成后提示已上线；文案取自当前语言包
  */
 
 // 导入依赖 //
@@ -16,36 +18,54 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
-  ArrowRight,
   CheckCircle2,
+  Clock,
   FileText,
   Loader2,
+  Send,
   UploadCloud,
 } from "lucide-react";
 import {
-  iGM_Exam_FetchProgress,
-  iGM_Exam_FormatSizeMb,
   iGM_Exam_Upload,
   iGM_ExamRequestError,
-  type iGM_ExamConvertProgress,
 } from "../iGM_Services/iGM_ExamClient";
+import { iGM_Exam_FetchOnlineIndexIds } from "../iGM_Services/iGM_ExamStaticClient";
 import { useI18n } from "../iGM_i18n/iGM_I18nContext";
 import styles from "./E_Admin_Upload.module.css";
 
 // 类型定义 //
-/** 上传流程阶段 */
-type iGM_Exam_UploadStage =
-  | "idle"
-  | "uploading"
-  | "converting"
-  | "completed"
-  | "failed";
+/** 发布表单草稿（全部为字符串，提交时转换为正整数） */
+interface iGM_Exam_PublishForm {
+  title: string;
+  subject: string;
+  issuer: string;
+  reviewer: string;
+  duration: string;
+  totalScore: string;
+  questionCount: string;
+  notice: string;
+}
 
 /** 单文件上限（字节） */
 const iGM_Exam_MaxUploadBytes = 50 * 1024 * 1024;
 
-/** 轮询间隔（毫秒） */
-const iGM_Exam_UploadPollMs = 1500;
+/** 正整数校验：首位非零的纯数字 */
+const iGM_Exam_PositiveIntPattern = /^[1-9]\d*$/;
+
+/** 线上部署状态轮询间隔（毫秒） */
+const iGM_ExamDeployPollMs = 30000;
+
+/** 空白表单 */
+const iGM_Exam_EmptyForm: iGM_Exam_PublishForm = {
+  title: "",
+  subject: "",
+  issuer: "",
+  reviewer: "",
+  duration: "",
+  totalScore: "",
+  questionCount: "",
+  notice: "",
+};
 
 // 核心逻辑 //
 /** 判定文件是否为 PDF（扩展名或 MIME） */
@@ -53,128 +73,126 @@ function iGM_Exam_IsPdf(file: File): boolean {
   return file.type === "application/pdf" || /\.pdf$/i.test(file.name);
 }
 
-/** 非阻塞等待 */
-function iGM_Exam_Sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+/** 正整数文本 → 数字（调用方已确保通过校验） */
+function iGM_Exam_ToInt(value: string): number {
+  return Number.parseInt(value.trim(), 10);
 }
 
-/** 试卷上传页 */
+/** 试卷发布页 */
 export function iGM_ExamUploadPage() {
   const { t } = useI18n();
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const aliveRef = useRef(true);
 
-  const [stage, setStage] = useState<iGM_Exam_UploadStage>("idle");
+  const [form, setForm] = useState<iGM_Exam_PublishForm>(iGM_Exam_EmptyForm);
+  const [file, setFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
-  const [fileName, setFileName] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
-  const [progress, setProgress] = useState<iGM_ExamConvertProgress | null>(null);
-  const [examId, setExamId] = useState("");
+  /** 发布后触发的部署提示所对应的试卷 id；null 表示不显示提示框 */
+  const [deployBannerId, setDeployBannerId] = useState<string | null>(null);
+  /** 线上已部署试卷 id 集合；null 表示尚未取得 */
+  const [onlineIds, setOnlineIds] = useState<Set<string> | null>(null);
 
+  // 部署提示显示期间每 30 秒轮询线上索引，检测到试卷已上线即停止
   useEffect(() => {
-    aliveRef.current = true;
-    return () => {
-      aliveRef.current = false;
-    };
-  }, []);
+    if (!deployBannerId) return;
+    if (onlineIds && onlineIds.has(deployBannerId)) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
 
-  // 转换完成：短暂展示完成后自动跳转到校对预览（管理端携带 examId）
-  useEffect(() => {
-    if (stage !== "completed" || !examId) return;
-    const timer = setTimeout(() => {
-      router.push(`/admin?examId=${encodeURIComponent(examId)}`);
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, [stage, examId, router]);
-
-  /** 上传并轮询转换进度 */
-  async function handleFile(file: File): Promise<void> {
-    setMessage("");
-    setProgress(null);
-    setExamId("");
-
-    if (!iGM_Exam_IsPdf(file)) {
-      setStage("failed");
-      setMessage(t("uploadOnlyPdf"));
-      return;
-    }
-    if (file.size > iGM_Exam_MaxUploadBytes) {
-      setStage("failed");
-      setMessage(t("uploadTooLarge"));
-      return;
-    }
-
-    setFileName(file.name);
-    setStage("uploading");
-
-    let id = "";
-    try {
-      const exam = await iGM_Exam_Upload(file);
-      if (!aliveRef.current) return;
-      id = exam.id;
-      setProgress(exam.convertProgress);
-    } catch (err) {
-      if (!aliveRef.current) return;
-      setStage("failed");
-      setMessage(
-        err instanceof iGM_ExamRequestError ? err.message : t("uploadFailed"),
-      );
-      return;
-    }
-
-    setExamId(id);
-    setStage("converting");
-
-    // 轮询转换进度直至完成 / 失败（最多 10 分钟）
-    const deadline = Date.now() + 10 * 60 * 1000;
-    while (aliveRef.current && Date.now() < deadline) {
-      await iGM_Exam_Sleep(iGM_Exam_UploadPollMs);
-      if (!aliveRef.current) return;
+    const tick = async (): Promise<void> => {
       try {
-        const p = await iGM_Exam_FetchProgress(id);
-        if (!aliveRef.current) return;
-        setProgress(p);
-        if (p.status === "completed") {
-          setStage("completed");
-          return;
-        }
-        if (p.status === "failed") {
-          setStage("failed");
-          setMessage(p.error || t("uploadStageFailed"));
-          return;
-        }
+        const ids = await iGM_Exam_FetchOnlineIndexIds();
+        if (cancelled) return;
+        setOnlineIds(ids);
       } catch {
         // 单次轮询失败不中断，继续下一轮
       }
+      if (!cancelled) {
+        timer = setTimeout(() => void tick(), iGM_ExamDeployPollMs);
+      }
+    };
+
+    timer = setTimeout(() => void tick(), iGM_ExamDeployPollMs);
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [deployBannerId, onlineIds]);
+
+  const deployDone =
+    deployBannerId !== null && Boolean(onlineIds?.has(deployBannerId));
+
+  // 校验：文本字段非空 + 数值为正整数 + 已选择 PDF
+  const textOk = [form.title, form.subject, form.issuer, form.reviewer].every(
+    (value) => value.trim().length > 0,
+  );
+  const numberValues = [form.duration, form.totalScore, form.questionCount];
+  const numberOk = numberValues.every((value) =>
+    iGM_Exam_PositiveIntPattern.test(value.trim()),
+  );
+  const numberInvalid = numberValues.some(
+    (value) =>
+      value.trim().length > 0 && !iGM_Exam_PositiveIntPattern.test(value.trim()),
+  );
+  const complete = textOk && numberOk && file !== null;
+  const hint = numberInvalid
+    ? t("uploadInvalidNumber")
+    : complete
+      ? ""
+      : t("uploadRequiredHint");
+
+  /** 选择文件：本地校验格式与体积 */
+  function pick(next: File | undefined): void {
+    if (!next) return;
+    if (!iGM_Exam_IsPdf(next)) {
+      setFile(null);
+      setMessage(t("uploadOnlyPdf"));
+      return;
     }
-    if (aliveRef.current) {
-      setStage("failed");
-      setMessage(t("uploadFailed"));
+    if (next.size > iGM_Exam_MaxUploadBytes) {
+      setFile(null);
+      setMessage(t("uploadTooLarge"));
+      return;
+    }
+    setMessage("");
+    setFile(next);
+  }
+
+  /** 提交发布：校验通过后携带元数据上传，成功后弹出部署提示 */
+  async function submit(): Promise<void> {
+    if (!complete || !file || submitting) return;
+    setSubmitting(true);
+    setMessage("");
+    try {
+      const result = await iGM_Exam_Upload(file, {
+        title: form.title.trim(),
+        subject: form.subject.trim(),
+        issuer: form.issuer.trim(),
+        reviewer: form.reviewer.trim(),
+        duration: iGM_Exam_ToInt(form.duration),
+        totalScore: iGM_Exam_ToInt(form.totalScore),
+        questionCount: iGM_Exam_ToInt(form.questionCount),
+        notice: form.notice.trim(),
+      });
+      setForm({ ...iGM_Exam_EmptyForm });
+      setFile(null);
+      if (inputRef.current) inputRef.current.value = "";
+      setDeployBannerId(result.exam.id);
+    } catch (err) {
+      setMessage(
+        err instanceof iGM_ExamRequestError ? err.message : t("uploadFailed"),
+      );
+    } finally {
+      setSubmitting(false);
     }
   }
 
-  /** 选择文件后重置输入，允许重复选择同一文件 */
-  function onPick(file: File | undefined): void {
-    if (!file) return;
-    void handleFile(file);
-    if (inputRef.current) inputRef.current.value = "";
-  }
-
-  const percent = progress ? Math.min(100, Math.max(0, progress.percent)) : 0;
-  const busy = stage === "uploading" || stage === "converting";
-  // 转换产物占用空间（MB，保留一位小数）
-  const sizeText = iGM_Exam_FormatSizeMb(progress?.fileSize ?? null);
-
-  /** 阶段指示高亮状态 */
-  function stepState(target: iGM_Exam_UploadStage): string {
-    if (stage === "failed") {
-      return target === "uploading" ? styles.stepFailed : "";
-    }
-    if (stage === "completed") return styles.stepDone;
-    if (stage === target) return styles.stepActive;
-    if (target === "uploading" && stage === "converting") return styles.stepDone;
-    return "";
+  /** 关闭部署提示并返回台账 */
+  function closeDeployBanner(): void {
+    setDeployBannerId(null);
+    router.push("/admin");
   }
 
   return (
@@ -186,138 +204,239 @@ export function iGM_ExamUploadPage() {
         <p className={styles.headLead}>{t("uploadLead")}</p>
       </header>
 
-      {/* 拖拽 / 选择区 */}
-      <section
-        className={`igm-double-rule ${styles.dropzone} ${
-          dragging ? styles.dropzoneActive : ""
-        }`}
-        onDragOver={(e) => {
-          e.preventDefault();
-          if (!busy) setDragging(true);
-        }}
-        onDragLeave={() => setDragging(false)}
-        onDrop={(e) => {
-          e.preventDefault();
-          setDragging(false);
-          if (busy) return;
-          onPick(e.dataTransfer.files?.[0]);
-        }}
-      >
-        <UploadCloud size={34} strokeWidth={1.5} className={styles.dropIcon} />
-        <p className={`igm-mono ${styles.dropHint}`}>{t("uploadDropHint")}</p>
-        <button
-          type="button"
-          className={styles.pickBtn}
-          onClick={() => inputRef.current?.click()}
-          disabled={busy}
-        >
-          {busy ? (
-            <Loader2 size={15} strokeWidth={1.8} className={styles.spin} />
-          ) : (
-            <FileText size={15} strokeWidth={1.8} />
-          )}
-          <span className={`igm-mono ${styles.pickLabel}`}>{t("uploadPick")}</span>
-        </button>
-        <input
-          ref={inputRef}
-          type="file"
-          accept="application/pdf,.pdf"
-          className={styles.hiddenInput}
-          onChange={(e) => onPick(e.target.files?.[0])}
-        />
-      </section>
+      {/* 发布信息表单 */}
+      <section className={styles.section} aria-label={t("uploadFormTitle")}>
+        <div className={styles.sectionHead}>
+          <span className={`igm-mono ${styles.sectionNum}`}>§ 1</span>
+          <h2 className={`igm-serif ${styles.sectionTitle}`}>
+            {t("uploadFormTitle")}
+          </h2>
+        </div>
 
-      {/* 阶段 + 进度 */}
-      {(stage !== "idle" || fileName) && (
-        <section className={styles.stageBox} aria-label={t("uploadStageConvert")}>
-          <div className={styles.stageSteps}>
-            <span className={`igm-mono ${styles.step} ${stepState("uploading")}`}>
-              {t("uploadStageUpload")}
+        <form
+          className={styles.form}
+          onSubmit={(e) => {
+            e.preventDefault();
+            void submit();
+          }}
+        >
+          <label className={styles.field}>
+            <span className={`igm-mono ${styles.fieldLabel}`}>
+              {t("adminFieldTitle")}
             </span>
-            <ArrowRight size={13} strokeWidth={1.8} className={styles.stepArrow} />
-            <span className={`igm-mono ${styles.step} ${stepState("converting")}`}>
-              {t("uploadStageConvert")}
-            </span>
-            <ArrowRight size={13} strokeWidth={1.8} className={styles.stepArrow} />
-            <span className={`igm-mono ${styles.step} ${stepState("completed")}`}>
-              {t("uploadStageDone")}
-            </span>
+            <input
+              className={styles.input}
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              placeholder={t("adminPlaceholderTitle")}
+            />
+          </label>
+
+          <div className={styles.fieldRow}>
+            <label className={styles.field}>
+              <span className={`igm-mono ${styles.fieldLabel}`}>
+                {t("fieldSubject")}
+              </span>
+              <input
+                className={styles.input}
+                value={form.subject}
+                onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                placeholder={t("adminPlaceholderSubject")}
+              />
+            </label>
+            <label className={styles.field}>
+              <span className={`igm-mono ${styles.fieldLabel}`}>
+                {t("fieldIssuer")}
+              </span>
+              <input
+                className={styles.input}
+                value={form.issuer}
+                onChange={(e) => setForm({ ...form, issuer: e.target.value })}
+                placeholder={t("adminPlaceholderIssuer")}
+              />
+            </label>
           </div>
 
-          {fileName && (
-            <p className={`igm-mono ${styles.fileName}`} title={fileName}>
-              {fileName}
+          <label className={styles.field}>
+            <span className={`igm-mono ${styles.fieldLabel}`}>
+              {t("fieldReviewer")}
+            </span>
+            <input
+              className={styles.input}
+              value={form.reviewer}
+              onChange={(e) => setForm({ ...form, reviewer: e.target.value })}
+              placeholder={t("adminPlaceholderReviewer")}
+            />
+          </label>
+
+          <div className={styles.fieldRowThree}>
+            <label className={styles.field}>
+              <span className={`igm-mono ${styles.fieldLabel}`}>
+                {t("adminFieldDuration")}
+              </span>
+              <input
+                className={styles.input}
+                inputMode="numeric"
+                value={form.duration}
+                onChange={(e) => setForm({ ...form, duration: e.target.value })}
+                placeholder="120"
+              />
+            </label>
+            <label className={styles.field}>
+              <span className={`igm-mono ${styles.fieldLabel}`}>
+                {t("adminFieldTotal")}
+              </span>
+              <input
+                className={styles.input}
+                inputMode="numeric"
+                value={form.totalScore}
+                onChange={(e) => setForm({ ...form, totalScore: e.target.value })}
+                placeholder="150"
+              />
+            </label>
+            <label className={styles.field}>
+              <span className={`igm-mono ${styles.fieldLabel}`}>
+                {t("adminFieldItems")}
+              </span>
+              <input
+                className={styles.input}
+                inputMode="numeric"
+                value={form.questionCount}
+                onChange={(e) =>
+                  setForm({ ...form, questionCount: e.target.value })
+                }
+                placeholder="30"
+              />
+            </label>
+          </div>
+
+          <label className={styles.field}>
+            <span className={`igm-mono ${styles.fieldLabel}`}>
+              {t("adminFieldNotice")}
+            </span>
+            <textarea
+              className={styles.textarea}
+              rows={2}
+              value={form.notice}
+              onChange={(e) => setForm({ ...form, notice: e.target.value })}
+              placeholder={t("adminPlaceholderNotice")}
+            />
+          </label>
+        </form>
+      </section>
+
+      {/* 试卷文件 */}
+      <section className={styles.section} aria-label={t("uploadFileTitle")}>
+        <div className={styles.sectionHead}>
+          <span className={`igm-mono ${styles.sectionNum}`}>§ 2</span>
+          <h2 className={`igm-serif ${styles.sectionTitle}`}>
+            {t("uploadFileTitle")}
+          </h2>
+        </div>
+
+        <div
+          className={`igm-double-rule ${styles.dropzone} ${
+            dragging ? styles.dropzoneActive : ""
+          }`}
+          onDragOver={(e) => {
+            e.preventDefault();
+            if (!submitting) setDragging(true);
+          }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragging(false);
+            if (submitting) return;
+            pick(e.dataTransfer.files?.[0]);
+          }}
+        >
+          <UploadCloud size={34} strokeWidth={1.5} className={styles.dropIcon} />
+          <p className={`igm-mono ${styles.dropHint}`}>{t("uploadDropHint")}</p>
+          <button
+            type="button"
+            className={styles.pickBtn}
+            onClick={() => inputRef.current?.click()}
+            disabled={submitting}
+          >
+            <FileText size={15} strokeWidth={1.8} />
+            <span className={`igm-mono ${styles.pickLabel}`}>
+              {t("uploadPick")}
+            </span>
+          </button>
+          <input
+            ref={inputRef}
+            type="file"
+            accept="application/pdf,.pdf"
+            className={styles.hiddenInput}
+            onChange={(e) => {
+              pick(e.target.files?.[0]);
+              e.target.value = "";
+            }}
+          />
+          {file && (
+            <p className={`igm-mono ${styles.fileName}`} title={file.name}>
+              {file.name}
             </p>
           )}
+        </div>
+      </section>
 
-          {busy && (
-            <>
-              <div className={styles.progressTrack}>
-                <div
-                  className={styles.progressFill}
-                  style={{ width: `${stage === "uploading" ? 10 : Math.max(percent, 40)}%` }}
-                />
-              </div>
-              <p className={`igm-mono ${styles.note}`}>
-                {stage === "uploading"
-                  ? t("uploadStageUpload")
-                  : t("adminProgressConverting")}
-              </p>
-            </>
+      {/* 提示与提交 */}
+      {message && (
+        <p className={`igm-mono ${styles.alertError}`}>
+          <AlertCircle size={14} strokeWidth={1.8} />
+          {message}
+        </p>
+      )}
+
+      <div className={styles.submitRow}>
+        <button
+          type="button"
+          className={styles.submitBtn}
+          onClick={() => void submit()}
+          disabled={!complete || submitting}
+        >
+          {submitting ? (
+            <Loader2 size={15} strokeWidth={1.8} className={styles.spin} />
+          ) : (
+            <Send size={15} strokeWidth={1.8} />
           )}
+          <span className={`igm-mono ${styles.submitLabel}`}>
+            {t("uploadSubmit")}
+          </span>
+        </button>
+        {hint && <p className={`igm-mono ${styles.hint}`}>{hint}</p>}
+      </div>
 
-          {stage === "completed" && (
-            <p className={`igm-mono ${styles.noteOk}`}>
-              <CheckCircle2 size={14} strokeWidth={1.8} />
-              {t("adminProgressDone")}
-            </p>
-          )}
-
-          {stage === "completed" && sizeText && (
-            <p className={`igm-mono ${styles.sizeNote}`}>
-              {t("fileSizeValue", { size: sizeText })}
-            </p>
-          )}
-
-          {stage === "failed" && (
-            <p className={`igm-mono ${styles.noteError}`}>
-              <AlertCircle size={14} strokeWidth={1.8} />
-              {message || t("uploadStageFailed")}
-            </p>
-          )}
-
-          {stage === "failed" && (
-            <div className={styles.actions}>
+      {/* 部署状态提示：发布后弹出，构建完成后自动切换为已上线 */}
+      {deployBannerId && (
+        <div className={styles.modalOverlay} role="presentation">
+          <div
+            className={styles.modal}
+            role="dialog"
+            aria-modal="true"
+            aria-label={deployDone ? t("deployDone") : t("deployTitle")}
+          >
+            <h3 className={`igm-serif ${styles.modalTitle}`}>
+              {deployDone ? t("deployDone") : t("deployTitle")}
+            </h3>
+            {!deployDone && <p className={styles.modalBody}>{t("deployBody")}</p>}
+            <div className={styles.modalActions}>
               <button
                 type="button"
-                className={styles.retryBtn}
-                onClick={() => {
-                  setStage("idle");
-                  setMessage("");
-                  setProgress(null);
-                  setFileName("");
-                  inputRef.current?.click();
-                }}
+                className={styles.modalConfirm}
+                onClick={closeDeployBanner}
               >
-                <UploadCloud size={14} strokeWidth={1.8} />
-                <span className="igm-mono">{t("uploadRetry")}</span>
+                {deployDone ? (
+                  <CheckCircle2 size={14} strokeWidth={1.8} />
+                ) : (
+                  <Clock size={14} strokeWidth={1.8} />
+                )}
+                <span className="igm-mono">{t("deployBack")}</span>
               </button>
             </div>
-          )}
-
-          {stage === "completed" && examId && (
-            <div className={styles.actions}>
-              <button
-                type="button"
-                className={styles.openBtn}
-                onClick={() => router.push(`/admin?examId=${encodeURIComponent(examId)}`)}
-              >
-                <ArrowRight size={14} strokeWidth={1.8} />
-                <span className="igm-mono">{t("uploadOpenPreview")}</span>
-              </button>
-            </div>
-          )}
-        </section>
+          </div>
+        </div>
       )}
     </main>
   );

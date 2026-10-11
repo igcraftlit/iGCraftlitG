@@ -3,9 +3,10 @@
  * 所属层：前端 / 页面样式层
  * 路由：E_Admin_Exam（/admin）
  * 模块：iGM_ExamAdmin
- * 作用：管理端样式（上传区、校对分栏、规格表单、解析全文与预览、确认弹窗、台账表格）
- * 内容：页头、上传区、提示、校对布局、原始文件预览、表单字段、操作按钮、弹窗、台账表格
- * 说明：桌面左右分栏校对，平板起上下堆叠；台账表格在窄屏隐藏次要列
+ * 作用：管理端样式（发布入口、预览分栏、只读规格、转换进度、删除弹窗、台账表格）
+ * 内容：页头、发布入口、提示、预览布局、原始文件预览、只读规格列表、操作按钮、
+ *       转换进度、状态标签、弹窗、台账表格
+ * 说明：桌面左右分栏预览，平板起上下堆叠；台账表格在窄屏隐藏次要列
  */
 
 /* ============================= 页面容器 ============================= */
@@ -61,7 +62,7 @@
   color: var(--igm-text-muted);
 }
 
-/* ============================= 上传区 ============================= */
+/* ============================= 发布入口 ============================= */
 .uploadSection {
   display: flex;
   align-items: center;
@@ -95,11 +96,6 @@
   border-color: var(--igm-ink-soft);
 }
 
-.uploadBtn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 .uploadLabel {
   font-size: 12px;
   font-weight: 700;
@@ -114,10 +110,6 @@
   to {
     transform: rotate(360deg);
   }
-}
-
-.hiddenInput {
-  display: none;
 }
 
 /* ============================= 提示 ============================= */
@@ -144,7 +136,7 @@
   background: color-mix(in srgb, var(--igm-gold) 12%, transparent);
 }
 
-/* ============================= 校对区 ============================= */
+/* ============================= 预览区 ============================= */
 .reviewSection {
   margin-bottom: 44px;
 }
@@ -179,7 +171,7 @@
   color: var(--igm-copper);
 }
 
-/* ============================= 原始文件预览 ============================= */
+/* ============================= HTML 预览 ============================= */
 .pdfFrame {
   width: 100%;
   height: 560px;
@@ -233,60 +225,43 @@
   color: var(--igm-text-muted);
 }
 
-/* ============================= 表单 ============================= */
-.form {
+/* ============================= 只读规格列表 ============================= */
+.specList {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 0;
+  margin: 0;
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+  overflow: hidden;
 }
 
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
+.specRow {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--igm-line-soft);
+  background: var(--igm-paper-raised);
 }
 
-.fieldLabel {
-  font-size: 9px;
-  letter-spacing: 0.2em;
+.specRow:last-child {
+  border-bottom: none;
+}
+
+.specKey {
+  margin: 0;
+  font-size: 10px;
+  letter-spacing: 0.16em;
   color: var(--igm-text-muted);
 }
 
-.input,
-.textarea {
-  width: 100%;
-  padding: 9px 12px;
-  background: var(--igm-paper-raised);
-  border: 1px solid var(--igm-line);
-  border-radius: var(--igm-radius);
-  color: var(--igm-text);
-  font-family: var(--igm-font-sans), system-ui, sans-serif;
+.specValue {
+  margin: 0;
   font-size: 14px;
-  outline: none;
-  transition: border-color 0.16s ease, box-shadow 0.16s ease;
-}
-
-.input:focus,
-.textarea:focus {
-  border-color: var(--igm-copper);
-  box-shadow: inset 0 0 0 1px var(--igm-copper);
-}
-
-.textarea {
-  resize: vertical;
   line-height: 1.6;
-}
-
-.fieldRow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.fieldRowThree {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  color: var(--igm-text);
+  word-break: break-word;
 }
 
 /* ============================= 操作按钮 ============================= */
@@ -299,11 +274,8 @@
   border-top: 1px solid var(--igm-line-soft);
 }
 
-.primary,
-.confirm,
 .reparse,
-.delete,
-.discard {
+.delete {
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -316,30 +288,9 @@
   transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
 }
 
-.primary {
-  background: var(--igm-ink);
-  border-color: var(--igm-ink);
-  color: var(--igm-paper);
-}
-
-.primary:hover:not(:disabled) {
-  background: var(--igm-ink-soft);
-  border-color: var(--igm-ink-soft);
-}
-
-.confirm:hover:not(:disabled) {
-  border-color: var(--igm-ink-soft);
-  background: color-mix(in srgb, var(--igm-ink-soft) 14%, transparent);
-}
-
 .reparse:hover:not(:disabled) {
   border-color: var(--igm-copper);
   background: color-mix(in srgb, var(--igm-gold) 14%, transparent);
-}
-
-.discard:hover:not(:disabled) {
-  border-color: var(--igm-text-muted);
-  background: color-mix(in srgb, var(--igm-text-muted) 12%, transparent);
 }
 
 .delete {
@@ -352,16 +303,13 @@
   background: color-mix(in srgb, var(--igm-cinnabar) 10%, transparent);
 }
 
-.primary:disabled,
-.confirm:disabled,
 .reparse:disabled,
-.delete:disabled,
-.discard:disabled {
+.delete:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
-/* ============================= 解析进度 ============================= */
+/* ============================= 转换进度 ============================= */
 .progressBox {
   display: flex;
   flex-direction: column;
@@ -698,9 +646,9 @@
     justify-content: center;
   }
 
-  .fieldRow,
-  .fieldRowThree {
+  .specRow {
     grid-template-columns: 1fr;
+    gap: 4px;
   }
 
   .tableHeadRow,

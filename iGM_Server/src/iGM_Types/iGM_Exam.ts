@@ -3,10 +3,11 @@
  * 所属层：后端 / 类型定义层
  * 路由：G_Exam（/api/exam/*）
  * 模块：iGM_Exam
- * 作用：iGC&M 教育考试系统的状态枚举、数据行、DTO 与识别结果类型
+ * 作用：iGC&M 教育考试系统的状态枚举、数据行与 DTO 类型
  * 内容：试卷状态与转换状态、试卷/文件/交卷数据行、列表与详情 DTO、
- *       转换进度 DTO、文档自动识别结果、支持的文件格式白名单
- * 说明：本模块仅支持 PDF，转换由 pdf2htmlEX 产出自包含 HTML 目录，
+ *       转换进度 DTO、支持的文件格式白名单
+ * 说明：本模块仅支持 PDF，转换由 pdf2htmlEX 产出自包含 HTML 目录；
+ *       试卷元数据由管理员在上传时手工填写，不再自动识别；
  *       磁盘路径绝不出现在对外 DTO
  */
 
@@ -97,20 +98,6 @@ export interface iGM_ExamSubmissionRow {
   iGM_ExamId: string;
   iGM_UserId: string | null;
   iGM_SubmittedAt: string;
-}
-
-/**
- * 文档自动识别结果
- * 字段均可为空（无法识别时留空，由管理员在校对界面补全）
- */
-export interface iGM_ExamRecognized {
-  title: string;
-  subject: string;
-  issuer: string;
-  reviewer: string;
-  duration: number | null;
-  totalScore: number | null;
-  questionCount: number | null;
 }
 
 /** 试卷列表项 DTO（索引卡片展示所需字段） */

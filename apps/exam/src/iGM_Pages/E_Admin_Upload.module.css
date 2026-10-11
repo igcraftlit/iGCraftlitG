@@ -3,8 +3,8 @@
  * 所属层：前端 / 页面样式层
  * 路由：E_Admin_Upload（/admin/upload）
  * 模块：iGM_ExamUpload
- * 作用：试卷上传页样式（页头、拖拽区、阶段指示、进度条、提示与操作）
- * 内容：页面容器、拖拽选择区、阶段步骤、进度条、提示、按钮
+ * 作用：试卷发布页样式（页头、发布表单、文件拖拽区、提示、提交按钮、部署提示弹窗）
+ * 内容：页面容器、小节标题、表单字段、拖拽选择区、错误提示、提交区、弹窗、响应式
  * 说明：沿用考试系统学术极简风格，配色取自全局 CSS 变量
  */
 
@@ -41,13 +41,96 @@
   color: var(--igm-text-muted);
 }
 
-/* ============================= 拖拽选择区 ============================= */
+/* ============================= 小节 ============================= */
+.section {
+  margin-bottom: 30px;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding-bottom: 12px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--igm-line);
+}
+
+.sectionNum {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--igm-cinnabar);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--igm-ink);
+}
+
+/* ============================= 表单 ============================= */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.fieldLabel {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--igm-text-muted);
+}
+
+.input,
+.textarea {
+  width: 100%;
+  padding: 9px 12px;
+  background: var(--igm-paper-raised);
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+  color: var(--igm-text);
+  font-family: var(--igm-font-sans), system-ui, sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: var(--igm-copper);
+  box-shadow: inset 0 0 0 1px var(--igm-copper);
+}
+
+.textarea {
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.fieldRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.fieldRowThree {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+/* ============================= 文件拖拽区 ============================= */
 .dropzone {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  padding: 56px 24px;
+  padding: 44px 24px;
   text-align: center;
   border: 1px dashed var(--igm-line);
   border-radius: var(--igm-radius);
@@ -99,6 +182,17 @@
   letter-spacing: 0.18em;
 }
 
+.fileName {
+  margin: 0;
+  font-size: 12px;
+  color: var(--igm-ink);
+  word-break: break-all;
+}
+
+.hiddenInput {
+  display: none;
+}
+
 .spin {
   animation: igm-admin-spin 1s linear infinite;
 }
@@ -109,140 +203,120 @@
   }
 }
 
-.hiddenInput {
-  display: none;
-}
-
-/* ============================= 阶段与进度 ============================= */
-.stageBox {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 24px;
-  padding: 20px 22px;
-  border: 1px solid var(--igm-line-soft);
-  border-radius: var(--igm-radius);
-  background: var(--igm-paper-raised);
-}
-
-.stageSteps {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.step {
-  padding: 3px 10px;
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  color: var(--igm-text-muted);
-  border: 1px solid var(--igm-line);
-  border-radius: var(--igm-radius);
-}
-
-.stepActive {
-  color: var(--igm-ink);
-  border-color: var(--igm-copper);
-  background: color-mix(in srgb, var(--igm-gold) 14%, transparent);
-}
-
-.stepDone {
-  color: var(--igm-ink-soft);
-  border-color: var(--igm-ink-soft);
-}
-
-.stepFailed {
-  color: var(--igm-cinnabar);
-  border-color: color-mix(in srgb, var(--igm-cinnabar) 60%, transparent);
-}
-
-.stepArrow {
-  color: var(--igm-text-muted);
-}
-
-.fileName {
-  margin: 0;
-  font-size: 12px;
-  color: var(--igm-text-muted);
-  word-break: break-all;
-}
-
-.progressTrack {
-  height: 8px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--igm-line) 60%, transparent);
-  overflow: hidden;
-}
-
-.progressFill {
-  height: 100%;
-  border-radius: 999px;
-  background: var(--igm-copper);
-  transition: width 0.3s ease;
-}
-
-.note,
-.noteOk,
-.noteError,
-.sizeNote {
+/* ============================= 提示 ============================= */
+.alertError {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin: 0 0 18px;
+  padding: 10px 14px;
+  font-size: 12px;
+  border-radius: var(--igm-radius);
+  color: var(--igm-cinnabar);
+  border: 1px solid var(--igm-cinnabar);
+  background: color-mix(in srgb, var(--igm-cinnabar) 8%, transparent);
+}
+
+/* ============================= 提交 ============================= */
+.submitRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding-top: 16px;
+  border-top: 1px solid var(--igm-line-soft);
+}
+
+.submitBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 26px;
+  background: var(--igm-ink);
+  color: var(--igm-paper);
+  border: 1px solid var(--igm-ink);
+  border-radius: var(--igm-radius);
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.submitBtn:hover:not(:disabled) {
+  background: var(--igm-ink-soft);
+  border-color: var(--igm-ink-soft);
+}
+
+.submitBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.submitLabel {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.hint {
   margin: 0;
   font-size: 11px;
   line-height: 1.7;
   color: var(--igm-text-muted);
 }
 
-.noteOk {
-  color: var(--igm-ink-soft);
-}
-
-.noteError {
-  color: var(--igm-cinnabar);
-}
-
-/* 转换产物占用空间 */
-.sizeNote {
-  color: var(--igm-ink);
-  letter-spacing: 0.08em;
-}
-
-/* ============================= 操作 ============================= */
-.actions {
+/* ============================= 部署提示弹窗 ============================= */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding-top: 4px;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: color-mix(in srgb, var(--igm-ink) 55%, transparent);
 }
 
-.retryBtn,
-.openBtn {
+.modal {
+  width: min(460px, 100%);
+  padding: 26px 26px 22px;
+  background: var(--igm-paper-raised);
+  border: 1px solid var(--igm-line);
+  border-radius: var(--igm-radius);
+  box-shadow: var(--igm-shadow);
+}
+
+.modalTitle {
+  margin: 0 0 12px;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--igm-ink);
+}
+
+.modalBody {
+  margin: 0 0 22px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--igm-text-muted);
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.modalConfirm {
   display: inline-flex;
   align-items: center;
   gap: 7px;
   padding: 9px 18px;
   border-radius: var(--igm-radius);
   font-size: 12px;
-  border: 1px solid var(--igm-line);
-  background: transparent;
-  color: var(--igm-ink);
-  transition: border-color 0.16s ease, background 0.16s ease;
-}
-
-.retryBtn:hover {
-  border-color: var(--igm-copper);
-  background: color-mix(in srgb, var(--igm-gold) 12%, transparent);
-}
-
-.openBtn {
+  border: 1px solid var(--igm-ink);
   background: var(--igm-ink);
-  border-color: var(--igm-ink);
   color: var(--igm-paper);
+  transition: background 0.16s ease, border-color 0.16s ease;
 }
 
-.openBtn:hover {
+.modalConfirm:hover:not(:disabled) {
   background: var(--igm-ink-soft);
   border-color: var(--igm-ink-soft);
 }
@@ -254,6 +328,11 @@
   }
 
   .dropzone {
-    padding: 40px 16px;
+    padding: 34px 16px;
+  }
+
+  .fieldRow,
+  .fieldRowThree {
+    grid-template-columns: 1fr;
   }
 }

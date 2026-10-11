@@ -4,9 +4,10 @@
  * 路由：G_Exam（/api/exam/*）
  * 模块：iGM_ExamRepository
  * 作用：iGM_Exams / iGM_ExamFiles / iGM_ExamSubmissions 三张表的唯一数据访问出口
- * 内容：试卷增删改查、按状态筛选、元数据与 HTML 目录写入、占用空间写入、转换状态写入、
+ * 内容：试卷增删查、按状态筛选、HTML 目录写入、占用空间写入、转换状态写入、
  *       文件行读写与临时路径清理、交卷记录写入与计数、编号序号计算所需的 id 与创建时间序列
- * 说明：磁盘路径仅存相对存储根目录的内部路径，绝不对外暴露
+ * 说明：试卷在上传时由管理员填写元数据并直接以已发布状态建档；
+ *       磁盘路径仅存相对存储根目录的内部路径，绝不对外暴露
  */
 
 // 导入依赖 //
@@ -14,13 +15,12 @@ import { iGM_Db } from "../iGM_Database/iGM_Database";
 import { iGM_RandomUuid } from "../iGM_Services/iGM_SecurityService";
 import type {
   iGM_ExamFileRow,
-  iGM_ExamRecognized,
   iGM_ExamRow,
   iGM_ExamSubmissionRow,
 } from "../iGM_Types/iGM_Exam";
 
 // 类型定义 //
-/** 试卷可写字段集合（新建与校对更新共用） */
+/** 试卷可写字段集合（上传建档时写入） */
 export interface iGM_ExamWriteFields {
   title: string;
   subject: string;
@@ -88,9 +88,14 @@ export async function iGM_ListExamIdCreatedPairs(): Promise<
     .all()) as { iGM_Id: string; iGM_CreatedAt: string }[];
 }
 
-/** 新建试卷（草稿），返回新试卷 ID；HTML 目录待后台转换完成后写入 */
+/**
+ * 新建试卷（上传时以管理员填写的元数据直接建档），返回新试卷 ID
+ * @param status 建档状态：上传即发布固定为 published
+ * @param parseStatus 内容转换状态，初始为 converting
+ */
 export async function iGM_InsertExam(
   fields: iGM_ExamWriteFields,
+  status: string,
   parseStatus: string,
   createdBy: string | null,
 ): Promise<string> {
@@ -102,7 +107,7 @@ export async function iGM_InsertExam(
         iGM_Duration, iGM_TotalScore, iGM_QuestionCount, iGM_Notice,
         iGM_HtmlPath, iGM_ParseStatus, iGM_OriginalFileDeleted,
         iGM_Status, iGM_CreatedBy, iGM_CreatedAt, iGM_UpdatedAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, 'draft', ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?)`,
     [
       id,
       fields.title,
@@ -115,45 +120,13 @@ export async function iGM_InsertExam(
       fields.notice,
       parseStatus,
       false,
+      status,
       createdBy,
       now,
       now,
     ],
   );
   return id;
-}
-
-/**
- * 校对 / 识别结果更新试卷元数据（不改状态）
- * @param parseStatus 为空时不改动转换状态
- */
-export async function iGM_UpdateExamFields(
-  examId: string,
-  fields: iGM_ExamWriteFields,
-  parseStatus: string | null,
-): Promise<void> {
-  await iGM_Db.run(
-    `UPDATE iGM_Exams SET
-       iGM_Title = ?, iGM_Subject = ?, iGM_Issuer = ?, iGM_Reviewer = ?,
-       iGM_Duration = ?, iGM_TotalScore = ?, iGM_QuestionCount = ?,
-       iGM_Notice = ?,
-       iGM_ParseStatus = COALESCE(?, iGM_ParseStatus),
-       iGM_UpdatedAt = ?
-     WHERE iGM_Id = ?`,
-    [
-      fields.title,
-      fields.subject,
-      fields.issuer,
-      fields.reviewer,
-      fields.duration,
-      fields.totalScore,
-      fields.questionCount,
-      fields.notice,
-      parseStatus,
-      new Date().toISOString(),
-      examId,
-    ],
-  );
 }
 
 /** 写入转换生成的 HTML 目录路径（相对存储根目录） */
@@ -230,18 +203,6 @@ export async function iGM_MarkExamFileFailed(
        iGM_ConvertStatus = 'failed', iGM_ConvertError = ?
      WHERE iGM_ExamId = ?`,
     [convertError, examId],
-  );
-}
-
-/** 发布试卷（管理端确认并发布仅切换状态） */
-export async function iGM_PublishExam(
-  examId: string,
-  status: string,
-): Promise<void> {
-  await iGM_Db.run(
-    `UPDATE iGM_Exams SET iGM_Status = ?, iGM_UpdatedAt = ?
-      WHERE iGM_Id = ?`,
-    [status, new Date().toISOString(), examId],
   );
 }
 
@@ -351,21 +312,18 @@ export async function iGM_CountSubmissions(examId: string): Promise<number> {
 }
 
 // 导出 //
-export type { iGM_ExamRecognized };
 export default {
   iGM_ListExamsByStatus,
   iGM_ListAllExams,
   iGM_FindExamById,
   iGM_ListExamIdCreatedPairs,
   iGM_InsertExam,
-  iGM_UpdateExamFields,
   iGM_SetExamHtmlPath,
   iGM_SetExamFileSize,
   iGM_SetExamParseStatus,
   iGM_MarkExamFileCompleted,
   iGM_SetExamFileConvertStatus,
   iGM_MarkExamFileFailed,
-  iGM_PublishExam,
   iGM_MarkExamOriginalDeleted,
   iGM_DeleteExam,
   iGM_InsertExamFile,

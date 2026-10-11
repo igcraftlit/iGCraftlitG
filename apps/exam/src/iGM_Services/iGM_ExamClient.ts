@@ -4,8 +4,8 @@
  * 路由：全局（调用后端 /api/exam/*）
  * 模块：iGM_ExamClient
  * 作用：iGC&M 教育考试系统唯一的后端访问出口
- * 内容：统一响应解包、列表 / 详情 / 管理端列表与详情、上传 PDF 建转换档、
- *       转换进度轮询、转换后 HTML 地址构造、占用空间格式化、校对更新、重新转换、删除、确认发布、交卷记录
+ * 内容：统一响应解包、列表 / 详情 / 管理端列表与详情、上传（元数据 + PDF）即发布、
+ *       转换进度轮询、转换后 HTML 地址构造、占用空间格式化、重新转换、删除、交卷记录
  * 说明：统一响应结构 { success, code, message, data }；错误归一化后抛出可读信息；
  *       本模块仅支持 PDF，转换由后端 pdf2htmlEX 产出自包含 HTML 目录
  */
@@ -88,17 +88,22 @@ export interface iGM_ExamDetail extends iGM_ExamListItem {
   fileType: string;
 }
 
-/** 校对更新入参（仅元数据） */
-export interface iGM_ExamUpdateInput {
-  examId: string;
+/** 上传发布入参：管理员手工填写的元数据（数值字段均为正整数） */
+export interface iGM_ExamPublishMeta {
   title: string;
   subject: string;
   issuer: string;
   reviewer: string;
-  duration: number | null;
-  totalScore: number | null;
-  questionCount: number | null;
+  duration: number;
+  totalScore: number;
+  questionCount: number;
   notice: string;
+}
+
+/** 上传发布结果：试卷详情 + 是否已触发静态部署 */
+export interface iGM_ExamPublishResult {
+  exam: iGM_ExamDetail;
+  deploying: boolean;
 }
 
 /** 交卷结果 */
@@ -236,15 +241,26 @@ export async function iGM_Exam_FetchAdminDetail(
   return data.exam;
 }
 
-/** 上传 PDF：后端落盘后立即返回，pdf2htmlEX 转换在后台进行 */
-export async function iGM_Exam_Upload(file: File): Promise<iGM_ExamDetail> {
+/** 上传 PDF 并直接发布：携带管理员填写的元数据，后端校验通过后建档并后台转换 */
+export async function iGM_Exam_Upload(
+  file: File,
+  meta: iGM_ExamPublishMeta,
+): Promise<iGM_ExamPublishResult> {
   const form = new FormData();
   form.append("file", file);
-  const data = await iGM_Exam_PostForm<{ exam: iGM_ExamDetail }>(
-    "/api/exam/upload",
-    form,
-  );
-  return data.exam;
+  form.append("title", meta.title);
+  form.append("subject", meta.subject);
+  form.append("issuer", meta.issuer);
+  form.append("reviewer", meta.reviewer);
+  form.append("duration", String(meta.duration));
+  form.append("totalScore", String(meta.totalScore));
+  form.append("questionCount", String(meta.questionCount));
+  form.append("notice", meta.notice);
+  const data = await iGM_Exam_PostForm<{
+    exam: iGM_ExamDetail;
+    deploying: boolean;
+  }>("/api/exam/upload", form);
+  return { exam: data.exam, deploying: Boolean(data.deploying) };
 }
 
 /** 查询转换进度（上传 / 重新转换后轮询） */
@@ -257,30 +273,9 @@ export async function iGM_Exam_FetchProgress(
   return data.progress;
 }
 
-/** 校对更新（仅元数据，不改转换产物） */
-export async function iGM_Exam_Update(
-  input: iGM_ExamUpdateInput,
-): Promise<void> {
-  await iGM_Exam_Post<{ updated: boolean }>("/api/exam/update", input);
-}
-
-/** 确认并发布试卷（原始 PDF 已在转换成功时删除）；返回后端是否已生成静态数据并触发部署 */
-export async function iGM_Exam_Confirm(examId: string): Promise<boolean> {
-  const data = await iGM_Exam_Post<{ confirmed: boolean; deploying: boolean }>(
-    "/api/exam/confirm",
-    { examId },
-  );
-  return Boolean(data.deploying);
-}
-
 /** 使用保留期内的原始 PDF 重新转换 */
 export async function iGM_Exam_Reparse(examId: string): Promise<void> {
   await iGM_Exam_Post<{ reparsed: boolean }>("/api/exam/reparse", { examId });
-}
-
-/** 基于已存 HTML 重新识别并回填元数据（原始 PDF 已删除时使用） */
-export async function iGM_Exam_Recognize(examId: string): Promise<void> {
-  await iGM_Exam_Post<{ recognized: boolean }>("/api/exam/recognize", { examId });
 }
 
 /** 删除试卷及关联原始文件与 HTML 目录 */
@@ -297,9 +292,6 @@ export default {
   iGM_Exam_FetchAdminDetail,
   iGM_Exam_Upload,
   iGM_Exam_FetchProgress,
-  iGM_Exam_Update,
-  iGM_Exam_Confirm,
   iGM_Exam_Reparse,
-  iGM_Exam_Recognize,
   iGM_Exam_Delete,
 };

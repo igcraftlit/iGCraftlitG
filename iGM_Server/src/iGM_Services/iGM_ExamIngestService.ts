@@ -3,12 +3,12 @@
  * 所属层：后端 / 业务服务层
  * 路由：G_Exam（/api/exam/upload、/api/exam/reparse 内部调用）
  * 模块：iGM_ExamIngestService
- * 作用：试卷 PDF 落盘临时目录、转换 HTML 目录管理、HTML 资源读取与元数据正则识别
+ * 作用：试卷 PDF 落盘临时目录、转换 HTML 目录管理与 HTML 资源读取
  * 内容：iGM_ExamError 业务错误类型、存储根 / 临时目录 / HTML 目录 / 日志目录解析与路径安全校验、
- *       PDF 格式校验与落盘（随机名）、临时文件读写删除、HTML 首页与资源读取（剥标签取文本）、
- *       转换产物目录占用统计、页面基准尺寸解析、禁止横向溢出样式注入、
- *       Title/Subject/Issuer/Reviewer/Duration/Total Score/Question Count 中英文双语正则识别
+ *       PDF 格式校验与落盘（随机名）、临时文件读写删除、HTML 资源读取、
+ *       转换产物目录占用统计、页面基准尺寸解析、禁止横向溢出样式注入
  * 说明：本模块仅支持 PDF；转换成功后由业务层删除原始 PDF；
+ *       试卷元数据由管理员手工填写，不在此层做任何正则识别；
  *       磁盘绝对路径绝不出现在对外 DTO
  */
 
@@ -21,7 +21,6 @@ import { iGM_SanitizeOriginalName } from "./iGM_StorageService";
 import {
   iGM_ResolveExamFileType,
   type iGM_ExamFileType,
-  type iGM_ExamRecognized,
 } from "../iGM_Types/iGM_Exam";
 
 // 类型定义 //
@@ -265,20 +264,6 @@ export async function iGM_RemoveExamTempFile(
   }
 }
 
-/**
- * 读取转换后试卷的 HTML 首页文本（剥标签）用于元数据识别
- * 首页缺失时抛 404（转换未完成或产物被清理）
- */
-export async function iGM_ReadExamHtmlText(examId: string): Promise<string> {
-  const absolutePath = iGM_ResolveExamHtmlAssetPath(examId, "index.html");
-  try {
-    const html = await readFile(absolutePath, "utf8");
-    return iGM_StripHtml(html);
-  } catch {
-    throw new iGM_ExamError("试卷 HTML 不存在", 404);
-  }
-}
-
 /** 读取转换后试卷目录内的任意资源字节（字体 / 图片 / CSS / JS） */
 export async function iGM_ReadExamHtmlAsset(
   examId: string,
@@ -412,109 +397,6 @@ export async function iGM_ReadExamPageSize(
   return null;
 }
 
-/** 剥离 HTML 标签与脚本样式，归一化空白，得到可正则匹配的纯文本 */
-function iGM_StripHtml(html: string): string {
-  return html
-    .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&amp;/gi, "&")
-    .replace(/&lt;/gi, "<")
-    .replace(/&gt;/gi, ">")
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;/gi, "'")
-    .replace(/&#(\d+);/g, (_match, code: string) =>
-      String.fromCharCode(Number(code)),
-    )
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-/** 第一个匹配分组的文本（中英文模式依次尝试），未命中返回空串 */
-function iGM_MatchText(
-  source: string,
-  patterns: readonly RegExp[],
-): string {
-  for (const pattern of patterns) {
-    const matched = source.match(pattern);
-    if (matched) {
-      const value = (matched[1] ?? matched[0] ?? "").trim();
-      // 归一化空白：抽取文本常以换行切分短句
-      if (value.length > 0) return value.replace(/\s+/g, " ").trim();
-    }
-  }
-  return "";
-}
-
-/** 第一个匹配分组的整数（中英文模式依次尝试），未命中返回 null */
-function iGM_MatchNumber(
-  source: string,
-  patterns: readonly RegExp[],
-): number | null {
-  for (const pattern of patterns) {
-    const matched = source.match(pattern);
-    if (matched) {
-      const value = Number(matched[1]);
-      if (Number.isFinite(value) && value > 0) return value;
-    }
-  }
-  return null;
-}
-
-/**
- * 从转换后 HTML 的纯文本中按正则识别试卷元数据
- * 规则来自模块规格：中英文双语模式，命中即取（识别失败由管理员补全）
- */
-export function iGM_RecognizeExamMeta(rawText: string): iGM_ExamRecognized {
-  // 标题：年份与「年」之间常带空格；科目卷名前的学段名称长度受限，避免吞掉后续正文
-  const title = iGM_MatchText(rawText, [
-    /\d{4}\s*年\s*[\u4e00-\u9fa5]{2,30}?\s*(?:学业水平考试|考试|统考|联考)/,
-    /\d{4}\s+(?:Provincial|National)\s+Examination/i,
-  ]);
-  // 科目卷名：前缀可能含拉丁字母（如 Minecraft科目·Ⅰ卷）
-  const subject = iGM_MatchText(rawText, [
-    /([A-Za-z\u4e00-\u9fa5]{1,20}科目\s*[·・]?\s*[IⅠ]+卷)/,
-    /Subject\s*[:：]\s*([^\n]{1,80}?)(?=\s*(?:Issuer|Reviewer|Notice|$))/i,
-  ]);
-  // 命题方：以「审题 / 考生须知」等后续标签为截止边界，避免吞掉整篇正文
-  const issuer = iGM_MatchText(rawText, [
-    /命题\s*[：:]\s*([^\n]{1,80}?)(?=\s*(?:审题|考生须知|注意事项|命题|$))/,
-    /Issuer\s*[:：]\s*([^\n]{1,80}?)(?=\s*(?:Reviewer|Notice|$))/i,
-  ]);
-  // 审题方：以「考生须知 / 注意事项」等后续标签为截止边界
-  const reviewer = iGM_MatchText(rawText, [
-    /审题\s*[：:]\s*([^\n]{1,80}?)(?=\s*(?:考生须知|注意事项|命题|审题|$))/,
-    /Reviewer\s*[:：]\s*([^\n]{1,80}?)(?=\s*(?:Notice|$))/i,
-  ]);
-  const duration = iGM_MatchNumber(rawText, [
-    /(?:考试|答卷|作答|测试)时间\s*[:：]?\s*(\d+)\s*分钟/,
-    /(?:考试|答卷|作答)时长\s*[:：]?\s*(\d+)\s*分钟/,
-    /用时\s*[:：]?\s*(\d+)\s*分钟/,
-    /限时\s*[:：]?\s*(\d+)\s*分钟/,
-    /时间\s*[:：]\s*(\d+)\s*分钟/,
-    /(?:Duration|Time)\s*[:：]?\s*(\d+)\s*(?:min|minutes)/i,
-    /(\d+)\s*minutes?/i,
-  ]);
-  const totalScore = iGM_MatchNumber(rawText, [
-    /试卷满分\s*[:：]?\s*(\d+)\s*分/,
-    /满分\s*[:：]?\s*(\d+)\s*分/,
-    /总分\s*[:：]?\s*(\d+)\s*分/,
-    /总分\s*[:：]?\s*(\d+)/,
-    /(?:Total\s*Score|Full\s*Marks?)\s*[:：]?\s*(\d+)/i,
-    /(\d+)\s*(?:marks|points)/i,
-  ]);
-  const questionCount = iGM_MatchNumber(rawText, [
-    /共\s*(\d+)\s*(?:小|大)?题/,
-    /(?:题数|题目数|试题数)\s*[:：]?\s*(\d+)/,
-    /(\d+)\s*(?:道|个)\s*(?:小)?题/,
-    /(\d+)\s+Questions?/i,
-    /Questions?\s*[:：]?\s*(\d+)/i,
-  ]);
-
-  return { title, subject, issuer, reviewer, duration, totalScore, questionCount };
-}
-
 // 导出 //
 export default {
   iGM_ExamError,
@@ -533,9 +415,7 @@ export default {
   iGM_StoreExamTempFile,
   iGM_ReadExamTempFile,
   iGM_RemoveExamTempFile,
-  iGM_ReadExamHtmlText,
   iGM_ReadExamHtmlAsset,
   iGM_ApplyExamHtmlOverrides,
   iGM_ReadExamPageSize,
-  iGM_RecognizeExamMeta,
 };

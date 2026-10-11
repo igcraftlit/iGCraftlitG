@@ -5,10 +5,11 @@
  * 模块：iGM_ExamService
  * 作用：iGC&M 教育考试系统的试卷业务逻辑与 DTO 组装
  * 内容：编号生成（E-YYYY-NNN）、列表（公开/管理端）、详情、
- *       上传后后台 pdf2htmlEX 转换建档（含转换产物占用空间统计、页面基准尺寸解析）、转换进度查询、HTML 资源读取、
- *       校对更新、确认并发布、重新转换、删除、交卷记录、原始文件读取
- * 说明：转换在后台异步执行，前端轮询进度接口；转换成功后立即删除原始 PDF，
- *       仅保留 HTML 目录；转换失败保留 PDF 24 小时供重新转换；
+ *       上传（管理员填写元数据 + PDF，校验通过直接发布）并后台 pdf2htmlEX 转换为 HTML、
+ *       转换进度查询、HTML 资源读取、重新转换、删除、交卷记录、原始文件读取
+ * 说明：上传即发布，不再有自动解析与审查校对流程；
+ *       转换在后台异步执行，转换成功且试卷已发布时导出静态数据并推送；
+ *       转换成功后立即删除原始 PDF，仅保留 HTML 目录；转换失败保留 PDF 供重新转换；
  *       磁盘路径绝不出现在对外 DTO
  */
 
@@ -28,12 +29,10 @@ import {
   iGM_MarkExamFileCompleted,
   iGM_MarkExamFileFailed,
   iGM_MarkExamOriginalDeleted,
-  iGM_PublishExam,
   iGM_SetExamFileConvertStatus,
   iGM_SetExamFileSize,
   iGM_SetExamHtmlPath,
   iGM_SetExamParseStatus,
-  iGM_UpdateExamFields,
   type iGM_ExamWriteFields,
 } from "../iGM_Repositories/iGM_ExamRepository";
 import {
@@ -46,15 +45,18 @@ import {
   iGM_ExamTempAbsolutePath,
   iGM_MeasureExamUsage,
   iGM_ReadExamHtmlAsset,
-  iGM_ReadExamHtmlText,
   iGM_ReadExamPageSize,
   iGM_ReadExamTempFile,
-  iGM_RecognizeExamMeta,
   iGM_RemoveExamHtmlDir,
   iGM_RemoveExamTempFile,
   iGM_StoreExamTempFile,
 } from "./iGM_ExamIngestService";
 import { iGM_RunPdf2HtmlEx } from "./iGM_ExamConvertService";
+import {
+  iGM_CommitExamStaticFiles,
+  iGM_GenerateExamStaticFile,
+  iGM_RebuildExamStaticIndex,
+} from "./iGM_ExamStaticService";
 import {
   type iGM_ExamConvertProgressDto,
   type iGM_ExamConvertStatus,
@@ -67,8 +69,9 @@ import {
 } from "../iGM_Types/iGM_Exam";
 
 // 类型定义 //
-/** 校对更新入参（全部为前端表单原始值） */
-export interface iGM_ExamUpdateInput {
+/** 上传发布入参：管理员手工填写的元数据 + 待转换的 PDF 文件 */
+export interface iGM_ExamPublishInput {
+  file: File | null;
   title: string;
   subject: string;
   issuer: string;
@@ -266,7 +269,24 @@ export async function iGM_GetExamDetailService(
 }
 
 /**
- * 后台转换试卷：调用 pdf2htmlEX 生成 HTML → 剥标签识别元数据 → 删除原始 PDF
+ * 导出已发布试卷的静态数据并推送，触发 Cloudflare Pages 重新构建
+ * 失败仅告警，不阻断转换与发布流程
+ */
+async function iGM_ExportPublishedExamStatic(examId: string): Promise<void> {
+  try {
+    const exported = await iGM_GenerateExamStaticFile(examId);
+    if (!exported) return;
+    await iGM_RebuildExamStaticIndex();
+    await iGM_CommitExamStaticFiles();
+  } catch (error) {
+    console.warn(
+      `[iGM_ExamService] 导出试卷静态数据失败：${examId}：${String(error)}`,
+    );
+  }
+}
+
+/**
+ * 后台转换试卷：调用 pdf2htmlEX 生成 HTML → 删除原始 PDF → 已发布则导出静态数据
  * 失败时标记转换失败并保留 PDF；本函数自行吞掉异常，不向调用方抛出
  */
 export async function iGM_RunExamConvertService(
@@ -291,15 +311,9 @@ export async function iGM_RunExamConvertService(
     const usageBytes = await iGM_MeasureExamUsage(examId);
     await iGM_SetExamFileSize(examId, usageBytes);
 
-    // 从生成的 HTML 中剥离文本，识别 Title/Subject/Issuer/Reviewer/Duration/TotalScore/QuestionCount
-    const plainText = await iGM_ReadExamHtmlText(examId);
-    const recognized = iGM_RecognizeExamMeta(plainText);
-    await iGM_UpdateExamFields(
-      examId,
-      iGM_ToWriteFields({ ...recognized, notice: row.iGM_Notice ?? "" }),
-      "completed",
-    );
+    // 元数据由管理员在上传时填写，转换阶段只登记产物与状态
     await iGM_SetExamHtmlPath(examId, iGM_ExamHtmlRelativePath(examId));
+    await iGM_SetExamParseStatus(examId, "completed");
     const now = new Date().toISOString();
     await iGM_MarkExamFileCompleted(examId, now);
 
@@ -307,6 +321,11 @@ export async function iGM_RunExamConvertService(
     await iGM_RemoveExamTempFile(relativePath);
     await iGM_ClearExamFileTempPath(examId, now);
     await iGM_MarkExamOriginalDeleted(examId);
+
+    // 上传即发布：转换完成后导出静态数据并推送，使试卷出现在线上目录
+    if (row.iGM_Status === "published") {
+      await iGM_ExportPublishedExamStatic(examId);
+    }
   } catch (error) {
     const message =
       error instanceof iGM_ExamError ? error.message : "试卷转换失败";
@@ -317,27 +336,37 @@ export async function iGM_RunExamConvertService(
 }
 
 /**
- * 上传 PDF 并建档为草稿：原始文件落盘临时目录，转换在后台异步执行
- * 返回详情 DTO，前端据此展示转换进度并轮询进度接口
+ * 校验管理员在上传时填写的必填元数据
+ * 任一文本字段为空、任一数值字段非正整数或未选择文件，一律提示「请填写完整信息」并返回 400
+ */
+function iGM_AssertPublishInput(input: iGM_ExamPublishInput): void {
+  const texts = [input.title, input.subject, input.issuer, input.reviewer];
+  const numbers = [input.duration, input.totalScore, input.questionCount];
+  const textIncomplete = texts.some((value) => value.trim().length === 0);
+  const numberIncomplete = numbers.some(
+    (value) => value === null || !Number.isInteger(value) || value <= 0,
+  );
+  if (!input.file || textIncomplete || numberIncomplete) {
+    throw new iGM_ExamError("请填写完整信息", 400);
+  }
+}
+
+/**
+ * 上传 PDF 并以管理员手工填写的元数据直接发布：
+ * 原始文件落盘临时目录 → 按元数据建档（状态 published）→ 后台 pdf2htmlEX 转换；
+ * 转换完成后由 iGM_RunExamConvertService 导出静态数据并推送
  */
 export async function iGM_UploadExamService(
-  file: File | null,
+  input: iGM_ExamPublishInput,
   createdBy: string | null,
 ): Promise<iGM_ExamDetailDto> {
-  if (!file) throw new iGM_ExamError("请选择要上传的试卷文件", 422);
+  iGM_AssertPublishInput(input);
+  const file = input.file as File;
   const bytes = new Uint8Array(await file.arrayBuffer());
   const stored = await iGM_StoreExamTempFile(file.name, bytes);
   const examId = await iGM_InsertExam(
-    {
-      title: "",
-      subject: "",
-      issuer: "",
-      reviewer: "",
-      duration: null,
-      totalScore: null,
-      questionCount: null,
-      notice: "",
-    },
+    iGM_ToWriteFields(input),
+    "published",
     "converting",
     createdBy,
   );
@@ -348,12 +377,12 @@ export async function iGM_UploadExamService(
     tempPath: stored.relativePath,
     convertStatus: "converting",
   });
-  // 后台转换：不阻塞上传响应
+  // 后台转换：不阻塞发布响应
   void iGM_RunExamConvertService(examId, stored.relativePath);
   return await iGM_GetExamDetailService(examId, { publicOnly: false });
 }
 
-/** 查询试卷转换进度（前端上传后轮询） */
+/** 查询试卷转换进度（前端转换中轮询） */
 export async function iGM_GetExamConvertProgressService(
   examId: string,
 ): Promise<iGM_ExamConvertProgressDto> {
@@ -361,26 +390,6 @@ export async function iGM_GetExamConvertProgressService(
   if (!row) throw new iGM_ExamError("试卷不存在", 404);
   const fileRow = await iGM_FindExamFileByExamId(examId);
   return iGM_BuildProgress(row, fileRow);
-}
-
-/** 校对更新试卷元数据（不改状态，不改 HTML 产物） */
-export async function iGM_UpdateExamService(
-  examId: string,
-  input: iGM_ExamUpdateInput,
-): Promise<void> {
-  const row = await iGM_FindExamById(examId);
-  if (!row) throw new iGM_ExamError("试卷不存在", 404);
-  await iGM_UpdateExamFields(examId, iGM_ToWriteFields(input), null);
-}
-
-/** 管理员确认并发布：切换状态为已发布（原始 PDF 已在转换成功时删除） */
-export async function iGM_PublishExamService(examId: string): Promise<void> {
-  const row = await iGM_FindExamById(examId);
-  if (!row) throw new iGM_ExamError("试卷不存在", 404);
-  if (row.iGM_ParseStatus !== "completed") {
-    throw new iGM_ExamError("试卷尚未完成转换，无法发布", 422);
-  }
-  await iGM_PublishExam(examId, "published");
 }
 
 /** 使用临时目录中的原始 PDF 重新转换（清除旧 HTML 产物后后台重新转换） */
@@ -394,37 +403,6 @@ export async function iGM_ReparseExamService(examId: string): Promise<void> {
   await iGM_SetExamParseStatus(examId, "converting");
   await iGM_SetExamFileConvertStatus(examId, "converting");
   void iGM_RunExamConvertService(examId, fileRow.iGM_TempPath);
-}
-
-/**
- * 基于已存 HTML 重新识别元数据并回填
- * 原始 PDF 已在转换成功时删除，无法重新转换，故直接从 HTML 产物重放识别；
- * 已校对的字段仅在识别到新值时覆盖，未识别到的保留原值，不改动转换状态
- */
-export async function iGM_ReRecognizeExamMetaService(
-  examId: string,
-): Promise<void> {
-  const row = await iGM_FindExamById(examId);
-  if (!row) throw new iGM_ExamError("试卷不存在", 404);
-  if (row.iGM_ParseStatus !== "completed" || !row.iGM_HtmlPath) {
-    throw new iGM_ExamError("试卷尚未完成转换，无法识别", 422);
-  }
-  const plainText = await iGM_ReadExamHtmlText(examId);
-  const recognized = iGM_RecognizeExamMeta(plainText);
-  await iGM_UpdateExamFields(
-    examId,
-    iGM_ToWriteFields({
-      title: recognized.title || (row.iGM_Title ?? ""),
-      subject: recognized.subject || (row.iGM_Subject ?? ""),
-      issuer: recognized.issuer || (row.iGM_Issuer ?? ""),
-      reviewer: recognized.reviewer || (row.iGM_Reviewer ?? ""),
-      duration: recognized.duration ?? row.iGM_Duration,
-      totalScore: recognized.totalScore ?? row.iGM_TotalScore,
-      questionCount: recognized.questionCount ?? row.iGM_QuestionCount,
-      notice: row.iGM_Notice ?? "",
-    }),
-    null,
-  );
 }
 
 /** 删除试卷：同时删除临时目录中的原始文件与 HTML 转换目录 */
@@ -499,10 +477,7 @@ export default {
   iGM_UploadExamService,
   iGM_RunExamConvertService,
   iGM_GetExamConvertProgressService,
-  iGM_UpdateExamService,
-  iGM_PublishExamService,
   iGM_ReparseExamService,
-  iGM_ReRecognizeExamMetaService,
   iGM_DeleteExamService,
   iGM_SubmitExamService,
   iGM_ReadExamFileService,
