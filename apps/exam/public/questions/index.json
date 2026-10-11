@@ -1,0 +1,66 @@
+{
+  "generatedAt": "2026-10-11T02:15:24.200Z",
+  "textbooks": [
+    {
+      "code": "Compulsory_1",
+      "name": "必修一：Minecraft基础导论"
+    },
+    {
+      "code": "Compulsory_2",
+      "name": "必修二：红石与指令基础"
+    },
+    {
+      "code": "Elective_1",
+      "name": "选修一：社区与建筑艺术"
+    },
+    {
+      "code": "Elective_2",
+      "name": "选修二：红石进阶与指令应用"
+    },
+    {
+      "code": "Elective_3",
+      "name": "选修三：服务器开发与架构"
+    },
+    {
+      "code": "Elective_4",
+      "name": "选修四：内容创作与跨界应用"
+    }
+  ],
+  "questions": [
+    {
+      "id": "6efef1dc-8ae9-43e8-8e83-b26619b07881",
+      "textbookCode": "Compulsory_1",
+      "textbookName": "必修一：Minecraft基础导论",
+      "stem": "改性剂是用来改变药水属性或使药水效果相反的材料，下列基础材料的改性剂中，唯一可以直接酿造成有效药水的改性剂的是",
+      "type": "single_choice",
+      "options": [
+        {
+          "key": "A",
+          "text": "萤石粉"
+        },
+        {
+          "key": "B",
+          "text": "火药"
+        },
+        {
+          "key": "C",
+          "text": "发酵蛛眼"
+        },
+        {
+          "key": "D",
+          "text": "红石粉"
+        }
+      ],
+      "answer": "",
+      "analysis": "",
+      "difficultyCoefficient": 0.65,
+      "difficultyLevel": "medium",
+      "tags": [
+        "药水",
+        "改性剂",
+        "基础材料"
+      ],
+      "createdAt": "2026-10-11T02:15:18.505Z"
+    }
+  ]
+}
