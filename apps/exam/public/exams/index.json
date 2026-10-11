@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-11T00:13:26.868Z",
+  "generatedAt": "2026-10-11T00:14:17.089Z",
   "exams": [
     {
       "id": "f7c10f7d-63ce-48a7-9e52-6bda106e7824",
@@ -25,8 +25,8 @@
       "totalScore": 150,
       "questionCount": 19,
       "status": "published",
-      "convertStatus": "converting",
-      "fileSize": null,
+      "convertStatus": "completed",
+      "fileSize": 27798152,
       "createdAt": "2026-10-11T00:11:55.706Z"
     },
     {
