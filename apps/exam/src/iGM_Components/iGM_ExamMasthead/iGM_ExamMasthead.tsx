@@ -14,7 +14,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { GraduationCap, LogIn, LogOut, User as UserIcon } from "lucide-react";
 import { iGM_ExamThemeToggle as IGM_ExamThemeToggle } from "../iGM_ExamThemeToggle/iGM_ExamThemeToggle";
 import { iGM_ExamCreatorBadge as IGM_ExamCreatorBadge } from "../iGM_ExamCreatorBadge/iGM_ExamCreatorBadge";
@@ -67,8 +67,9 @@ const iGM_Exam_NavRoutes = [
 /** 学术期刊刊头 */
 export function iGM_ExamMasthead({ initialDate }: iGM_ExamMastheadProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { t, formatDate } = useI18n();
-  const { user, loading, login, logout } = iGM_ExamUseAuth();
+  const { user, loading, logout } = iGM_ExamUseAuth();
   const [baseDate, setBaseDate] = useState<Date>(initialDate ?? iGM_Exam_BuildDate);
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -148,7 +149,7 @@ export function iGM_ExamMasthead({ initialDate }: iGM_ExamMastheadProps) {
               <button
                 type="button"
                 className={styles.authLogin}
-                onClick={login}
+                onClick={() => router.push("/login")}
                 title={t("authLoginWithIGM")}
               >
                 <LogIn size={16} strokeWidth={1.5} />

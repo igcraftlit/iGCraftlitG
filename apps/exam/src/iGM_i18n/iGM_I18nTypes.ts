@@ -300,6 +300,14 @@ export interface iGM_I18nDict {
   authMyAccount: string;
   authGreeting: string;
   authFailed: string;
+  // 登录页（/login）
+  loginSubtitle: string;
+  loginEnter: string;
+  loginSignedInLead: string;
+  loginUidLabel: string;
+  loginPrivacy: string;
+  loginTerms: string;
+  loginChecking: string;
   // 独立申请页（/apply-creator）
   applyPageTitle: string;
   applyPageLead: string;

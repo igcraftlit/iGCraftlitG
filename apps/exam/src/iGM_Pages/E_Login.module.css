@@ -1,0 +1,233 @@
+/**
+ * 文件路径：apps/exam/src/iGM_Pages/E_Login.module.css
+ * 所属层：前端 / 页面样式层
+ * 路由：E_Login（/login）
+ * 模块：iGM_Login
+ * 作用：微软式授权登录页样式
+ * 说明：居中卡片、纯净底、品牌靛蓝主按钮；仅保留淡入动效；
+ *       沿用考试站色彩令牌与三段式排版（衬线标题 / 无衬线正文 / 等宽数字）
+ */
+
+/* ============================= 页面容器 ============================= */
+/* 居中承载卡片：桌面端留出上下呼吸空间，卡片本身不占满屏宽 */
+.page {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 56px 20px 80px;
+}
+
+/* ============================= 授权卡片 ============================= */
+.card {
+  width: 100%;
+  max-width: 440px;
+  padding: 40px 36px 30px;
+  background: var(--igm-paper-raised);
+  border: 1px solid var(--igm-line-soft);
+  border-radius: 8px;
+  box-shadow: var(--igm-shadow-tight);
+  text-align: center;
+  /* 仅淡入：上浮 + 透明度渐显，无花哨动效 */
+  animation: igm-login-fade 0.42s ease both;
+}
+
+/* ============================= 顶部品牌 ============================= */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+.brandMark {
+  color: var(--igm-ink);
+}
+.brandName {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--igm-ink);
+}
+
+/* ============================= 标题与副标题 ============================= */
+.title {
+  margin: 0 0 10px;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--igm-ink);
+}
+.lead {
+  margin: 0 0 28px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--igm-text-muted);
+}
+
+/* ============================= 主操作按钮 ============================= */
+/* 品牌靛蓝 #1e3a5f：明暗模式保持一致，不随主题反转 */
+.primaryBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 44px;
+  font-family: var(--igm-font-sans), "Segoe UI", system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+  background: #1e3a5f;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.primaryBtn:hover {
+  background: #16304d;
+}
+.primaryBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ============================= 辅助按钮（退出登录） ============================= */
+.secondaryBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 40px;
+  margin-top: 12px;
+  font-family: var(--igm-font-sans), "Segoe UI", system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--igm-text);
+  background: transparent;
+  border: 1px solid var(--igm-line-soft);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.secondaryBtn:hover {
+  background: color-mix(in srgb, var(--igm-line-soft) 35%, transparent);
+}
+.secondaryBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ============================= 已登录账户区 ============================= */
+.account {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin: 0 0 24px;
+  padding: 12px 14px;
+  text-align: left;
+  background: var(--igm-paper-sink);
+  border: 1px solid var(--igm-line-soft);
+  border-radius: 6px;
+}
+.avatarWrap {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  color: var(--igm-copper);
+  background: var(--igm-paper-raised);
+  border: 1px solid var(--igm-line-soft);
+  border-radius: 50%;
+}
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.accountText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.accountName {
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--igm-ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.accountUid {
+  font-size: 12px;
+  color: var(--igm-text-muted);
+}
+
+/* ============================= 底部辅助链接 ============================= */
+.links {
+  margin: 22px 0 0;
+  font-size: 12px;
+  color: var(--igm-text-muted);
+}
+.links a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.links a:hover {
+  color: var(--igm-ink);
+  text-decoration: underline;
+}
+.dot {
+  margin: 0 8px;
+  opacity: 0.5;
+}
+
+/* ============================= 底部版权 ============================= */
+.footNote {
+  margin: 26px 0 0;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--igm-text-muted);
+  opacity: 0.85;
+}
+
+/* ============================= 加载态 ============================= */
+.loading {
+  margin: 20px 0 8px;
+  font-size: 13px;
+  color: var(--igm-text-muted);
+}
+
+/* ============================= 动效 ============================= */
+@keyframes igm-login-fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================= 响应式 ============================= */
+@media (max-width: 480px) {
+  .page {
+    padding: 32px 16px 56px;
+  }
+  .card {
+    max-width: 100%;
+    padding: 32px 22px 24px;
+  }
+  .title {
+    font-size: 22px;
+  }
+  .lead {
+    margin-bottom: 24px;
+  }
+}

@@ -15,6 +15,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import {
   CheckCircle,
@@ -56,7 +57,8 @@ const iGM_DirectionLabelKey: Record<iGM_ExaminerDirection, iGM_I18nKey> = {
 /** 独立申请页面 */
 export function E_CreatorApply() {
   const { t } = useI18n();
-  const { user, loading, login } = iGM_ExamUseAuth();
+  const router = useRouter();
+  const { user, loading } = iGM_ExamUseAuth();
   const [status, setStatus] = useState<iGM_MyApplicationStatus | null>(null);
   const [statusLoading, setStatusLoading] = useState(true);
   const [statusError, setStatusError] = useState<string | null>(null);
@@ -158,7 +160,7 @@ export function E_CreatorApply() {
           <button
             type="button"
             className={styles.guideBtn}
-            onClick={login}
+            onClick={() => router.push("/login")}
           >
             {t("authLoginWithIGM")} →
           </button>

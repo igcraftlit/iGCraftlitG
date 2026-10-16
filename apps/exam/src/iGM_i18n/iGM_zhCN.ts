@@ -294,6 +294,14 @@ export const iGM_zhCN: iGM_I18nDict = {
   authMyAccount: "我的主站账户",
   authGreeting: "已登录",
   authFailed: "登录失败，请重试",
+  // 登录页（/login）
+  loginSubtitle: "使用 iGCraftLit 账号继续访问考试站",
+  loginEnter: "进入考试站",
+  loginSignedInLead: "你已使用 iGCraftLit 账号登录。",
+  loginUidLabel: "GUID 编号",
+  loginPrivacy: "隐私政策",
+  loginTerms: "服务条款",
+  loginChecking: "正在校验登录状态…",
   // 独立申请页（/apply-creator）
   applyPageTitle: "命题创作者申请",
   applyPageLead: "通过审核后，你将获得 iGC&M 命题创作者资格，可上传与管理模拟试卷、参与命题审核。",

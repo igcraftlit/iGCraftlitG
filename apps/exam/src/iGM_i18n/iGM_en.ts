@@ -301,6 +301,14 @@ export const iGM_en: iGM_I18nDict = {
   authMyAccount: "Main site account",
   authGreeting: "Signed in",
   authFailed: "Sign-in failed. Please try again.",
+  // Login page (/login)
+  loginSubtitle: "Continue to the examination site with your iGCraftLit account",
+  loginEnter: "Enter the examination site",
+  loginSignedInLead: "You are signed in with your iGCraftLit account.",
+  loginUidLabel: "GUID",
+  loginPrivacy: "Privacy Policy",
+  loginTerms: "Terms of Service",
+  loginChecking: "Checking session…",
   // Independent apply page (/apply-creator)
   applyPageTitle: "Creator Application",
   applyPageLead: "Once approved, you'll receive iGC&M Creator status — upload and manage exam papers, participate in review.",
