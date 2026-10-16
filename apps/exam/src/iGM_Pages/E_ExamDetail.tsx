@@ -98,7 +98,10 @@ export function E_ExamDetail() {
    * @param target 计算基准元素（普通视图取试卷舞台，全屏取覆盖层舞台）
    * @param allowScaleUp 是否允许放大超过 100%（全屏下按覆盖层宽度自适应）
    * 普通视图预留左右内边距并封顶 100%，保证版面不超出可视区、只保留纵向滚动；
-   * 全屏视图按覆盖层可用宽度自适应，允许放大以填满宽度（仍受 MaxZoom 上限约束）
+   * 全屏视图按覆盖层可用宽度自适应，允许放大以填满宽度（仍受 MaxZoom 上限约束）。
+   * 注意：「适应宽度」刻意不受手动最小缩放（MinZoom）约束——MinZoom 只限制手动按钮；
+   * 窄屏上真实适配比例可能低于 MinZoom，若一并下钳会被抬高，版面因而宽于屏幕、右侧被裁切；
+   * 此处仅保留 0.1 的安全下限，避免容器宽度退化（0 / NaN）导致缩放失效。
    */
   const iGM_Exam_FitZoom = useCallback(
     (target: HTMLElement | null, allowScaleUp: boolean): number => {
@@ -108,9 +111,7 @@ export function E_ExamDetail() {
       const base = allowScaleUp ? usable : Math.min(usable, iGM_Exam_MaxSheetWidth);
       const raw = base / sheetWidth;
       const capped = allowScaleUp ? raw : Math.min(1, raw);
-      return Number(
-        Math.min(iGM_Exam_MaxZoom, Math.max(iGM_Exam_MinZoom, capped)).toFixed(3),
-      );
+      return Number(Math.min(iGM_Exam_MaxZoom, Math.max(0.1, capped)).toFixed(3));
     },
     [sheetWidth],
   );
@@ -237,6 +238,16 @@ export function E_ExamDetail() {
   const answerFileName = exam.answerPdfUrl
     ? decodeURIComponent(exam.answerPdfUrl.split("/").pop() ?? "")
     : "";
+
+  // 是否允许舞台横向拖动：仅当手动放大超过当前「适应宽度」比例时（含很小容差），
+  // 适应宽度及以下锁定横向溢出，避免窄屏版面宽于屏幕、右侧被裁切
+  const isPannable =
+    zoom >
+    iGM_Exam_FitZoom(
+      isFullscreen ? fullscreenStageRef.current : stageRef.current,
+      isFullscreen,
+    ) +
+      0.01;
 
   return (
     <main className={styles.page}>
@@ -365,7 +376,14 @@ export function E_ExamDetail() {
                 </span>
               )}
             </div>
-            <div className={styles.paperStage} ref={stageRef}>
+            <div
+              className={
+                isPannable
+                  ? `${styles.paperStage} ${styles.isPannable}`
+                  : styles.paperStage
+              }
+              ref={stageRef}
+            >
               <div
                 className={styles.paperSheet}
                 style={
@@ -485,7 +503,14 @@ export function E_ExamDetail() {
               </button>
             </div>
           </div>
-          <div className={styles.fullscreenStage} ref={fullscreenStageRef}>
+          <div
+            className={
+              isPannable
+                ? `${styles.fullscreenStage} ${styles.isPannable}`
+                : styles.fullscreenStage
+            }
+            ref={fullscreenStageRef}
+          >
             <div
               className={styles.paperSheet}
               style={

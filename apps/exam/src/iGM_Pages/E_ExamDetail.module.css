@@ -338,13 +338,13 @@
   color: var(--igm-ink-soft);
 }
 
-/* 预览舞台：默认「适应宽度」下版面不超出可视区，只保留纵向滚动；
-   手动放大后如需查看右侧，舞台自身提供横向滚动 */
+/* 预览舞台：默认「适应宽度」下横向锁定溢出、只保留纵向滚动；
+   手动放大超过适应宽度时由 .isPannable 切回横向滚动以查看被裁部分；
+   采用块布局而非 flex 居中，使超出时自左边缘起可拖动而非左右被“卡住” */
 .paperStage {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  overflow: auto;
+  display: block;
+  overflow-x: hidden;
+  overflow-y: auto;
   padding: 18px 12px 26px;
   background: var(--igm-paper-sink);
   border: 1px solid var(--igm-line-soft);
@@ -353,7 +353,7 @@
 
 /* 纸张：尺寸取自后端上报的真实 PDF 页尺寸（回退 A4），缩放由 --igm-zoom 控制 */
 .paperSheet {
-  flex: 0 0 auto;
+  margin-inline: auto;
   width: var(--igm-page-w, 794px);
   height: var(--igm-page-h, 1123px);
   overflow: hidden;
@@ -406,12 +406,16 @@
 .fullscreenStage {
   flex: 1 1 auto;
   min-height: 0;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  display: block;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 18px 12px 26px;
+}
+
+/* 手动放大超过适应宽度时，舞台（普通 / 全屏）切回横向滚动，允许拖动查看被裁部分 */
+.paperStage.isPannable,
+.fullscreenStage.isPannable {
+  overflow-x: auto;
 }
 
 /* ============================= 交卷 ============================= */
@@ -520,6 +524,32 @@
   .paperHead {
     flex-wrap: wrap;
     row-gap: 10px;
+  }
+
+  /* 窄屏工具条：压缩内边距 / 间距与字号，必要时允许自身换行，避免撑破整行 */
+  .zoomBar {
+    gap: 6px;
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .zoomBtn {
+    padding: 4px 7px;
+    font-size: 10px;
+  }
+
+  .zoomValue {
+    min-width: 34px;
+    font-size: 10px;
+  }
+
+  /* 全屏：窄屏去掉舞台左右内边距，让纸张贴到屏幕边缘 */
+  .fullscreenStage {
+    padding: 8px 0 14px;
+  }
+
+  .fullscreenBar {
+    padding: 8px 10px;
   }
 }
 
