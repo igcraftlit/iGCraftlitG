@@ -18,6 +18,7 @@ export const iGM_en: iGM_I18nDict = {
   instituteName: "iGC&M Education Examinations Research Institute",
   mastheadMeta: "VOL. {volume} · NO. {issue}",
   mastheadSubtitle: "EST. 2026 · ACADEMIC ASSESSMENT",
+  navAnnounce: "Notice",
   navExaminations: "Examinations",
   navAdmin: "Exam Management",
   navUpload: "Upload Paper",
@@ -335,12 +336,6 @@ export const iGM_en: iGM_I18nDict = {
   authMyAccount: "Main site account",
   authGreeting: "Signed in",
   authFailed: "Sign-in failed. Please try again.",
-  // Left announcement sidebar
-  announceColLabel: "Announcements",
-  announceTag: "ANNOUNCE",
-  announceTitle: "Apply to become an iGC&M Creator",
-  announceLead: "Passionate about Minecraft education and content creation? Join us and shape high-quality exam papers and question banks.",
-  announceCta: "Learn more",
   // Independent apply page (/apply-creator)
   applyPageTitle: "Creator Application",
   applyPageLead: "Once approved, you'll receive iGC&M Creator status — upload and manage exam papers, participate in review.",

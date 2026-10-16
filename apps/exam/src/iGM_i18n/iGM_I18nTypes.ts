@@ -24,6 +24,7 @@ export interface iGM_I18nDict {
   instituteName: string;
   mastheadMeta: string;
   mastheadSubtitle: string;
+  navAnnounce: string;
   navExaminations: string;
   navAdmin: string;
   navUpload: string;
@@ -334,12 +335,6 @@ export interface iGM_I18nDict {
   authMyAccount: string;
   authGreeting: string;
   authFailed: string;
-  // 左侧公告栏
-  announceColLabel: string;
-  announceTag: string;
-  announceTitle: string;
-  announceLead: string;
-  announceCta: string;
   // 独立申请页（/apply-creator）
   applyPageTitle: string;
   applyPageLead: string;

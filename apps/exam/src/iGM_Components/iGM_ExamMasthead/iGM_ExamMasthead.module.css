@@ -202,6 +202,15 @@
   color: var(--igm-ink);
 }
 
+/* 公告入口：铜色强调，吸引点击 */
+.navAnnounce {
+  color: var(--igm-copper);
+}
+
+.navAnnounce:hover {
+  color: var(--igm-cinnabar);
+}
+
 .navLink::after {
   content: "";
   position: absolute;
@@ -221,6 +230,10 @@
 
 .navActive::after {
   transform: scaleX(1);
+}
+
+.navAnnounce::after {
+  background: var(--igm-copper);
 }
 
 .date {

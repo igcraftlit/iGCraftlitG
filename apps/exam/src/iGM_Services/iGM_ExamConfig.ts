@@ -56,5 +56,23 @@ export const iGM_ExamConfig: iGM_ExamWebConfig = {
   buildTime: process.env.NEXT_PUBLIC_IGM_EXAM_BUILD_TIME ?? "",
 };
 
+/**
+ * 解析媒体展示地址，统一转为绝对地址（可直接用作 img src）：
+ *  - 完整 http/https URL 原样返回（兼容外部头像）
+ *  - 站内相对路径（如主站头像 /G_File/preview?fileId=...）按运行时 API 域名补全，
+ *    否则浏览器会把它解析到考试站静态域名下导致 404 破图
+ *  - 其余视为文件 ID，拼文件预览接口
+ *  - 空值返回 null（调用方据此回落占位图标）
+ */
+export function iGM_Exam_ResolveMediaUrl(
+  value: string | null | undefined,
+): string | null {
+  const raw = value?.trim();
+  if (!raw) return null;
+  if (/^https?:\/\//i.test(raw)) return raw;
+  if (raw.startsWith("/")) return `${iGM_ExamConfig.apiBase}${raw}`;
+  return `${iGM_ExamConfig.apiBase}/G_File/preview?fileId=${encodeURIComponent(raw)}`;
+}
+
 // 导出 //
 export default iGM_ExamConfig;

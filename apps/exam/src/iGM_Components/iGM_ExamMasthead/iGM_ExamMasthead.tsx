@@ -21,6 +21,7 @@ import { iGM_ExamCreatorBadge as IGM_ExamCreatorBadge } from "../iGM_ExamCreator
 import { iGM_ExamLangToggle as IGM_ExamLangToggle } from "../iGM_ExamLangToggle/iGM_ExamLangToggle";
 import { useI18n } from "../../iGM_i18n/iGM_I18nContext";
 import { iGM_ExamUseAuth } from "../../iGM_AuthContext";
+import { iGM_Exam_ResolveMediaUrl } from "../../iGM_Services/iGM_ExamConfig";
 import styles from "./iGM_ExamMasthead.module.css";
 
 // 类型定义 //
@@ -55,6 +56,7 @@ const iGM_Exam_BuildDate = new Date(
 
 /** 导航项路由（文案由当前语言包提供） */
 const iGM_Exam_NavRoutes = [
+  { href: "/apply-creator", labelKey: "navAnnounce" },
   { href: "/", labelKey: "navExaminations" },
   { href: "/bank", labelKey: "navQuestionBank" },
   { href: "/editor", labelKey: "navQuestionEditor" },
@@ -76,6 +78,9 @@ export function iGM_ExamMasthead({ initialDate }: iGM_ExamMastheadProps) {
 
   const volume = iGM_Exam_ToRoman(baseDate.getFullYear() - 2025);
   const issue = String(baseDate.getMonth() + 1).padStart(2, "0");
+
+  // 主站头像引用为站内相对路径（/G_File/preview?fileId=...），按运行时 API 域名补全后使用
+  const avatarUrl = iGM_Exam_ResolveMediaUrl(user?.picture);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -100,13 +105,14 @@ export function iGM_ExamMasthead({ initialDate }: iGM_ExamMastheadProps) {
             <IGM_ExamLangToggle />
             {loading ? null : user ? (
               <div className={styles.authArea} aria-label="Account">
-                {user.picture && user.picture.trim() ? (
+                {avatarUrl ? (
                   <img
-                    src={user.picture}
+                    src={avatarUrl}
                     alt=""
                     width={22}
                     height={22}
                     className={styles.authAvatar}
+                    referrerPolicy="no-referrer"
                     onError={(e) => {
                       (e.currentTarget as HTMLImageElement).style.display =
                         "none";
@@ -121,10 +127,7 @@ export function iGM_ExamMasthead({ initialDate }: iGM_ExamMastheadProps) {
                 <span
                   className={styles.authFallbackIcon}
                   data-auth-fallback
-                  style={{
-                    display:
-                      user.picture && user.picture.trim() ? "none" : "inline-flex",
-                  }}
+                  style={{ display: avatarUrl ? "none" : "inline-flex" }}
                 >
                   <UserIcon size={18} strokeWidth={1.5} />
                 </span>
@@ -169,11 +172,12 @@ export function iGM_ExamMasthead({ initialDate }: iGM_ExamMastheadProps) {
           <ul className={styles.navList}>
             {iGM_Exam_NavRoutes.map((item) => {
               const active = pathname === item.href;
+              const announce = item.href === "/apply-creator";
               return (
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className={`${styles.navLink} ${active ? styles.navActive : ""}`}
+                    className={`${styles.navLink} ${active ? styles.navActive : ""} ${announce ? styles.navAnnounce : ""}`}
                     aria-current={active ? "page" : undefined}
                   >
                     {t(item.labelKey)}

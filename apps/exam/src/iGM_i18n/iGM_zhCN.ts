@@ -18,6 +18,7 @@ export const iGM_zhCN: iGM_I18nDict = {
   instituteName: "iGC&M 教育考试研究院",
   mastheadMeta: "第 {volume} 卷 · 第 {issue} 期",
   mastheadSubtitle: "创院于 2026 · 学术测评",
+  navAnnounce: "公告",
   navExaminations: "考试目录",
   navAdmin: "考试管理",
   navUpload: "上传试卷",
@@ -328,12 +329,6 @@ export const iGM_zhCN: iGM_I18nDict = {
   authMyAccount: "我的主站账户",
   authGreeting: "已登录",
   authFailed: "登录失败，请重试",
-  // 左侧公告栏
-  announceColLabel: "公告栏",
-  announceTag: "公告",
-  announceTitle: "申请成为 iGC&M 命题创作者",
-  announceLead: "热爱 Minecraft 教育、拥有命题与内容创作能力？加入我们，共同打造高质量的模拟试卷与题库资源。",
-  announceCta: "立即了解",
   // 独立申请页（/apply-creator）
   applyPageTitle: "命题创作者申请",
   applyPageLead: "通过审核后，你将获得 iGC&M 命题创作者资格，可上传与管理模拟试卷、参与命题审核。",

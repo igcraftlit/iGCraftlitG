@@ -1,14 +1,16 @@
 /**
  * 文件路径：iGM_Server/src/iGM_Routes/G_Examiner.ts
  * 所属层：后端 / 路由层
- * 路由：/api/exam/creator/profile（命题者编号档案）、/G_Examiner/revoke、
+ * 路由：/G_Examiner/status（准入状态）、/api/exam/creator/profile（命题者编号档案）、
+ *       /G_Examiner/revoke、
  *       /api/exam/creator/apply（独立申请页提交）、
  *       /api/exam/creator/my-status（独立申请页查状态）、
  *       /api/exam/creator/pending（管理端待审核列表）、
  *       /api/exam/creator/review（管理端审核通过/拒绝）
  * 模块：G_Examiner
- * 作用：命题创作者编号档案查询、申请提交/状态查询、管理端审核与撤销
- * 内容：命题者编号档案（/api/exam/creator/profile）、
+ * 作用：命题创作者准入状态、编号档案查询、申请提交/状态查询、管理端审核与撤销
+ * 内容：准入状态（/G_Examiner/status，命题管理与试卷上传页的权限闸门）、
+ *       命题者编号档案（/api/exam/creator/profile）、
  *       申请提交与状态查询（/apply、/my-status）、
  *       管理端待审核列表与审核（/pending、/review）、
  *       管理端撤销资格
@@ -27,6 +29,7 @@ import {
 import { iGM_IsStaff, iGM_RequireUser } from "../iGM_Middleware/iGM_AuthGuard";
 import {
   iGM_ExaminerError,
+  iGM_IsActiveExaminer,
   iGM_GetCreatorProfileService,
   iGM_RevokeExaminerService,
   iGM_SubmitExaminerApplyService,
@@ -52,6 +55,16 @@ async function iGM_HandleRevoke(ctx: iGM_RouteContext) {
   if (!userId) throw new iGM_ExaminerError("缺少用户 ID", 400);
   await iGM_RevokeExaminerService(userId);
   return iGM_Ok({ userId }, "命题创作者资格已撤销");
+}
+
+/* ---------- 准入状态（登录用户；命题管理/试卷上传页的权限闸门） ---------- */
+async function iGM_HandleGateStatus(ctx: iGM_RouteContext) {
+  const user = iGM_RequireUser(await iGM_CurrentUser(ctx));
+  const isExaminer = await iGM_IsActiveExaminer(user.iGM_Id);
+  return iGM_Ok({
+    isExaminer,
+    gate: isExaminer ? ("approved" as const) : ("none" as const),
+  });
 }
 
 /* ---------- 命题者编号档案（登录用户；非命题创作者返回 NOT_EXAMINER） ---------- */
@@ -133,6 +146,7 @@ async function iGM_HandleReview(ctx: iGM_RouteContext) {
  * 业务错误统一抛 iGM_ExaminerError，由 iGM_ServerMain 全局错误处理器格式化
  */
 export const G_Examiner = new Elysia({ name: "G_Examiner" })
+  .get("/G_Examiner/status", iGM_HandleGateStatus as never)
   .get("/api/exam/creator/profile", iGM_HandleCreatorProfile as never)
   .post("/api/exam/creator/apply", iGM_HandleApplySubmit as never)
   .get("/api/exam/creator/my-status", iGM_HandleMyApplyStatus as never)
