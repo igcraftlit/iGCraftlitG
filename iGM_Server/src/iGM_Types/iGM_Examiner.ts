@@ -53,3 +53,47 @@ export function iGM_JoinCommaList(values: readonly string[]): string {
 }
 
 // 导出 //
+
+// ===== 命题创作者申请 =====
+
+/** 申请状态 */
+export type iGM_ApplicationStatus = "pending" | "approved" | "rejected";
+
+/** 命题创作者申请表的数据行（iGM_ExaminerApplications） */
+export interface iGM_ExaminerApplicationRow {
+  iGM_Id: string;
+  iGM_UserId: string;
+  iGM_RealName: string;
+  iGM_Contact: string;
+  iGM_Bio: string;
+  iGM_Directions: string;
+  iGM_PortfolioUrl: string | null;
+  iGM_Reason: string;
+  iGM_Status: iGM_ApplicationStatus;
+  iGM_ReviewerId: string | null;
+  iGM_ReviewComment: string | null;
+  iGM_CreatedAt: string;
+  iGM_UpdatedAt: string;
+  iGM_AgreedToRules: boolean;
+}
+
+/** 提交命题创作者申请的输入 DTO */
+export interface iGM_ExaminerApplyInput {
+  realName: string;
+  contact: string;
+  bio: string;
+  directions: string[];
+  portfolioUrl?: string;
+  reason: string;
+  agreedToRules: boolean;
+}
+
+/** 我的申请状态 DTO（前端独立申请页用） */
+export interface iGM_MyApplicationDto {
+  hasApplication: boolean;
+  status: iGM_ApplicationStatus | null;
+  submittedAt: string | null;
+  reviewedAt: string | null;
+  reviewerName: string | null;
+  reviewComment: string | null;
+}

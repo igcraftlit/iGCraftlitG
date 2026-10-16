@@ -13,6 +13,103 @@
   max-width: var(--igm-maxw);
   margin: 0 auto;
   padding: 40px 28px 72px;
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+}
+
+/* 主内容列：右侧 */
+.mainCol {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* ============================= 左侧公告栏 ============================= */
+.announceCol {
+  flex: 0 0 240px;
+  position: sticky;
+  top: 88px;
+}
+.announceCard {
+  display: block;
+  padding: 18px 16px 16px;
+  background: var(--igm-paper);
+  border: 1px solid var(--igm-copper);
+  border-left: 4px solid var(--igm-copper);
+  border-radius: 2px;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  text-decoration: none;
+  color: inherit;
+}
+.announceCard:hover {
+  box-shadow: 0 2px 12px -4px rgba(184, 107, 53, 0.35);
+  transform: translateY(-2px);
+}
+.announceTop {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.announceIcon {
+  color: var(--igm-copper);
+}
+.announceTag {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--igm-copper);
+  text-transform: uppercase;
+}
+.announceTitle {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--igm-ink);
+}
+.announceLead {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--igm-text-muted);
+}
+.announceCta {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--igm-copper);
+}
+
+/* ============================= 响应式 ============================= */
+@media (max-width: 900px) {
+  .page {
+    flex-direction: column;
+  }
+  .announceCol {
+    flex: none;
+    position: static;
+    width: 100%;
+  }
+  .announceCard {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    border-left: 3px solid var(--igm-copper);
+  }
+  .announceTop {
+    margin-bottom: 0;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .announceTitle {
+    margin: 0;
+    font-size: 14px;
+  }
+  .announceLead,
+  .announceCta {
+    display: none;
+  }
 }
 
 /* ============================= 引言 ============================= */

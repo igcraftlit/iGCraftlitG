@@ -32,6 +32,38 @@ export interface iGM_CreatorProfile {
   status: string;
 }
 
+/** 我的申请状态 DTO（后端 /api/exam/creator/my-status 返回的 data） */
+export interface iGM_MyApplicationStatus {
+  hasApplication: boolean;
+  status: "pending" | "approved" | "rejected" | null;
+  submittedAt: string | null;
+  reviewedAt: string | null;
+  reviewerName: string | null;
+  reviewComment: string | null;
+}
+
+/** 命题方向多选枚举（后端持久化为逗号分隔） */
+export const iGM_ExaminerDirections = [
+  "minecraft_java",
+  "redstone",
+  "build",
+  "server_dev",
+  "mod_dev",
+  "general",
+] as const;
+export type iGM_ExaminerDirection = (typeof iGM_ExaminerDirections)[number];
+
+/** 申请表单输入 */
+export interface iGM_ExaminerApplyForm {
+  realName: string;
+  contact: string;
+  bio: string;
+  directions: iGM_ExaminerDirection[];
+  portfolioUrl?: string;
+  reason: string;
+  agreedToRules: boolean;
+}
+
 /** 当前登录用户（/G_Auth/me 返回的 user 字段） */
 export interface iGM_ExaminerUser {
   id: string;
@@ -134,6 +166,48 @@ export async function iGM_Examiner_FetchCreatorProfile(): Promise<iGM_CreatorPro
     };
   } catch {
     return null;
+  }
+}
+
+/* ---------- 独立申请页：提交 ---------- */
+
+/** 提交命题创作者申请 */
+export async function iGM_Examiner_SubmitApply(
+  form: iGM_ExaminerApplyForm,
+): Promise<{ id: string }> {
+  return await iGM_Examiner_Post<{ id: string }>(
+    "/api/exam/creator/apply",
+    form,
+  );
+}
+
+/* ---------- 独立申请页：我的申请状态 ---------- */
+
+/** 查询我的申请状态（未登录时后端返回 401 → 前端跳登录） */
+export async function iGM_Examiner_FetchMyApplyStatus(): Promise<iGM_MyApplicationStatus> {
+  return await iGM_Examiner_Get<iGM_MyApplicationStatus>(
+    "/api/exam/creator/my-status",
+  );
+}
+
+// 私有：POST 请求（携带 Cookie）
+async function iGM_Examiner_Post<T>(
+  path: string,
+  body: unknown,
+): Promise<T> {
+  try {
+    const response = await fetch(`${iGM_ExamConfig.apiBase}${path}`, {
+      method: "POST",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(body),
+    });
+    return await iGM_Examiner_Unwrap<T>(response);
+  } catch (error) {
+    if (error instanceof iGM_ExamRequestError) throw error;
+    throw new iGM_ExamRequestError(
+      "Unable to reach the examiner service. Please try again later.",
+    );
   }
 }
 

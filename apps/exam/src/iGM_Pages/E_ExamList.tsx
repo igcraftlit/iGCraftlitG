@@ -12,7 +12,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FileSearch, RefreshCw, Search } from "lucide-react";
+import Link from "next/link";
+import { FileSearch, RefreshCw, Search, Megaphone } from "lucide-react";
 import {
   iGM_Exam_FetchStaticIndex,
   iGM_Exam_FetchStaticIssuers,
@@ -81,12 +82,31 @@ export function E_ExamList() {
 
   return (
     <main className={styles.page}>
-      {/* 引言：期刊论文摘要风 */}
-      <section className={styles.intro}>
-        <p className={`igm-eyebrow ${styles.introEyebrow}`}>{t("listEyebrow")}</p>
-        <h1 className={`igm-serif ${styles.introTitle}`}>{t("listTitle")}</h1>
-        <p className={styles.introLead}>{t("listLead")}</p>
-      </section>
+      {/* 左侧公告栏：桌面端显示，移动端折叠为顶部置顶卡片 */}
+      <aside className={styles.announceCol} aria-label={t("announceColLabel")}>
+        <Link href="/apply-creator" className={styles.announceCard}>
+          <div className={styles.announceTop}>
+            <Megaphone size={15} strokeWidth={1.8} className={styles.announceIcon} />
+            <span className={`igm-mono ${styles.announceTag}`}>{t("announceTag")}</span>
+          </div>
+          <p className={`igm-serif ${styles.announceTitle}`}>
+            {t("announceTitle")}
+          </p>
+          <p className={styles.announceLead}>{t("announceLead")}</p>
+          <span className={`igm-mono ${styles.announceCta}`}>
+            {t("announceCta")} →
+          </span>
+        </Link>
+      </aside>
+
+      {/* 主内容区 */}
+      <div className={styles.mainCol}>
+        {/* 引言：期刊论文摘要风 */}
+        <section className={styles.intro}>
+          <p className={`igm-eyebrow ${styles.introEyebrow}`}>{t("listEyebrow")}</p>
+          <h1 className={`igm-serif ${styles.introTitle}`}>{t("listTitle")}</h1>
+          <p className={styles.introLead}>{t("listLead")}</p>
+        </section>
 
       {/* 统计带 */}
       <section
@@ -199,6 +219,7 @@ export function E_ExamList() {
           </div>
         )}
       </section>
+      </div>
     </main>
   );
 }

@@ -334,6 +334,48 @@ export interface iGM_I18nDict {
   authMyAccount: string;
   authGreeting: string;
   authFailed: string;
+  // 左侧公告栏
+  announceColLabel: string;
+  announceTag: string;
+  announceTitle: string;
+  announceLead: string;
+  announceCta: string;
+  // 独立申请页（/apply-creator）
+  applyPageTitle: string;
+  applyPageLead: string;
+  applyNeedLogin: string;
+  applyNeedLoginLead: string;
+  applyAlreadyExaminer: string;
+  applyAlreadyExaminerLead: string;
+  applyBackToList: string;
+  applySubmitted: string;
+  applySubmittedLead: string;
+  applySubmittedAt: string;
+  applyRejected: string;
+  applyRejectedLead: string;
+  applyRealName: string;
+  applyContact: string;
+  applyContactPh: string;
+  applyDirections: string;
+  applyBio: string;
+  applyBioPh: string;
+  applyPortfolio: string;
+  applyPortfolioPh: string;
+  applyReason: string;
+  applyReasonPh: string;
+  applyAgree: string;
+  applySubmit: string;
+  applySubmitting: string;
+  applySubmittedSuccess: string;
+  applyNeedAgree: string;
+  applyNeedDir: string;
+  // 命题方向标签
+  applyDirMcJava: string;
+  applyDirRedstone: string;
+  applyDirBuild: string;
+  applyDirServerDev: string;
+  applyDirModDev: string;
+  applyDirGeneral: string;
 }
 
 /** 语言包键联合类型 */

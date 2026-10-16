@@ -100,17 +100,34 @@ export function iGM_ExamMasthead({ initialDate }: iGM_ExamMastheadProps) {
             <IGM_ExamLangToggle />
             {loading ? null : user ? (
               <div className={styles.authArea} aria-label="Account">
-                {user.picture ? (
+                {user.picture && user.picture.trim() ? (
                   <img
                     src={user.picture}
                     alt=""
                     width={22}
                     height={22}
                     className={styles.authAvatar}
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).style.display =
+                        "none";
+                      const fallback =
+                        (e.currentTarget.parentElement?.querySelector(
+                          "[data-auth-fallback]",
+                        ) as HTMLElement | null);
+                      if (fallback) fallback.style.display = "inline-flex";
+                    }}
                   />
-                ) : (
+                ) : null}
+                <span
+                  className={styles.authFallbackIcon}
+                  data-auth-fallback
+                  style={{
+                    display:
+                      user.picture && user.picture.trim() ? "none" : "inline-flex",
+                  }}
+                >
                   <UserIcon size={18} strokeWidth={1.5} />
-                )}
+                </span>
                 <span className={styles.authName} title={user.displayName}>
                   {user.displayName}
                 </span>

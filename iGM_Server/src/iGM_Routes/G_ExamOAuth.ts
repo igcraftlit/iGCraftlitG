@@ -233,10 +233,15 @@ async function iGM_HandleMe(ctx: iGM_RouteContext) {
     ? await iGM_FindExaminerByUser(user.iGM_Id)
     : null;
 
+  // 后端判空兜底：主站用户未设头像时 iGM_Avatar 可能是 null 或空字符串
+  const rawAvatar = user.iGM_Avatar;
+  const picture =
+    rawAvatar && rawAvatar.trim() ? rawAvatar.trim() : null;
+
   return iGM_Ok({
     uid: user.iGM_Uid,
     displayName: user.iGM_DisplayName ?? user.iGM_Username,
-    picture: user.iGM_Avatar,
+    picture,
     username: user.iGM_Username,
     isExaminer,
     creatorId: creatorRow?.iGM_Id ?? null,

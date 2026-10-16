@@ -13,7 +13,11 @@
 // 导入依赖 //
 import { iGM_Db } from "../iGM_Database/iGM_Database";
 import { iGM_RandomUuid } from "../iGM_Services/iGM_SecurityService";
-import type { iGM_ExaminerRow } from "../iGM_Types/iGM_Examiner";
+import type {
+  iGM_ExaminerRow,
+  iGM_ExaminerApplicationRow,
+  iGM_ApplicationStatus,
+} from "../iGM_Types/iGM_Examiner";
 
 // 核心逻辑 //
 /** 读取命题创作者行 */
@@ -65,6 +69,96 @@ export async function iGM_ListExaminers(): Promise<iGM_ExaminerRow[]> {
   return (await iGM_Db
     .query(`SELECT * FROM iGM_Examiners ORDER BY iGM_ApprovedAt DESC`)
     .all()) as iGM_ExaminerRow[];
+}
+
+// ===== 命题创作者申请 =====
+
+/** 插入一条申请（审核字段在 INSERT 时固定写 NULL，由 Reviewer 路由更新） */
+export async function iGM_InsertApplication(params: {
+  iGM_UserId: string;
+  iGM_RealName: string;
+  iGM_Contact: string;
+  iGM_Bio: string;
+  iGM_Directions: string;
+  iGM_PortfolioUrl: string | null;
+  iGM_Reason: string;
+  iGM_AgreedToRules: boolean;
+}): Promise<string> {
+  const now = new Date().toISOString();
+  const id = iGM_RandomUuid();
+  await iGM_Db.run(
+    `INSERT INTO iGM_ExaminerApplications
+       (iGM_Id, iGM_UserId, iGM_RealName, iGM_Contact, iGM_Bio, iGM_Directions,
+        iGM_PortfolioUrl, iGM_Reason, iGM_Status, iGM_ReviewerId, iGM_ReviewComment,
+        iGM_CreatedAt, iGM_UpdatedAt, iGM_AgreedToRules)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?)`,
+    [
+      id,
+      params.iGM_UserId,
+      params.iGM_RealName,
+      params.iGM_Contact,
+      params.iGM_Bio,
+      params.iGM_Directions,
+      params.iGM_PortfolioUrl,
+      params.iGM_Reason,
+      "pending",
+      now,
+      now,
+      params.iGM_AgreedToRules,
+    ],
+  );
+  return id;
+}
+
+/** 按用户查最新一条申请（提交状态轮询 + 我的申请状态用） */
+export async function iGM_FindLatestApplicationByUser(
+  userId: string,
+): Promise<iGM_ExaminerApplicationRow | null> {
+  return (
+    ((await iGM_Db
+      .query(
+        `SELECT * FROM iGM_ExaminerApplications WHERE iGM_UserId = ? ORDER BY iGM_CreatedAt DESC LIMIT 1`,
+      )
+      .get(userId)) as iGM_ExaminerApplicationRow | undefined) ?? null
+  );
+}
+
+/** 按 ID 查申请 */
+export async function iGM_FindApplicationById(
+  id: string,
+): Promise<iGM_ExaminerApplicationRow | null> {
+  return (
+    ((await iGM_Db
+      .query(`SELECT * FROM iGM_ExaminerApplications WHERE iGM_Id = ?`)
+      .get(id)) as iGM_ExaminerApplicationRow | undefined) ?? null
+  );
+}
+
+/** 管理端列出待审核申请 */
+export async function iGM_ListPendingApplications(): Promise<
+  iGM_ExaminerApplicationRow[]
+> {
+  return (await iGM_Db
+    .query(
+      `SELECT * FROM iGM_ExaminerApplications WHERE iGM_Status = 'pending' ORDER BY iGM_CreatedAt ASC`,
+    )
+    .all()) as iGM_ExaminerApplicationRow[];
+}
+
+/** 更新申请状态（审核通过/拒绝） */
+export async function iGM_UpdateApplicationStatus(
+  id: string,
+  status: iGM_ApplicationStatus,
+  reviewerId: string,
+  reviewComment: string | null,
+): Promise<void> {
+  const now = new Date().toISOString();
+  await iGM_Db.run(
+    `UPDATE iGM_ExaminerApplications
+       SET iGM_Status = ?, iGM_ReviewerId = ?, iGM_ReviewComment = ?, iGM_UpdatedAt = ?
+     WHERE iGM_Id = ?`,
+    [status, reviewerId, reviewComment, now, id],
+  );
 }
 
 // 导出 //

@@ -1,0 +1,289 @@
+/**
+ * 文件路径：apps/exam/src/iGM_Pages/E_CreatorApply.module.css
+ * 所属层：前端 / 页面样式层
+ * 路由：E_CreatorApply（/apply-creator）
+ * 模块：iGM_CreatorApply
+ * 作用：命题创作者独立申请页样式
+ * 说明：沿用 igm-mono / igm-serif / igm-copper 学术期刊体系
+ */
+
+/* ============================= 页面容器 ============================= */
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 48px 28px 72px;
+}
+
+/* ============================= 页面头 ============================= */
+.header {
+  margin-bottom: 32px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--igm-line);
+}
+.title {
+  margin: 0 0 8px;
+  font-size: clamp(24px, 3.6vw, 32px);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--igm-ink);
+}
+.lead {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--igm-text-muted);
+}
+
+/* ============================= 登录引导卡片 ============================= */
+.guideCard {
+  text-align: center;
+  padding: 48px 24px;
+  border: 1px dashed var(--igm-line);
+  border-radius: 2px;
+}
+.guideIcon,
+.alreadyIcon,
+.statusIcon {
+  color: var(--igm-copper);
+  margin-bottom: 16px;
+}
+.guideTitle,
+.alreadyTitle,
+.statusTitle {
+  margin: 0 0 10px;
+  font-size: 22px;
+  color: var(--igm-ink);
+}
+.guideLead,
+.alreadyLead,
+.statusLead,
+.rejectLead {
+  margin: 0 0 20px;
+  color: var(--igm-text-muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+.guideBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  font-family: var(--igm-font-mono);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--igm-paper);
+  background: var(--igm-ink);
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.guideBtn:hover {
+  background: var(--igm-copper);
+}
+
+/* ============================= 已是创作者 / 状态卡片 ============================= */
+.alreadyCard,
+.statusCard {
+  text-align: center;
+  padding: 40px 24px;
+  border: 1px solid var(--igm-line);
+  border-left: 3px solid var(--igm-copper);
+  border-radius: 2px;
+}
+.rejectComment {
+  margin: 0 0 14px;
+  padding: 12px 16px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--igm-ink);
+  background: var(--igm-line-soft);
+  border-radius: 2px;
+  text-align: left;
+}
+.statusList {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin: 0 0 20px;
+  padding: 0;
+  font-size: 13px;
+  color: var(--igm-text-muted);
+}
+.statusList > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.statusList dt {
+  font-family: var(--igm-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--igm-copper);
+}
+.statusList dd {
+  margin: 0;
+  font-family: var(--igm-font-mono);
+}
+.backLink {
+  font-family: var(--igm-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--igm-copper);
+  text-decoration: none;
+}
+.backLink:hover {
+  text-decoration: underline;
+}
+
+/* ============================= 表单 ============================= */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  margin-top: 28px;
+}
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.formLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--igm-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--igm-copper);
+}
+.formInput,
+.formTextarea {
+  font-family: var(--igm-font-mono);
+  font-size: 13px;
+  padding: 10px 12px;
+  color: var(--igm-ink);
+  background: var(--igm-paper);
+  border: 1px solid var(--igm-line);
+  border-radius: 2px;
+  transition: border-color 0.15s ease;
+}
+.formInput:focus,
+.formTextarea:focus {
+  outline: none;
+  border-color: var(--igm-copper);
+}
+.formTextarea {
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.7;
+}
+.dirGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+.dirChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-family: var(--igm-font-mono);
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--igm-ink);
+  background: var(--igm-paper);
+  border: 1px solid var(--igm-line);
+  border-radius: 2px;
+  transition: all 0.12s ease;
+}
+.dirChip:hover {
+  border-color: var(--igm-copper);
+}
+.dirChip input {
+  margin: 0;
+  accent-color: var(--igm-copper);
+}
+.dirChip[data-checked="true"] {
+  color: var(--igm-paper);
+  background: var(--igm-copper);
+  border-color: var(--igm-copper);
+}
+.agree {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--igm-text-muted);
+}
+.agree input {
+  accent-color: var(--igm-copper);
+}
+.submitBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 28px;
+  font-family: var(--igm-font-mono);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--igm-paper);
+  background: var(--igm-ink);
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+  align-self: flex-start;
+}
+.submitBtn:hover:not(:disabled) {
+  background: var(--igm-copper);
+}
+.submitBtn:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+/* ============================= 状态反馈 ============================= */
+.inlineError,
+.inlineSuccess {
+  margin: -6px 0 0;
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 2px;
+}
+.inlineError {
+  color: #a94442;
+  background: #fdf0ef;
+  border: 1px solid #e6c8c5;
+}
+.inlineSuccess {
+  color: #3c763d;
+  background: #eff6ec;
+  border: 1px solid #c8e0bf;
+}
+.loading {
+  text-align: center;
+  padding: 48px;
+  color: var(--igm-text-muted);
+}
+
+/* ============================= 响应式 ============================= */
+@media (max-width: 640px) {
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+  .dirGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .page {
+    padding: 36px 20px 56px;
+  }
+}
