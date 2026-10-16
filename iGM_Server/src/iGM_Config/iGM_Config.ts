@@ -160,6 +160,34 @@ export interface iGM_OAuthConfig {
   allowHttpRedirect: boolean;
 }
 
+/** 考试站 OAuth Client（对接主站 IdP）配置 */
+export interface iGM_ExamOAuthClientConfig {
+  /** 主站授权端点完整 URL */
+  authorizeUrl: string;
+  /** 主站令牌端点完整 URL */
+  tokenUrl: string;
+  /** 主站用户信息端点完整 URL */
+  userinfoUrl: string;
+  /** 主站撤销端点完整 URL */
+  revokeUrl: string;
+  /** OAuth client_id */
+  clientId: string;
+  /** OAuth client_secret（仅后端持有，严禁进前端） */
+  clientSecret: string;
+  /** 生产环境 OAuth 回调地址（必须已在主站注册表里登记） */
+  callbackUrl: string;
+  /** 本地开发 OAuth 回调地址（本地开发时 override callbackUrl） */
+  localCallbackUrl: string;
+  /** 本地开发回调地址是否启用 http（localhost） */
+  allowHttpLocal: boolean;
+  /** OAuth scope 请求 */
+  scope: string;
+  /** 跨子域 cookie 的 domain（用于 exam.igcraftlit.com 共享登录态） */
+  cookieDomain: string;
+  /** OAuth client 接入方展示名称（日志用） */
+  appName: string;
+}
+
 /** 本地 AI 模型通道：Ollama 部署，OpenAI 兼容端点（标准版 + Pro 版双模型） */
 export interface iGM_AIChannelConfig {
   /** OpenAI 兼容基础地址（含 /v1，不含结尾斜杠） */
@@ -227,6 +255,8 @@ export interface iGM_AppConfig {
   thirdParty: iGM_ThirdPartyConfig;
   /** 模块二十一：OAuth 2.0 + OIDC 身份提供方配置 */
   oauth: iGM_OAuthConfig;
+  /** 考试站 OAuth Client（对接主站 IdP）配置 */
+  examOAuth: iGM_ExamOAuthClientConfig;
   /** AI 赋能系统模块一：DeepSeek 基础对话配置 */
   ai: iGM_AIConfig;
 }
@@ -477,6 +507,36 @@ export const iGM_Config: iGM_AppConfig = {
     // 仅本地开发允许 http 回调（限 localhost / 127.0.0.1）
     allowHttpRedirect:
       (process.env.IGM_OAUTH_ALLOW_HTTP ?? "true") === "true",
+  },
+  // 考试站作为 OAuth Client 接入主站 IdP
+  examOAuth: {
+    authorizeUrl:
+      process.env.IGCRAFTLIT_OAUTH_AUTHORIZE_URL ??
+      "https://api.igcraftlit.com/oauth/authorize",
+    tokenUrl:
+      process.env.IGCRAFTLIT_OAUTH_TOKEN_URL ??
+      "https://api.igcraftlit.com/oauth/token",
+    userinfoUrl:
+      process.env.IGCRAFTLIT_OAUTH_USERINFO_URL ??
+      "https://api.igcraftlit.com/oauth/userinfo",
+    revokeUrl:
+      process.env.IGCRAFTLIT_OAUTH_REVOKE_URL ??
+      "https://api.igcraftlit.com/oauth/revoke",
+    clientId:
+      process.env.IGCRAFTLIT_OAUTH_CLIENT_ID ?? "",
+    clientSecret:
+      process.env.IGCRAFTLIT_OAUTH_CLIENT_SECRET ?? "",
+    callbackUrl:
+      process.env.IGCRAFTLIT_OAUTH_CALLBACK_URL ??
+      "https://api.igcraftlit.com/api/exam/oauth/callback",
+    localCallbackUrl:
+      process.env.IGCRAFTLIT_OAUTH_LOCAL_CALLBACK_URL ??
+      "http://localhost:3001/api/exam/oauth/callback",
+    allowHttpLocal: true,
+    scope: process.env.IGCRAFTLIT_OAUTH_SCOPE ?? "openid profile",
+    cookieDomain:
+      process.env.IGCRAFTLIT_OAUTH_COOKIE_DOMAIN ?? ".igcraftlit.com",
+    appName: "iGCraftLit 考试站",
   },
   ai: {
     // 本地 Ollama 单通道（原 UPR/SPR/DeepSeek 全部废弃）

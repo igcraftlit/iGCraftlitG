@@ -54,6 +54,7 @@ import { G_ThirdParty } from "./iGM_Routes/G_ThirdParty";
 import { iGM_ThirdPartyError } from "./iGM_Services/iGM_ThirdPartyService";
 // 模块二十一：OAuth 2.0 + OpenID Connect 身份提供方
 import { G_OAuth } from "./iGM_Routes/G_OAuth";
+import { G_ExamOAuth } from "./iGM_Routes/G_ExamOAuth";
 import { iGM_OAuthError } from "./iGM_Services/iGM_OAuthService";
 // 模块二十六（启动器 26.3.2）：启动器发布历史
 import { G_LauncherRelease } from "./iGM_Routes/G_LauncherRelease";
@@ -248,6 +249,8 @@ const iGM_Server = new Elysia()
   .use(G_Question)
   // 考试系统：AI 亮点题目检索 / 送往命题管理 / 待审核审批（/api/exam/*）
   .use(G_ExamHighlight)
+  // 考试系统：OAuth Client 登录主站 IdP（/api/exam/oauth/*）
+  .use(G_ExamOAuth)
   // 根路径占位
   .get("/", () => ({
     success: true,

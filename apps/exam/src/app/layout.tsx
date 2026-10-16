@@ -18,6 +18,7 @@ import { Inter, JetBrains_Mono, Source_Serif_4 } from "next/font/google";
 import { iGM_ExamMasthead as IGM_ExamMasthead } from "../iGM_Components/iGM_ExamMasthead/iGM_ExamMasthead";
 import { iGM_ExamFooter as IGM_ExamFooter } from "../iGM_Components/iGM_ExamFooter/iGM_ExamFooter";
 import { iGM_ExamI18nProvider as IGM_ExamI18nProvider } from "../iGM_i18n/iGM_I18nContext";
+import { iGM_ExamAuthProvider as IGM_ExamAuthProvider } from "../iGM_AuthContext";
 import "./globals.css";
 
 // 类型定义 //
@@ -94,11 +95,13 @@ export default function iGM_Exam_RootLayout({
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: iGM_Exam_ThemeInitScript }}
         />
-        <IGM_ExamI18nProvider>
-          <IGM_ExamMasthead />
-          {children}
-          <IGM_ExamFooter />
-        </IGM_ExamI18nProvider>
+        <IGM_ExamAuthProvider>
+          <IGM_ExamI18nProvider>
+            <IGM_ExamMasthead />
+            {children}
+            <IGM_ExamFooter />
+          </IGM_ExamI18nProvider>
+        </IGM_ExamAuthProvider>
       </body>
     </html>
   );

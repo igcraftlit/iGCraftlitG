@@ -48,6 +48,79 @@
   gap: 10px;
 }
 
+/* 登录按钮（未登录态） */
+.authLogin {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-family: var(--igm-font-mono);
+  letter-spacing: 0.04em;
+  color: var(--igm-ink);
+  background: var(--igm-paper);
+  border: 1px solid var(--igm-line);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.authLogin:hover {
+  color: var(--igm-paper);
+  background: var(--igm-ink);
+  border-color: var(--igm-ink);
+}
+
+/* 登录后：头像 + 昵称 + 退出 */
+.authArea {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 6px 3px 3px;
+  border: 1px solid var(--igm-line);
+  border-radius: 2px;
+  background: var(--igm-paper);
+}
+.authAvatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--igm-line-soft);
+  border: 1px solid var(--igm-line-soft);
+}
+.authName {
+  font-size: 12px;
+  font-family: var(--igm-font-mono);
+  letter-spacing: 0.02em;
+  color: var(--igm-ink);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.authLogout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: var(--igm-copper);
+  background: transparent;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.authLogout:hover:not(:disabled) {
+  color: var(--igm-paper);
+  background: var(--igm-copper);
+}
+.authLogout:disabled {
+  opacity: 0.4;
+  cursor: wait;
+}
+
 /* ============================= 刊名行 ============================= */
 .titleRow {
   padding: 16px 0 12px;

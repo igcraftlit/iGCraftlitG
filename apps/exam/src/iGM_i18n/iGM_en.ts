@@ -326,6 +326,15 @@ export const iGM_en: iGM_I18nDict = {
   reviewApproved: "Question approved and added to the bank.",
   reviewRejected: "Question rejected.",
   reviewEditTitle: "Edit & Approve",
+  // OAuth 登录/登出
+  authLogin: "Sign in",
+  authLoginWithIGM: "Sign in with iGCraftLit",
+  authLoggingIn: "Redirecting…",
+  authLogout: "Sign out",
+  authLoggingOut: "Signing out…",
+  authMyAccount: "Main site account",
+  authGreeting: "Signed in",
+  authFailed: "Sign-in failed. Please try again.",
 };
 
 // 导出 //

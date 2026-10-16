@@ -319,6 +319,15 @@ export const iGM_zhCN: iGM_I18nDict = {
   reviewApproved: "题目已通过并入库。",
   reviewRejected: "题目已拒绝。",
   reviewEditTitle: "编辑后通过",
+  // OAuth 登录/登出
+  authLogin: "登录",
+  authLoginWithIGM: "使用 iGCraftLit 账号登录",
+  authLoggingIn: "正在跳转登录…",
+  authLogout: "退出",
+  authLoggingOut: "正在退出…",
+  authMyAccount: "我的主站账户",
+  authGreeting: "已登录",
+  authFailed: "登录失败，请重试",
 };
 
 // 导出 //

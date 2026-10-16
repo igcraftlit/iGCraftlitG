@@ -15,11 +15,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { GraduationCap } from "lucide-react";
+import { GraduationCap, LogIn, LogOut, User as UserIcon } from "lucide-react";
 import { iGM_ExamThemeToggle as IGM_ExamThemeToggle } from "../iGM_ExamThemeToggle/iGM_ExamThemeToggle";
 import { iGM_ExamCreatorBadge as IGM_ExamCreatorBadge } from "../iGM_ExamCreatorBadge/iGM_ExamCreatorBadge";
 import { iGM_ExamLangToggle as IGM_ExamLangToggle } from "../iGM_ExamLangToggle/iGM_ExamLangToggle";
 import { useI18n } from "../../iGM_i18n/iGM_I18nContext";
+import { iGM_ExamUseAuth } from "../../iGM_AuthContext";
 import styles from "./iGM_ExamMasthead.module.css";
 
 // 类型定义 //
@@ -65,7 +66,9 @@ const iGM_Exam_NavRoutes = [
 export function iGM_ExamMasthead({ initialDate }: iGM_ExamMastheadProps) {
   const pathname = usePathname();
   const { t, formatDate } = useI18n();
+  const { user, loading, login, logout } = iGM_ExamUseAuth();
   const [baseDate, setBaseDate] = useState<Date>(initialDate ?? iGM_Exam_BuildDate);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     setBaseDate(new Date());
@@ -74,10 +77,19 @@ export function iGM_ExamMasthead({ initialDate }: iGM_ExamMastheadProps) {
   const volume = iGM_Exam_ToRoman(baseDate.getFullYear() - 2025);
   const issue = String(baseDate.getMonth() + 1).padStart(2, "0");
 
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await logout();
+    } finally {
+      setLoggingOut(false);
+    }
+  };
+
   return (
     <header className={styles.masthead}>
       <div className={styles.inner}>
-        {/* 元信息行：卷期 + 主题摇杆 + 语言切换 */}
+        {/* 元信息行：卷期 + 主题摇杆 + 语言切换 + 登录 */}
         <div className={styles.metaRow}>
           <span className={`igm-mono ${styles.volIssue}`}>
             {t("mastheadMeta", { volume, issue })}
@@ -86,6 +98,43 @@ export function iGM_ExamMasthead({ initialDate }: iGM_ExamMastheadProps) {
             <IGM_ExamThemeToggle />
             <IGM_ExamCreatorBadge />
             <IGM_ExamLangToggle />
+            {loading ? null : user ? (
+              <div className={styles.authArea} aria-label="Account">
+                {user.picture ? (
+                  <img
+                    src={user.picture}
+                    alt=""
+                    width={22}
+                    height={22}
+                    className={styles.authAvatar}
+                  />
+                ) : (
+                  <UserIcon size={18} strokeWidth={1.5} />
+                )}
+                <span className={styles.authName} title={user.displayName}>
+                  {user.displayName}
+                </span>
+                <button
+                  type="button"
+                  className={styles.authLogout}
+                  onClick={handleLogout}
+                  disabled={loggingOut}
+                  title={t("authLogout")}
+                >
+                  <LogOut size={16} strokeWidth={1.5} />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className={styles.authLogin}
+                onClick={login}
+                title={t("authLoginWithIGM")}
+              >
+                <LogIn size={16} strokeWidth={1.5} />
+                <span>{t("authLogin")}</span>
+              </button>
+            )}
           </div>
         </div>
 

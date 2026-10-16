@@ -325,6 +325,15 @@ export interface iGM_I18nDict {
   reviewApproved: string;
   reviewRejected: string;
   reviewEditTitle: string;
+  // OAuth 登录/登出
+  authLogin: string;
+  authLoginWithIGM: string;
+  authLoggingIn: string;
+  authLogout: string;
+  authLoggingOut: string;
+  authMyAccount: string;
+  authGreeting: string;
+  authFailed: string;
 }
 
 /** 语言包键联合类型 */

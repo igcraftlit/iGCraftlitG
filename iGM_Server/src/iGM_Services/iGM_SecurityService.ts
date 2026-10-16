@@ -88,11 +88,17 @@ export function iGM_ReadCookie(
 /**
  * 构造 Set-Cookie 头值
  * @param maxAge 秒；传 0 表示立即过期（登出清除）
+ * @param domain 可选，显式设置 Cookie 作用域域名（如 ".igcraftlit.com" 让所有子域共享）；不传则不设置 Domain
+ * @param secureOverride 可选，强制覆盖 Secure 标记；未传则按 NODE_ENV 自动判断
  */
 export function iGM_BuildSetCookie(
   name: string,
   value: string,
   maxAge: number,
+  options?: {
+    domain?: string;
+    secureOverride?: boolean;
+  },
 ): string {
   const parts = [
     `${name}=${encodeURIComponent(value)}`,
@@ -101,8 +107,14 @@ export function iGM_BuildSetCookie(
     "SameSite=Lax",
     `Max-Age=${maxAge}`,
   ];
+  if (options?.domain) parts.push(`Domain=${options.domain}`);
   // 生产域名 HTTPS 下追加 Secure；本地 http 不追加，否则 Cookie 不会写入
-  if (process.env.NODE_ENV === "production") parts.push("Secure");
+  // 显式 secureOverride 用于 exam 跨子域 cookie（生产需 Secure）
+  const secure =
+    options?.secureOverride !== undefined
+      ? options.secureOverride
+      : process.env.NODE_ENV === "production";
+  if (secure) parts.push("Secure");
   return parts.join("; ");
 }
 
@@ -110,17 +122,22 @@ export function iGM_BuildSetCookie(
 export function iGM_BuildSessionCookie(
   config: typeof iGM_Config,
   sessionId: string,
+  options?: { domain?: string; secureOverride?: boolean },
 ): string {
   return iGM_BuildSetCookie(
     config.auth.cookieName,
     sessionId,
     Math.floor(config.auth.sessionTtlMs / 1000),
+    options,
   );
 }
 
 /** 清除会话 Cookie 的便捷方法 */
-export function iGM_ClearSessionCookie(config: typeof iGM_Config): string {
-  return iGM_BuildSetCookie(config.auth.cookieName, "", 0);
+export function iGM_ClearSessionCookie(
+  config: typeof iGM_Config,
+  options?: { domain?: string; secureOverride?: boolean },
+): string {
+  return iGM_BuildSetCookie(config.auth.cookieName, "", 0, options);
 }
 
 // 导出 //
