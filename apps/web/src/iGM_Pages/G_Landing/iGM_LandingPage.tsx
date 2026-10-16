@@ -4,7 +4,7 @@
  * 路由：/（控制台之前的门户落地页）
  * 模块：G_Landing
  * 作用：进入控制台之前的品牌门户主页，介绍社区理念、领域、活动与价值观
- * 内容：磨砂悬浮导航（含 LOGO 与登录头像）、居中 Hero（交互点阵背景 + 标题聚光灯）、
+ * 内容：固定磨砂导航（含 LOGO 与登录头像）、双栏 Hero（WebGL 流体背景 + 站名 / 主标题 / 副标题）、
  *       WHY / FOCUS / WHAT / VALUES 区块、加入我们 CTA、极简页脚
  * 动效：Hero 阶梯拉出、区块滚动进场、卡片悬停、滚动指示（均支持 reduce-motion 降级）
  */
@@ -12,12 +12,6 @@
 // 导入依赖 //
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  useState,
-  type PointerEvent as ReactPointerEvent,
-} from "react";
 import { iGM_Link as Link } from "../../iGM_Components/iGM_Link/iGM_Link";
 import { useTranslations } from "next-intl";
 import {
@@ -85,67 +79,11 @@ export function iGM_LandingPage() {
   const year = new Date().getFullYear();
   // 顶部导航主按钮：未登录显示"登录/注册"（进入五框向导），已登录显示头像 + 进入控制台
   const { user } = iGM_UseAuth();
-  /** Hero 主标题元素：鼠标移动时写入聚光灯坐标 CSS 变量 */
-  const iGM_TitleRef = useRef<HTMLHeadingElement | null>(null);
-  /** 导航是否处于"向下滚动后的收缩态" */
-  const [iGM_NavCollapsed, iGM_SetNavCollapsed] = useState(false);
-
-  /**
-   * 导航滚动交互：监听 window.scrollY 与滚动方向。
-   * 向下滚超过阈值收缩为紧凑条形，向上滚或回到顶部恢复全宽导航。
-   */
-  useEffect(() => {
-    /** 收缩阈值：超过此滚动距离才允许进入收缩态 */
-    const iGM_Threshold = 100;
-    /** 方向判定死区：过滤微小抖动 */
-    const iGM_DeadZone = 4;
-
-    let iGM_LastY = window.scrollY;
-    let iGM_Ticking = false;
-
-    function iGM_Update(): void {
-      const y = window.scrollY;
-      const delta = y - iGM_LastY;
-
-      if (y <= iGM_Threshold) {
-        iGM_SetNavCollapsed(false);
-      } else if (delta > iGM_DeadZone) {
-        iGM_SetNavCollapsed(true);
-      } else if (delta < -iGM_DeadZone) {
-        iGM_SetNavCollapsed(false);
-      }
-
-      iGM_LastY = y;
-      iGM_Ticking = false;
-    }
-
-    function iGM_HandleScroll(): void {
-      if (iGM_Ticking) return;
-      iGM_Ticking = true;
-      window.requestAnimationFrame(iGM_Update);
-    }
-
-    window.addEventListener("scroll", iGM_HandleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", iGM_HandleScroll);
-  }, []);
-
-  /** 标题聚光灯：把指针位置换算为标题内的像素坐标写入 CSS 变量 */
-  function iGM_HandleTitleMove(
-    event: ReactPointerEvent<HTMLHeadingElement>,
-  ): void {
-    const node = iGM_TitleRef.current;
-    if (!node) return;
-    const rect = node.getBoundingClientRect();
-    node.style.setProperty("--igm-spot-x", `${event.clientX - rect.left}px`);
-    node.style.setProperty("--igm-spot-y", `${event.clientY - rect.top}px`);
-  }
 
   return (
     <div className={styles.landing} id="top">
-      {/* ===== 悬浮导航（向下滚动后收缩为紧凑条形） ===== */}
-      <header
-        className={`${styles.topnav} ${iGM_NavCollapsed ? styles.isScrolledDown : ""}`}
-      >
+      {/* ===== 固定磨砂导航：始终固定在顶部，跟随全场滚动 ===== */}
+      <header className={styles.topnav}>
         <div className={styles.topnavInner}>
           <a href="#top" className={`igm-font-brand ${styles.brand}`}>
             {/* 站点 LOGO：静态资源位于 public 根目录 */}
@@ -169,16 +107,6 @@ export function iGM_LandingPage() {
               {t("landing.nav.join")}
             </a>
           </nav>
-
-          {/* 收缩态专用：紧凑的搜索 / 命令入口 */}
-          <Link
-            href="/G_Search"
-            className={styles.navSearch}
-            aria-label={t("topbar.search")}
-          >
-            <Search size={15} strokeWidth={2} aria-hidden />
-            <span className={styles.navSearchLabel}>{t("topbar.search")}</span>
-          </Link>
 
           <div className={styles.navActions}>
             {user ? (
@@ -210,32 +138,23 @@ export function iGM_LandingPage() {
         <div className={styles.heroGlow} aria-hidden />
         <div className={styles.heroInner}>
           <div className={styles.heroText}>
-            <IGM_Reveal direction="up" duration={800} className={styles.heroLine}>
-              {/* 主标题：鼠标移动时出现柔和聚光灯跟随（mix-blend-mode: difference） */}
-              <h1
-                ref={iGM_TitleRef}
-                className={`igm-font-brand ${styles.heroTitle}`}
-                onPointerMove={iGM_HandleTitleMove}
-              >
+            <IGM_Reveal direction="right" duration={800}>
+              {/* 网站名称：位于主标题上方，字号小于主标题 */}
+              <p className={`igm-font-brand ${styles.heroBrand}`}>
+                {t("home.heading")}
+              </p>
+            </IGM_Reveal>
+            <IGM_Reveal direction="right" duration={800} delay={110}>
+              <h1 className={`igm-font-brand ${styles.heroTitle}`}>
                 {t("landing.hero.title")}
               </h1>
             </IGM_Reveal>
-            <IGM_Reveal
-              direction="up"
-              duration={800}
-              delay={140}
-              className={styles.heroLine}
-            >
+            <IGM_Reveal direction="right" duration={800} delay={220}>
               <p className={styles.heroSubtitle}>
                 {t("landing.hero.subtitle")}
               </p>
             </IGM_Reveal>
-            <IGM_Reveal
-              direction="up"
-              duration={800}
-              delay={280}
-              className={styles.heroLine}
-            >
+            <IGM_Reveal direction="right" duration={800} delay={330}>
               <div className={styles.heroActions}>
                 <Link href="/G_Community" className={styles.buttonPrimary}>
                   {t("landing.hero.primary")}
