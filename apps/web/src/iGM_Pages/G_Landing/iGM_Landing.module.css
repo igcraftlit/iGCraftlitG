@@ -76,10 +76,12 @@
   z-index: 30;
   height: var(--igm-topbar-height);
   /* 磨砂玻璃质感：半透明面板底 + 高斯模糊，边框柔和 */
-  background: var(--igm-panel);
+  background-color: var(--igm-panel);
   -webkit-backdrop-filter: blur(12px) saturate(160%);
   backdrop-filter: blur(12px) saturate(160%);
   border-bottom: 1px solid var(--igm-border);
+  /* 滚动收缩 / 恢复的统一过渡曲线 */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .topnavInner {
@@ -91,6 +93,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 20px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .brand {
@@ -110,6 +115,83 @@
   border-radius: 6px;
   flex-shrink: 0;
   user-select: none;
+}
+
+.brandText {
+  white-space: nowrap;
+}
+
+/* 收缩态专用搜索入口：默认隐藏，仅在滚动收缩的紧凑条形内显示 */
+.navSearch {
+  display: none;
+  align-items: center;
+  gap: 7px;
+  flex: 1;
+  min-width: 0;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border-strong);
+  background-color: var(--igm-surface-subtle);
+  color: var(--igm-text-muted);
+  font-size: 13px;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.navSearch:hover {
+  color: var(--igm-text);
+  border-color: var(--igm-accent);
+  background-color: var(--igm-accent-soft);
+}
+
+.navSearchLabel {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===== 导航滚动收缩态（仅桌面端，移动端保持全宽导航） ===== */
+@media (min-width: 901px) {
+  /* 收缩后外层导航让位：透明化，把视觉焦点交给内部悬浮条形 */
+  .topnav.isScrolledDown {
+    height: 52px;
+    padding-top: 6px;
+    background-color: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-bottom-color: transparent;
+  }
+
+  /* 收缩为居中的紧凑条形：小号 Logo + 搜索 / 命令入口 */
+  .isScrolledDown .topnavInner {
+    max-width: 520px;
+    padding: 0 10px 0 14px;
+    justify-content: center;
+    gap: 12px;
+    border-color: var(--igm-border);
+    background-color: var(--igm-panel);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    backdrop-filter: blur(16px) saturate(160%);
+    box-shadow: var(--igm-shadow-hover);
+  }
+
+  /* 收缩态仅保留 Logo 与搜索入口，其余导航项与操作区隐藏 */
+  .isScrolledDown .brandText,
+  .isScrolledDown .navLinks,
+  .isScrolledDown .navActions {
+    display: none;
+  }
+
+  .isScrolledDown .brandLogo {
+    height: 22px;
+  }
+
+  .isScrolledDown .navSearch {
+    display: inline-flex;
+  }
 }
 
 .navLinks {
@@ -218,7 +300,7 @@
   max-width: 880px;
 }
 
-/* 交互点阵背景画布：铺满 Hero，位于内容之下 */
+/* 交互点阵 / 流体背景：铺满 Hero，位于内容之下 */
 .heroCanvas {
   z-index: 0;
 }
@@ -603,6 +685,10 @@
 
 /* ===== 降低动态偏好：关闭氛围动画 ===== */
 @media (prefers-reduced-motion: reduce) {
+  .topnav,
+  .topnavInner {
+    transition: none;
+  }
   :global(html) {
     scroll-behavior: auto;
   }
