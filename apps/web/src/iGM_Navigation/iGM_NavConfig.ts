@@ -17,6 +17,7 @@ import {
   CalendarCheck,
   CalendarDays,
   CalendarPlus,
+  ClipboardCheck,
   ClipboardList,
   Code2,
   FolderOpen,
@@ -327,6 +328,13 @@ export const iGM_NavGroups: iGM_NavGroup[] = [
             labelKey: "nav.adminUsers",
             roles: ["moderator", "admin"],
             staffOnly: true,
+          },
+          {
+            // 考试系统：命题创作者申请审核（仅 admin 可见；后端 /api/admin/examiner-applications 强制校验）
+            href: "/G_AdminExaminer",
+            icon: ClipboardCheck,
+            labelKey: "nav.adminExaminer",
+            roles: ["admin"],
           },
           {
             // 模块二十五：系统面板（系统信息 + 邮件测试）

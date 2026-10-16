@@ -3,54 +3,8 @@
     "name": "iGCraftLit Community",
     "tagline": "面向创作者的极简社区空间"
   },
-  "ai": {
-    "widget": {
-      "title": "iGM StarWhisper",
-      "open": "打开 iGM StarWhisper",
-      "close": "关闭",
-      "send": "发送",
-      "stopGenerating": "停止生成",
-      "copyCode": "复制",
-      "copiedCode": "已复制",
-      "placeholder": "输入你的问题…",
-      "empty": "你好，我是 iGM StarWhisper（iGCraftLit 社区官方助手），有什么可以帮你？",
-      "loadingHistory": "正在加载历史对话…",
-      "thinking": "AI 思考中...",
-      "loginRequired": "请先登录账号后使用 AI 助手",
-      "goLogin": "去登录",
-      "modelInfo": "Model Info",
-      "modelLocal": "Local",
-      "modelCloud": "Cloud",
-      "sessions": "会话记录",
-      "newConversation": "新建会话",
-      "sessionsEmpty": "暂无历史会话",
-      "sessionUntitled": "新会话",
-      "capability": "可回答站内问题与通用知识 · 无法访问外部网站 · 不回答敏感话题",
-      "accountIsolation": "当前对话仅对当前账号可见",
-      "modelStandard": "标准版",
-      "modelPro": "Pro 版",
-      "modelProHint": "更强推理",
-      "generatedBy": "由 {model} 生成"
-    },
-    "notice": {
-      "timeout": "AI 响应超时，已根据生成内容扣费，本次回答未完整输出。",
-      "truncated": "内容超过最大字数 5000 字限制，已自动截断并扣费。"
-    },
-    "errors": {
-      "network": "无法连接服务，请检查网络后重试",
-      "timeout": "AI 响应超时，已根据生成内容扣费，本次回答未完整输出",
-      "authError": "AI 服务配置错误",
-      "busy": "提问过于频繁，请稍后再试",
-      "upstream": "AI 暂时无法响应，请稍后重试",
-      "generic": "出现未知问题，请稍后重试",
-      "emptyMessage": "请输入内容后再发送",
-      "messageTooLong": "内容过长，请精简后再发送",
-      "conversationNotFound": "对话记录不存在或已失效",
-      "quotaInsufficient": "UQ 与 Coin 余额均不足，完成任务或充值后可继续使用。",
-      "quotaUserNotFound": "账户不存在或已被删除，请重新登录"
-    }
-  },
   "nav": {
+    "adminExaminer": "命题创作者申请",
     "groupMain": "主页",
     "groupCommunity": "社区",
     "groupPersonal": "个人",
@@ -273,6 +227,10 @@
     }
   },
   "pages": {
+    "adminExaminer": {
+      "title": "命题创作者申请审核",
+      "description": "查看并审核命题创作者申请，通过后自动授予命题创作者资格与命题者编号。"
+    },
     "search": {
       "title": "全站搜索",
       "description": "搜索社区内的帖子、资源、用户与组织"
@@ -328,12 +286,6 @@
     "checkin": {
       "title": "每日签到",
       "description": "连续签到赢取额外积分"
-    },
-    "accountRecharge": {
-      "title": "充值 SPR",
-      "description": "SPR（Stellar Premium Reserve）为 iGM StarWhisper Premium 通道（DeepSeek Flash）的付费额度，1 SPR = 1 元",
-      "badge": "即将开放",
-      "comingSoon": "充值通道正在建设中，开放后即可在此购买 SPR，敬请期待"
     },
     "levels": {
       "title": "等级与考核",
@@ -1700,6 +1652,51 @@
     "empty": "暂无排行数据"
   },
   "admin": {
+    "examiner": {
+      "filters": {
+        "all": "全部",
+        "pending": "待审核",
+        "approved": "已通过",
+        "rejected": "已拒绝"
+      },
+      "searchPlaceholder": "搜索用户名、真实姓名或联系方式",
+      "search": "检索",
+      "status": {
+        "pending": "待审核",
+        "approved": "已通过",
+        "rejected": "已拒绝"
+      },
+      "applicant": "申请人",
+      "uid": "UID",
+      "realName": "真实姓名",
+      "contact": "联系方式",
+      "email": "邮箱",
+      "submittedAt": "申请时间",
+      "viewDetail": "查看详情",
+      "approve": "通过",
+      "approveConfirm": "确认通过 {name} 的命题创作者申请？通过后将自动授予资格并分配命题者编号。",
+      "reject": "拒绝",
+      "detailTitle": "申请详情",
+      "bio": "个人简介",
+      "directions": "命题方向",
+      "portfolio": "过往作品链接",
+      "reason": "申请理由",
+      "agreedToRules": "已同意命题创作者规范",
+      "yes": "是",
+      "no": "否",
+      "reviewLog": "审核日志",
+      "reviewerName": "审核人",
+      "reviewedAt": "审核时间",
+      "reviewComment": "审核意见",
+      "noComment": "无",
+      "rejectTitle": "拒绝申请",
+      "rejectReasonPlaceholder": "请填写拒绝理由，将展示给申请人",
+      "rejectReasonRequired": "请填写拒绝理由",
+      "rejectConfirm": "确认拒绝",
+      "cancel": "取消",
+      "close": "关闭",
+      "empty": "暂无命题创作者申请"
+    },
     "panel": {
       "readonlyNotice": "你当前以受信任组织负责人身份访问：仅可查看与本组织相关的内容，审核操作不可用。",
       "tabs": {
@@ -1752,35 +1749,6 @@
           "sdk": "SDK 调用量",
           "app": "应用调用量"
         }
-      },
-      "aiStats": {
-        "title": "AI 调用额度统计",
-        "uprChannel": "UPR 通道",
-        "sprChannel": "SPR 通道",
-        "totalCalls": "总调用次数",
-        "totalConsumedUpr": "总消耗 UPR",
-        "totalConsumedSpr": "总消耗 SPR",
-        "todayConsumedUpr": "当日消耗 UPR",
-        "todayConsumedSpr": "当日消耗 SPR",
-        "totalRevenue": "总收入（元）",
-        "topUprUsers": "UPR 消耗排行 Top 10",
-        "topSprUsers": "SPR 消耗排行 Top 10",
-        "topUsersEmpty": "所选时间范围内暂无 AI 调用记录",
-        "calls": "调用次数",
-        "rangeDay": "日",
-        "rangeWeek": "周",
-        "rangeMonth": "月",
-        "uqChannel": "UQ 通道",
-        "totalConsumedUq": "总消耗 UQ",
-        "todayConsumedUq": "当日消耗 UQ",
-        "topUqUsers": "UQ 消耗排行 Top 10",
-        "coinChannel": "Coin 通道",
-        "totalConsumedCoin": "总消耗 Coin",
-        "todayConsumedCoin": "当日消耗 Coin",
-        "topCoinUsers": "Coin 消耗排行 Top 10",
-        "modelUsage": "模型调用量",
-        "modelStandard": "标准版",
-        "modelPro": "Pro 版"
       }
     },
     "overview": {

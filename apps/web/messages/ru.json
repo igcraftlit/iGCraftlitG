@@ -3,54 +3,8 @@
     "name": "iGCraftLit Community",
     "tagline": "Минималистичное сообщество для авторов"
   },
-  "ai": {
-    "widget": {
-      "title": "iGM StarWhisper",
-      "open": "Открыть iGM StarWhisper",
-      "close": "Закрыть",
-      "send": "Отправить",
-      "stopGenerating": "Остановить генерацию",
-      "copyCode": "Копировать",
-      "copiedCode": "Скопировано",
-      "placeholder": "Введите ваш вопрос…",
-      "empty": "Здравствуйте! Я iGM StarWhisper — официальный помощник сообщества iGCraftLit. Чем могу помочь?",
-      "loadingHistory": "Загрузка истории диалога…",
-      "thinking": "AI думает...",
-      "loginRequired": "Сначала войдите в аккаунт, чтобы использовать ИИ-помощника",
-      "goLogin": "Войти",
-      "modelInfo": "Model Info",
-      "modelLocal": "Local",
-      "modelCloud": "Cloud",
-      "sessions": "Диалоги",
-      "newConversation": "Новый диалог",
-      "sessionsEmpty": "Истории диалогов пока нет",
-      "sessionUntitled": "Новый диалог",
-      "capability": "Отвечает на вопросы о сайте и общие знания · Нет доступа к внешним сайтам · Не отвечает на чувствительные темы",
-      "accountIsolation": "Этот диалог виден только с вашего аккаунта",
-      "modelStandard": "Стандартная",
-      "modelPro": "Pro",
-      "modelProHint": "Улучшенные рассуждения",
-      "generatedBy": "Создано {model}"
-    },
-    "notice": {
-      "timeout": "AI не ответил вовремя. Списание произведено за сгенерированный текст, ответ неполный.",
-      "truncated": "Текст превысил лимит в 5000 символов: он был автоматически обрезан, списание произведено."
-    },
-    "errors": {
-      "network": "Не удаётся подключиться к сервису. Проверьте сеть и повторите попытку",
-      "timeout": "AI не ответил вовремя. Списание произведено за сгенерированный текст, ответ неполный",
-      "authError": "Ошибка конфигурации AI-сервиса",
-      "busy": "Слишком много запросов. Повторите попытку позже",
-      "upstream": "AI временно недоступен. Повторите попытку позже",
-      "generic": "Произошла неизвестная ошибка. Повторите попытку позже",
-      "emptyMessage": "Сначала введите сообщение",
-      "messageTooLong": "Сообщение слишком длинное. Сократите его и повторите попытку",
-      "conversationNotFound": "Диалог не существует или больше недоступен",
-      "quotaInsufficient": "Баланс UQ и Coin недостаточен. Выполните задания или пополните счёт.",
-      "quotaUserNotFound": "Аккаунт не найден или удалён. Войдите снова"
-    }
-  },
   "nav": {
+    "adminExaminer": "Заявки авторов",
     "groupMain": "Главное",
     "groupCommunity": "Сообщество",
     "groupPersonal": "Личное",
@@ -273,6 +227,10 @@
     }
   },
   "pages": {
+    "adminExaminer": {
+      "title": "Проверка заявок авторов",
+      "description": "Проверяйте заявки авторов. При одобрении статус и номер автора выдаются автоматически."
+    },
     "search": {
       "title": "Поиск по сайту",
       "description": "Поиск постов, ресурсов, пользователей и организаций в сообществе"
@@ -328,12 +286,6 @@
     "checkin": {
       "title": "Ежедневная отметка",
       "description": "Отмечайтесь подряд и получайте бонусные баллы"
-    },
-    "accountRecharge": {
-      "title": "Пополнить SPR",
-      "description": "SPR (Stellar Premium Reserve) — платный лимит канала iGM StarWhisper Premium (DeepSeek Flash). 1 SPR = 1 юань",
-      "badge": "Скоро",
-      "comingSoon": "Канал пополнения находится в разработке. После запуска здесь можно будет приобрести SPR"
     },
     "levels": {
       "title": "Уровни и экзамены",
@@ -1700,6 +1652,51 @@
     "empty": "Данных рейтинга пока нет"
   },
   "admin": {
+    "examiner": {
+      "filters": {
+        "all": "Все",
+        "pending": "На проверке",
+        "approved": "Одобрено",
+        "rejected": "Отклонено"
+      },
+      "searchPlaceholder": "Поиск по имени пользователя, ФИО или контакту",
+      "search": "Найти",
+      "status": {
+        "pending": "На проверке",
+        "approved": "Одобрено",
+        "rejected": "Отклонено"
+      },
+      "applicant": "Заявитель",
+      "uid": "UID",
+      "realName": "ФИО",
+      "contact": "Контакт",
+      "email": "Эл. почта",
+      "submittedAt": "Дата подачи",
+      "viewDetail": "Подробнее",
+      "approve": "Одобрить",
+      "approveConfirm": "Одобрить заявку {name}? Статус и номер автора будут выданы автоматически.",
+      "reject": "Отклонить",
+      "detailTitle": "Детали заявки",
+      "bio": "О себе",
+      "directions": "Направления",
+      "portfolio": "Ссылка на работы",
+      "reason": "Причина заявки",
+      "agreedToRules": "Согласие с правилами",
+      "yes": "Да",
+      "no": "Нет",
+      "reviewLog": "Журнал проверки",
+      "reviewerName": "Проверяющий",
+      "reviewedAt": "Время проверки",
+      "reviewComment": "Комментарий",
+      "noComment": "Нет",
+      "rejectTitle": "Отклонить заявку",
+      "rejectReasonPlaceholder": "Укажите причину отказа (будет показана заявителю)",
+      "rejectReasonRequired": "Укажите причину отказа",
+      "rejectConfirm": "Подтвердить отказ",
+      "cancel": "Отмена",
+      "close": "Закрыть",
+      "empty": "Заявок авторов пока нет"
+    },
     "panel": {
       "readonlyNotice": "Вы вошли как владелец доверенной организации: доступен только просмотр данных, связанных с вашей организацией; действия модерации недоступны.",
       "tabs": {
@@ -1752,35 +1749,6 @@
           "sdk": "Вызовы SDK",
           "app": "Вызовы приложений"
         }
-      },
-      "aiStats": {
-        "title": "Статистика вызовов AI",
-        "uprChannel": "Канал UPR",
-        "sprChannel": "Канал SPR",
-        "totalCalls": "Всего вызовов",
-        "totalConsumedUpr": "Всего потрачено UPR",
-        "totalConsumedSpr": "Всего потрачено SPR",
-        "todayConsumedUpr": "Потрачено UPR сегодня",
-        "todayConsumedSpr": "Потрачено SPR сегодня",
-        "totalRevenue": "Общий доход (CNY)",
-        "topUprUsers": "Топ-10 по UPR",
-        "topSprUsers": "Топ-10 по SPR",
-        "topUsersEmpty": "За выбранный период нет записей о вызовах AI",
-        "calls": "Вызовов",
-        "rangeDay": "День",
-        "rangeWeek": "Неделя",
-        "rangeMonth": "Месяц",
-        "uqChannel": "Канал UQ",
-        "totalConsumedUq": "Всего потрачено UQ",
-        "todayConsumedUq": "Потрачено UQ сегодня",
-        "topUqUsers": "Топ-10 по UQ",
-        "coinChannel": "Канал Coin",
-        "totalConsumedCoin": "Всего потрачено Coin",
-        "todayConsumedCoin": "Потрачено Coin сегодня",
-        "topCoinUsers": "Топ-10 по Coin",
-        "modelUsage": "Использование моделей",
-        "modelStandard": "Стандартная",
-        "modelPro": "Pro"
       }
     },
     "overview": {

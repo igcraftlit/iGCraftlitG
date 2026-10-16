@@ -43,13 +43,6 @@
 }
 
 /* ============================= 页头操作 ============================= */
-.headActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: -12px 0 22px;
-}
-
 .presetsBtn {
   display: inline-flex;
   align-items: center;
@@ -67,30 +60,6 @@
 .presetsBtn:hover {
   border-color: var(--igm-copper);
   background: color-mix(in srgb, var(--igm-gold) 12%, transparent);
-}
-
-/* AI 查找亮点题目按钮 */
-.aiSelectBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 8px 16px;
-  border: 1px solid var(--igm-copper);
-  border-radius: var(--igm-radius);
-  background: transparent;
-  color: var(--igm-copper);
-  font-size: 12px;
-  cursor: pointer;
-  transition: border-color 0.16s ease, background 0.16s ease;
-}
-
-.aiSelectBtn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--igm-gold) 14%, transparent);
-}
-
-.aiSelectBtn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 /* ============================= 准入提示 ============================= */

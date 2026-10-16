@@ -15,11 +15,12 @@ uploads/
 *.tsbuildinfo
 scripts/logs/
 iGM_Server/logs/
+apps/exam/logs/
 screenshots/
 RUN.txt
 # 文档资料：第三方二进制包不入库
 docs/*.jar
-# AI 本地模型缓存：运行时下载产物，不入库
+# 本地后端运行时缓存：不入库
 iGM_Server/.models/
 # 教育考试子站点：PDF.js Worker 为构建期复制产物，不入库
 apps/exam/public/pdf.worker.min.mjs

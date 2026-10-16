@@ -5,9 +5,10 @@
  * 模块：iGM_ExaminerRepository
  * 作用：iGM_Examiners 命题创作者表的唯一数据访问出口
  * 内容：命题创作者资格读取、写入（分配编号）、撤销
- * 说明：iGM_Examiners 表保留，供命题者编号档案查询（/api/exam/creator/profile）
- *       与撤销资格（/G_Examiner/revoke）使用；
- *       命题创作者申请与命题方预设模块已于 047 迁移移除
+ * 说明：iGM_Examiners 表供命题者编号档案查询（/api/exam/creator/profile）、
+ *       撤销资格（/G_Examiner/revoke）与管理端审核通过授予资格使用；
+ *       iGM_ExaminerApplications 表由 048 迁移创建，供申请提交（G_Examiner）
+ *       与管理端审核列表 / 详情（G_AdminExaminer）使用
  */
 
 // 导入依赖 //
@@ -158,6 +159,89 @@ export async function iGM_UpdateApplicationStatus(
        SET iGM_Status = ?, iGM_ReviewerId = ?, iGM_ReviewComment = ?, iGM_UpdatedAt = ?
      WHERE iGM_Id = ?`,
     [status, reviewerId, reviewComment, now, id],
+  );
+}
+
+/** 申请列表行（关联申请人用户名 / GUID 与审核人用户名） */
+export interface iGM_ExaminerApplicationListRow
+  extends iGM_ExaminerApplicationRow {
+  iGM_ApplicantName: string;
+  iGM_ApplicantUid: string;
+  iGM_ReviewerName: string | null;
+}
+
+/** 申请详情行（附申请人邮箱） */
+export interface iGM_ExaminerApplicationDetailRow
+  extends iGM_ExaminerApplicationListRow {
+  iGM_ApplicantEmail: string;
+}
+
+/** 分页列出申请（可按状态筛选，关键词匹配用户名 / 真实姓名 / 联系方式） */
+export async function iGM_ListApplications(options: {
+  status?: string;
+  q?: string;
+  page: number;
+  pageSize: number;
+}): Promise<{ rows: iGM_ExaminerApplicationListRow[]; total: number }> {
+  const clauses: string[] = [];
+  const params: unknown[] = [];
+  if (options.status) {
+    clauses.push("a.iGM_Status = ?");
+    params.push(options.status);
+  }
+  if (options.q) {
+    clauses.push(
+      "(u.iGM_Username LIKE ? OR a.iGM_RealName LIKE ? OR a.iGM_Contact LIKE ?)",
+    );
+    const like = `%${options.q}%`;
+    params.push(like, like, like);
+  }
+  const where = clauses.length > 0 ? clauses.join(" AND ") : "TRUE";
+  const offset = (options.page - 1) * options.pageSize;
+
+  const rows = (await iGM_Db
+    .query(
+      `SELECT a.*, u.iGM_Username AS iGM_ApplicantName,
+              u.iGM_Uid AS iGM_ApplicantUid,
+              r.iGM_Username AS iGM_ReviewerName
+         FROM iGM_ExaminerApplications a
+         JOIN iGM_Users u ON u.iGM_Id = a.iGM_UserId
+         LEFT JOIN iGM_Users r ON r.iGM_Id = a.iGM_ReviewerId
+        WHERE ${where}
+        ORDER BY a.iGM_CreatedAt DESC, a.iGM_Id DESC
+        LIMIT ? OFFSET ?`,
+    )
+    .all(...params, options.pageSize, offset)) as iGM_ExaminerApplicationListRow[];
+
+  const totalRow = (await iGM_Db
+    .query(
+      `SELECT COUNT(*) AS iGM_Count
+         FROM iGM_ExaminerApplications a
+         JOIN iGM_Users u ON u.iGM_Id = a.iGM_UserId
+        WHERE ${where}`,
+    )
+    .get(...params)) as { iGM_Count: number } | undefined;
+
+  return { rows, total: totalRow?.iGM_Count ?? 0 };
+}
+
+/** 按 ID 读取申请详情（含申请人邮箱与审核人用户名） */
+export async function iGM_FindApplicationDetailById(
+  id: string,
+): Promise<iGM_ExaminerApplicationDetailRow | null> {
+  return (
+    ((await iGM_Db
+      .query(
+        `SELECT a.*, u.iGM_Username AS iGM_ApplicantName,
+                u.iGM_Uid AS iGM_ApplicantUid,
+                u.iGM_Email AS iGM_ApplicantEmail,
+                r.iGM_Username AS iGM_ReviewerName
+           FROM iGM_ExaminerApplications a
+           JOIN iGM_Users u ON u.iGM_Id = a.iGM_UserId
+           LEFT JOIN iGM_Users r ON r.iGM_Id = a.iGM_ReviewerId
+          WHERE a.iGM_Id = ?`,
+      )
+      .get(id)) as iGM_ExaminerApplicationDetailRow | undefined) ?? null
   );
 }
 

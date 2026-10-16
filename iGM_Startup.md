@@ -32,8 +32,6 @@
 | **Node.js** | ≥ 20.0.0 | 前端 Next.js 开发依赖 |
 
 可选：
-- **Ollama + Qwen2.5:7B** — AI 助手 Free 通道（本地）
-- **DeepSeek API Key** — AI 助手 Premium 通道（云端）
 - **cloudflared** — 线上 API 隧道
 
 ---
@@ -148,18 +146,7 @@ exit
 
 ---
 
-## 七、Ollama 本地 AI（可选）
-
-```powershell
-ollama serve
-ollama pull qwen2.5:7b
-ollama list
-exit
-```
-
----
-
-## 八、cloudflared 隧道（可选）
+## 七、cloudflared 隧道（可选）
 
 ```powershell
 cloudflared tunnel run igcraftlit-api
@@ -168,7 +155,7 @@ exit
 
 ---
 
-## 九、常见问题
+## 八、常见问题
 
 ### Q1：后端报 "连接数据库失败"
 
@@ -206,7 +193,7 @@ exit
 
 ---
 
-## 十、项目结构
+## 九、项目结构
 
 ```
 D:/IGWEB/
@@ -224,7 +211,7 @@ D:/IGWEB/
 
 ---
 
-## 十一、命令速查
+## 十、命令速查
 
 | 命令 | 说明 |
 |------|------|
@@ -235,7 +222,7 @@ D:/IGWEB/
 | `bun run db:init` | 初始化数据库 |
 | `bun run db:migrate` | 执行数据库迁移 |
 
-## 十二、地址速查
+## 十一、地址速查
 
 | 服务 | 地址 |
 |------|------|
@@ -252,5 +239,5 @@ D:/IGWEB/
 
 | 类型 | 前缀 | 示例 |
 |------|------|------|
-| 组件 / 服务 / 模块 / 表 | `iGM_` | `iGM_AIChatWidget`, `iGM_Users` |
+| 组件 / 服务 / 模块 / 表 | `iGM_` | `iGM_NotificationService`, `iGM_Users` |
 | 页面 / API 路由 | `G_` | `G_Home`, `G_Auth`, `G_Community` |

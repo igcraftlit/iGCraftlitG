@@ -3,8 +3,8 @@
  * 所属层：后端 / 路由层
  * 路由：/api/question/*
  * 模块：G_Question
- * 作用：题库与题目编辑器接口集合（公开题库、我的题库、AI 分析、增删改、发布）
- * 内容：公开已发布题库分页、我的题目分页、AI 智能分析、创建、更新、删除、发布
+ * 作用：题库与题目编辑器接口集合（公开题库、我的题库、增删改、发布）
+ * 内容：公开已发布题库分页、我的题目分页、创建、更新、删除、发布
  * 约束：统一响应 { success, code, message, data }；公开题库无需登录，其余须登录且
  *       具备命题创作者资格（管理人员放行）；操作者身份一律取自会话，禁止前端传参
  */
@@ -34,10 +34,6 @@ import {
   type iGM_QuestionActor,
   type iGM_QuestionWriteInput,
 } from "../iGM_Services/iGM_QuestionService";
-import {
-  iGM_AnalyzeQuestionService,
-  type iGM_QuestionAnalyzeInput,
-} from "../iGM_Services/iGM_QuestionAnalyzeService";
 import type { iGM_QuestionOption } from "../iGM_Types/iGM_Question";
 
 // 类型定义 //
@@ -144,8 +140,6 @@ function iGM_ReadWriteInput(ctx: iGM_RouteContext): iGM_QuestionWriteInput {
     difficultyCoefficient: iGM_NumberField(body, "difficultyCoefficient"),
     difficultyLevel: iGM_Field(body, "difficultyLevel") || null,
     tags: iGM_StringArrayField(body, "tags"),
-    aiTextbookCode: iGM_Field(body, "aiTextbookCode") || null,
-    aiSource: iGM_Field(body, "aiSource") || null,
   };
 }
 
@@ -182,24 +176,6 @@ async function iGM_HandleMine(ctx: iGM_RouteContext) {
       pageSize,
     }),
   );
-}
-
-/* ---------- AI 智能分析（难度 / 题型 / 标签 / 教材归属 / 建议） ---------- */
-async function iGM_HandleAnalyze(ctx: iGM_RouteContext) {
-  const actor = await iGM_ResolveQuestionActor(ctx);
-  iGM_EnforceRateLimit(
-    ctx,
-    "questionAnalyze",
-    `user:${actor.userId}:${iGM_ClientIp(ctx)}`,
-  );
-  const body = ctx.body;
-  const input: iGM_QuestionAnalyzeInput = {
-    stem: iGM_Field(body, "stem"),
-    options: iGM_QuestionOptionsField(body, "options"),
-    answer: iGM_Field(body, "answer"),
-    analysis: iGM_Field(body, "analysis"),
-  };
-  return iGM_Ok(await iGM_AnalyzeQuestionService(input));
 }
 
 /* ---------- 创建题目（草稿） ---------- */
@@ -269,7 +245,6 @@ async function iGM_HandlePublish(ctx: iGM_RouteContext) {
 export const G_Question = new Elysia({ name: "G_Question" })
   .get("/api/question/list", iGM_HandleList as never)
   .get("/api/question/mine", iGM_HandleMine as never)
-  .post("/api/question/analyze", iGM_HandleAnalyze as never)
   .post("/api/question/create", iGM_HandleCreate as never)
   .post("/api/question/update", iGM_HandleUpdate as never)
   .post("/api/question/delete", iGM_HandleDelete as never)

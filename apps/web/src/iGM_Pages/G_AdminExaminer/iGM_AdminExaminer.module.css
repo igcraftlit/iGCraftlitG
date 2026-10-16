@@ -1,0 +1,197 @@
+/**
+ * 文件路径：apps/web/src/iGM_Pages/G_AdminExaminer/iGM_AdminExaminer.module.css
+ * 所属层：前端 / 页面样式层
+ * 路由：/G_AdminExaminer
+ * 模块：G_AdminExaminer
+ * 作用：命题创作者申请审核面板专属样式（筛选栏、申请摘要、详情弹层、拒绝表单）
+ * 说明：遵循全局 CSS 变量；状态徽标与按钮复用 iGM_Admin.module.css
+ */
+
+/* ===== 状态筛选栏 ===== */
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.filterButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border-strong);
+  background: var(--igm-surface);
+  color: var(--igm-text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.filterButton:hover {
+  background: var(--igm-surface-subtle);
+  color: var(--igm-text);
+}
+
+.filterButtonActive {
+  border-color: var(--igm-accent);
+  background: var(--igm-accent-soft);
+  color: var(--igm-accent);
+}
+
+/* ===== 申请条目 ===== */
+.applicantName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.applicantMeta {
+  font-size: 11px;
+  color: var(--igm-text-subtle);
+}
+
+.detailLine {
+  font-size: 12px;
+  color: var(--igm-text-muted);
+}
+
+/* ===== 详情弹层 ===== */
+.detailOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.detailDialog {
+  width: min(680px, 100%);
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--igm-radius-lg);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-surface);
+  box-shadow: var(--igm-shadow-lg);
+  overflow: hidden;
+}
+
+.detailHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--igm-border);
+}
+
+.detailTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.detailClose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--igm-radius);
+  background: transparent;
+  color: var(--igm-text-muted);
+  cursor: pointer;
+}
+
+.detailClose:hover {
+  background: var(--igm-surface-subtle);
+  color: var(--igm-text);
+}
+
+.detailBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.detailRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detailLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--igm-text-subtle);
+}
+
+.detailValue {
+  font-size: 13px;
+  color: var(--igm-text);
+  word-break: break-word;
+}
+
+.detailPre {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--igm-text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: inherit;
+}
+
+.detailSection {
+  padding-top: 14px;
+  border-top: 1px solid var(--igm-border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.detailSectionTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.detailActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--igm-border);
+}
+
+/* ===== 拒绝表单 ===== */
+.rejectTextarea {
+  width: 100%;
+  min-height: 96px;
+  padding: 8px 10px;
+  font-size: 13px;
+  line-height: 1.6;
+  font-family: inherit;
+  color: var(--igm-text);
+  border-radius: var(--igm-radius);
+  border: 1px solid var(--igm-border-strong);
+  background: var(--igm-surface);
+  resize: vertical;
+}
+
+.rejectTextarea:focus {
+  outline: none;
+  border-color: var(--igm-accent);
+}

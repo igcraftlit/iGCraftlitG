@@ -55,7 +55,7 @@ export class iGM_RequestError extends Error {
 // 核心逻辑 //
 /**
  * 读取持久化在 Cookie 中的界面语言，供后端选择邮件语言；
- * 流式请求（SSE）无法复用 iGM_Request，由 iGM_AIClient 直接引用此函数附带语言头
+ * 请求统一通过 iGM_ReadLocaleCookie 附带语言头
  */
 export function iGM_ReadLocaleCookie(): string {
   if (typeof document === "undefined") return "zh-CN";

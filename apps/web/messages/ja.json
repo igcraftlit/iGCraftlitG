@@ -3,54 +3,8 @@
     "name": "iGCraftLit Community",
     "tagline": "クリエイターのためのミニマルなコミュニティ"
   },
-  "ai": {
-    "widget": {
-      "title": "iGM StarWhisper",
-      "open": "iGM StarWhisper を開く",
-      "close": "閉じる",
-      "send": "送信",
-      "stopGenerating": "生成を停止",
-      "copyCode": "コピー",
-      "copiedCode": "コピーしました",
-      "placeholder": "質問を入力してください…",
-      "empty": "こんにちは、iGCraftLit コミュニティ公式アシスタントの iGM StarWhisper です。ご質問をどうぞ。",
-      "loadingHistory": "会話履歴を読み込み中…",
-      "thinking": "AI 考え中...",
-      "loginRequired": "AI アシスタントを利用するには、先にログインしてください",
-      "goLogin": "ログイン",
-      "modelInfo": "Model Info",
-      "modelLocal": "Local",
-      "modelCloud": "Cloud",
-      "sessions": "会話履歴",
-      "newConversation": "新しい会話",
-      "sessionsEmpty": "会話履歴はまだありません",
-      "sessionUntitled": "新しい会話",
-      "capability": "サイト内の質問と一般知識に回答 · 外部サイトへのアクセス不可 · センシティブな話題には回答しません",
-      "accountIsolation": "この会話は現在のアカウントにのみ表示されます",
-      "modelStandard": "標準版",
-      "modelPro": "Pro 版",
-      "modelProHint": "より強力な推論",
-      "generatedBy": "{model}が生成"
-    },
-    "notice": {
-      "timeout": "AI の応答がタイムアウトしました。生成された内容に応じて課金され、今回の回答は不完全です。",
-      "truncated": "内容が最大 5000 文字の制限を超えたため、自動的に切り詰められ課金されました。"
-    },
-    "errors": {
-      "network": "サービスに接続できません。ネットワークを確認して再試行してください",
-      "timeout": "AI の応答がタイムアウトしました。生成された内容に応じて課金され、今回の回答は不完全です",
-      "authError": "AI サービスの設定エラー",
-      "busy": "リクエストが多すぎます。しばらくしてから再試行してください",
-      "upstream": "AI が一時的に応答できません。しばらくしてから再試行してください",
-      "generic": "不明な問題が発生しました。しばらくしてから再試行してください",
-      "emptyMessage": "内容を入力してから送信してください",
-      "messageTooLong": "内容が長すぎます。短くしてから再送信してください",
-      "conversationNotFound": "会話履歴が存在しないか、無効になりました",
-      "quotaInsufficient": "UQ と Coin の残高が共に不足しています。タスクを完了するかチャージしてください。",
-      "quotaUserNotFound": "アカウントが存在しないか削除されました。再度ログインしてください"
-    }
-  },
   "nav": {
+    "adminExaminer": "出題者申請",
     "groupMain": "メイン",
     "groupCommunity": "コミュニティ",
     "groupPersonal": "個人",
@@ -273,6 +227,10 @@
     }
   },
   "pages": {
+    "adminExaminer": {
+      "title": "出題者申請の審査",
+      "description": "出題者申請を確認・審査します。承認すると出題者資格と出題者番号が自動付与されます。"
+    },
     "search": {
       "title": "サイト内検索",
       "description": "コミュニティ内の投稿・リソース・ユーザー・組織を検索"
@@ -328,12 +286,6 @@
     "checkin": {
       "title": "毎日チェックイン",
       "description": "連続チェックインでボーナスポイントを獲得"
-    },
-    "accountRecharge": {
-      "title": "SPR をチャージ",
-      "description": "SPR（Stellar Premium Reserve）は iGM StarWhisper Premium チャネル（DeepSeek Flash）の有料クォータです。1 SPR = 1 元",
-      "badge": "準備中",
-      "comingSoon": "チャージ機能は準備中です。公開後はこちらで SPR を購入できます"
     },
     "levels": {
       "title": "レベルと審査",
@@ -1700,6 +1652,51 @@
     "empty": "ランキングデータはまだありません"
   },
   "admin": {
+    "examiner": {
+      "filters": {
+        "all": "すべて",
+        "pending": "審査待ち",
+        "approved": "承認済み",
+        "rejected": "却下済み"
+      },
+      "searchPlaceholder": "ユーザー名・氏名・連絡先で検索",
+      "search": "検索",
+      "status": {
+        "pending": "審査待ち",
+        "approved": "承認済み",
+        "rejected": "却下済み"
+      },
+      "applicant": "申請者",
+      "uid": "UID",
+      "realName": "氏名",
+      "contact": "連絡先",
+      "email": "メール",
+      "submittedAt": "申請日時",
+      "viewDetail": "詳細を見る",
+      "approve": "承認",
+      "approveConfirm": "{name} の出題者申請を承認しますか？承認すると出題者資格と出題者番号が自動付与されます。",
+      "reject": "却下",
+      "detailTitle": "申請の詳細",
+      "bio": "自己紹介",
+      "directions": "出題分野",
+      "portfolio": "実績リンク",
+      "reason": "申請理由",
+      "agreedToRules": "出題者規範に同意済み",
+      "yes": "はい",
+      "no": "いいえ",
+      "reviewLog": "審査ログ",
+      "reviewerName": "審査担当",
+      "reviewedAt": "審査日時",
+      "reviewComment": "審査コメント",
+      "noComment": "なし",
+      "rejectTitle": "申請を却下",
+      "rejectReasonPlaceholder": "却下理由を入力してください（申請者に表示されます）",
+      "rejectReasonRequired": "却下理由を入力してください",
+      "rejectConfirm": "却下を確定",
+      "cancel": "キャンセル",
+      "close": "閉じる",
+      "empty": "出題者申請はまだありません"
+    },
     "panel": {
       "readonlyNotice": "現在は信頼組織のオーナーとしてアクセスしています。自組織に関連する情報のみ閲覧でき、審査操作は利用できません。",
       "tabs": {
@@ -1752,35 +1749,6 @@
           "sdk": "SDK 呼び出し数",
           "app": "アプリ呼び出し数"
         }
-      },
-      "aiStats": {
-        "title": "AI 呼び出し・クォータ統計",
-        "uprChannel": "UPR チャンネル",
-        "sprChannel": "SPR チャンネル",
-        "totalCalls": "総呼び出し回数",
-        "totalConsumedUpr": "総消費 UPR",
-        "totalConsumedSpr": "総消費 SPR",
-        "todayConsumedUpr": "当日消費 UPR",
-        "todayConsumedSpr": "当日消費 SPR",
-        "totalRevenue": "総収入（元）",
-        "topUprUsers": "UPR 消費ユーザー Top 10",
-        "topSprUsers": "SPR 消費ユーザー Top 10",
-        "topUsersEmpty": "選択した期間に AI 呼び出し記録はありません",
-        "calls": "呼び出し回数",
-        "rangeDay": "日",
-        "rangeWeek": "週",
-        "rangeMonth": "月",
-        "uqChannel": "UQ チャンネル",
-        "totalConsumedUq": "総消費 UQ",
-        "todayConsumedUq": "当日消費 UQ",
-        "topUqUsers": "UQ 消費ユーザー Top 10",
-        "coinChannel": "Coin チャンネル",
-        "totalConsumedCoin": "総消費 Coin",
-        "todayConsumedCoin": "当日消費 Coin",
-        "topCoinUsers": "Coin 消費ユーザー Top 10",
-        "modelUsage": "モデル呼び出し量",
-        "modelStandard": "標準版",
-        "modelPro": "Pro 版"
       }
     },
     "overview": {

@@ -22,7 +22,6 @@ import {
   Code2,
   KeySquare,
   LoaderCircle,
-  Sparkles,
   UserCheck,
   Users,
 } from "lucide-react";
@@ -31,17 +30,10 @@ import { iGM_AdminTabs as IGM_AdminTabs } from "../../iGM_Components/iGM_AdminPa
 import { iGM_DeveloperReviewPanel as IGM_DeveloperReviewPanel } from "../G_DeveloperReview/iGM_DeveloperReviewPage";
 import { iGM_AdminOAuthPanel as IGM_AdminOAuthPanel } from "../G_AdminOAuth/iGM_AdminOAuthPage";
 import { iGM_UseLocale } from "../../iGM_Providers/iGM_LocaleProvider";
+import { iGM_FormatDateTime } from "../../iGM_Components/iGM_Format/iGM_Format";
 import {
-  iGM_FormatDateTime,
-  iGM_FormatQuota,
-} from "../../iGM_Components/iGM_Format/iGM_Format";
-import {
-  iGM_ApiAdminAICallStats,
   iGM_ApiAdminDeveloperAccounts,
   iGM_ApiAdminDeveloperCallStats,
-  type iGM_AICallStats,
-  type iGM_AICallStatsRange,
-  type iGM_AICallStatsUser,
   type iGM_DeveloperAccount,
   type iGM_DeveloperCallStats,
 } from "../../iGM_Services/iGM_AdminClient";
@@ -129,11 +121,9 @@ function iGM_DeveloperAccountsInner() {
   );
 }
 
-/** 调用量监测 Tab 主体：时间范围筛选 + 通道汇总 + 按日条形 + 应用 Top + AI 调用统计 */
+/** 调用量监测 Tab 主体：时间范围筛选 + 通道汇总 + 按日条形 + 应用 Top */
 function iGM_DeveloperCallStatsInner() {
   const t = useTranslations();
-  // JSX 组件标签须大写开头（同文件局部组件大写别名）
-  const IGM_AICallStatsInner = iGM_AICallStatsInner;
 
   const [range, setRange] = useState<iGM_StatsRange>(7);
   const [stats, setStats] = useState<iGM_DeveloperCallStats | null>(null);
@@ -294,210 +284,6 @@ function iGM_DeveloperCallStatsInner() {
           </section>
         </>
       )}
-
-      {/* AI 赋能系统重构：AI 双币种调用统计（UQ / Coin）+ 双模型调用量，独立数据源与时间范围 */}
-      <IGM_AICallStatsInner />
-    </div>
-  );
-}
-
-/** AI 调用统计时间范围的语言包键映射 */
-const iGM_AIRangeLabelKeys: Record<iGM_AICallStatsRange, string> = {
-  day: "admin.developer.aiStats.rangeDay",
-  week: "admin.developer.aiStats.rangeWeek",
-  month: "admin.developer.aiStats.rangeMonth",
-};
-
-/**
- * AI 赋能系统重构：AI 双币种调用统计面板
- * 数据聚合自 iGM_UQTransactions（常规额度）与 iGM_CoinTransactions（社区币）：
- * UQ 组（总调用次数 / 总消耗 / 当日消耗）、Coin 组（同口径）
- * 以及两组消耗排行 Top 10，另加双模型（标准版 / Pro 版）调用量
- */
-function iGM_AICallStatsInner() {
-  const t = useTranslations();
-  // JSX 组件标签须大写开头（同文件局部组件大写别名）
-  const IGM_AITopList = iGM_AITopList;
-
-  const [range, setRange] = useState<iGM_AICallStatsRange>("day");
-  const [stats, setStats] = useState<iGM_AICallStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [loadFailed, setLoadFailed] = useState(false);
-
-  const iGM_Load = useCallback((next: iGM_AICallStatsRange) => {
-    setLoading(true);
-    setLoadFailed(false);
-    iGM_ApiAdminAICallStats(next)
-      .then((response) => {
-        if (response.data) setStats(response.data);
-      })
-      .catch(() => setLoadFailed(true))
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    iGM_Load("day");
-  }, [iGM_Load]);
-
-  return (
-    <section className={uiStyles.sectionCard}>
-      <h2 className={uiStyles.sectionTitle}>
-        <span className={uiStyles.sectionTitleIcon}>
-          <Sparkles size={16} />
-        </span>
-        {t("admin.developer.aiStats.title")}
-      </h2>
-
-      {/* 时间范围筛选：日 / 周 / 月 */}
-      <div className={uiStyles.chips}>
-        {(["day", "week", "month"] as iGM_AICallStatsRange[]).map((item) => (
-          <button
-            key={item}
-            type="button"
-            className={`${uiStyles.chip} ${range === item ? uiStyles.chipActive : ""}`}
-            onClick={() => {
-              setRange(item);
-              iGM_Load(item);
-            }}
-          >
-            {t(iGM_AIRangeLabelKeys[item])}
-          </button>
-        ))}
-      </div>
-
-      {loading ? (
-        <div className={uiStyles.stateBox}>
-          <LoaderCircle size={16} className="igm-spin" />
-          {t("community.state.loading")}
-        </div>
-      ) : loadFailed || !stats ? (
-        <div className={`${uiStyles.alert} ${uiStyles.alertError}`}>
-          {t("admin.errors.loadFailed")}
-        </div>
-      ) : (
-        <>
-          {/* UQ 通道（常规额度）：总调用次数 / 总消耗 / 当日消耗 */}
-          <h3 className={styles.aiChannelTitle}>
-            {t("admin.developer.aiStats.uqChannel")}
-          </h3>
-          <div className={styles.statsGrid}>
-            <div className={tileStyles.statTile}>
-              <span className={tileStyles.statLabel}>
-                {t("admin.developer.aiStats.totalCalls")}
-              </span>
-              <span className={tileStyles.statValue}>{stats.uq.totalCalls}</span>
-            </div>
-            <div className={tileStyles.statTile}>
-              <span className={tileStyles.statLabel}>
-                {t("admin.developer.aiStats.totalConsumedUq")}
-              </span>
-              <span className={tileStyles.statValue}>
-                {iGM_FormatQuota(stats.uq.totalConsumed)}
-              </span>
-            </div>
-            <div className={tileStyles.statTile}>
-              <span className={tileStyles.statLabel}>
-                {t("admin.developer.aiStats.todayConsumedUq")}
-              </span>
-              <span className={tileStyles.statValue}>
-                {iGM_FormatQuota(stats.uq.todayConsumed)}
-              </span>
-            </div>
-          </div>
-
-          <h3 className={styles.aiTopTitle}>
-            {t("admin.developer.aiStats.topUqUsers")}
-          </h3>
-          <IGM_AITopList users={stats.topUqUsers} unit="UQ" />
-
-          {/* Coin 通道（社区币）：总调用次数 / 总消耗 / 当日消耗 */}
-          <h3 className={styles.aiChannelTitle}>
-            {t("admin.developer.aiStats.coinChannel")}
-          </h3>
-          <div className={styles.statsGrid}>
-            <div className={tileStyles.statTile}>
-              <span className={tileStyles.statLabel}>
-                {t("admin.developer.aiStats.totalCalls")}
-              </span>
-              <span className={tileStyles.statValue}>{stats.coin.totalCalls}</span>
-            </div>
-            <div className={tileStyles.statTile}>
-              <span className={tileStyles.statLabel}>
-                {t("admin.developer.aiStats.totalConsumedCoin")}
-              </span>
-              <span className={tileStyles.statValue}>
-                {iGM_FormatQuota(stats.coin.totalConsumed)}
-              </span>
-            </div>
-            <div className={tileStyles.statTile}>
-              <span className={tileStyles.statLabel}>
-                {t("admin.developer.aiStats.todayConsumedCoin")}
-              </span>
-              <span className={tileStyles.statValue}>
-                {iGM_FormatQuota(stats.coin.todayConsumed)}
-              </span>
-            </div>
-          </div>
-
-          <h3 className={styles.aiTopTitle}>
-            {t("admin.developer.aiStats.topCoinUsers")}
-          </h3>
-          <IGM_AITopList users={stats.topCoinUsers} unit="Coin" />
-
-          {/* 双模型调用量：标准版（qwen2.5:7b）/ Pro 版（deepseek-r1:7b） */}
-          <h3 className={styles.aiChannelTitle}>
-            {t("admin.developer.aiStats.modelUsage")}
-          </h3>
-          <div className={styles.statsGrid}>
-            <div className={tileStyles.statTile}>
-              <span className={tileStyles.statLabel}>
-                {t("admin.developer.aiStats.modelStandard")}
-              </span>
-              <span className={tileStyles.statValue}>{stats.models.standard}</span>
-            </div>
-            <div className={tileStyles.statTile}>
-              <span className={tileStyles.statLabel}>
-                {t("admin.developer.aiStats.modelPro")}
-              </span>
-              <span className={tileStyles.statValue}>{stats.models.pro}</span>
-            </div>
-          </div>
-        </>
-      )}
-    </section>
-  );
-}
-
-/** 双币种共用的消耗排行 Top 10 列表 */
-function iGM_AITopList({ users, unit }: { users: iGM_AICallStatsUser[]; unit: string }) {
-  const t = useTranslations();
-
-  if (users.length === 0) {
-    return (
-      <div className={uiStyles.stateBox}>
-        {t("admin.developer.aiStats.topUsersEmpty")}
-      </div>
-    );
-  }
-
-  return (
-    <div className={tileStyles.recordList}>
-      {users.map((user) => (
-        <div key={user.userId} className={tileStyles.recordRow}>
-          <div className={tileStyles.recordMain}>
-            <span className={tileStyles.recordAction}>
-              {user.displayName ?? user.username}
-              <span className={styles.metaSub}>@{user.username}</span>
-            </span>
-            <span className={styles.metaLine}>
-              {t("admin.developer.aiStats.calls")}：{user.calls}
-            </span>
-          </div>
-          <span className={styles.clientCount}>
-            {iGM_FormatQuota(user.consumed)} {unit}
-          </span>
-        </div>
-      ))}
     </div>
   );
 }

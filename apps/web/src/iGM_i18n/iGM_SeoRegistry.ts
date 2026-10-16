@@ -63,6 +63,8 @@ export const iGM_SeoDisallowPatterns = [
   "/*/G_AdminModeration",
   "/*/G_AdminSystem",
   "/*/G_AdminDeveloper",
+  // 考试系统：命题创作者申请审核页（仅 admin，不收录）
+  "/*/G_AdminExaminer",
   "/*/G_Auth",
   "/*/G_Settings",
   "/*/G_Notification",

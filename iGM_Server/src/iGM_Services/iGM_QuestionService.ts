@@ -7,8 +7,7 @@
  * 内容：题目业务错误类型、字段校验（题干 / 题型 / 教材必填）、教材名称服务端派生、
  *       归属校验、创建（草稿）、更新（保持状态）、删除、发布、公开题库与我的题库分页，
  *       已发布集合变更后触发静态导出
- * 说明：教材名称一律按教材编码在服务端派生，忽略前端传入值；
- *       是否为「人工调整」由 AI 建议编码与最终编码是否不一致自动计算
+ * 说明：教材名称一律按教材编码在服务端派生，忽略前端传入值
  */
 
 // 导入依赖 //
@@ -71,8 +70,6 @@ export interface iGM_QuestionWriteInput {
   difficultyCoefficient: number | null;
   difficultyLevel: string | null;
   tags: string[];
-  aiTextbookCode: string | null;
-  aiSource: string | null;
 }
 
 /** 分页列表结果 */
@@ -124,9 +121,6 @@ export function iGM_ToQuestionDto(row: iGM_QuestionRow): iGM_QuestionDto {
       : null,
     tags: iGM_SplitCommaList(row.iGM_Tags ?? ""),
     status: iGM_IsQuestionStatus(row.iGM_Status) ? row.iGM_Status : "draft",
-    aiTextbookCode: row.iGM_AiTextbookCode,
-    aiSource: row.iGM_AiSource,
-    adjustedByUser: row.iGM_AdjustedByUser,
     createdAt: row.iGM_CreatedAt,
     updatedAt: row.iGM_UpdatedAt,
   };
@@ -156,7 +150,7 @@ function iGM_AssertWriteInput(input: iGM_QuestionWriteInput): string {
   return input.textbookCode;
 }
 
-/** 组装可写字段（教材名称服务端派生、人工调整标记自动计算） */
+/** 组装可写字段（教材名称服务端派生） */
 function iGM_BuildWriteFields(
   input: iGM_QuestionWriteInput,
 ): {
@@ -166,14 +160,12 @@ function iGM_BuildWriteFields(
   difficultyLevel: iGM_QuestionDifficultyLevel;
   tags: string;
   options: string;
-  adjustedByUser: boolean;
 } {
   const textbookCode = iGM_AssertWriteInput(input);
   const coefficient = iGM_ClampCoefficient(input.difficultyCoefficient);
   const difficultyLevel = iGM_IsDifficultyLevel(input.difficultyLevel)
     ? input.difficultyLevel
     : iGM_NormalizeDifficultyLevel(coefficient);
-  const aiCode = input.aiTextbookCode ? input.aiTextbookCode.trim() : "";
   return {
     textbookCode,
     textbookName: iGM_ResolveTextbookName(textbookCode),
@@ -183,7 +175,6 @@ function iGM_BuildWriteFields(
       input.tags.map((tag) => tag.trim()).filter(Boolean),
     ),
     options: iGM_SerializeQuestionOptions(input.options),
-    adjustedByUser: aiCode.length > 0 && textbookCode !== aiCode,
   };
 }
 
@@ -233,9 +224,6 @@ export async function iGM_CreateQuestionService(
     difficultyCoefficient: fields.difficultyCoefficient,
     difficultyLevel: fields.difficultyLevel,
     tags: fields.tags,
-    aiTextbookCode: input.aiTextbookCode ? input.aiTextbookCode.trim() : null,
-    aiSource: input.aiSource ? input.aiSource.trim() : null,
-    adjustedByUser: fields.adjustedByUser,
     status: "draft",
   });
   return iGM_ToQuestionDto(row);
@@ -264,9 +252,6 @@ export async function iGM_UpdateQuestionService(
     difficultyCoefficient: fields.difficultyCoefficient,
     difficultyLevel: fields.difficultyLevel,
     tags: fields.tags,
-    aiTextbookCode: input.aiTextbookCode ? input.aiTextbookCode.trim() : null,
-    aiSource: input.aiSource ? input.aiSource.trim() : null,
-    adjustedByUser: fields.adjustedByUser,
   });
   const updated = await iGM_FindQuestionById(questionId);
   if (existing.iGM_Status === "published") {

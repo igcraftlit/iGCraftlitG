@@ -8,9 +8,7 @@
  *       邮箱验证码与重置令牌时效、基础限流参数、163 邮箱 SMTP 邮件配置、
  *       模块四本地文件上传存储配置、模块十七 Minecraft 本体下载配置、
  *       模块二十第三方资源（Modrinth）接入配置、
- *       AI 赋能系统模块一 DeepSeek 对话配置、
- *       AI 赋能系统模块三双通道（本地 Qwen / DeepSeek）+ UPR / SPR 双额度配置、
- *       AI 助手双模型（标准版 qwen2.5:7b / Pro 版 deepseek-r1:7b）档位解析
+ *       账户额度配置（UQ / Coin 注册赠送）
  */
 
 // 导入依赖 //
@@ -188,48 +186,15 @@ export interface iGM_ExamOAuthClientConfig {
   appName: string;
 }
 
-/** 本地 AI 模型通道：Ollama 部署，OpenAI 兼容端点（标准版 + Pro 版双模型） */
-export interface iGM_AIChannelConfig {
-  /** OpenAI 兼容基础地址（含 /v1，不含结尾斜杠） */
-  apiBase: string;
-  /** 标准版底层 Ollama 实际模型名（如 qwen2.5:7b） */
-  model: string;
-  /** 标准版对外展示模型名（Chat iGM Nove V0.1） */
-  displayName: string;
-  /** 标准版单次上游请求超时（毫秒），本地模型冷启动较慢，默认 90 秒 */
-  timeoutMs: number;
-  /** Pro 版底层 Ollama 实际模型名（如 deepseek-r1:7b） */
-  proModel: string;
-  /** Pro 版对外展示模型名（Chat iGM Nove V0.1 Pro） */
-  proDisplayName: string;
-  /** Pro 版单次上游请求超时（毫秒），推理模型更慢，默认 120 秒 */
-  proTimeoutMs: number;
-}
-
 /**
- * AI 赋能系统重构（单通道 + UQ/Coin 双币种 + 高峰/非高峰计费）
- * 说明：仅保留本地 Ollama 单通道（原 UPR/SPR/DeepSeek 全部废弃）；
- *       计费规则：优先扣 UQ（免费额度 10），不足时自动扣 Coin（社区币 5）；
- *       高峰时段 Coin 单价 = 非高峰 × 1.5；
- *       不接 RAG / 向量库，通过 System Prompt 限定回答范围
+ * UQ / Coin 双币种账户配置
+ * 说明：AI 功能模块已整体移除，此处仅保留账户体系所需的注册赠送额度
  */
-export interface iGM_AIConfig {
-  /** 本地 Ollama 单通道 */
-  channel: iGM_AIChannelConfig;
-  /** 拼接上下文时携带的历史消息条数上限 */
-  maxHistoryMessages: number;
-  /** 单条用户消息长度上限（字符数） */
-  maxMessageLength: number;
-  /** 单次 AI 回答最大字数上限（超出自动截断并按已生成内容扣费） */
-  maxAnswerLength: number;
-  /** 上游单次生成上限（max_tokens） */
-  maxAnswerTokens: number;
+export interface iGM_QuotaConfig {
   /** UQ：新用户注册免费赠送（用户表 iGM_UqBalance 默认值） */
   uqRegisterGift: number;
   /** Coin：新用户注册免费赠送（用户表 iGM_CoinBalance 默认值） */
   coinRegisterGift: number;
-  /** 提问固定扣费（每次 0.02，优先扣 UQ） */
-  questionFixedCost: number;
 }
 
 export interface iGM_AppConfig {
@@ -257,8 +222,8 @@ export interface iGM_AppConfig {
   oauth: iGM_OAuthConfig;
   /** 考试站 OAuth Client（对接主站 IdP）配置 */
   examOAuth: iGM_ExamOAuthClientConfig;
-  /** AI 赋能系统模块一：DeepSeek 基础对话配置 */
-  ai: iGM_AIConfig;
+  /** UQ / Coin 双币种账户配置 */
+  quota: iGM_QuotaConfig;
 }
 
 // 核心逻辑 //
@@ -376,8 +341,6 @@ export const iGM_Config: iGM_AppConfig = {
     oauthAppWrite: { windowMs: 10 * 60 * 1000, max: 5 },
     // 模块二十一：用户信息 / 撤销端点——1 分钟内最多 60 次
     oauthUserinfo: { windowMs: 60 * 1000, max: 60 },
-    // AI 赋能系统模块一：AI 对话提问——1 分钟内最多 20 次（保护上游 API 配额与成本）
-    aiChat: { windowMs: 60 * 1000, max: 20 },
     // iGC&M 教育考试系统：列表与详情读取——1 分钟内最多 120 次
     examRead: { windowMs: 60 * 1000, max: 120 },
     // iGC&M 教育考试系统：试卷上传/替换——10 分钟内最多 20 次
@@ -390,12 +353,6 @@ export const iGM_Config: iGM_AppConfig = {
     questionRead: { windowMs: 60 * 1000, max: 60 },
     // 题库：题目创建 / 更新 / 删除 / 发布——1 分钟内最多 20 次
     questionWrite: { windowMs: 60 * 1000, max: 20 },
-    // 题库：AI 智能分析（触发本地模型）——1 分钟内最多 10 次
-    questionAnalyze: { windowMs: 60 * 1000, max: 10 },
-    // 考试站：AI 亮点题目检索（整卷逐题触发本地模型，耗时较长）——1 分钟内最多 6 次
-    highlightAnalyze: { windowMs: 60 * 1000, max: 6 },
-    // 考试站：亮点候选题写操作（送往命题管理 / 审批）——1 分钟内最多 30 次
-    highlightWrite: { windowMs: 60 * 1000, max: 30 },
   },
   mail: {
     // 163 邮箱 SMTP：465 端口隐式 SSL；密码使用客户端授权码（非登录密码），
@@ -538,64 +495,12 @@ export const iGM_Config: iGM_AppConfig = {
       process.env.IGCRAFTLIT_OAUTH_COOKIE_DOMAIN ?? ".igcraftlit.com",
     appName: "iGCraftLit 考试站",
   },
-  ai: {
-    // 本地 Ollama 单通道（原 UPR/SPR/DeepSeek 全部废弃）
-    channel: {
-      apiBase: (
-        process.env.OLLAMA_API_BASE ?? "http://localhost:11434/v1"
-      ).replace(/\/$/, ""),
-      model: process.env.OLLAMA_MODEL ?? "qwen2.5:7b",
-      displayName: "Chat iGM Nove V0.1",
-      timeoutMs: Number(process.env.OLLAMA_TIMEOUT_MS ?? 90000),
-      proModel: process.env.OLLAMA_PRO_MODEL ?? "deepseek-r1:7b",
-      proDisplayName: "Chat iGM Nove V0.1 Pro",
-      proTimeoutMs: Number(process.env.OLLAMA_PRO_TIMEOUT_MS ?? 120000),
-    },
-    maxHistoryMessages: Number(process.env.IGM_AI_MAX_HISTORY ?? 20),
-    maxMessageLength: Number(process.env.IGM_AI_MAX_MESSAGE_LENGTH ?? 2000),
-    maxAnswerLength: Number(process.env.IGM_AI_MAX_ANSWER_LENGTH ?? 5000),
-    maxAnswerTokens: Number(process.env.IGM_AI_MAX_ANSWER_TOKENS ?? 4500),
+  quota: {
     // UQ / Coin 双币种：注册赠送 UQ 10 + Coin 5
     uqRegisterGift: 10,
     coinRegisterGift: 5,
-    questionFixedCost: 0.02,
   },
 };
-
-/** AI 模型档位键：标准版 / Pro 版 */
-export type iGM_AIModelKey = "standard" | "pro";
-
-/** AI 模型档位档案（底层模型名 + 对外展示名 + 超时） */
-export interface iGM_AIModelProfile {
-  key: iGM_AIModelKey;
-  model: string;
-  displayName: string;
-  timeoutMs: number;
-}
-
-/**
- * 按前端传入的模型参数解析实际使用的模型档位：
- * 命中 Pro 底层模型名或 "pro" 别名时走 Pro 版，其余（含空值）一律走标准版
- */
-export function iGM_ResolveAIModel(
-  requested?: string | null,
-): iGM_AIModelProfile {
-  const ch = iGM_Config.ai.channel;
-  const isPro = requested === ch.proModel || requested === "pro";
-  return isPro
-    ? {
-        key: "pro",
-        model: ch.proModel,
-        displayName: ch.proDisplayName,
-        timeoutMs: ch.proTimeoutMs,
-      }
-    : {
-        key: "standard",
-        model: ch.model,
-        displayName: ch.displayName,
-        timeoutMs: ch.timeoutMs,
-      };
-}
 
 // 导出 //
 export default iGM_Config;

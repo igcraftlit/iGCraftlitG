@@ -97,3 +97,38 @@ export interface iGM_MyApplicationDto {
   reviewerName: string | null;
   reviewComment: string | null;
 }
+
+/** 管理端：申请列表项 DTO */
+export interface iGM_ExaminerApplicationItemDto {
+  id: string;
+  userId: string;
+  applicantName: string;
+  applicantUid: string;
+  realName: string;
+  contact: string;
+  status: iGM_ApplicationStatus;
+  submittedAt: string;
+  reviewedAt: string | null;
+  reviewerName: string | null;
+  reviewComment: string | null;
+}
+
+/** 管理端：申请详情 DTO（含完整申请表单与审核日志） */
+export interface iGM_ExaminerApplicationDetailDto
+  extends iGM_ExaminerApplicationItemDto {
+  applicantEmail: string;
+  bio: string;
+  directions: string[];
+  portfolioUrl: string | null;
+  reason: string;
+  agreedToRules: boolean;
+}
+
+/** 管理端：申请分页结果 DTO */
+export interface iGM_ExaminerApplicationPageDto {
+  items: iGM_ExaminerApplicationItemDto[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}

@@ -27,7 +27,6 @@ import {
   Pencil,
   RotateCcw,
   Save,
-  Sparkles,
   Trash2,
   Upload,
 } from "lucide-react";
@@ -54,11 +53,6 @@ import {
   iGM_Examiner_FetchStatus,
   type iGM_ExaminerGate,
 } from "../iGM_Services/iGM_ExaminerClient";
-import { iGM_HighlightPanel as IGM_HighlightPanel } from "../iGM_Components/iGM_HighlightPanel/iGM_HighlightPanel";
-import {
-  iGM_QuestionAi_Select,
-  type iGM_AiSelectResult,
-} from "../iGM_Services/iGM_QuestionAiClient";
 import { useI18n } from "../iGM_i18n/iGM_I18nContext";
 import type { iGM_I18nKey } from "../iGM_i18n/iGM_I18nTypes";
 import styles from "./E_Admin_Exam.module.css";
@@ -267,14 +261,6 @@ export function iGM_ExamAdmin() {
   const answerInputRef = useRef<HTMLInputElement | null>(null);
   /** 命题创作者准入状态；null 表示尚未读取 */
   const [gate, setGate] = useState<iGM_ExaminerGate | null>(null);
-  /** AI 亮点题目检索结果；null 表示尚未检索 */
-  const [highlight, setHighlight] = useState<iGM_AiSelectResult | null>(null);
-  /** 亮点题目面板是否展开 */
-  const [highlightOpen, setHighlightOpen] = useState(false);
-  /** 是否正在检索亮点题目 */
-  const [analyzing, setAnalyzing] = useState(false);
-  /** AI 亮点题目检索错误提示（与全局 message 分离） */
-  const [aiError, setAiError] = useState("");
 
   /** 已发布但尚未出现在线上索引中的试卷：状态显示为"部署中" */
   const deployingIds = useMemo(() => {
@@ -413,37 +399,6 @@ export function iGM_ExamAdmin() {
     } finally {
       setBusy(false);
     }
-  }
-
-  /** 检索 AI 亮点题目：调用 select-ai-questions 并展开面板 */
-  async function findHighlights(): Promise<void> {
-    if (!draft || analyzing) return;
-    setAnalyzing(true);
-    setAiError("");
-    try {
-      const result = await iGM_QuestionAi_Select(draft.examId);
-      setHighlight(result);
-      setHighlightOpen(true);
-    } catch (err) {
-      setAiError(iGM_Exam_ReadError(err, t("aiSelectFailed")));
-      setHighlightOpen(false);
-    } finally {
-      setAnalyzing(false);
-    }
-  }
-
-  /** 忽略单题：仅从当前面板本地移除 */
-  function ignoreHighlight(selectionId: string): void {
-    setHighlight((current) =>
-      current
-        ? {
-            ...current,
-            questions: current.questions.filter(
-              (item) => item.selectionId !== selectionId,
-            ),
-          }
-        : current,
-    );
   }
 
   /** 使用保留期内的原始 PDF 重新转换 */
@@ -630,25 +585,6 @@ export function iGM_ExamAdmin() {
         <p className={styles.headLead}>{t("adminLead")}</p>
       </header>
 
-      {/* AI 亮点题目 */}
-      <div className={styles.headActions}>
-        <button
-          type="button"
-          className={styles.aiSelectBtn}
-          onClick={() => void findHighlights()}
-          disabled={!draft || analyzing}
-        >
-          {analyzing ? (
-            <Loader2 size={14} strokeWidth={1.8} className={styles.spin} />
-          ) : (
-            <Sparkles size={14} strokeWidth={1.8} />
-          )}
-          <span className="igm-mono">
-            {analyzing ? t("aiSelectAnalyzing") : t("aiSelectFindBtn")}
-          </span>
-        </button>
-      </div>
-
       {/* 发布入口 */}
       <section
         className={`igm-double-rule ${styles.uploadSection}`}
@@ -682,13 +618,6 @@ export function iGM_ExamAdmin() {
           {notice}
         </p>
       )}
-      {aiError && (
-        <p className={`igm-mono ${styles.alertError}`}>
-          <AlertCircle size={14} strokeWidth={1.8} />
-          {aiError}
-        </p>
-      )}
-
       {/* 预览区 */}
       {draft && (
         <section className={styles.reviewSection} aria-label={t("adminPreviewTitle")}>
@@ -962,15 +891,6 @@ export function iGM_ExamAdmin() {
             </div>
           </div>
         </section>
-      )}
-
-      {/* AI 亮点题目面板 */}
-      {highlightOpen && highlight && (
-        <IGM_HighlightPanel
-          result={highlight}
-          onIgnore={ignoreHighlight}
-          onClose={() => setHighlightOpen(false)}
-        />
       )}
 
       {/* 台账 */}

@@ -14,7 +14,6 @@
 import { iGM_Db } from "../iGM_Database/iGM_Database";
 import { iGM_RandomUuid } from "../iGM_Services/iGM_SecurityService";
 import type { iGM_QuestionRow } from "../iGM_Types/iGM_Question";
-import type { iGM_ReviewQuestionRow } from "../iGM_Types/iGM_AIQuestionSelection";
 
 // 类型定义 //
 /** 题目可写字段集合（创建时写入的全部业务字段） */
@@ -30,9 +29,6 @@ export interface iGM_QuestionWriteFields {
   difficultyCoefficient: number | null;
   difficultyLevel: string | null;
   tags: string;
-  aiTextbookCode: string | null;
-  aiSource: string | null;
-  adjustedByUser: boolean;
   status: string;
 }
 
@@ -48,20 +44,7 @@ export interface iGM_QuestionUpdateFields {
   difficultyCoefficient?: number | null;
   difficultyLevel?: string | null;
   tags?: string;
-  aiTextbookCode?: string | null;
-  aiSource?: string | null;
-  adjustedByUser?: boolean;
   status?: string;
-}
-
-/** 带审批列的题目可写字段集合（AI 亮点题目送往命题管理时写入） */
-export interface iGM_ReviewQuestionWriteFields extends iGM_QuestionWriteFields {
-  reviewStatus: string | null;
-  qualityScore: number | null;
-  aiSelected: boolean;
-  aiReason: string | null;
-  modelUsed: string | null;
-  sourceExamId: string | null;
 }
 
 /** 分页查询结果 */
@@ -94,9 +77,6 @@ export async function iGM_InsertQuestion(
     iGM_DifficultyCoefficient: fields.difficultyCoefficient,
     iGM_DifficultyLevel: fields.difficultyLevel,
     iGM_Tags: fields.tags,
-    iGM_AiTextbookCode: fields.aiTextbookCode,
-    iGM_AiSource: fields.aiSource,
-    iGM_AdjustedByUser: fields.adjustedByUser,
     iGM_Status: fields.status,
     iGM_CreatedAt: now,
     iGM_UpdatedAt: now,
@@ -106,9 +86,8 @@ export async function iGM_InsertQuestion(
        (iGM_Id, iGM_CreatorId, iGM_Stem, iGM_Type, iGM_Options, iGM_Answer,
         iGM_Analysis, iGM_TextbookCode, iGM_TextbookName,
         iGM_DifficultyCoefficient, iGM_DifficultyLevel, iGM_Tags,
-        iGM_AiTextbookCode, iGM_AiSource, iGM_AdjustedByUser, iGM_Status,
-        iGM_CreatedAt, iGM_UpdatedAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        iGM_Status, iGM_CreatedAt, iGM_UpdatedAt)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       row.iGM_Id,
       row.iGM_CreatorId,
@@ -122,9 +101,6 @@ export async function iGM_InsertQuestion(
       row.iGM_DifficultyCoefficient,
       row.iGM_DifficultyLevel,
       row.iGM_Tags,
-      row.iGM_AiTextbookCode,
-      row.iGM_AiSource,
-      row.iGM_AdjustedByUser,
       row.iGM_Status,
       row.iGM_CreatedAt,
       row.iGM_UpdatedAt,
@@ -149,9 +125,6 @@ export async function iGM_UpdateQuestion(
     ["difficultyCoefficient", "iGM_DifficultyCoefficient"],
     ["difficultyLevel", "iGM_DifficultyLevel"],
     ["tags", "iGM_Tags"],
-    ["aiTextbookCode", "iGM_AiTextbookCode"],
-    ["aiSource", "iGM_AiSource"],
-    ["adjustedByUser", "iGM_AdjustedByUser"],
     ["status", "iGM_Status"],
   ];
   const assignments: string[] = [];
@@ -284,127 +257,9 @@ export async function iGM_ListPublicQuestions(options: {
   return { rows, total: totalRow?.iGM_Count ?? 0 };
 }
 
-/** 写入带审批列的题目（AI 亮点题目送往命题管理，返回完整数据行） */
-export async function iGM_InsertReviewQuestion(
-  fields: iGM_ReviewQuestionWriteFields,
-): Promise<iGM_ReviewQuestionRow> {
-  const now = new Date().toISOString();
-  const row: iGM_ReviewQuestionRow = {
-    iGM_Id: iGM_RandomUuid(),
-    iGM_CreatorId: fields.creatorId,
-    iGM_Stem: fields.stem,
-    iGM_Type: fields.type,
-    iGM_Options: fields.options,
-    iGM_Answer: fields.answer,
-    iGM_Analysis: fields.analysis,
-    iGM_TextbookCode: fields.textbookCode,
-    iGM_TextbookName: fields.textbookName,
-    iGM_DifficultyCoefficient: fields.difficultyCoefficient,
-    iGM_DifficultyLevel: fields.difficultyLevel,
-    iGM_Tags: fields.tags,
-    iGM_AiTextbookCode: fields.aiTextbookCode,
-    iGM_AiSource: fields.aiSource,
-    iGM_AdjustedByUser: fields.adjustedByUser,
-    iGM_Status: fields.status,
-    iGM_QualityScore: fields.qualityScore,
-    iGM_AiSelected: fields.aiSelected,
-    iGM_ReviewStatus: fields.reviewStatus,
-    iGM_AiReason: fields.aiReason,
-    iGM_ModelUsed: fields.modelUsed,
-    iGM_SourceExamId: fields.sourceExamId,
-    iGM_CreatedAt: now,
-    iGM_UpdatedAt: now,
-  };
-  await iGM_Db.run(
-    `INSERT INTO iGM_QuestionBank
-       (iGM_Id, iGM_CreatorId, iGM_Stem, iGM_Type, iGM_Options, iGM_Answer,
-        iGM_Analysis, iGM_TextbookCode, iGM_TextbookName,
-        iGM_DifficultyCoefficient, iGM_DifficultyLevel, iGM_Tags,
-        iGM_AiTextbookCode, iGM_AiSource, iGM_AdjustedByUser, iGM_Status,
-        iGM_QualityScore, iGM_AiSelected, iGM_ReviewStatus, iGM_AiReason,
-        iGM_ModelUsed, iGM_SourceExamId, iGM_CreatedAt, iGM_UpdatedAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      row.iGM_Id,
-      row.iGM_CreatorId,
-      row.iGM_Stem,
-      row.iGM_Type,
-      row.iGM_Options,
-      row.iGM_Answer,
-      row.iGM_Analysis,
-      row.iGM_TextbookCode,
-      row.iGM_TextbookName,
-      row.iGM_DifficultyCoefficient,
-      row.iGM_DifficultyLevel,
-      row.iGM_Tags,
-      row.iGM_AiTextbookCode,
-      row.iGM_AiSource,
-      row.iGM_AdjustedByUser,
-      row.iGM_Status,
-      row.iGM_QualityScore,
-      row.iGM_AiSelected,
-      row.iGM_ReviewStatus,
-      row.iGM_AiReason,
-      row.iGM_ModelUsed,
-      row.iGM_SourceExamId,
-      row.iGM_CreatedAt,
-      row.iGM_UpdatedAt,
-    ],
-  );
-  return row;
-}
-
-/** 按审批状态列出题目（creatorId 为空表示不按创建者过滤，管理端见全部） */
-export async function iGM_ListQuestionsByReviewStatus(
-  reviewStatus: string,
-  creatorId: string | null,
-): Promise<iGM_ReviewQuestionRow[]> {
-  const clauses: string[] = ["iGM_ReviewStatus = ?"];
-  const params: unknown[] = [reviewStatus];
-  if (creatorId) {
-    clauses.push("iGM_CreatorId = ?");
-    params.push(creatorId);
-  }
-  return (await iGM_Db
-    .query(
-      `SELECT * FROM iGM_QuestionBank
-        WHERE ${clauses.join(" AND ")}
-        ORDER BY iGM_CreatedAt DESC, iGM_Id DESC`,
-    )
-    .all(...params)) as iGM_ReviewQuestionRow[];
-}
-
-/** 更新题目审批状态与业务状态（仅更新显式提供的字段） */
-export async function iGM_UpdateQuestionReview(
-  id: string,
-  fields: { reviewStatus?: string; status?: string },
-): Promise<void> {
-  const assignments: string[] = [];
-  const values: unknown[] = [];
-  if (fields.reviewStatus !== undefined) {
-    assignments.push("iGM_ReviewStatus = ?");
-    values.push(fields.reviewStatus);
-  }
-  if (fields.status !== undefined) {
-    assignments.push("iGM_Status = ?");
-    values.push(fields.status);
-  }
-  if (assignments.length === 0) return;
-  assignments.push("iGM_UpdatedAt = ?");
-  values.push(new Date().toISOString());
-  values.push(id);
-  await iGM_Db.run(
-    `UPDATE iGM_QuestionBank SET ${assignments.join(", ")} WHERE iGM_Id = ?`,
-    values,
-  );
-}
-
 // 导出 //
 export default {
   iGM_InsertQuestion,
-  iGM_InsertReviewQuestion,
-  iGM_ListQuestionsByReviewStatus,
-  iGM_UpdateQuestionReview,
   iGM_UpdateQuestion,
   iGM_FindQuestionById,
   iGM_DeleteQuestion,

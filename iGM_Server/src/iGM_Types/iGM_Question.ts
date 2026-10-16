@@ -5,7 +5,7 @@
  * 模块：iGM_Question
  * 作用：题库题目的教材目录、枚举、数据行与 DTO 类型定义
  * 内容：固定教材目录（六册）、教材编码 / 题型 / 难度 / 状态类型、题目数据行、
- *       选项、题目 DTO、AI 分析结果类型、字段校验与选项序列化工具、难度归一等
+ *       选项、题目 DTO、字段校验与选项序列化工具、难度归一等
  * 说明：教材名称一律由教材编码在服务端派生，前端传入的名称一律忽略；
  *       选项以 JSON 文本存库（[{"key":"A","text":"..."}]），对外暴露为对象数组
  */
@@ -80,9 +80,6 @@ export interface iGM_QuestionRow {
   iGM_DifficultyCoefficient: number | null;
   iGM_DifficultyLevel: string | null;
   iGM_Tags: string | null;
-  iGM_AiTextbookCode: string | null;
-  iGM_AiSource: string | null;
-  iGM_AdjustedByUser: boolean;
   iGM_Status: string;
   iGM_CreatedAt: string;
   iGM_UpdatedAt: string;
@@ -102,23 +99,8 @@ export interface iGM_QuestionDto {
   difficultyLevel: iGM_QuestionDifficultyLevel | null;
   tags: string[];
   status: iGM_QuestionStatus;
-  aiTextbookCode: string | null;
-  aiSource: string | null;
-  adjustedByUser: boolean;
   createdAt: string;
   updatedAt: string;
-}
-
-/** AI 分析结果 */
-export interface iGM_QuestionAnalysis {
-  difficultyCoefficient: number;
-  difficultyLevel: iGM_QuestionDifficultyLevel;
-  type: iGM_QuestionType;
-  tags: string[];
-  textbookCode: iGM_TextbookCode;
-  textbookName: string;
-  suggestion: string;
-  source: "ollama" | "keyword" | "keyword-default";
 }
 
 // 核心逻辑 //

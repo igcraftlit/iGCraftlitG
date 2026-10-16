@@ -3,8 +3,8 @@
  * 所属层：前端 / 服务层
  * 路由：E_QuestionEditor（/editor）
  * 模块：iGM_QuestionClient
- * 作用：题库（question）后端访问出口：我的题目分页、AI 辅助判断、创建 / 更新 / 删除 / 发布
- * 内容：统一响应解包、GET / POST 封装、题目 DTO 与分页结构、分析结果结构、五类题型与状态枚举
+ * 作用：题库（question）后端访问出口：我的题目分页、创建 / 更新 / 删除 / 发布
+ * 内容：统一响应解包、GET / POST 封装、题目 DTO 与分页结构、五类题型与状态枚举
  * 说明：统一携带 Cookie（credentials: "include"），解包 { success, code, message, data }，
  *       失败抛出 iGM_ExamRequestError；准入闸门复用 iGM_ExaminerClient，不在此重复实现
  */
@@ -58,26 +58,6 @@ export interface iGM_QuestionPage {
   totalPages: number;
 }
 
-/** AI 辅助判断结果 */
-export interface iGM_QuestionAnalysis {
-  difficultyCoefficient: number;
-  difficultyLevel: string;
-  type: iGM_QuestionType;
-  tags: string[];
-  textbookCode: string;
-  textbookName: string;
-  suggestion: string;
-  source: string;
-}
-
-/** AI 辅助判断入参 */
-export interface iGM_QuestionAnalyzeInput {
-  stem: string;
-  options?: iGM_QuestionOption[];
-  answer?: string;
-  analysis?: string;
-}
-
 /** 创建入参 */
 export interface iGM_QuestionCreateInput {
   stem: string;
@@ -89,8 +69,6 @@ export interface iGM_QuestionCreateInput {
   difficultyCoefficient?: number;
   difficultyLevel?: string;
   tags?: string[];
-  aiTextbookCode?: string;
-  aiSource?: string;
 }
 
 /** 更新入参 */
@@ -189,18 +167,6 @@ export async function iGM_Question_FetchMine(
   );
 }
 
-/* ---------- AI 辅助判断 ---------- */
-
-/** 依据题干 / 选项 / 答案 / 解析推断题型、难度、标签与教材 */
-export async function iGM_Question_Analyze(
-  input: iGM_QuestionAnalyzeInput,
-): Promise<iGM_QuestionAnalysis> {
-  return await iGM_Question_Post<iGM_QuestionAnalysis>(
-    "/api/question/analyze",
-    input,
-  );
-}
-
 /* ---------- 增删改与发布 ---------- */
 
 /** 创建题目（返回新建的题目实体） */
@@ -248,7 +214,6 @@ export async function iGM_Question_Publish(
 // 导出 //
 export default {
   iGM_Question_FetchMine,
-  iGM_Question_Analyze,
   iGM_Question_Create,
   iGM_Question_Update,
   iGM_Question_Delete,

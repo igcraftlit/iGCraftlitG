@@ -58,11 +58,6 @@ import { G_ExamOAuth } from "./iGM_Routes/G_ExamOAuth";
 import { iGM_OAuthError } from "./iGM_Services/iGM_OAuthService";
 // 模块二十六（启动器 26.3.2）：启动器发布历史
 import { G_LauncherRelease } from "./iGM_Routes/G_LauncherRelease";
-// AI 赋能系统模块一：AI 助手基础对话（DeepSeek 代理）
-import { G_AI } from "./iGM_Routes/G_AI";
-import { iGM_AIError } from "./iGM_Services/iGM_AIService";
-// AI 赋能系统模块三：UPR / SPR 额度业务错误（余额不足 402 / 账户不存在）
-import { iGM_QuotaError } from "./iGM_Services/iGM_QuotaService";
 // 全站搜索：帖子 / 资源 / 用户 / 组织聚合搜索
 import { G_Search } from "./iGM_Routes/G_Search";
 // iGC&M 教育考试系统：试卷业务错误（上传/识别/发布等）
@@ -74,8 +69,8 @@ import { iGM_ExaminerError } from "./iGM_Services/iGM_ExaminerService";
 // 考试系统：题库与题目编辑器
 import { G_Question } from "./iGM_Routes/G_Question";
 import { iGM_QuestionError } from "./iGM_Services/iGM_QuestionService";
-// 考试系统：AI 亮点题目检索 / 送往命题管理 / 待审核审批
-import { G_ExamHighlight } from "./iGM_Routes/G_ExamHighlight";
+// 考试系统：命题创作者申请管理员审核（/api/admin/examiner-applications）
+import { G_AdminExaminer } from "./iGM_Routes/G_AdminExaminer";
 import { iGM_EnsureExamStorageRoot } from "./iGM_Services/iGM_ExamIngestService";
 import { iGM_StartExamCleanup } from "./iGM_Services/iGM_ExamCleanupService";
 
@@ -165,16 +160,6 @@ const iGM_Server = new Elysia()
       set.status = error.status;
       return iGM_Fail(error.status, error.message);
     }
-    // AI 赋能系统模块一：AI 对话业务错误（未配置/超时/上游异常/会话越权等）
-    if (error instanceof iGM_AIError) {
-      set.status = error.status;
-      return iGM_Fail(error.status, error.message);
-    }
-    // AI 赋能系统模块三：UPR / SPR 额度业务错误（余额不足 402 / 账户不存在）
-    if (error instanceof iGM_QuotaError) {
-      set.status = error.status;
-      return iGM_Fail(error.status, error.message);
-    }
     // iGC&M 教育考试系统：试卷业务错误（上传/识别/发布/删除等）
     if (error instanceof iGM_ExamError) {
       set.status = error.status;
@@ -237,8 +222,6 @@ const iGM_Server = new Elysia()
   .use(G_OAuth)
   // 模块二十六（启动器 26.3.2）：启动器发布历史（官网下载页与启动器共用）
   .use(G_LauncherRelease)
-  // AI 赋能系统模块一：AI 助手基础对话（DeepSeek 代理）
-  .use(G_AI)
   // 全站搜索：帖子 / 资源 / 用户 / 组织聚合搜索（公开只读，按 IP 限流）
   .use(G_Search)
   // iGC&M 教育考试系统：试卷列表 / 详情 / 上传识别 / 校对 / 发布（/api/exam/*）
@@ -247,8 +230,8 @@ const iGM_Server = new Elysia()
   .use(G_Examiner)
   // 考试系统：题库与题目编辑器（/api/question/*）
   .use(G_Question)
-  // 考试系统：AI 亮点题目检索 / 送往命题管理 / 待审核审批（/api/exam/*）
-  .use(G_ExamHighlight)
+  // 考试系统：命题创作者申请管理员审核（/api/admin/examiner-applications/*）
+  .use(G_AdminExaminer)
   // 考试系统：OAuth Client 登录主站 IdP（/api/exam/oauth/*）
   .use(G_ExamOAuth)
   // 根路径占位
@@ -273,9 +256,9 @@ iGM_StartExamCleanup();
 
 // 仅在本地直接运行时监听端口（被导入时不占用端口）
 if (import.meta.main) {
-  // idleTimeout：本地模型冷启动期间（可达 60 秒以上）后端向客户端零输出，
-  // Bun 默认 idleTimeout 会在此期间切断连接（前端表现为「无法连接服务」）；
-  // 显式设为允许的最大值 255 秒，覆盖 Free 通道 120 秒上游超时 + 推理耗时
+  // idleTimeout：本地长任务（如试卷上传转换、大批量文件写入）期间后端向客户端
+  // 零输出，Bun 默认 idleTimeout 会在此期间切断连接（前端表现为「无法连接服务」）；
+  // 显式设为允许的最大值 255 秒
   iGM_Server.listen({ port: iGM_Config.port, idleTimeout: 255 });
   console.log(
     `[iGM_Server] 后端已启动：http://localhost:${iGM_Config.port}（健康检查 /G_Api_Health）`,

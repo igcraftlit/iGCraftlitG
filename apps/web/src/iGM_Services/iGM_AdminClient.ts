@@ -5,7 +5,8 @@
  * 模块：iGM_AdminClient
  * 作用：管理后台相关后端接口的唯一前端调用出口
  * 内容：数据概览、用户列表、封禁/解封、修改角色、删除用户、内容列表、审核与删除、
- *       举报列表与处理、测试邮件、操作日志、系统信息
+ *       举报列表与处理、测试邮件、操作日志、系统信息、开发者调用量、
+ *       命题创作者申请列表 / 详情 / 通过 / 拒绝
  * 约束：只经 iGM_Request 发请求；类型与后端 iGM_Types/iGM_Admin.ts 保持一致；
  *       权限由后端严格校验，前端仅做展示层控制
  */
@@ -90,49 +91,6 @@ export interface iGM_DeveloperCallStats {
   daily: Array<{ date: string } & Record<string, number | string>>;
   /** 按应用调用量 Top 20 */
   topClients: Array<{ clientId: string; count: number }>;
-}
-
-/** AI 赋能系统模块三：AI 调用统计时间范围（日 / 周 / 月） */
-export type iGM_AICallStatsRange = "day" | "week" | "month";
-
-/** AI 赋能系统重构：单币种额度统计（UQ 聚合自 iGM_UQTransactions，Coin 聚合自 iGM_CoinTransactions） */
-export interface iGM_AICallStatsChannel {
-  /** 时间范围内总调用次数 */
-  totalCalls: number;
-  /** 时间范围内总消耗额度 */
-  totalConsumed: number;
-  /** 当日消耗额度（不随时间范围变化） */
-  todayConsumed: number;
-}
-
-/** 双模型调用量（按 AI 回复所用底层模型归类） */
-export interface iGM_AICallStatsModels {
-  /** 标准版（qwen2.5:7b）回复条数 */
-  standard: number;
-  /** Pro 版（deepseek-r1:7b）回复条数 */
-  pro: number;
-}
-
-/** 消耗排行 Top 10 条目 */
-export interface iGM_AICallStatsUser {
-  userId: string;
-  username: string;
-  displayName: string | null;
-  consumed: number;
-  calls: number;
-}
-
-/** AI 赋能系统重构：AI 双币种调用统计（UQ / Coin）+ 双模型调用量 */
-export interface iGM_AICallStats {
-  range: iGM_AICallStatsRange;
-  uq: iGM_AICallStatsChannel;
-  coin: iGM_AICallStatsChannel;
-  /** UQ 消耗排行 Top 10 用户 */
-  topUqUsers: iGM_AICallStatsUser[];
-  /** Coin 消耗排行 Top 10 用户 */
-  topCoinUsers: iGM_AICallStatsUser[];
-  /** 双模型调用量（标准版 / Pro 版） */
-  models: iGM_AICallStatsModels;
 }
 
 /** 后台内容条目（帖子或评论统一形态） */
@@ -327,11 +285,86 @@ export function iGM_ApiAdminDeveloperCallStats(
   return iGM_Get(`/G_Admin/developers/call-stats?days=${days}`);
 }
 
-/** AI 赋能系统模块二：AI 调用额度统计（开发者分区 - 调用量） */
-export function iGM_ApiAdminAICallStats(
-  range: iGM_AICallStatsRange,
-): Promise<iGM_ApiResponse<iGM_AICallStats>> {
-  return iGM_Get(`/G_Admin/ai-usage-stats?range=${range}`);
+/** 命题创作者申请状态 */
+export type iGM_ExaminerApplicationStatus = "pending" | "approved" | "rejected";
+
+/** 命题创作者申请（管理端列表项） */
+export interface iGM_ExaminerApplication {
+  id: string;
+  userId: string;
+  applicantName: string;
+  applicantUid: string;
+  realName: string;
+  contact: string;
+  status: iGM_ExaminerApplicationStatus;
+  submittedAt: string;
+  reviewedAt: string | null;
+  reviewerName: string | null;
+  reviewComment: string | null;
+}
+
+/** 命题创作者申请详情（含完整申请表单与审核日志） */
+export interface iGM_ExaminerApplicationDetail
+  extends iGM_ExaminerApplication {
+  applicantEmail: string;
+  bio: string;
+  directions: string[];
+  portfolioUrl: string | null;
+  reason: string;
+  agreedToRules: boolean;
+}
+
+/** 命题创作者申请分页结果 */
+export interface iGM_ExaminerApplicationPage {
+  items: iGM_ExaminerApplication[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+/** 考试系统：命题创作者申请列表（status 为空表示不筛选；q 为关键词检索） */
+export function iGM_ApiAdminExaminerApplications(input: {
+  status: iGM_ExaminerApplicationStatus | null;
+  q: string;
+  page: number;
+  pageSize: number;
+}): Promise<iGM_ApiResponse<iGM_ExaminerApplicationPage>> {
+  const params = new URLSearchParams({
+    page: String(input.page),
+    pageSize: String(input.pageSize),
+  });
+  if (input.status) params.set("status", input.status);
+  if (input.q.trim()) params.set("q", input.q.trim());
+  return iGM_Get(`/api/admin/examiner-applications?${params.toString()}`);
+}
+
+/** 考试系统：命题创作者申请详情 */
+export function iGM_ApiAdminExaminerApplicationDetail(
+  id: string,
+): Promise<iGM_ApiResponse<iGM_ExaminerApplicationDetail>> {
+  return iGM_Get(`/api/admin/examiner-applications/${encodeURIComponent(id)}`);
+}
+
+/** 考试系统：审核通过（后端授予资格并自动分配命题者编号） */
+export function iGM_ApiAdminApproveExaminerApplication(
+  id: string,
+): Promise<iGM_ApiResponse<{ id: string; status: string }>> {
+  return iGM_Post(
+    `/api/admin/examiner-applications/${encodeURIComponent(id)}/approve`,
+    {},
+  );
+}
+
+/** 考试系统：拒绝申请（reason 为必填拒绝理由，后端会写入审核日志） */
+export function iGM_ApiAdminRejectExaminerApplication(
+  id: string,
+  reason: string,
+): Promise<iGM_ApiResponse<{ id: string; status: string }>> {
+  return iGM_Post(
+    `/api/admin/examiner-applications/${encodeURIComponent(id)}/reject`,
+    { reason },
+  );
 }
 
 // 导出 //
@@ -350,5 +383,8 @@ export default {
   iGM_ApiAdminSettings,
   iGM_ApiAdminDeveloperAccounts,
   iGM_ApiAdminDeveloperCallStats,
-  iGM_ApiAdminAICallStats,
+  iGM_ApiAdminExaminerApplications,
+  iGM_ApiAdminExaminerApplicationDetail,
+  iGM_ApiAdminApproveExaminerApplication,
+  iGM_ApiAdminRejectExaminerApplication,
 };
