@@ -77,8 +77,7 @@ export const iGM_SeoDisallowPatterns = [
   "/*/G_DeveloperStatus",
   // 模块十六：开发者申请审核页（须登录，不收录）
   "/*/G_DeveloperReview",
-  // 命题创作者申请审核页（须登录且限管理人员，不收录）
-  "/*/G_ExaminerReview",
+
   // 模块十八：本体版本详情（带查询参数）与下载相关页面（登录态/用户私有，不收录）
   "/*/G_MinecraftVersionDetail",
   "/*/G_GameInstall",

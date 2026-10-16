@@ -36,15 +36,10 @@ import {
   iGM_SetExamFileSize,
   iGM_SetExamHtmlPath,
   iGM_SetExamAnswerPath,
-  iGM_SetExamPresetId,
   iGM_SetExamParseStatus,
   iGM_UpdateExamFields,
   type iGM_ExamWriteFields,
 } from "../iGM_Repositories/iGM_ExamRepository";
-import {
-  iGM_LoadVisiblePresetRows,
-  iGM_ResolveIssuerPresetId,
-} from "./iGM_IssuerPresetService";
 import {
   iGM_ExamError,
   iGM_ApplyExamHtmlOverrides,
@@ -448,10 +443,6 @@ export async function iGM_UploadExamService(
     "converting",
     createdBy,
   );
-  // 关键词归档：命题方文本命中可见预设时记录预设 ID，便于目录按预设筛选
-  const presets = await iGM_LoadVisiblePresetRows(createdBy);
-  const presetId = iGM_ResolveIssuerPresetId(createdBy, fields.issuer, presets);
-  if (presetId) await iGM_SetExamPresetId(examId, presetId);
   await iGM_InsertExamFile(examId, {
     fileName: stored.fileName,
     fileType: stored.fileType,
@@ -497,16 +488,6 @@ export async function iGM_UpdateExamMetaService(
   iGM_AssertMetaFields(input);
   const fields = iGM_ToWriteFields(input);
   await iGM_UpdateExamFields(examId, fields);
-  // 命题方可能被改动：重新解析关键词归档
-  const presets = await iGM_LoadVisiblePresetRows(
-    actor.isAdmin ? null : actor.userId,
-  );
-  const presetId = iGM_ResolveIssuerPresetId(
-    actor.isAdmin ? null : actor.userId,
-    fields.issuer,
-    presets,
-  );
-  await iGM_SetExamPresetId(examId, presetId);
   await iGM_ExportExamStatic(examId);
   return await iGM_GetExamDetailService(examId, { publicOnly: false });
 }

@@ -6,6 +6,8 @@
  * 作用：iGC&M 教育考试系统子站点 HTML 根节点、字体变量与全局样式注入
  * 内容：衬线（Source Serif 4）/ 无衬线（Inter）/ 等宽（JetBrains Mono）
  *       三套字体变量、防 FOUC 主题初始化脚本、站点元数据
+ * 说明：刊头日期在客户端挂载后按本地时间刷新，并按当前语言格式化，
+ *       首屏使用构建期日期，避免水合不一致
  */
 
 // 导入依赖 //
@@ -47,7 +49,11 @@ const iGM_Exam_Mono = JetBrains_Mono({
   display: "swap",
 });
 
-// 核心逻辑 //
+/** 构建期日期（环境变量注入），水合前后一致 */
+const iGM_Exam_BuildDate = new Date(
+  process.env.NEXT_PUBLIC_IGM_EXAM_BUILD_TIME || Date.now(),
+);
+
 export const metadata: Metadata = {
   title: "iGC&M Education Examinations Research Institute",
   description:

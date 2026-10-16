@@ -10,7 +10,6 @@
  *       信息修改与答案上传后会重新导出静态数据并推送，触发 Pages 重建；
  *       转换在后台执行，前端轮询进度接口；原始 PDF 转换成功时已自动删除，
  *       仅转换失败时保留供重新转换；支持通过 ?examId= 直接打开某试卷预览；文案取自当前语言包
- *       权限互斥：准入通过仅渲染管理面板、绝不渲染申请表单；未通过按状态渲染申请表单或状态提示
  */
 
 // 导入依赖 //
@@ -29,7 +28,6 @@ import {
   RotateCcw,
   Save,
   Sparkles,
-  Tag,
   Trash2,
   Upload,
 } from "lucide-react";
@@ -55,9 +53,7 @@ import {
   iGM_Examiner_FetchMe,
   iGM_Examiner_FetchStatus,
   type iGM_ExaminerGate,
-  type iGM_ExaminerStatus,
 } from "../iGM_Services/iGM_ExaminerClient";
-import { iGM_ExaminerApplyForm as IGM_ExaminerApplyForm } from "../iGM_Components/iGM_ExaminerApplyForm/iGM_ExaminerApplyForm";
 import { iGM_HighlightPanel as IGM_HighlightPanel } from "../iGM_Components/iGM_HighlightPanel/iGM_HighlightPanel";
 import {
   iGM_QuestionAi_Select,
@@ -119,15 +115,6 @@ const iGM_Exam_ConvertKeys: Record<iGM_ExamConvertStatus, iGM_I18nKey> = {
   converting: "convertStatusConverting",
   completed: "convertStatusCompleted",
   failed: "convertStatusFailed",
-};
-
-/** 准入状态 → 语言包键 */
-const iGM_Examiner_GateKeys: Record<iGM_ExaminerGate, iGM_I18nKey> = {
-  none: "examinerStatusNone",
-  pending: "examinerStatusPending",
-  approved: "examinerStatusApproved",
-  rejected: "examinerStatusRejected",
-  suspended: "examinerStatusSuspended",
 };
 
 /** 轮询间隔（毫秒） */
@@ -280,10 +267,6 @@ export function iGM_ExamAdmin() {
   const answerInputRef = useRef<HTMLInputElement | null>(null);
   /** 命题创作者准入状态；null 表示尚未读取 */
   const [gate, setGate] = useState<iGM_ExaminerGate | null>(null);
-  /** 准入状态详情（含最近申请与审核意见） */
-  const [gateStatus, setGateStatus] = useState<iGM_ExaminerStatus | null>(null);
-  /** 被拒绝后是否展开重新申请表单 */
-  const [reapplyOpen, setReapplyOpen] = useState(false);
   /** AI 亮点题目检索结果；null 表示尚未检索 */
   const [highlight, setHighlight] = useState<iGM_AiSelectResult | null>(null);
   /** 亮点题目面板是否展开 */
@@ -308,16 +291,13 @@ export function iGM_ExamAdmin() {
     try {
       await iGM_Examiner_FetchMe();
     } catch {
-      setGateStatus(null);
       setGate("none");
       return;
     }
     try {
       const status = await iGM_Examiner_FetchStatus();
-      setGateStatus(status);
       setGate(status.gate);
     } catch {
-      setGateStatus(null);
       setGate("none");
     }
   }, []);
@@ -613,7 +593,7 @@ export function iGM_ExamAdmin() {
     return { key: iGM_Exam_StatusKeys[item.status], cls: `st_${item.status}` };
   }
 
-  // 未通过准入（含未登录）：仅展示准入提示与命题创作者申请表单
+  // 未通过准入：简单的"无访问权限"提示
   if (gate !== "approved") {
     return (
       <main className={styles.page}>
@@ -624,77 +604,19 @@ export function iGM_ExamAdmin() {
           <p className={styles.headLead}>{t("adminLead")}</p>
         </header>
 
-        {gate === null ? (
-          <p className={`igm-mono ${styles.state}`}>
-            {t("examinerStatusLoading")}
-          </p>
-        ) : (
-          <>
-            <section
-              className={`igm-double-rule ${styles.gateSection}`}
-              aria-label={t("examinerGateTitle")}
-            >
-              <h2 className={`igm-serif ${styles.gateTitle}`}>
-                {t("examinerGateTitle")}
-              </h2>
-              <p className={styles.gateLead}>{t("examinerGateLead")}</p>
-              {gateStatus && gateStatus.gate !== "none" && (
-                <div className={styles.gateStatus}>
-                  <span
-                    className={`igm-mono ${styles.gateTag} ${
-                      styles[`gate_${gateStatus.gate}`]
-                    }`}
-                  >
-                    {t(iGM_Examiner_GateKeys[gateStatus.gate])}
-                  </span>
-                  {gateStatus.application?.reviewComment && (
-                    <p className={`igm-mono ${styles.gateComment}`}>
-                      {t("examinerStatusReviewComment")}：
-                      {gateStatus.application.reviewComment}
-                    </p>
-                  )}
-                  <Link href="/status" className={styles.gateLink}>
-                    <span className="igm-mono">{t("examinerStatusTitle")}</span>
-                  </Link>
-                </div>
-              )}
-            </section>
-
-            {/* 权限互斥：未申请展示申请表单；待审核 / 已撤销仅展示状态；
-                已拒绝展示原因与「重新申请」按钮（点击后展开表单）；已通过绝不渲染申请组件 */}
-            {gate === "none" && (
-              <IGM_ExaminerApplyForm onSubmitted={() => void refreshGate()} />
-            )}
-            {gate === "pending" && (
-              <p className={`igm-mono ${styles.gateLead}`}>
-                {t("examinerGatePendingLead")}
-              </p>
-            )}
-            {gate === "suspended" && (
-              <p className={`igm-mono ${styles.gateLead}`}>
-                {t("examinerGateSuspendedLead")}
-              </p>
-            )}
-            {gate === "rejected" &&
-              (reapplyOpen ? (
-                <IGM_ExaminerApplyForm onSubmitted={() => void refreshGate()} />
-              ) : (
-                <>
-                  <p className={`igm-mono ${styles.gateLead}`}>
-                    {t("examinerGateRejectedLead")}
-                  </p>
-                  <button
-                    type="button"
-                    className={styles.reapplyBtn}
-                    onClick={() => setReapplyOpen(true)}
-                  >
-                    <RotateCcw size={14} strokeWidth={1.8} />
-                    <span className="igm-mono">{t("examinerReapply")}</span>
-                  </button>
-                </>
-              ))}
-          </>
-        )}
+        <section
+          className={`igm-double-rule ${styles.gateSection}`}
+          aria-label={t("examinerGateTitle")}
+        >
+          <h2 className={`igm-serif ${styles.gateTitle}`}>
+            {t("examinerGateTitle")}
+          </h2>
+          <p className={styles.gateLead}>{t("examinerGateLead")}</p>
+          <p className={`igm-mono ${styles.state}`}>{t("examinerNoAccess")}</p>
+          <Link href="/" className={styles.gateLink}>
+            <span className="igm-mono">{t("navExaminations")}</span>
+          </Link>
+        </section>
       </main>
     );
   }
@@ -708,12 +630,8 @@ export function iGM_ExamAdmin() {
         <p className={styles.headLead}>{t("adminLead")}</p>
       </header>
 
-      {/* 命题方预设入口 + AI 亮点题目 */}
+      {/* AI 亮点题目 */}
       <div className={styles.headActions}>
-        <Link href="/presets" className={styles.presetsBtn}>
-          <Tag size={14} strokeWidth={1.8} />
-          <span className="igm-mono">{t("examinerGateGotoPresets")}</span>
-        </Link>
         <button
           type="button"
           className={styles.aiSelectBtn}

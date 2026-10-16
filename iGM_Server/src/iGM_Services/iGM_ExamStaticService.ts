@@ -27,7 +27,6 @@ import {
   iGM_ListExamIdCreatedPairs,
   iGM_ListExamsByStatus,
 } from "../iGM_Repositories/iGM_ExamRepository";
-import { iGM_ListIssuerPresetsVisibleTo } from "../iGM_Repositories/iGM_IssuerPresetRepository";
 import {
   iGM_ExamAnswerAbsolutePath,
   iGM_ExamAnswerFileName,
@@ -207,10 +206,9 @@ export async function iGM_GenerateExamStaticFile(examId: string): Promise<boolea
 export async function iGM_RebuildExamStaticIndex(): Promise<void> {
   const root = iGM_ExamStaticRoot();
   await mkdir(root, { recursive: true });
-  const [rows, codeMap, presetRows] = await Promise.all([
+  const [rows, codeMap] = await Promise.all([
     iGM_ListExamsByStatus("published"),
     iGM_BuildExamCodeMap(),
-    iGM_ListIssuerPresetsVisibleTo(null),
   ]);
   const exams: iGM_ExamStaticIndexItem[] = rows.map((row) => ({
     id: row.iGM_Id,
@@ -226,14 +224,10 @@ export async function iGM_RebuildExamStaticIndex(): Promise<void> {
     fileSize: row.iGM_FileSize,
     createdAt: row.iGM_CreatedAt,
   }));
-  // 命题方筛选项：已发布试卷的命题方 ∪ 全站公开预设名称
+  // 命题方筛选项：已发布试卷的命题方
   const issuerSet = new Set<string>();
   for (const row of rows) {
     const value = (row.iGM_Issuer ?? "").trim();
-    if (value) issuerSet.add(value);
-  }
-  for (const preset of presetRows) {
-    const value = preset.iGM_Name.trim();
     if (value) issuerSet.add(value);
   }
   const issuers = [...issuerSet].sort((a, b) => a.localeCompare(b, "zh-Hans-CN"));

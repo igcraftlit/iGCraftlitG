@@ -59,8 +59,6 @@ const iGM_Exam_NavRoutes = [
   { href: "/editor", labelKey: "navQuestionEditor" },
   { href: "/admin/upload", labelKey: "navUpload" },
   { href: "/admin", labelKey: "navAdmin" },
-  { href: "/apply", labelKey: "navApply" },
-  { href: "/presets", labelKey: "navPresets" },
 ] as const;
 
 /** 学术期刊刊头 */

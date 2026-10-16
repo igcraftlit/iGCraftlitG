@@ -6,9 +6,8 @@
  * 作用：命题管理页，编写题目、AI 辅助判断难度与教材、管理已提交题目（发布 / 删除）
  * 内容：准入闸门、命题表单（题干 / 题型 / 选项 / 答案 / 解析 / 难度 / 标签 / 所属教材）、
  *       AI 辅助判断、必填教材校验（未选教材禁止提交）、我的题目清单、部署提示
- * 说明：准入闸门与 E_Admin_Upload 一致（iGM_Examiner_FetchMe + FetchStatus）；
+ * 说明：准入闸门简化——仅校验 gate === "approved"；
  *       记录 AI 建议教材（aiTextbookCode / aiSource）随创建请求提交；文案取自当前语言包
- *       权限互斥：准入通过仅渲染命题面板、绝不渲染申请表单；未通过按状态渲染申请表单或状态提示
  */
 
 // 导入依赖 //
@@ -24,7 +23,6 @@ import {
   Loader2,
   Pencil,
   Plus,
-  RotateCcw,
   Send,
   Sparkles,
   Trash2,
@@ -55,10 +53,8 @@ import {
   iGM_Examiner_FetchMe,
   iGM_Examiner_FetchStatus,
   type iGM_ExaminerGate,
-  type iGM_ExaminerStatus,
 } from "../iGM_Services/iGM_ExaminerClient";
 import { iGM_ExamRequestError } from "../iGM_Services/iGM_ExamClient";
-import { iGM_ExaminerApplyForm as IGM_ExaminerApplyForm } from "../iGM_Components/iGM_ExaminerApplyForm/iGM_ExaminerApplyForm";
 import { useI18n } from "../iGM_i18n/iGM_I18nContext";
 import type { iGM_I18nKey } from "../iGM_i18n/iGM_I18nTypes";
 import styles from "./E_QuestionEditor.module.css";
@@ -99,15 +95,6 @@ const iGM_Question_LevelOptions: { value: string; labelKey: iGM_I18nKey }[] = [
 const iGM_Question_StatusKeys: Record<iGM_QuestionStatus, iGM_I18nKey> = {
   draft: "editorStatusDraft",
   published: "editorStatusPublished",
-};
-
-/** 准入状态 → 文案键 */
-const iGM_Examiner_GateKeys: Record<iGM_ExaminerGate, iGM_I18nKey> = {
-  none: "examinerStatusNone",
-  pending: "examinerStatusPending",
-  approved: "examinerStatusApproved",
-  rejected: "examinerStatusRejected",
-  suspended: "examinerStatusSuspended",
 };
 
 /** 空白表单 */
@@ -179,9 +166,6 @@ export function E_QuestionEditor() {
   );
 
   const [gate, setGate] = useState<iGM_ExaminerGate | null>(null);
-  const [gateStatus, setGateStatus] = useState<iGM_ExaminerStatus | null>(null);
-  /** 被拒绝后是否展开重新申请表单 */
-  const [reapplyOpen, setReapplyOpen] = useState(false);
 
   const [form, setForm] = useState<iGM_Question_Form>(iGM_Question_EmptyForm);
   /** 最近一次 AI 建议的教材代码（可为空） */
@@ -220,16 +204,13 @@ export function E_QuestionEditor() {
     try {
       await iGM_Examiner_FetchMe();
     } catch {
-      setGateStatus(null);
       setGate("none");
       return;
     }
     try {
       const status = await iGM_Examiner_FetchStatus();
-      setGateStatus(status);
       setGate(status.gate);
     } catch {
-      setGateStatus(null);
       setGate("none");
     }
   }, []);
@@ -585,7 +566,7 @@ export function E_QuestionEditor() {
     }
   }
 
-  // 未通过准入（含未登录）：仅展示准入提示与命题创作者申请表单
+  // 未通过准入：简单的"无访问权限"提示
   if (gate !== "approved") {
     return (
       <main className={styles.page}>
@@ -597,77 +578,19 @@ export function E_QuestionEditor() {
           <p className={styles.headLead}>{t("editorLead")}</p>
         </header>
 
-        {gate === null ? (
-          <p className={`igm-mono ${styles.state}`}>
-            {t("examinerStatusLoading")}
-          </p>
-        ) : (
-          <>
-            <section
-              className={`igm-double-rule ${styles.gateSection}`}
-              aria-label={t("editorGateTitle")}
-            >
-              <h2 className={`igm-serif ${styles.gateTitle}`}>
-                {t("editorGateTitle")}
-              </h2>
-              <p className={styles.gateLead}>{t("editorGateLead")}</p>
-              {gateStatus && gateStatus.gate !== "none" && (
-                <div className={styles.gateStatus}>
-                  <span
-                    className={`igm-mono ${styles.gateTag} ${
-                      styles[`gate_${gateStatus.gate}`]
-                    }`}
-                  >
-                    {t(iGM_Examiner_GateKeys[gateStatus.gate])}
-                  </span>
-                  {gateStatus.application?.reviewComment && (
-                    <p className={`igm-mono ${styles.gateComment}`}>
-                      {t("examinerStatusReviewComment")}：
-                      {gateStatus.application.reviewComment}
-                    </p>
-                  )}
-                  <Link href="/status" className={styles.gateLink}>
-                    <span className="igm-mono">{t("examinerStatusTitle")}</span>
-                  </Link>
-                </div>
-              )}
-            </section>
-
-            {/* 权限互斥：未申请展示申请表单；待审核 / 已撤销仅展示状态；
-                已拒绝展示原因与「重新申请」按钮（点击后展开表单）；已通过绝不渲染申请组件 */}
-            {gate === "none" && (
-              <IGM_ExaminerApplyForm onSubmitted={() => void refreshGate()} />
-            )}
-            {gate === "pending" && (
-              <p className={`igm-mono ${styles.gateLead}`}>
-                {t("examinerGatePendingLead")}
-              </p>
-            )}
-            {gate === "suspended" && (
-              <p className={`igm-mono ${styles.gateLead}`}>
-                {t("examinerGateSuspendedLead")}
-              </p>
-            )}
-            {gate === "rejected" &&
-              (reapplyOpen ? (
-                <IGM_ExaminerApplyForm onSubmitted={() => void refreshGate()} />
-              ) : (
-                <>
-                  <p className={`igm-mono ${styles.gateLead}`}>
-                    {t("examinerGateRejectedLead")}
-                  </p>
-                  <button
-                    type="button"
-                    className={styles.reapplyBtn}
-                    onClick={() => setReapplyOpen(true)}
-                  >
-                    <RotateCcw size={14} strokeWidth={1.8} />
-                    <span className="igm-mono">{t("examinerReapply")}</span>
-                  </button>
-                </>
-              ))}
-          </>
-        )}
+        <section
+          className={`igm-double-rule ${styles.gateSection}`}
+          aria-label={t("editorGateTitle")}
+        >
+          <h2 className={`igm-serif ${styles.gateTitle}`}>
+            {t("editorGateTitle")}
+          </h2>
+          <p className={styles.gateLead}>{t("editorGateLead")}</p>
+          <p className={`igm-mono ${styles.state}`}>{t("examinerNoAccess")}</p>
+          <Link href="/" className={styles.gateLink}>
+            <span className="igm-mono">{t("navExaminations")}</span>
+          </Link>
+        </section>
       </main>
     );
   }
@@ -1429,7 +1352,7 @@ export function E_QuestionEditor() {
                 {reviewBusyId !== "" ? (
                   <Loader2 size={14} strokeWidth={1.8} className={styles.spin} />
                 ) : (
-                  <Check size={14} strokeWidth={1.8} />
+                  <Send size={14} strokeWidth={1.8} />
                 )}
                 <span className="igm-mono">{t("reviewSaveApprove")}</span>
               </button>

@@ -33,15 +33,10 @@ import {
 import { iGM_Exam_FetchOnlineIndexIds } from "../iGM_Services/iGM_ExamStaticClient";
 import {
   iGM_Examiner_FetchMe,
-  iGM_Examiner_FetchPresets,
   iGM_Examiner_FetchStatus,
   type iGM_ExaminerGate,
-  type iGM_ExaminerStatus,
-  type iGM_IssuerPresetDto,
 } from "../iGM_Services/iGM_ExaminerClient";
-import { iGM_ExaminerApplyForm as IGM_ExaminerApplyForm } from "../iGM_Components/iGM_ExaminerApplyForm/iGM_ExaminerApplyForm";
 import { useI18n } from "../iGM_i18n/iGM_I18nContext";
-import type { iGM_I18nKey } from "../iGM_i18n/iGM_I18nTypes";
 import styles from "./E_Admin_Upload.module.css";
 
 // 类型定义 //
@@ -78,15 +73,6 @@ const iGM_Exam_EmptyForm: iGM_Exam_PublishForm = {
   notice: "",
 };
 
-/** 准入状态 → 语言包键 */
-const iGM_Examiner_GateKeys: Record<iGM_ExaminerGate, iGM_I18nKey> = {
-  none: "examinerStatusNone",
-  pending: "examinerStatusPending",
-  approved: "examinerStatusApproved",
-  rejected: "examinerStatusRejected",
-  suspended: "examinerStatusSuspended",
-};
-
 // 核心逻辑 //
 /** 判定文件是否为 PDF（扩展名或 MIME） */
 function iGM_Exam_IsPdf(file: File): boolean {
@@ -115,28 +101,19 @@ export function iGM_ExamUploadPage() {
   const [onlineIds, setOnlineIds] = useState<Set<string> | null>(null);
   /** 命题创作者准入状态；null 表示尚未读取 */
   const [gate, setGate] = useState<iGM_ExaminerGate | null>(null);
-  /** 准入状态详情（含最近申请与审核意见） */
-  const [gateStatus, setGateStatus] = useState<iGM_ExaminerStatus | null>(null);
-  /** 命题方预设（供命题方下拉选用） */
-  const [presets, setPresets] = useState<iGM_IssuerPresetDto[]>([]);
-  /** 命题方下拉选中值；空串表示自定义输入 */
-  const [presetChoice, setPresetChoice] = useState("");
 
   /** 读取准入状态；未登录（401）或读取失败时按未准入处理 */
   const refreshGate = useCallback(async (): Promise<void> => {
     try {
       await iGM_Examiner_FetchMe();
     } catch {
-      setGateStatus(null);
       setGate("none");
       return;
     }
     try {
       const status = await iGM_Examiner_FetchStatus();
-      setGateStatus(status);
       setGate(status.gate);
     } catch {
-      setGateStatus(null);
       setGate("none");
     }
   }, []);
@@ -144,23 +121,6 @@ export function iGM_ExamUploadPage() {
   useEffect(() => {
     void refreshGate();
   }, [refreshGate]);
-
-  // 仅准入通过后加载命题方预设
-  useEffect(() => {
-    if (gate !== "approved") return;
-    let cancelled = false;
-    void (async () => {
-      try {
-        const list = await iGM_Examiner_FetchPresets();
-        if (!cancelled) setPresets(list);
-      } catch {
-        if (!cancelled) setPresets([]);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [gate]);
 
   // 部署提示显示期间每 30 秒轮询线上索引，检测到试卷已上线即停止
   useEffect(() => {
@@ -263,7 +223,7 @@ export function iGM_ExamUploadPage() {
     router.push("/admin");
   }
 
-  // 未通过准入（含未登录）：仅展示准入提示与命题创作者申请表单，而非发布表单
+  // 未通过准入：简单的"无访问权限"提示
   if (gate !== "approved") {
     return (
       <main className={styles.page}>
@@ -276,45 +236,19 @@ export function iGM_ExamUploadPage() {
           <p className={styles.headLead}>{t("uploadLead")}</p>
         </header>
 
-        {gate === null ? (
-          <p className={`igm-mono ${styles.state}`}>
-            {t("examinerStatusLoading")}
-          </p>
-        ) : (
-          <>
-            <section
-              className={`igm-double-rule ${styles.gateSection}`}
-              aria-label={t("examinerGateTitle")}
-            >
-              <h2 className={`igm-serif ${styles.gateTitle}`}>
-                {t("examinerGateTitle")}
-              </h2>
-              <p className={styles.gateLead}>{t("examinerGateLead")}</p>
-              {gateStatus && gateStatus.gate !== "none" && (
-                <div className={styles.gateStatus}>
-                  <span
-                    className={`igm-mono ${styles.gateTag} ${
-                      styles[`gate_${gateStatus.gate}`]
-                    }`}
-                  >
-                    {t(iGM_Examiner_GateKeys[gateStatus.gate])}
-                  </span>
-                  {gateStatus.application?.reviewComment && (
-                    <p className={`igm-mono ${styles.gateComment}`}>
-                      {t("examinerStatusReviewComment")}：
-                      {gateStatus.application.reviewComment}
-                    </p>
-                  )}
-                  <Link href="/status" className={styles.gateLink}>
-                    <span className="igm-mono">{t("examinerStatusTitle")}</span>
-                  </Link>
-                </div>
-              )}
-            </section>
-
-            <IGM_ExaminerApplyForm onSubmitted={() => void refreshGate()} />
-          </>
-        )}
+        <section
+          className={`igm-double-rule ${styles.gateSection}`}
+          aria-label={t("examinerGateTitle")}
+        >
+          <h2 className={`igm-serif ${styles.gateTitle}`}>
+            {t("examinerGateTitle")}
+          </h2>
+          <p className={styles.gateLead}>{t("examinerGateLead")}</p>
+          <p className={`igm-mono ${styles.state}`}>{t("examinerNoAccess")}</p>
+          <Link href="/" className={styles.gateLink}>
+            <span className="igm-mono">{t("navExaminations")}</span>
+          </Link>
+        </section>
       </main>
     );
   }
@@ -368,42 +302,17 @@ export function iGM_ExamUploadPage() {
                 placeholder={t("adminPlaceholderSubject")}
               />
             </label>
-            <div className={styles.field}>
+            <label className={styles.field}>
               <span className={`igm-mono ${styles.fieldLabel}`}>
                 {t("fieldIssuer")}
               </span>
-              <div className={styles.issuerRow}>
-                {presets.length > 0 && (
-                  <select
-                    className={styles.input}
-                    value={presetChoice}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setPresetChoice(value);
-                      setForm((prev) => ({
-                        ...prev,
-                        issuer: value || "",
-                      }));
-                    }}
-                    aria-label={t("uploadIssuerPreset")}
-                  >
-                    <option value="">{t("uploadIssuerCustom")}</option>
-                    {presets.map((preset) => (
-                      <option key={preset.id} value={preset.name}>
-                        {preset.name}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                <input
-                  className={styles.input}
-                  value={form.issuer}
-                  onChange={(e) => setForm({ ...form, issuer: e.target.value })}
-                  placeholder={t("adminPlaceholderIssuer")}
-                  disabled={presetChoice !== ""}
-                />
-              </div>
-            </div>
+              <input
+                className={styles.input}
+                value={form.issuer}
+                onChange={(e) => setForm({ ...form, issuer: e.target.value })}
+                placeholder={t("adminPlaceholderIssuer")}
+              />
+            </label>
           </div>
 
           <label className={styles.field}>

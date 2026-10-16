@@ -178,18 +178,6 @@ export async function iGM_SetExamAnswerPath(
   );
 }
 
-/** 写入试卷归档的命题方预设 ID（关键词命中时归档）；无匹配时传 null */
-export async function iGM_SetExamPresetId(
-  examId: string,
-  presetId: string | null,
-): Promise<void> {
-  await iGM_Db.run(
-    `UPDATE iGM_Exams SET iGM_PresetId = ?, iGM_UpdatedAt = ?
-      WHERE iGM_Id = ?`,
-    [presetId, new Date().toISOString(), examId],
-  );
-}
-
 /** 更新试卷元数据（管理端在预览页修改规格后调用） */
 export async function iGM_UpdateExamFields(
   examId: string,
@@ -385,7 +373,6 @@ export default {
   iGM_SetExamHtmlPath,
   iGM_SetExamFileSize,
   iGM_SetExamAnswerPath,
-  iGM_SetExamPresetId,
   iGM_UpdateExamFields,
   iGM_SetExamParseStatus,
   iGM_MarkExamFileCompleted,
