@@ -80,19 +80,18 @@ export function iGM_LandingPage() {
   const year = new Date().getFullYear();
   // 顶部导航主按钮：未登录显示"登录/注册"（进入五框向导），已登录显示头像 + 进入控制台
   const { user } = iGM_UseAuth();
-  /** 是否已滚过阈值：为真时导航固定在顶部，便于紧凑条悬浮跟随滚动 */
-  const [iGM_NavPinned, iGM_SetNavPinned] = useState(false);
-  /** 是否处于紧凑搜索条形态（向下滚动进入，向上滚动退出） */
+  /** 是否处于紧凑搜索条形态（向下滚动进入，向上滚动恢复完整导航） */
   const [iGM_NavCompact, iGM_SetNavCompact] = useState(false);
 
   /**
    * 导航滚动逻辑：监听 window.scrollY 与滚动方向。
-   * - 顶部（未超过阈值）：导航留在文档流中随页面自然滚走；
-   * - 向下滚过阈值：固定于顶部并切换为紧凑搜索条，跟随滚动一直可见；
-   * - 向上滚：恢复完整导航（Logo / 主导航 / 语言 / 主题 / 头像）。
+   * 导航以 sticky 吸顶跟随滚动，因此仅需在"向下滚动 / 向上滚动"之间切换形态：
+   * - 向下滚过阈值：切换为紧凑搜索条（仿 DeepSeek 悬浮搜索框）；
+   * - 向上滚动：恢复完整导航（Logo / 主导航 / 语言 / 主题 / 头像）；
+   * - 回到顶部：恢复完整导航。
    */
   useEffect(() => {
-    /** 触发固定与紧凑形态的滚动阈值 */
+    /** 切换为紧凑形态的滚动阈值 */
     const iGM_Threshold = 100;
     /** 方向判定死区：过滤微小抖动 */
     const iGM_DeadZone = 4;
@@ -104,16 +103,11 @@ export function iGM_LandingPage() {
       const y = window.scrollY;
       const delta = y - iGM_LastY;
 
-      iGM_SetNavPinned(y > iGM_Threshold);
-
       if (y <= iGM_Threshold) {
-        // 回到顶部：恢复完整导航，随页面自然滚动
         iGM_SetNavCompact(false);
       } else if (delta > iGM_DeadZone) {
-        // 向下滚动：切换为紧凑搜索条
         iGM_SetNavCompact(true);
       } else if (delta < -iGM_DeadZone) {
-        // 向上滚动：恢复原样
         iGM_SetNavCompact(false);
       }
 
@@ -127,15 +121,18 @@ export function iGM_LandingPage() {
       window.requestAnimationFrame(iGM_Update);
     }
 
+    // 初始挂载时同步一次，避免刷新后停留在滚动位置却仍是初始形态
+    iGM_Update();
+
     window.addEventListener("scroll", iGM_HandleScroll, { passive: true });
     return () => window.removeEventListener("scroll", iGM_HandleScroll);
   }, []);
 
   return (
     <div className={styles.landing} id="top">
-      {/* ===== 磨砂导航：顶部随页面自然滚动，滚动后固定并切换为紧凑搜索条 ===== */}
+      {/* ===== 磨砂导航：sticky 吸顶跟随滚动，滚动后切换为紧凑搜索条 ===== */}
       <header
-        className={`${styles.topnav} ${iGM_NavPinned ? styles.isPinned : ""} ${iGM_NavCompact ? styles.isCompact : ""}`}
+        className={`${styles.topnav} ${iGM_NavCompact ? styles.isCompact : ""}`}
       >
         <div className={styles.topnavInner}>
           <a href="#top" className={`igm-font-brand ${styles.brand}`}>

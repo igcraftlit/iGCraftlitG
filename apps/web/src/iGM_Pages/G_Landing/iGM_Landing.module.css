@@ -15,7 +15,7 @@
 /* 首页专属主题令牌：参考 DeepSeek 官网设计规范的色板 / 圆角 / 阴影。
    仅在 .landing 作用域内覆盖全局 --igm-* 变量，其余页面不受影响 */
 .landing {
-  /* 作为绝对定位导航的定位参照（导航位于文档顶部，随页面自然滚走） */
+  /* 作为首页内容与吸顶导航的定位上下文 */
   position: relative;
   min-height: 100vh;
 
@@ -70,12 +70,13 @@
 }
 
 /* ===== 悬浮导航 ===== */
-/* 顶部导航：默认留在文档流中随页面自然滚走（不固定） */
+/* 顶部导航：始终随页面滚动跟随并吸顶保持可见。
+   此处必须使用 sticky 而非 fixed：页面外层转场容器（app/[locale]/template.tsx
+   的 .pageEnter）带有 perspective / transform / will-change，会为该容器内的
+   position: fixed 元素创建包含块，使 fixed 导航以容器为参照、随页面一起滚走。 */
 .topnav {
-  position: absolute;
+  position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
   z-index: 30;
   height: var(--igm-topbar-height);
   /* 磨砂玻璃质感：半透明面板底 + 高斯模糊，边框柔和 */
@@ -83,11 +84,6 @@
   -webkit-backdrop-filter: blur(16px) saturate(160%);
   backdrop-filter: blur(16px) saturate(160%);
   border-bottom: 1px solid var(--igm-border);
-}
-
-/* 滚过阈值后固定于顶部，让紧凑搜索条悬浮跟随滚动 */
-.topnav.isPinned {
-  position: fixed;
 }
 
 .topnavInner {
@@ -102,11 +98,11 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 进入固定态时导航自上滑入 */
+/* 紧凑搜索条滑入 */
 @keyframes iGM_NavSlideIn {
   from {
     opacity: 0;
-    transform: translateY(-14px);
+    transform: translateY(-10px);
   }
   to {
     opacity: 1;
@@ -114,15 +110,10 @@
   }
 }
 
-.isPinned .topnavInner {
-  animation: iGM_NavSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
 /* ===== 紧凑搜索条形态：仿 DeepSeek 的居中悬浮搜索框（仅桌面端，移动端保持完整导航） ===== */
 @media (min-width: 901px) {
+  /* 保持与顶部形态一致的流内高度，避免切换时页面内容发生位移 */
   .topnav.isCompact {
-    height: 60px;
-    padding-top: 8px;
     background-color: transparent;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
@@ -131,6 +122,8 @@
 
   .isCompact .topnavInner {
     max-width: 520px;
+    height: calc(var(--igm-topbar-height) - 12px);
+    margin: 6px auto 0;
     padding: 0 10px 0 14px;
     justify-content: center;
     gap: 12px;
@@ -140,6 +133,7 @@
     -webkit-backdrop-filter: blur(16px) saturate(160%);
     backdrop-filter: blur(16px) saturate(160%);
     box-shadow: var(--igm-shadow-hover);
+    animation: iGM_NavSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* 紧凑形态仅保留小号 Logo 与搜索入口 */
@@ -155,7 +149,6 @@
 
   .isCompact .navSearch {
     display: inline-flex;
-    animation: iGM_NavSlideIn 0.28s ease;
   }
 }
 
@@ -266,7 +259,8 @@
 /* ===== Hero ===== */
 .hero {
   position: relative;
-  min-height: 100svh;
+  /* 导航已在文档流内占据高度，此处扣除，使 Hero 恰好填满首屏 */
+  min-height: calc(100svh - var(--igm-topbar-height));
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -306,7 +300,7 @@
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 96px 28px 72px;
+  padding: 40px 28px 72px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 600px);
   gap: 40px;
@@ -709,8 +703,7 @@
   }
 
   /* 导航滑入动画与形态过渡一并关闭 */
-  .isPinned .topnavInner,
-  .isCompact .navSearch {
+  .isCompact .topnavInner {
     animation: none;
   }
 
