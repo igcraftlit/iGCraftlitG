@@ -12,6 +12,7 @@
 // 导入依赖 //
 "use client";
 
+import { useEffect, useState } from "react";
 import { iGM_Link as Link } from "../../iGM_Components/iGM_Link/iGM_Link";
 import { useTranslations } from "next-intl";
 import {
@@ -79,11 +80,63 @@ export function iGM_LandingPage() {
   const year = new Date().getFullYear();
   // 顶部导航主按钮：未登录显示"登录/注册"（进入五框向导），已登录显示头像 + 进入控制台
   const { user } = iGM_UseAuth();
+  /** 是否已滚过阈值：为真时导航固定在顶部，便于紧凑条悬浮跟随滚动 */
+  const [iGM_NavPinned, iGM_SetNavPinned] = useState(false);
+  /** 是否处于紧凑搜索条形态（向下滚动进入，向上滚动退出） */
+  const [iGM_NavCompact, iGM_SetNavCompact] = useState(false);
+
+  /**
+   * 导航滚动逻辑：监听 window.scrollY 与滚动方向。
+   * - 顶部（未超过阈值）：导航留在文档流中随页面自然滚走；
+   * - 向下滚过阈值：固定于顶部并切换为紧凑搜索条，跟随滚动一直可见；
+   * - 向上滚：恢复完整导航（Logo / 主导航 / 语言 / 主题 / 头像）。
+   */
+  useEffect(() => {
+    /** 触发固定与紧凑形态的滚动阈值 */
+    const iGM_Threshold = 100;
+    /** 方向判定死区：过滤微小抖动 */
+    const iGM_DeadZone = 4;
+
+    let iGM_LastY = window.scrollY;
+    let iGM_Ticking = false;
+
+    function iGM_Update(): void {
+      const y = window.scrollY;
+      const delta = y - iGM_LastY;
+
+      iGM_SetNavPinned(y > iGM_Threshold);
+
+      if (y <= iGM_Threshold) {
+        // 回到顶部：恢复完整导航，随页面自然滚动
+        iGM_SetNavCompact(false);
+      } else if (delta > iGM_DeadZone) {
+        // 向下滚动：切换为紧凑搜索条
+        iGM_SetNavCompact(true);
+      } else if (delta < -iGM_DeadZone) {
+        // 向上滚动：恢复原样
+        iGM_SetNavCompact(false);
+      }
+
+      iGM_LastY = y;
+      iGM_Ticking = false;
+    }
+
+    function iGM_HandleScroll(): void {
+      if (iGM_Ticking) return;
+      iGM_Ticking = true;
+      window.requestAnimationFrame(iGM_Update);
+    }
+
+    window.addEventListener("scroll", iGM_HandleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", iGM_HandleScroll);
+  }, []);
 
   return (
     <div className={styles.landing} id="top">
-      {/* ===== 固定磨砂导航：始终固定在顶部，跟随全场滚动 ===== */}
-      <header className={styles.topnav}>
+      {/* ===== 磨砂导航：顶部随页面自然滚动，滚动后固定并切换为紧凑搜索条 ===== */}
+      <header
+        className={`${styles.topnav} ${iGM_NavPinned ? styles.isPinned : ""} ${iGM_NavCompact ? styles.isCompact : ""}`}
+      >
         <div className={styles.topnavInner}>
           <a href="#top" className={`igm-font-brand ${styles.brand}`}>
             {/* 站点 LOGO：静态资源位于 public 根目录 */}
@@ -107,6 +160,16 @@ export function iGM_LandingPage() {
               {t("landing.nav.join")}
             </a>
           </nav>
+
+          {/* 紧凑形态专用的搜索 / 命令入口 */}
+          <Link
+            href="/G_Search"
+            className={styles.navSearch}
+            aria-label={t("topbar.search")}
+          >
+            <Search size={15} strokeWidth={2} aria-hidden />
+            <span className={styles.navSearchLabel}>{t("topbar.search")}</span>
+          </Link>
 
           <div className={styles.navActions}>
             {user ? (
@@ -139,18 +202,19 @@ export function iGM_LandingPage() {
         <div className={styles.heroInner}>
           <div className={styles.heroText}>
             <IGM_Reveal direction="right" duration={800}>
-              {/* 网站名称：位于主标题上方，字号小于主标题 */}
-              <p className={`igm-font-brand ${styles.heroBrand}`}>
-                {t("home.heading")}
-              </p>
-            </IGM_Reveal>
-            <IGM_Reveal direction="right" duration={800} delay={110}>
+              {/* 真正的主标题：网站名称，页面最大字号 */}
               <h1 className={`igm-font-brand ${styles.heroTitle}`}>
-                {t("landing.hero.title")}
+                {t("home.heading")}
               </h1>
             </IGM_Reveal>
-            <IGM_Reveal direction="right" duration={800} delay={220}>
+            <IGM_Reveal direction="right" duration={800} delay={110}>
+              {/* 副标题：次要字号 */}
               <p className={styles.heroSubtitle}>
+                {t("landing.hero.title")}
+              </p>
+            </IGM_Reveal>
+            <IGM_Reveal direction="right" duration={800} delay={220}>
+              <p className={styles.heroDescription}>
                 {t("landing.hero.subtitle")}
               </p>
             </IGM_Reveal>

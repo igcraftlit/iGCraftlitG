@@ -15,6 +15,8 @@
 /* 首页专属主题令牌：参考 DeepSeek 官网设计规范的色板 / 圆角 / 阴影。
    仅在 .landing 作用域内覆盖全局 --igm-* 变量，其余页面不受影响 */
 .landing {
+  /* 作为绝对定位导航的定位参照（导航位于文档顶部，随页面自然滚走） */
+  position: relative;
   min-height: 100vh;
 
   /* 亮色：品牌色 #4d6bfe，页面背景 #f9f8f8，浮层 #ffffff，面板 hsla(0,0%,100%,.3) */
@@ -68,8 +70,9 @@
 }
 
 /* ===== 悬浮导航 ===== */
+/* 顶部导航：默认留在文档流中随页面自然滚走（不固定） */
 .topnav {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   right: 0;
@@ -80,12 +83,11 @@
   -webkit-backdrop-filter: blur(16px) saturate(160%);
   backdrop-filter: blur(16px) saturate(160%);
   border-bottom: 1px solid var(--igm-border);
-  /* 柔和阴影：让固定导航与滚动内容形成层次分离 */
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03), 0 10px 24px rgba(15, 23, 42, 0.05);
 }
 
-:global(html[data-theme="dark"]) .topnav {
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 24px rgba(0, 0, 0, 0.45);
+/* 滚过阈值后固定于顶部，让紧凑搜索条悬浮跟随滚动 */
+.topnav.isPinned {
+  position: fixed;
 }
 
 .topnavInner {
@@ -97,6 +99,64 @@
   align-items: center;
   justify-content: space-between;
   gap: 20px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 进入固定态时导航自上滑入 */
+@keyframes iGM_NavSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.isPinned .topnavInner {
+  animation: iGM_NavSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== 紧凑搜索条形态：仿 DeepSeek 的居中悬浮搜索框（仅桌面端，移动端保持完整导航） ===== */
+@media (min-width: 901px) {
+  .topnav.isCompact {
+    height: 60px;
+    padding-top: 8px;
+    background-color: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-bottom-color: transparent;
+  }
+
+  .isCompact .topnavInner {
+    max-width: 520px;
+    padding: 0 10px 0 14px;
+    justify-content: center;
+    gap: 12px;
+    border: 1px solid var(--igm-border);
+    border-radius: 999px;
+    background-color: var(--igm-panel);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    backdrop-filter: blur(16px) saturate(160%);
+    box-shadow: var(--igm-shadow-hover);
+  }
+
+  /* 紧凑形态仅保留小号 Logo 与搜索入口 */
+  .isCompact .brandText,
+  .isCompact .navLinks,
+  .isCompact .navActions {
+    display: none;
+  }
+
+  .isCompact .brandLogo {
+    height: 22px;
+  }
+
+  .isCompact .navSearch {
+    display: inline-flex;
+    animation: iGM_NavSlideIn 0.28s ease;
+  }
 }
 
 .brand {
@@ -120,6 +180,38 @@
 
 .brandText {
   white-space: nowrap;
+}
+
+/* 紧凑形态专用的搜索入口：默认隐藏，滚动收缩后显示 */
+.navSearch {
+  display: none;
+  align-items: center;
+  gap: 7px;
+  flex: 1;
+  min-width: 0;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border-strong);
+  background-color: var(--igm-surface-subtle);
+  color: var(--igm-text-muted);
+  font-size: 13px;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.navSearch:hover {
+  color: var(--igm-text);
+  border-color: var(--igm-accent);
+  background-color: var(--igm-accent-soft);
+}
+
+.navSearchLabel {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .navLinks {
@@ -233,26 +325,29 @@
   z-index: 0;
 }
 
-/* 网站名称：位于主标题上方，字号小于主标题 */
-.heroBrand {
-  margin-bottom: 14px;
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  color: var(--igm-accent);
-}
-
+/* 网站名称作为真正的主标题：页面最大字号 */
 .heroTitle {
-  font-size: clamp(30px, 3.6vw, 46px);
+  font-size: clamp(32px, 4.6vw, 62px);
   font-weight: 700;
-  line-height: 1.22;
+  line-height: 1.12;
   letter-spacing: -0.01em;
   color: var(--igm-text);
 }
 
+/* 副标题：次要字号 */
 .heroSubtitle {
-  margin-top: 18px;
-  max-width: 520px;
+  margin-top: 16px;
+  max-width: 560px;
+  font-size: clamp(16px, 1.9vw, 21px);
+  font-weight: 500;
+  line-height: 1.6;
+  color: var(--igm-text-muted);
+}
+
+/* 第三行小字描述 */
+.heroDescription {
+  margin-top: 16px;
+  max-width: 540px;
   font-size: 14.5px;
   line-height: 1.9;
   color: var(--igm-text-muted);
@@ -307,9 +402,9 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  height: 44px;
-  padding: 0 24px;
-  border-radius: 999px;
+  height: 42px;
+  padding: 0 22px;
+  border-radius: var(--igm-radius);
   font-size: 14.5px;
   font-weight: 500;
   white-space: nowrap;
@@ -611,5 +706,15 @@
   .heroGlow,
   .scrollHint {
     animation: none;
+  }
+
+  /* 导航滑入动画与形态过渡一并关闭 */
+  .isPinned .topnavInner,
+  .isCompact .navSearch {
+    animation: none;
+  }
+
+  .topnavInner {
+    transition: none;
   }
 }
