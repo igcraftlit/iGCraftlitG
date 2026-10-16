@@ -143,6 +143,8 @@
       "auth": "登录 / 注册"
     },
     "hero": {
+      "title": "以方块为基，用代码筑梦，向科技深处探索。",
+      "subtitle": "iGCraftLit 是一个深耕 Minecraft、代码与科技领域的创作者团队。我们因方块相聚，以创新为驱动，以合作为纽带，用代码重构想象，用科技拓展边界。我们期待与每一位热爱探索的玩家，共同构建一个开放、共创的技术生态。",
       "slogan": "「以方块之名，向世界敞开。」",
       "description": "iGCraftLit 是一个面向 Minecraft 创作者的玩家社区。我们因方块相聚，汇聚热爱建造与探索的人们，共同构筑开放、自由的游戏生态。",
       "primary": "进入社区",
@@ -222,7 +224,7 @@
       "secondary": "登录"
     },
     "footer": {
-      "rights": "© {year} iGCraftLit Community. All rights reserved.",
+      "rights": "© {year} iGCraftLit Team. All Rights Reserved.",
       "console": "控制台"
     }
   },

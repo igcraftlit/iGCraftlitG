@@ -143,6 +143,8 @@
       "auth": "ログイン / 登録"
     },
     "hero": {
+      "title": "ブロックを礎に、コードで夢を紡ぎ、テクノロジーの深淵へ。",
+      "subtitle": "iGCraftLit は、Minecraft・コード・テクノロジーを深く掘り下げるクリエイターチームです。ブロックが私たちを結び、イノベーションを原動力に、協働を絆に、コードで想像を再構築し、テクノロジーで境界を広げていきます。探索を愛するすべてのプレイヤーとともに、開かれた共創の技術エコシステムを築いていきます。",
       "slogan": "「ブロックの名のもとに、世界へ開こう。」",
       "description": "iGCraftLit は Minecraft クリエイターのためのコミュニティです。ブロックに集い、建築と探索を愛する人々が集い、開かれた自由なゲームエコシステムを共に築きます。",
       "primary": "コミュニティへ",
@@ -222,7 +224,7 @@
       "secondary": "ログイン"
     },
     "footer": {
-      "rights": "© {year} iGCraftLit Community. All rights reserved.",
+      "rights": "© {year} iGCraftLit Team. All Rights Reserved.",
       "console": "コンソール"
     }
   },

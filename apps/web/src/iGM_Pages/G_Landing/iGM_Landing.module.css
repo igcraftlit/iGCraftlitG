@@ -12,10 +12,54 @@
   scroll-behavior: smooth;
 }
 
+/* 首页专属主题令牌：参考 DeepSeek 官网设计规范的色板 / 圆角 / 阴影。
+   仅在 .landing 作用域内覆盖全局 --igm-* 变量，其余页面不受影响 */
 .landing {
   min-height: 100vh;
+
+  /* 亮色：品牌色 #4d6bfe，页面背景 #f9f8f8，浮层 #ffffff，面板 hsla(0,0%,100%,.3) */
+  --igm-bg: #f9f8f8;
+  --igm-surface: #ffffff;
+  --igm-surface-subtle: rgba(15, 23, 42, 0.035);
+  --igm-border: #f1f5f9;
+  --igm-border-strong: #e2e8f0;
+  --igm-text: #18181b;
+  --igm-text-muted: #64748b;
+  --igm-text-subtle: #94a3b8;
+  --igm-accent: #4d6bfe;
+  --igm-accent-hover: #3f5cf0;
+  --igm-accent-soft: rgba(77, 107, 254, 0.08);
+  --igm-radius: 12px;
+  --igm-radius-lg: 24px;
+  --igm-shadow: 0 0 0 1px #f1f5f9, 0 2px 4px rgba(15, 23, 42, 0.04),
+    0 12px 24px rgba(15, 23, 42, 0.06);
+  --igm-shadow-hover: 0 0 0 1px #e2e8f0, 0 4px 8px rgba(15, 23, 42, 0.06),
+    0 16px 32px rgba(15, 23, 42, 0.1);
+  /* 磨砂悬浮导航底色：面板背景（亮色 30% 白） */
+  --igm-panel: hsla(0, 0%, 100%, 0.3);
+
   background: var(--igm-bg);
   color: var(--igm-text);
+}
+
+/* 暗色：品牌色 #6799fe，页面背景 #0a0a0a，浮层 #262626，面板 hsla(0,0%,100%,.06) */
+:global(html[data-theme="dark"]) .landing {
+  --igm-bg: #0a0a0a;
+  --igm-surface: #262626;
+  --igm-surface-subtle: rgba(255, 255, 255, 0.05);
+  --igm-border: rgba(255, 255, 255, 0.08);
+  --igm-border-strong: rgba(255, 255, 255, 0.14);
+  --igm-text: #f5f5f5;
+  --igm-text-muted: #a3a3a3;
+  --igm-text-subtle: #737373;
+  --igm-accent: #6799fe;
+  --igm-accent-hover: #86aaff;
+  --igm-accent-soft: rgba(103, 153, 254, 0.14);
+  --igm-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 2px 4px rgba(0, 0, 0, 0.4), 0 12px 24px rgba(0, 0, 0, 0.5);
+  --igm-shadow-hover: 0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 4px 8px rgba(0, 0, 0, 0.45), 0 16px 32px rgba(0, 0, 0, 0.6);
+  --igm-panel: hsla(0, 0%, 100%, 0.06);
 }
 
 /* 锚点定位时为悬浮导航预留空间 */
@@ -31,9 +75,10 @@
   right: 0;
   z-index: 30;
   height: var(--igm-topbar-height);
-  background: color-mix(in srgb, var(--igm-bg) 82%, transparent);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
+  /* 磨砂玻璃质感：半透明面板底 + 高斯模糊，边框柔和 */
+  background: var(--igm-panel);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  backdrop-filter: blur(12px) saturate(160%);
   border-bottom: 1px solid var(--igm-border);
 }
 
@@ -49,26 +94,42 @@
 }
 
 .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
   font-size: 19px;
   font-weight: 700;
   color: var(--igm-text);
   flex-shrink: 0;
 }
 
+/* 站点 LOGO：固定高度，宽度自适应 */
+.brandLogo {
+  width: auto;
+  height: 26px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  user-select: none;
+}
+
 .navLinks {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 4px;
 }
 
+/* 导航项：悬停出现圆角矩形高亮背景 */
 .navAnchor {
+  padding: 8px 14px;
+  border-radius: 10px;
   font-size: 13.5px;
   color: var(--igm-text-muted);
-  transition: color 0.15s ease;
+  transition: color 0.15s ease, background-color 0.15s ease;
 }
 
 .navAnchor:hover {
-  color: var(--igm-accent);
+  color: var(--igm-text);
+  background: var(--igm-surface-subtle);
 }
 
 .navActions {
@@ -139,42 +200,69 @@
 
 .heroInner {
   position: relative;
+  z-index: 1; /* 内容位于交互点阵背景之上 */
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 96px 28px 72px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 600px);
-  gap: 40px;
+  padding: 132px 28px 96px;
+  display: flex;
+  justify-content: center;
 }
 
 .heroText {
-  grid-column: 2;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  max-width: 880px;
+}
+
+/* 交互点阵背景画布：铺满 Hero，位于内容之下 */
+.heroCanvas {
+  z-index: 0;
+}
+
+/* Reveal 包装横向撑满，保证标题与副标题按容器宽度自然换行 */
+.heroLine {
+  width: 100%;
 }
 
 .heroTitle {
-  font-size: clamp(56px, 9vw, 104px);
+  position: relative;
+  font-size: clamp(30px, 5.2vw, 58px);
   font-weight: 700;
-  line-height: 1.05;
-  letter-spacing: 0.01em;
+  line-height: 1.18;
+  letter-spacing: -0.01em;
   color: var(--igm-text);
 }
 
-.heroSlogan {
-  margin-top: 18px;
-  font-size: clamp(18px, 2.2vw, 23px);
-  font-style: italic;
-  color: var(--igm-text-muted);
+/* 标题聚光灯：指针位置径向柔光，difference 混合呈现柔和高光 */
+.heroTitle::after {
+  content: "";
+  position: absolute;
+  inset: -8%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  background: radial-gradient(
+    circle 170px at var(--igm-spot-x, 50%) var(--igm-spot-y, 50%),
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.35) 35%,
+    transparent 70%
+  );
+  mix-blend-mode: difference;
 }
 
-.heroDescription {
-  margin-top: 20px;
-  max-width: 470px;
-  font-size: 14.5px;
-  line-height: 1.9;
+.heroTitle:hover::after {
+  opacity: 1;
+}
+
+.heroSubtitle {
+  margin-top: 22px;
+  max-width: 760px;
+  font-size: clamp(14px, 1.5vw, 16px);
+  line-height: 1.95;
   color: var(--igm-text-muted);
 }
 
@@ -182,6 +270,7 @@
   margin-top: 36px;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 14px;
   flex-wrap: wrap;
 }
@@ -189,6 +278,7 @@
 /* 向下滚动指示：底部居中轻微浮动 */
 .scrollHint {
   position: absolute;
+  z-index: 2;
   bottom: 26px;
   left: 50%;
   transform: translateX(-50%);
@@ -438,49 +528,13 @@
   padding: 26px 28px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.footerBrand {
-  font-size: 14px;
-  color: var(--igm-text);
+  justify-content: center;
 }
 
 .footerCopyright {
   font-size: 12.5px;
   color: var(--igm-text-subtle);
-}
-
-.footerActions {
-  display: inline-flex;
-  align-items: center;
-  gap: 18px;
-}
-
-.footerDev {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12.5px;
-  color: var(--igm-text-muted);
-  white-space: nowrap;
-  transition: color 0.15s ease;
-}
-
-.footerDev:hover {
-  color: var(--igm-accent);
-}
-
-.footerConsole {
-  font-size: 12.5px;
-  color: var(--igm-text-muted);
-  transition: color 0.15s ease;
-}
-
-.footerConsole:hover {
-  color: var(--igm-accent);
+  text-align: center;
 }
 
 /* ===== 响应式：平板与手机 ===== */
@@ -490,11 +544,8 @@
   }
 
   .heroInner {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .heroText {
-    grid-column: 1;
+    /* 窄屏 Hero 顶部留白收敛，避免与悬浮导航叠加 */
+    padding-top: 108px;
   }
 
   .sectionInner {
@@ -547,16 +598,6 @@
   .ctaActions .buttonGhost {
     flex: 1 1 auto;
     justify-content: center;
-  }
-
-  .footerCopyright {
-    order: 3;
-    width: 100%;
-  }
-
-  .footerActions {
-    flex-wrap: wrap;
-    gap: 10px 16px;
   }
 }
 

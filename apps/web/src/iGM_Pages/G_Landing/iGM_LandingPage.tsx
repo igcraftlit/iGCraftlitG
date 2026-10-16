@@ -4,18 +4,19 @@
  * 路由：/（控制台之前的门户落地页）
  * 模块：G_Landing
  * 作用：进入控制台之前的品牌门户主页，介绍社区理念、领域、活动与价值观
- * 内容：悬浮导航、Hero 首屏、WHY / FOCUS / WHAT / VALUES 区块、加入我们 CTA、页脚
+ * 内容：磨砂悬浮导航（含 LOGO 与登录头像）、居中 Hero（交互点阵背景 + 标题聚光灯）、
+ *       WHY / FOCUS / WHAT / VALUES 区块、加入我们 CTA、极简页脚
  * 动效：Hero 阶梯拉出、区块滚动进场、卡片悬停、滚动指示（均支持 reduce-motion 降级）
  */
 
 // 导入依赖 //
 "use client";
 
+import { useRef, type PointerEvent as ReactPointerEvent } from "react";
 import { iGM_Link as Link } from "../../iGM_Components/iGM_Link/iGM_Link";
 import { useTranslations } from "next-intl";
 import {
   ArrowRight,
-  ArrowUpRight,
   BookOpen,
   CalendarDays,
   ChevronDown,
@@ -29,12 +30,13 @@ import {
   Package,
   Search,
   Sparkles,
-  Terminal,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { iGM_Reveal as IGM_Reveal } from "../../iGM_Components/iGM_Reveal/iGM_Reveal";
 import { iGM_ThemeToggle as IGM_ThemeToggle } from "../../iGM_Components/iGM_ThemeToggle/iGM_ThemeToggle";
 import { iGM_LanguageSwitcher as IGM_LanguageSwitcher } from "../../iGM_Components/iGM_LanguageSwitcher/iGM_LanguageSwitcher";
+import { iGM_Avatar as IGM_Avatar } from "../../iGM_Components/iGM_Avatar/iGM_Avatar";
+import { iGM_DotGrid as IGM_DotGrid } from "../../iGM_Components/iGM_DotGrid/iGM_DotGrid";
 import { iGM_UseAuth } from "../../iGM_Providers/iGM_AuthProvider";
 import styles from "./iGM_Landing.module.css";
 
@@ -76,8 +78,21 @@ const iGM_WhyTags = ["t1", "t2", "t3", "t4"];
 export function iGM_LandingPage() {
   const t = useTranslations();
   const year = new Date().getFullYear();
-  // 顶部导航主按钮：未登录显示"登录/注册"（进入五框向导），已登录显示"进入控制台"
+  // 顶部导航主按钮：未登录显示"登录/注册"（进入五框向导），已登录显示头像 + 进入控制台
   const { user } = iGM_UseAuth();
+  /** Hero 主标题元素：鼠标移动时写入聚光灯坐标 CSS 变量 */
+  const iGM_TitleRef = useRef<HTMLHeadingElement | null>(null);
+
+  /** 标题聚光灯：把指针位置换算为标题内的像素坐标写入 CSS 变量 */
+  function iGM_HandleTitleMove(
+    event: ReactPointerEvent<HTMLHeadingElement>,
+  ): void {
+    const node = iGM_TitleRef.current;
+    if (!node) return;
+    const rect = node.getBoundingClientRect();
+    node.style.setProperty("--igm-spot-x", `${event.clientX - rect.left}px`);
+    node.style.setProperty("--igm-spot-y", `${event.clientY - rect.top}px`);
+  }
 
   return (
     <div className={styles.landing} id="top">
@@ -85,6 +100,13 @@ export function iGM_LandingPage() {
       <header className={styles.topnav}>
         <div className={styles.topnavInner}>
           <a href="#top" className={`igm-font-brand ${styles.brand}`}>
+            {/* 站点 LOGO：静态资源位于 public 根目录 */}
+            <img
+              src="/iGM_save1.ico"
+              alt=""
+              aria-hidden
+              className={styles.brandLogo}
+            />
             {t("landing.brand")}
           </a>
 
@@ -103,6 +125,12 @@ export function iGM_LandingPage() {
           <div className={styles.navActions}>
             {user ? (
               <Link href="/G_Home" className={styles.consoleButton}>
+                {/* 已登录：显示头像 + 进入控制台 */}
+                <IGM_Avatar
+                  src={user.avatar}
+                  name={user.displayName || user.username}
+                  size="sm"
+                />
                 {t("landing.nav.console")}
               </Link>
             ) : (
@@ -119,25 +147,37 @@ export function iGM_LandingPage() {
 
       {/* ===== Hero 首屏 ===== */}
       <section className={styles.hero} id="hero">
+        {/* 交互点阵网格背景：鼠标移动产生微妙互动 */}
+        <IGM_DotGrid className={styles.heroCanvas} />
         <div className={styles.heroGlow} aria-hidden />
         <div className={styles.heroInner}>
           <div className={styles.heroText}>
-            <IGM_Reveal direction="right" duration={800}>
-              <h1 className={`igm-font-brand ${styles.heroTitle}`}>
-                {t("landing.brand")}
+            <IGM_Reveal direction="up" duration={800} className={styles.heroLine}>
+              {/* 主标题：鼠标移动时出现柔和聚光灯跟随（mix-blend-mode: difference） */}
+              <h1
+                ref={iGM_TitleRef}
+                className={`igm-font-brand ${styles.heroTitle}`}
+                onPointerMove={iGM_HandleTitleMove}
+              >
+                {t("landing.hero.title")}
               </h1>
             </IGM_Reveal>
-            <IGM_Reveal direction="right" duration={800} delay={110}>
-              <p className={styles.heroSlogan}>
-                {t("landing.hero.slogan")}
+            <IGM_Reveal
+              direction="up"
+              duration={800}
+              delay={140}
+              className={styles.heroLine}
+            >
+              <p className={styles.heroSubtitle}>
+                {t("landing.hero.subtitle")}
               </p>
             </IGM_Reveal>
-            <IGM_Reveal direction="right" duration={800} delay={220}>
-              <p className={styles.heroDescription}>
-                {t("landing.hero.description")}
-              </p>
-            </IGM_Reveal>
-            <IGM_Reveal direction="right" duration={800} delay={330}>
+            <IGM_Reveal
+              direction="up"
+              duration={800}
+              delay={280}
+              className={styles.heroLine}
+            >
               <div className={styles.heroActions}>
                 <Link href="/G_Community" className={styles.buttonPrimary}>
                   {t("landing.hero.primary")}
@@ -320,26 +360,8 @@ export function iGM_LandingPage() {
 
       {/* ===== 页脚 ===== */}
       <footer className={styles.landingFooter}>
-        <span className={`igm-font-brand ${styles.footerBrand}`}>
-          {t("landing.brand")}
-        </span>
         <span className={styles.footerCopyright}>
           {t("landing.footer.rights", { year })}
-        </span>
-        <span className={styles.footerActions}>
-          <a
-            className={styles.footerDev}
-            href="https://cli.igcraftlit.com"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Terminal size={12} aria-hidden />
-            {t("footer.devPortal")}
-            <ArrowUpRight size={11} aria-hidden />
-          </a>
-          <Link href="/G_Home" className={styles.footerConsole}>
-            {t("landing.footer.console")}
-          </Link>
         </span>
       </footer>
     </div>

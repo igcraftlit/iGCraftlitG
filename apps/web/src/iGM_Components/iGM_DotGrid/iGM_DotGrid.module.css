@@ -1,0 +1,22 @@
+/*
+ * 文件路径：apps/web/src/iGM_Components/iGM_DotGrid/iGM_DotGrid.module.css
+ * 所属层：前端 / 通用组件样式
+ * 路由：G_Landing（首页 Hero 背景）
+ * 模块：iGM_DotGrid
+ * 作用：交互点阵网格背景的铺满容器与画布样式
+ * 内容：绝对定位铺满、禁止指针事件抢占、随主题过渡
+ */
+
+.host {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  /* 背景不拦截交互，鼠标事件交给上层内容 */
+  pointer-events: none;
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

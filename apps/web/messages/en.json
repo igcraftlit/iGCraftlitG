@@ -143,6 +143,8 @@
       "auth": "Log in / Sign up"
     },
     "hero": {
+      "title": "Built on blocks, dreamed in code, exploring the depths of technology.",
+      "subtitle": "iGCraftLit is a creators' team deeply rooted in Minecraft, code and technology. Gathered by blocks, driven by innovation and bound by collaboration, we reshape imagination with code and push the boundaries with technology. Together with every explorer, we are building an open, co-created technical ecosystem.",
       "slogan": "\"In the name of blocks, open to the world.\"",
       "description": "iGCraftLit is a community for Minecraft creators. Gathered by blocks, we bring together players who love building and exploring to shape an open, free gaming ecosystem.",
       "primary": "Enter Community",
@@ -222,7 +224,7 @@
       "secondary": "Sign In"
     },
     "footer": {
-      "rights": "© {year} iGCraftLit Community. All rights reserved.",
+      "rights": "© {year} iGCraftLit Team. All Rights Reserved.",
       "console": "Console"
     }
   },
