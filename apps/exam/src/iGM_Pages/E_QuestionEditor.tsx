@@ -16,15 +16,19 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   AlertCircle,
+  Check,
   CheckCircle2,
   Loader2,
+  Pencil,
   Plus,
   RotateCcw,
   Send,
   Sparkles,
   Trash2,
+  X,
 } from "lucide-react";
 import {
   iGM_Question_Analyze,
@@ -37,6 +41,12 @@ import {
   type iGM_QuestionStatus,
   type iGM_QuestionType,
 } from "../iGM_Services/iGM_QuestionClient";
+import {
+  iGM_QuestionAi_FetchPending,
+  iGM_QuestionAi_NormalizeOptions,
+  iGM_QuestionAi_Review,
+  type iGM_PendingQuestion,
+} from "../iGM_Services/iGM_QuestionAiClient";
 import {
   iGM_QuestionTextbooks,
   iGM_QuestionTextbookName,
@@ -113,6 +123,28 @@ const iGM_Question_EmptyForm: iGM_Question_Form = {
   textbookCode: "",
 };
 
+/** 命题管理标签页：我的题目 / 待审核题目 */
+type iGM_Editor_Tab = "mine" | "pending";
+
+/** 待审核题目「编辑后通过」表单（数值与标签以字符串承载） */
+interface iGM_Review_EditForm {
+  stem: string;
+  type: iGM_QuestionType;
+  options: iGM_QuestionOption[];
+  answer: string;
+  analysis: string;
+  textbookCode: string;
+  tags: string;
+  difficultyCoefficient: string;
+  difficultyLevel: string;
+}
+
+/** 待审核题目编辑弹窗状态 */
+interface iGM_Review_EditState {
+  questionId: string;
+  form: iGM_Review_EditForm;
+}
+
 // 核心逻辑 //
 /** 难度等级归一化：简单 / 中等 / 困难三档，未识别时回落中等 */
 function iGM_Question_NormalizeLevel(value: string): string {
@@ -139,6 +171,12 @@ function iGM_Question_SplitTags(text: string): string[] {
 /** 命题管理页 */
 export function E_QuestionEditor() {
   const { t } = useI18n();
+  const searchParams = useSearchParams();
+
+  /** 当前标签页：支持 ?tab=pending 直达待审核题目 */
+  const [activeTab, setActiveTab] = useState<iGM_Editor_Tab>(() =>
+    searchParams.get("tab") === "pending" ? "pending" : "mine",
+  );
 
   const [gate, setGate] = useState<iGM_ExaminerGate | null>(null);
   const [gateStatus, setGateStatus] = useState<iGM_ExaminerStatus | null>(null);
@@ -165,6 +203,17 @@ export function E_QuestionEditor() {
   const [busyId, setBusyId] = useState("");
   /** 是否显示"正在部署"提示 */
   const [deploying, setDeploying] = useState(false);
+
+  /** 待审核题目列表 */
+  const [pending, setPending] = useState<iGM_PendingQuestion[]>([]);
+  const [pendingState, setPendingState] = useState<iGM_Question_ListState>("loading");
+  const [pendingMessage, setPendingMessage] = useState("");
+  /** 待审核题目操作成功提示 */
+  const [reviewNotice, setReviewNotice] = useState("");
+  /** 正在通过 / 拒绝的题目 id */
+  const [reviewBusyId, setReviewBusyId] = useState("");
+  /** 编辑后通过弹窗；null 表示未打开 */
+  const [reviewEdit, setReviewEdit] = useState<iGM_Review_EditState | null>(null);
 
   /** 读取准入状态；未登录（401）或读取失败时按未准入处理 */
   const refreshGate = useCallback(async (): Promise<void> => {
@@ -208,6 +257,188 @@ export function E_QuestionEditor() {
     if (gate !== "approved") return;
     void loadMine();
   }, [gate, loadMine]);
+
+  /** 加载待审核题目 */
+  const loadPending = useCallback(async (): Promise<void> => {
+    setPendingState("loading");
+    setPendingMessage("");
+    try {
+      const list = await iGM_QuestionAi_FetchPending();
+      setPending(list);
+      setPendingState("ready");
+    } catch (err) {
+      setPendingMessage(err instanceof iGM_ExamRequestError ? err.message : "");
+      setPendingState("error");
+    }
+  }, []);
+
+  // 准入通过且切到「待审核题目」标签时加载
+  useEffect(() => {
+    if (gate !== "approved") return;
+    if (activeTab !== "pending") return;
+    void loadPending();
+  }, [gate, activeTab, loadPending]);
+
+  /** 通过题目 */
+  async function approve(questionId: string): Promise<void> {
+    if (reviewBusyId) return;
+    setReviewBusyId(questionId);
+    setPendingMessage("");
+    setReviewNotice("");
+    try {
+      await iGM_QuestionAi_Review({ questionId, action: "approve" });
+      setPending((list) => list.filter((item) => item.id !== questionId));
+      setReviewNotice(t("reviewApproved"));
+    } catch (err) {
+      setPendingMessage(
+        err instanceof iGM_ExamRequestError ? err.message : t("editorFailed"),
+      );
+    } finally {
+      setReviewBusyId("");
+    }
+  }
+
+  /** 拒绝题目 */
+  async function reject(questionId: string): Promise<void> {
+    if (reviewBusyId) return;
+    if (!window.confirm(t("editorDeleteConfirm"))) return;
+    setReviewBusyId(questionId);
+    setPendingMessage("");
+    setReviewNotice("");
+    try {
+      await iGM_QuestionAi_Review({ questionId, action: "reject" });
+      setPending((list) => list.filter((item) => item.id !== questionId));
+      setReviewNotice(t("reviewRejected"));
+    } catch (err) {
+      setPendingMessage(
+        err instanceof iGM_ExamRequestError ? err.message : t("editorFailed"),
+      );
+    } finally {
+      setReviewBusyId("");
+    }
+  }
+
+  /** 打开「编辑后通过」弹窗，用题目当前内容预填表单 */
+  function openReviewEdit(item: iGM_PendingQuestion): void {
+    setReviewNotice("");
+    setPendingMessage("");
+    setReviewEdit({
+      questionId: item.id,
+      form: {
+        stem: item.stem,
+        type: item.type,
+        options: iGM_QuestionAi_NormalizeOptions(item.options),
+        answer: item.answer,
+        analysis: item.analysis,
+        textbookCode: item.textbookCode,
+        tags: Array.isArray(item.tags) ? item.tags.join(", ") : "",
+        difficultyCoefficient:
+          item.difficultyCoefficient === null
+            ? ""
+            : String(item.difficultyCoefficient),
+        difficultyLevel: iGM_Question_NormalizeLevel(item.difficultyLevel),
+      },
+    });
+  }
+
+  /** 更新编辑弹窗表单某个字段 */
+  function patchReview(partial: Partial<iGM_Review_EditForm>): void {
+    setReviewEdit((current) =>
+      current ? { ...current, form: { ...current.form, ...partial } } : current,
+    );
+  }
+
+  /** 编辑弹窗新增选项 */
+  function reviewAddOption(): void {
+    setReviewEdit((current) =>
+      current
+        ? {
+            ...current,
+            form: {
+              ...current.form,
+              options: [
+                ...current.form.options,
+                { key: iGM_Question_NextKey(current.form.options.length), text: "" },
+              ],
+            },
+          }
+        : current,
+    );
+  }
+
+  /** 编辑弹窗删除选项 */
+  function reviewRemoveOption(index: number): void {
+    setReviewEdit((current) =>
+      current
+        ? {
+            ...current,
+            form: {
+              ...current.form,
+              options: current.form.options.filter((_, i) => i !== index),
+            },
+          }
+        : current,
+    );
+  }
+
+  /** 编辑弹窗修改选项 */
+  function reviewUpdateOption(
+    index: number,
+    partial: Partial<iGM_QuestionOption>,
+  ): void {
+    setReviewEdit((current) =>
+      current
+        ? {
+            ...current,
+            form: {
+              ...current.form,
+              options: current.form.options.map((item, i) =>
+                i === index ? { ...item, ...partial } : item,
+              ),
+            },
+          }
+        : current,
+    );
+  }
+
+  /** 保存并入库：以 approve 携带 edits 提交，成功后从列表移除 */
+  async function saveReviewEdit(): Promise<void> {
+    if (!reviewEdit || reviewBusyId) return;
+    const { questionId, form } = reviewEdit;
+    const coefficient = Number.parseFloat(form.difficultyCoefficient);
+    const isChoice =
+      form.type === "single_choice" || form.type === "multiple_choice";
+    setReviewBusyId(questionId);
+    setPendingMessage("");
+    setReviewNotice("");
+    try {
+      await iGM_QuestionAi_Review({
+        questionId,
+        action: "approve",
+        edits: {
+          stem: form.stem.trim(),
+          options: isChoice ? form.options : [],
+          answer: form.answer.trim(),
+          analysis: form.analysis.trim(),
+          textbookCode: form.textbookCode,
+          tags: iGM_Question_SplitTags(form.tags),
+          difficultyCoefficient: Number.isFinite(coefficient)
+            ? coefficient
+            : undefined,
+          difficultyLevel: form.difficultyLevel,
+        },
+      });
+      setPending((list) => list.filter((item) => item.id !== questionId));
+      setReviewEdit(null);
+      setReviewNotice(t("reviewApproved"));
+    } catch (err) {
+      setPendingMessage(
+        err instanceof iGM_ExamRequestError ? err.message : t("editorFailed"),
+      );
+    } finally {
+      setReviewBusyId("");
+    }
+  }
 
   const isChoiceType =
     form.type === "single_choice" || form.type === "multiple_choice";
@@ -458,8 +689,32 @@ export function E_QuestionEditor() {
         </div>
       )}
 
-      {/* 命题表单 */}
-      <section className={styles.section} aria-label={t("editorFormTitle")}>
+      {/* 标签切换：我的题目 / 待审核题目 */}
+      <div className={styles.tabs} role="tablist">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "mine"}
+          className={`${styles.tab} ${activeTab === "mine" ? styles.tabActive : ""}`}
+          onClick={() => setActiveTab("mine")}
+        >
+          <span className="igm-mono">{t("editorTabMine")}</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "pending"}
+          className={`${styles.tab} ${activeTab === "pending" ? styles.tabActive : ""}`}
+          onClick={() => setActiveTab("pending")}
+        >
+          <span className="igm-mono">{t("editorTabPending")}</span>
+        </button>
+      </div>
+
+      {activeTab === "mine" ? (
+        <>
+          {/* 命题表单 */}
+          <section className={styles.section} aria-label={t("editorFormTitle")}>
         <div className={styles.sectionHead}>
           <span className={`igm-mono ${styles.sectionNum}`}>§ 1</span>
           <h2 className={`igm-serif ${styles.sectionTitle}`}>
@@ -801,6 +1056,387 @@ export function E_QuestionEditor() {
           </div>
         )}
       </section>
+        </>
+      ) : (
+        <section className={styles.section} aria-label={t("editorTabPending")}>
+          <div className={styles.sectionHead}>
+            <span className={`igm-mono ${styles.sectionNum}`}>§ 2</span>
+            <h2 className={`igm-serif ${styles.sectionTitle}`}>
+              {t("editorTabPending")}
+            </h2>
+          </div>
+
+          {reviewNotice && !pendingMessage && (
+            <p className={`igm-mono ${styles.alertOk}`}>
+              <CheckCircle2 size={14} strokeWidth={1.8} />
+              {reviewNotice}
+            </p>
+          )}
+          {pendingMessage && (
+            <p className={`igm-mono ${styles.alertError}`}>
+              <AlertCircle size={14} strokeWidth={1.8} />
+              {pendingMessage}
+            </p>
+          )}
+
+          {pendingState === "loading" && (
+            <p className={`igm-mono ${styles.state}`}>{t("editorLoading")}</p>
+          )}
+          {pendingState === "error" && (
+            <p className={`igm-mono ${styles.alertError}`}>
+              <AlertCircle size={14} strokeWidth={1.8} />
+              {pendingMessage || t("editorFailed")}
+            </p>
+          )}
+          {pendingState === "ready" && pending.length === 0 && (
+            <p className={`igm-mono ${styles.state}`}>{t("reviewEmpty")}</p>
+          )}
+
+          {pendingState === "ready" && pending.length > 0 && (
+            <div className={styles.reviewList}>
+              {pending.map((item) => {
+                const busy = reviewBusyId === item.id;
+                const typeOption = iGM_Question_TypeOptions.find(
+                  (option) => option.value === item.type,
+                );
+                const levelOption = iGM_Question_LevelOptions.find(
+                  (option) =>
+                    option.value ===
+                    iGM_Question_NormalizeLevel(item.difficultyLevel),
+                );
+                const options = iGM_QuestionAi_NormalizeOptions(item.options);
+                return (
+                  <article key={item.id} className={styles.reviewCard}>
+                    <div className={styles.reviewTop}>
+                      <span className={`igm-mono ${styles.reviewType}`}>
+                        {typeOption ? t(typeOption.labelKey) : item.type}
+                      </span>
+                      <span className={`igm-mono ${styles.reviewTextbook}`}>
+                        {item.textbookName ||
+                          iGM_QuestionTextbookName(item.textbookCode)}
+                      </span>
+                      {item.qualityScore !== null && (
+                        <span className={`igm-mono ${styles.reviewScore}`}>
+                          {t("aiQualityScore")} {item.qualityScore}
+                        </span>
+                      )}
+                      <span className={`igm-mono ${styles.reviewScore}`}>
+                        {t("aiDifficultyCoefficient")}{" "}
+                        {item.difficultyCoefficient === null
+                          ? "—"
+                          : item.difficultyCoefficient}
+                        {levelOption ? ` · ${t(levelOption.labelKey)}` : ""}
+                      </span>
+                    </div>
+
+                    <p className={styles.reviewStem}>{item.stem}</p>
+
+                    {options.length > 0 && (
+                      <ul className={styles.reviewOptions}>
+                        {options.map((option) => (
+                          <li key={option.key} className={styles.reviewOption}>
+                            <span className={`igm-mono ${styles.reviewOptionKey}`}>
+                              {option.key}
+                            </span>
+                            <span>{option.text}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    {item.answer && (
+                      <p className={styles.reviewField}>
+                        <span className={`igm-mono ${styles.reviewFieldKey}`}>
+                          {t("bankFieldAnswer")}
+                        </span>
+                        {item.answer}
+                      </p>
+                    )}
+                    {item.analysis && (
+                      <p className={styles.reviewField}>
+                        <span className={`igm-mono ${styles.reviewFieldKey}`}>
+                          {t("bankFieldAnalysis")}
+                        </span>
+                        {item.analysis}
+                      </p>
+                    )}
+
+                    {Array.isArray(item.tags) && item.tags.length > 0 && (
+                      <div className={styles.reviewTags}>
+                        {item.tags.map((tag) => (
+                          <span key={tag} className={`igm-mono ${styles.reviewTag}`}>
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {item.aiReason && (
+                      <p className={styles.reviewReason}>
+                        <span className={`igm-mono ${styles.reviewReasonKey}`}>
+                          {t("aiReason")}
+                        </span>
+                        {item.aiReason}
+                      </p>
+                    )}
+
+                    <div className={styles.reviewActions}>
+                      <button
+                        type="button"
+                        className={styles.approveBtn}
+                        onClick={() => void approve(item.id)}
+                        disabled={busy}
+                      >
+                        {busy ? (
+                          <Loader2
+                            size={13}
+                            strokeWidth={1.8}
+                            className={styles.spin}
+                          />
+                        ) : (
+                          <Check size={13} strokeWidth={1.8} />
+                        )}
+                        <span className="igm-mono">{t("reviewApprove")}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.editApproveBtn}
+                        onClick={() => openReviewEdit(item)}
+                        disabled={busy}
+                      >
+                        <Pencil size={13} strokeWidth={1.8} />
+                        <span className="igm-mono">{t("reviewEditApprove")}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.rejectBtn}
+                        onClick={() => void reject(item.id)}
+                        disabled={busy}
+                      >
+                        <X size={13} strokeWidth={1.8} />
+                        <span className="igm-mono">{t("reviewReject")}</span>
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* 编辑后通过弹窗 */}
+      {reviewEdit && (
+        <div className={styles.modalOverlay} role="presentation">
+          <div
+            className={styles.modal}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t("reviewEditTitle")}
+          >
+            <h3 className={`igm-serif ${styles.modalTitle}`}>
+              {t("reviewEditTitle")}
+            </h3>
+
+            <div className={styles.modalForm}>
+              <label className={styles.field}>
+                <span className={`igm-mono ${styles.fieldLabel}`}>
+                  {t("editorFieldStem")}
+                </span>
+                <textarea
+                  className={styles.textarea}
+                  rows={3}
+                  value={reviewEdit.form.stem}
+                  onChange={(event) => patchReview({ stem: event.target.value })}
+                />
+              </label>
+
+              <div className={styles.fieldRow}>
+                <label className={styles.field}>
+                  <span className={`igm-mono ${styles.fieldLabel}`}>
+                    {t("editorFieldType")}
+                  </span>
+                  <select
+                    className={styles.input}
+                    value={reviewEdit.form.type}
+                    onChange={(event) =>
+                      patchReview({ type: event.target.value as iGM_QuestionType })
+                    }
+                  >
+                    {iGM_Question_TypeOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {t(option.labelKey)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className={styles.field}>
+                  <span className={`igm-mono ${styles.fieldLabel}`}>
+                    {t("editorFieldTextbook")}
+                  </span>
+                  <select
+                    className={styles.input}
+                    value={reviewEdit.form.textbookCode}
+                    onChange={(event) =>
+                      patchReview({ textbookCode: event.target.value })
+                    }
+                  >
+                    <option value="">{t("editorSelectTextbook")}</option>
+                    {iGM_QuestionTextbooks.map((book) => (
+                      <option key={book.code} value={book.code}>
+                        {book.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              {(reviewEdit.form.type === "single_choice" ||
+                reviewEdit.form.type === "multiple_choice") && (
+                <div className={styles.field}>
+                  <span className={`igm-mono ${styles.fieldLabel}`}>
+                    {t("editorFieldOptions")}
+                  </span>
+                  <div className={styles.optionList}>
+                    {reviewEdit.form.options.map((option, index) => (
+                      <div key={index} className={styles.optionRow}>
+                        <input
+                          className={styles.optionKeyInput}
+                          value={option.key}
+                          onChange={(event) =>
+                            reviewUpdateOption(index, { key: event.target.value })
+                          }
+                          aria-label={t("editorOptionKey")}
+                        />
+                        <input
+                          className={styles.input}
+                          value={option.text}
+                          onChange={(event) =>
+                            reviewUpdateOption(index, { text: event.target.value })
+                          }
+                          aria-label={t("editorOptionText")}
+                        />
+                        <button
+                          type="button"
+                          className={styles.removeBtn}
+                          onClick={() => reviewRemoveOption(index)}
+                          aria-label={t("editorRemoveOption")}
+                          title={t("editorRemoveOption")}
+                        >
+                          <Trash2 size={14} strokeWidth={1.8} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    className={styles.addBtn}
+                    onClick={reviewAddOption}
+                  >
+                    <Plus size={14} strokeWidth={1.8} />
+                    <span className="igm-mono">{t("editorAddOption")}</span>
+                  </button>
+                </div>
+              )}
+
+              <label className={styles.field}>
+                <span className={`igm-mono ${styles.fieldLabel}`}>
+                  {t("editorFieldAnswer")}
+                </span>
+                <input
+                  className={styles.input}
+                  value={reviewEdit.form.answer}
+                  onChange={(event) => patchReview({ answer: event.target.value })}
+                />
+              </label>
+
+              <label className={styles.field}>
+                <span className={`igm-mono ${styles.fieldLabel}`}>
+                  {t("editorFieldAnalysis")}
+                </span>
+                <textarea
+                  className={styles.textarea}
+                  rows={3}
+                  value={reviewEdit.form.analysis}
+                  onChange={(event) =>
+                    patchReview({ analysis: event.target.value })
+                  }
+                />
+              </label>
+
+              <div className={styles.fieldRow}>
+                <label className={styles.field}>
+                  <span className={`igm-mono ${styles.fieldLabel}`}>
+                    {t("editorFieldDifficulty")}
+                  </span>
+                  <input
+                    className={styles.input}
+                    inputMode="decimal"
+                    value={reviewEdit.form.difficultyCoefficient}
+                    onChange={(event) =>
+                      patchReview({ difficultyCoefficient: event.target.value })
+                    }
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span className={`igm-mono ${styles.fieldLabel}`}>
+                    {t("bankFieldDifficulty")}
+                  </span>
+                  <select
+                    className={styles.input}
+                    value={reviewEdit.form.difficultyLevel}
+                    onChange={(event) =>
+                      patchReview({ difficultyLevel: event.target.value })
+                    }
+                  >
+                    {iGM_Question_LevelOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {t(option.labelKey)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <label className={styles.field}>
+                <span className={`igm-mono ${styles.fieldLabel}`}>
+                  {t("editorFieldTags")}
+                </span>
+                <input
+                  className={styles.input}
+                  value={reviewEdit.form.tags}
+                  onChange={(event) => patchReview({ tags: event.target.value })}
+                />
+              </label>
+            </div>
+
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.modalCancel}
+                onClick={() => setReviewEdit(null)}
+                disabled={reviewBusyId !== ""}
+              >
+                <span className="igm-mono">{t("adminCancel")}</span>
+              </button>
+              <button
+                type="button"
+                className={styles.modalConfirm}
+                onClick={() => void saveReviewEdit()}
+                disabled={reviewBusyId !== ""}
+              >
+                {reviewBusyId !== "" ? (
+                  <Loader2 size={14} strokeWidth={1.8} className={styles.spin} />
+                ) : (
+                  <Check size={14} strokeWidth={1.8} />
+                )}
+                <span className="igm-mono">{t("reviewSaveApprove")}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

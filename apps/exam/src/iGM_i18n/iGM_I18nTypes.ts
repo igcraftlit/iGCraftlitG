@@ -368,6 +368,37 @@ export interface iGM_I18nDict {
   difficultyEasy: string;
   difficultyMedium: string;
   difficultyHard: string;
+  // AI 亮点题目检索
+  aiSelectFindBtn: string;
+  aiSelectAnalyzing: string;
+  aiSelectFailed: string;
+  aiSelectEmpty: string;
+  aiSelectKeywordHint: string;
+  aiHighlightTitle: string;
+  aiQualityScore: string;
+  aiDifficultyCoefficient: string;
+  aiKnowledgeTags: string;
+  aiTextbook: string;
+  aiReason: string;
+  aiSendToEditor: string;
+  aiSendSuccess: string;
+  aiSendGoNow: string;
+  aiSendLater: string;
+  aiIgnore: string;
+  aiSelectAll: string;
+  aiExpand: string;
+  aiCollapse: string;
+  // 命题管理：待审核题目
+  editorTabMine: string;
+  editorTabPending: string;
+  reviewApprove: string;
+  reviewReject: string;
+  reviewEditApprove: string;
+  reviewSaveApprove: string;
+  reviewEmpty: string;
+  reviewApproved: string;
+  reviewRejected: string;
+  reviewEditTitle: string;
 }
 
 /** 语言包键联合类型 */

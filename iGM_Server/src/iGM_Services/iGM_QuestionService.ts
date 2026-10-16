@@ -104,7 +104,7 @@ function iGM_ClampCoefficient(value: number | null): number | null {
 }
 
 /** 数据行 → 题目 DTO（唯一映射出口） */
-function iGM_ToQuestionDto(row: iGM_QuestionRow): iGM_QuestionDto {
+export function iGM_ToQuestionDto(row: iGM_QuestionRow): iGM_QuestionDto {
   const type =
     row.iGM_Type && iGM_IsQuestionType(row.iGM_Type)
       ? row.iGM_Type

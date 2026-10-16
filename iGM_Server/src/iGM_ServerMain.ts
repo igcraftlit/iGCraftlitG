@@ -73,6 +73,8 @@ import { iGM_ExaminerError } from "./iGM_Services/iGM_ExaminerService";
 // 考试系统：题库与题目编辑器
 import { G_Question } from "./iGM_Routes/G_Question";
 import { iGM_QuestionError } from "./iGM_Services/iGM_QuestionService";
+// 考试系统：AI 亮点题目检索 / 送往命题管理 / 待审核审批
+import { G_ExamHighlight } from "./iGM_Routes/G_ExamHighlight";
 import { iGM_EnsureExamStorageRoot } from "./iGM_Services/iGM_ExamIngestService";
 import { iGM_StartExamCleanup } from "./iGM_Services/iGM_ExamCleanupService";
 
@@ -244,6 +246,8 @@ const iGM_Server = new Elysia()
   .use(G_Examiner)
   // 考试系统：题库与题目编辑器（/api/question/*）
   .use(G_Question)
+  // 考试系统：AI 亮点题目检索 / 送往命题管理 / 待审核审批（/api/exam/*）
+  .use(G_ExamHighlight)
   // 根路径占位
   .get("/", () => ({
     success: true,

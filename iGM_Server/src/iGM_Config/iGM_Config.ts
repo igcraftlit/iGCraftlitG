@@ -362,6 +362,10 @@ export const iGM_Config: iGM_AppConfig = {
     questionWrite: { windowMs: 60 * 1000, max: 20 },
     // 题库：AI 智能分析（触发本地模型）——1 分钟内最多 10 次
     questionAnalyze: { windowMs: 60 * 1000, max: 10 },
+    // 考试站：AI 亮点题目检索（整卷逐题触发本地模型，耗时较长）——1 分钟内最多 6 次
+    highlightAnalyze: { windowMs: 60 * 1000, max: 6 },
+    // 考试站：亮点候选题写操作（送往命题管理 / 审批）——1 分钟内最多 30 次
+    highlightWrite: { windowMs: 60 * 1000, max: 30 },
   },
   mail: {
     // 163 邮箱 SMTP：465 端口隐式 SSL；密码使用客户端授权码（非登录密码），
