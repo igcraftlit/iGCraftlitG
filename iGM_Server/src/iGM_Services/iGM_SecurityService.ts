@@ -140,6 +140,32 @@ export function iGM_ClearSessionCookie(
   return iGM_BuildSetCookie(config.auth.cookieName, "", 0, options);
 }
 
+/**
+ * 写入考试站独立会话 Cookie 的便捷方法。
+ * 与主站会话完全隔离：使用独立 Cookie 名，且 host-only（不传 domain），
+ * 因此不会下发到 .igcraftlit.com，主站退出登录不会清除它，反之亦然。
+ */
+export function iGM_BuildExamSessionCookie(
+  config: typeof iGM_Config,
+  sessionId: string,
+  options?: { secureOverride?: boolean },
+): string {
+  return iGM_BuildSetCookie(
+    config.examOAuth.sessionCookieName,
+    sessionId,
+    Math.floor(config.auth.sessionTtlMs / 1000),
+    options,
+  );
+}
+
+/** 清除考试站独立会话 Cookie（host-only，与主站 Cookie 互不影响） */
+export function iGM_ClearExamSessionCookie(
+  config: typeof iGM_Config,
+  options?: { secureOverride?: boolean },
+): string {
+  return iGM_BuildSetCookie(config.examOAuth.sessionCookieName, "", 0, options);
+}
+
 // 导出 //
 export default {
   iGM_HashPassword,
@@ -154,4 +180,6 @@ export default {
   iGM_BuildSetCookie,
   iGM_BuildSessionCookie,
   iGM_ClearSessionCookie,
+  iGM_BuildExamSessionCookie,
+  iGM_ClearExamSessionCookie,
 };

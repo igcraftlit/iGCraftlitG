@@ -7,10 +7,11 @@
  * 内容：
  *   GET  /api/exam/oauth/login     — 生成 PKCE + state，302 到主站 /oauth/authorize
  *   GET  /api/exam/oauth/callback  — 主站回跳，code→token→userinfo→本地会话，302 回 exam 首页
- *   GET  /api/exam/oauth/me        — 读 cookie 返回当前用户（含 creator 信息）
- *   POST /api/exam/oauth/logout    — 清本地会话 + 清 cookie
+ *   GET  /api/exam/oauth/me        — 读考试站独立 cookie 返回当前用户（含 creator 信息）
+ *   POST /api/exam/oauth/logout    — 仅清考试站本地会话 + 独立 cookie（不动主站）
  * 约束：client_secret 仅存在 iGM_Config.examOAuth，严禁落日志或响应；
- *       callback cookie 显式 Domain=.igcraftlit.com 让 exam.igcraftlit.com 能读到
+ *       考试站使用独立会话 Cookie（igm_exam_session，host-only 不写 Domain），
+ *       与主站 iGM_SID(.igcraftlit.com) 完全隔离：互不影响退出登录
  */
 
 // 导入依赖 //
@@ -18,8 +19,8 @@ import { Elysia } from "elysia";
 import { iGM_Config } from "../iGM_Config/iGM_Config";
 import { iGM_Ok } from "../iGM_Types/iGM_Response";
 import {
-  iGM_BuildSessionCookie,
-  iGM_ClearSessionCookie,
+  iGM_BuildExamSessionCookie,
+  iGM_ClearExamSessionCookie,
   iGM_ReadCookie,
 } from "../iGM_Services/iGM_SecurityService";
 import {
@@ -82,22 +83,20 @@ function iGM_Q(query: Record<string, string | undefined>, key: string): string {
 /* ---------- 工具：根据请求 host 构造 cookie options ---------- */
 
 /**
- * 为 exam OAuth 登录的 Set-Cookie 构造 domain + secure 选项：
- * - localhost 无 domain、无 Secure（http 能写）
- * - 其他生产域名显式 Domain=.igcraftlit.com + Secure
+ * 为考试站独立会话 Cookie 构造 options：
+ * - 生产域名 HTTPS 下追加 Secure（host-only，不写 Domain，故不会下发到 .igcraftlit.com）
+ * - localhost 无 Secure（http 才能写入），同样不写 Domain
+ * 说明：cookie 落在当前接口域名（api.igcraftlit.com）上且仅此主机可见，
+ *       考试站前端调用同域接口时正常携带，主站页面/接口读不到该会话。
  */
 function iGM_ExamCookieOptions(host: string): {
-  domain?: string;
   secureOverride?: boolean;
 } {
   const lower = host.toLowerCase();
   const isLocal =
     lower === "localhost" || lower === "127.0.0.1" || lower === "::1";
   if (isLocal) return {};
-  return {
-    domain: iGM_Config.examOAuth.cookieDomain,
-    secureOverride: true,
-  };
+  return { secureOverride: true };
 }
 
 /* ---------- GET /api/exam/oauth/login ---------- */
@@ -172,9 +171,9 @@ async function iGM_HandleCallback(ctx: iGM_RouteContext): Promise<Response> {
       ip,
     });
 
-    // 设置跨子域 cookie
+    // 签发考试站独立会话 cookie（igm_exam_session，host-only，不写主站域）
     const cookieOpts = iGM_ExamCookieOptions(host);
-    const cookie = iGM_BuildSessionCookie(
+    const cookie = iGM_BuildExamSessionCookie(
       iGM_Config,
       result.sessionId,
       cookieOpts,
@@ -221,7 +220,11 @@ function iGM_BuildExamHomeUrl(host: string): string {
  * 未登录时返回 { success:true, data: null }（200，让前端能区分"未登录"和"接口错误"）
  */
 async function iGM_HandleMe(ctx: iGM_RouteContext) {
-  const sid = iGM_ReadCookie(ctx.request, iGM_Config.auth.cookieName);
+  // 只读考试站独立会话 cookie；主站 iGM_SID 不参与，保证两站登录态互不联动
+  const sid = iGM_ReadCookie(
+    ctx.request,
+    iGM_Config.examOAuth.sessionCookieName,
+  );
   const user = sid ? await iGM_ResolveSession(sid) : null;
   if (!user) {
     return iGM_Ok(null);
@@ -252,19 +255,22 @@ async function iGM_HandleMe(ctx: iGM_RouteContext) {
 /* ---------- POST /api/exam/oauth/logout ---------- */
 
 /**
- * 清除本地会话 + 清 cookie。
- * 主站 IdP 令牌此处不 revoke（access_token 1h 自动过期，简化实现）；
- * 如需 revoke 需额外 upstreamAccessToken 持久化，后续再补。
+ * 退出考试站：只清考试站本地会话 + 独立 cookie。
+ * - 不调用主站登出接口，不触碰主站 iGM_SID cookie（主站登录态不受影响）
+ * - 不 revoke 主站 OAuth 令牌（access_token 1h 自动过期；如需撤销仅在"解除授权"时单独调用）
  */
 async function iGM_HandleLogout(ctx: iGM_RouteContext) {
-  const sid = iGM_ReadCookie(ctx.request, iGM_Config.auth.cookieName);
+  const sid = iGM_ReadCookie(
+    ctx.request,
+    iGM_Config.examOAuth.sessionCookieName,
+  );
   if (sid) {
     await iGM_RevokeLocalSession(sid);
   }
 
   const host = iGM_HostOf(ctx.request);
   const cookieOpts = iGM_ExamCookieOptions(host);
-  const clear = iGM_ClearSessionCookie(iGM_Config, cookieOpts);
+  const clear = iGM_ClearExamSessionCookie(iGM_Config, cookieOpts);
   ctx.set.headers["Set-Cookie"] = clear;
   ctx.set.status = 200;
   return iGM_Ok(null);

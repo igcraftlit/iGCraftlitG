@@ -180,8 +180,12 @@ export interface iGM_ExamOAuthClientConfig {
   allowHttpLocal: boolean;
   /** OAuth scope 请求 */
   scope: string;
-  /** 跨子域 cookie 的 domain（用于 exam.igcraftlit.com 共享登录态） */
-  cookieDomain: string;
+  /**
+   * 考试站独立会话 Cookie 名。
+   * 与主站 iGM_SID 完全隔离：主站退出/重新登录不会影响考试站，
+   * 考试站退出也不会动主站 Cookie。
+   */
+  sessionCookieName: string;
   /** OAuth client 接入方展示名称（日志用） */
   appName: string;
 }
@@ -491,8 +495,8 @@ export const iGM_Config: iGM_AppConfig = {
       "http://localhost:3001/api/exam/oauth/callback",
     allowHttpLocal: true,
     scope: process.env.IGCRAFTLIT_OAUTH_SCOPE ?? "openid profile",
-    cookieDomain:
-      process.env.IGCRAFTLIT_OAUTH_COOKIE_DOMAIN ?? ".igcraftlit.com",
+    // 考试站独立会话 Cookie：host-only 签发（不写 Domain），与主站 .igcraftlit.com 域隔离
+    sessionCookieName: "igm_exam_session",
     appName: "iGCraftLit 考试站",
   },
   quota: {

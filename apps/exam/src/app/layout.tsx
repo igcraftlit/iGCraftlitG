@@ -6,8 +6,8 @@
  * 作用：iGC&M 教育考试系统子站点 HTML 根节点、字体变量与全局样式注入
  * 内容：衬线（Source Serif 4）/ 无衬线（Inter）/ 等宽（JetBrains Mono）
  *       三套字体变量、防 FOUC 主题初始化脚本、站点元数据
- * 说明：刊头日期在客户端挂载后按本地时间刷新，并按当前语言格式化，
- *       首屏使用构建期日期，避免水合不一致
+ * 说明：刊头/页脚改由 iGM_ExamChrome 按路由渲染，独立授权登录页（/login）
+ *       不显示刊头与页脚；刊头日期在客户端挂载后按本地时间刷新
  */
 
 // 导入依赖 //
@@ -15,8 +15,7 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import type { ReactNode } from "react";
 import { Inter, JetBrains_Mono, Source_Serif_4 } from "next/font/google";
-import { iGM_ExamMasthead as IGM_ExamMasthead } from "../iGM_Components/iGM_ExamMasthead/iGM_ExamMasthead";
-import { iGM_ExamFooter as IGM_ExamFooter } from "../iGM_Components/iGM_ExamFooter/iGM_ExamFooter";
+import { iGM_ExamChrome as IGM_ExamChrome } from "../iGM_Components/iGM_ExamChrome/iGM_ExamChrome";
 import { iGM_ExamI18nProvider as IGM_ExamI18nProvider } from "../iGM_i18n/iGM_I18nContext";
 import { iGM_ExamAuthProvider as IGM_ExamAuthProvider } from "../iGM_AuthContext";
 import "./globals.css";
@@ -97,9 +96,7 @@ export default function iGM_Exam_RootLayout({
         />
         <IGM_ExamAuthProvider>
           <IGM_ExamI18nProvider>
-            <IGM_ExamMasthead />
-            {children}
-            <IGM_ExamFooter />
+            <IGM_ExamChrome>{children}</IGM_ExamChrome>
           </IGM_ExamI18nProvider>
         </IGM_ExamAuthProvider>
       </body>
