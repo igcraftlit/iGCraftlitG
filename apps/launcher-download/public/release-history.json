@@ -1,11 +1,85 @@
 {
   "releases": [
     {
+      "id": "3b7f1c2a-9d64-4f18-8a2b-5c1e7f904a21",
+      "version": "26.4.1",
+      "releasedAt": "2026-10-17",
+      "updateType": "patch",
+      "isLatest": true,
+      "channel": "stable",
+      "platform": "Windows x64",
+      "fileName": "",
+      "fileSize": 0,
+      "fileSizeLabel": "",
+      "sha256": "",
+      "downloadUrl": "",
+      "releasePageUrl": "",
+      "notes": {
+        "zh-CN": {
+          "improved": [
+            "资源中心第二步详情面板改为满高填充，版本演进图与详情面板纵向随窗口拉伸铺满"
+          ],
+          "fixed": [
+            "修复资源中心全屏自适应：废除外层固定的 max-width 限制，改用 width 100% 的 Flex 布局，左侧版本演进图与右侧详情面板按约 1.8 : 1 的比例随窗口放大拉伸，消除两侧大片留白",
+            "修复版本演进图轨道高度被固定为 420px 的问题，改为占满面板剩余高度（最小 240px）"
+          ]
+        },
+        "en": {
+          "improved": [
+            "The step-2 detail panel in the Resource Center now fills the available height, letting the version graph and the detail panel stretch vertically"
+          ],
+          "fixed": [
+            "Fixed the Resource Center full-screen layout: removed the fixed outer max-width and switched to a width:100% flex layout, so the version graph on the left and the detail panel on the right scale proportionally (about 1.8 : 1) with the window and the large side gaps are gone",
+            "Fixed the version graph track being locked to a 420px height; it now fills the remaining panel height (min 240px)"
+          ]
+        }
+      }
+    },
+    {
+      "id": "a1c9e4d5-72b3-4e8f-9c15-6d20b8f3e7a4",
+      "version": "26.4.0",
+      "releasedAt": "2026-10-15",
+      "updateType": "minor",
+      "isLatest": false,
+      "channel": "stable",
+      "platform": "Windows x64",
+      "fileName": "",
+      "fileSize": 0,
+      "fileSizeLabel": "",
+      "sha256": "",
+      "downloadUrl": "",
+      "releasePageUrl": "",
+      "notes": {
+        "zh-CN": {
+          "added": [
+            "皮肤库内置 100 款精选皮肤，支持「精选 / 全部」浏览、分页（每页 15 款）、懒加载与换页防抖",
+            "资源中心第三步支持为 Fabric / Forge / NeoForge 自由选择具体的加载器版本，不再强制使用最新版",
+            "版本演进图重做为线性时间轴：一条主线贯穿原版正式版，快照版与特殊版自主线节点引出分支"
+          ],
+          "improved": [
+            "主界面全屏铺满，顶部导航磨砂质感加深（backdrop-filter blur 26px）",
+            "演进图等独立滚动区锁定滚动链，滚轮不再带动整页滚动"
+          ]
+        },
+        "en": {
+          "added": [
+            "The skin library now ships 100 built-in skins with Featured / All browsing, paging (15 per page), lazy loading and debounced page changes",
+            "Step 3 of the Resource Center now lets you pick a specific version for Fabric / Forge / NeoForge instead of forcing the latest",
+            "The version graph is now a linear timeline: a main line runs through releases, with snapshots and special versions branching off the main-line nodes"
+          ],
+          "improved": [
+            "The main UI now fills the whole window and the top navigation has a deeper frosted look (backdrop-filter blur 26px)",
+            "Independent scroll areas such as the graph now lock the scroll chain, so the wheel no longer scrolls the whole page"
+          ]
+        }
+      }
+    },
+    {
       "id": "d47a0c1e-7b2f-4a6e-93c9-26330a2e3f11",
       "version": "26.3.3",
       "releasedAt": "2026-10-03",
       "updateType": "patch",
-      "isLatest": true,
+      "isLatest": false,
       "channel": "stable",
       "platform": "Windows x64",
       "fileName": "iGM-CraftCeon-Launcher-Setup-26.3.3.zip",
@@ -63,7 +137,7 @@
       "fileSize": 70536044,
       "fileSizeLabel": "67.27 MB",
       "sha256": "1b8f57eca7c8457c9980dcc0e94185663db0a852f1e0d080d4b1eeeb8aae7574",
-      "downloadUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/download/v26.3.2/iGM-CraftCeon-Launcher-Setup-26.3.2.zip",
+      "downloadUrl": "",
       "releasePageUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/tag/v26.3.2",
       "notes": {
         "zh-CN": {
@@ -118,7 +192,7 @@
       "fileSize": 70412815,
       "fileSizeLabel": "67.15 MB",
       "sha256": "7037315e4430b64d380b22f3b3e51c1820b37bfb5f304e6af9a15cf792d42be6",
-      "downloadUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/download/v26.3.1/iGM-CraftCeon-Launcher-Setup-26.3.1.zip",
+      "downloadUrl": "",
       "releasePageUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/tag/v26.3.1",
       "notes": {
         "zh-CN": {

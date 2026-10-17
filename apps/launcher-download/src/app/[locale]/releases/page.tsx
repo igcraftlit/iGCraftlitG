@@ -5,7 +5,9 @@
  * 模块：iGM_LauncherDl_Downloader
  * 作用：历史版本页——按版本渲染完整发布记录（版本号、日期、更新类型、新增 / 优化 / 修复内容）
  * 内容：纯静态 SSG 服务端页面，数据取自构建期常量 public/release-history.json；
- *       最新版置顶并加「最新」标记，其余按发布日期倒序；每版保留下载与发布页入口
+ *       最新版置顶并加「最新」标记，其余按发布日期倒序；
+ *       仅当某版本配置了 downloadUrl / releasePageUrl 时才渲染对应入口，
+ *       未配置下载渠道的版本（如 26.4.0 / 26.4.1）与已下架下载的历史版本只展示版本号与更新日志
  */
 
 // 导入依赖 //
@@ -86,21 +88,27 @@ export default async function iGM_LauncherDl_ReleasesPage({
                 ))}
               </div>
 
-              <div className={styles.actions}>
-                <a className={styles.primaryButton} href={release.downloadUrl}>
-                  <Download size={17} aria-hidden />
-                  {page.downloadAction}
-                </a>
-                <a
-                  className={styles.secondaryButton}
-                  href={release.releasePageUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <ExternalLink size={16} aria-hidden />
-                  {page.releasePageAction}
-                </a>
-              </div>
+              {release.downloadUrl || release.releasePageUrl ? (
+                <div className={styles.actions}>
+                  {release.downloadUrl ? (
+                    <a className={styles.primaryButton} href={release.downloadUrl}>
+                      <Download size={17} aria-hidden />
+                      {page.downloadAction}
+                    </a>
+                  ) : null}
+                  {release.releasePageUrl ? (
+                    <a
+                      className={styles.secondaryButton}
+                      href={release.releasePageUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <ExternalLink size={16} aria-hidden />
+                      {page.releasePageAction}
+                    </a>
+                  ) : null}
+                </div>
+              ) : null}
             </li>
           );
         })}
