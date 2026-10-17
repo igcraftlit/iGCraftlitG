@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-11T02:17:24.703Z",
+  "generatedAt": "2026-10-17T05:29:39.729Z",
   "textbooks": [
     {
       "code": "Compulsory_1",
@@ -26,5 +26,44 @@
       "name": "选修四：内容创作与跨界应用"
     }
   ],
-  "questions": []
+  "questions": [
+    {
+      "id": "05650420-4a1b-4d05-995b-5f124aa53cbe",
+      "textbookCode": "Elective_2",
+      "textbookName": "选修二：红石进阶与指令应用",
+      "stem": "在 Minecraft Java版 1.20.5 及更高版本中，物品组件（Item Components）系统彻底取代了传统的物品 NBT 标签。假设你正在开发一个 RPG 地图，需要编写一条 /give 指令，给予玩家一把名为“§d星辉之刃”（且名字不倾斜）的“下界合金剑”。该武器需具备以下属性：无法破坏、基础攻击伤害增加 15 点、且附魔“锋利”等级为 10 级。以下哪条指令的语法在 1.20.5+ 中是完全正确的？",
+      "type": "single_choice",
+      "options": [
+        {
+          "key": "A",
+          "text": "/give @s minecraft:netherite_sword[minecraft:custom_name='{\"text\":\"星辉之刃\",\"color\":\"light_purple\",\"italic\":false}',minecraft:unbreakable={},minecraft:attribute_modifiers=[{type:\"minecraft:attack_damage\",id:\"minecraft:base_attack_damage\",amount:15,operation:\"add_value\",slot:\"mainhand\"}],minecraft:enchantments={levels:{\"minecraft:sharpness\":10}}]"
+        },
+        {
+          "key": "B",
+          "text": "/give @s minecraft:netherite_sword{custom_name:'{\"text\":\"星辉之刃\",\"color\":\"light_purple\"}',Unbreakable:1b,AttributeModifiers:[{AttributeName:\"generic.attack_damage\",Name:\"generic.attack_damage\",Amount:15,Operation:0,UUID:[I;1,2,3,4],Slot:\"mainhand\"}],Enchantments:[{id:\"minecraft:sharpness\",lvl:10s}]}"
+        },
+        {
+          "key": "C",
+          "text": "/give @s minecraft:netherite_sword[minecraft:item_name='{\"text\":\"星辉之刃\",\"color\":\"light_purple\"}',minecraft:unbreakable={},minecraft:attribute_modifiers={modifiers:[{type:\"minecraft:generic.attack_damage\",amount:15,operation:\"add_value\"}]},minecraft:enchantments={\"minecraft:sharpness\":10}]"
+        },
+        {
+          "key": "D",
+          "text": "/give @s minecraft:netherite_sword[minecraft:custom_name='{\"text\":\"星辉之刃\",\"color\":\"light_purple\"}',minecraft:unbreakable=true,minecraft:attribute_modifiers=[{type:\"minecraft:attack_damage\",amount:15,operation:\"add_value\"}],minecraft:enchantments={levels:{\"minecraft:sharpness\":10}}]"
+        }
+      ],
+      "answer": "A",
+      "analysis": "1. NBT与组件系统：1.20.5 版本移除了旧的物品 NBT 格式（选项 B 错误），必须使用中括号 [] 包裹的组件语法。\n2. 名称倾斜：custom_name 组件默认会使得物品名称显示为斜体，必须显式添加 \"italic\":false 来取消斜体；item_name 虽不倾斜，但 A 选项使用了 custom_name 并修正了斜体，是标准做法。\n3. 无法破坏组件：unbreakable 是一个空组件 {}，而不是布尔值 true（选项 D 错误）。\n4. 属性修饰符：attribute_modifiers 必须是一个列表 []。且在 1.20.5 中，原版属性 ID 移除了 generic. 前缀（直接为 minecraft:attack_damage），且必须包含 id 字段（选项 C 错误）。\n5. 附魔组件：enchantments 组件需要包含 levels 对象，语法为 {levels:{\"minecraft:sharpness\":10}}。选项 C 和 D 语法错误。",
+      "difficultyCoefficient": null,
+      "difficultyLevel": "hard",
+      "tags": [
+        "1.20.5",
+        "物品组件",
+        "Components",
+        "give指令",
+        "数据包开发",
+        "高级语法"
+      ],
+      "createdAt": "2026-10-17T05:29:26.357Z"
+    }
+  ]
 }
