@@ -66,6 +66,10 @@
         "typescript": "5.9.2",
       },
     },
+    "apps/launcher-v2": {
+      "name": "igm-launcher-v2-workspace",
+      "version": "26.4.0",
+    },
     "apps/web": {
       "name": "igcraftlit-web",
       "version": "0.1.0",
@@ -465,6 +469,8 @@
     "igcraftlit-web": ["igcraftlit-web@workspace:apps/web"],
 
     "igm-cli": ["igm-cli@workspace:apps/iGM_CLI"],
+
+    "igm-launcher-v2-workspace": ["igm-launcher-v2-workspace@workspace:apps/launcher-v2"],
 
     "immer": ["immer@11.1.18", "", {}, "sha512-EQyQtLiYW029lyoczMl/Hh4Xu7cDecSc58JRYpHyL4tIAu3eqd1yJzQX04d2BZHDkzFFvm6qJEJWOtfDSWAXbQ=="],
 
