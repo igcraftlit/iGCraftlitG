@@ -9,7 +9,9 @@
  *       refresh_token）、userinfo、令牌撤销、用户授权管理与操作日志
  * 说明：access_token 短效（默认 1 小时）；refresh_token 最长两个季度（180 天）且
  *       支持撤销与轮换，到期后必须重新走授权流程；授权码一次性、5 分钟有效；
- *       client_secret / 令牌一律只存哈希，明文仅在发放当下返回一次
+ *       client_secret / 令牌一律只存哈希，明文仅在发放当下返回一次；
+ *       桌面 / 移动类型按 RFC 8252 视为公开客户端，不校验 client_secret，
+ *       兑换授权码时必须携带 PKCE（S256），否则拒绝兑换
  */
 
 // 导入依赖 //
@@ -868,7 +870,17 @@ export async function iGM_HasFullConsent(
 
 /* ---------- 令牌端点 ---------- */
 
-/** 校验客户端身份：client_secret 哈希比对 */
+/**
+ * 公开客户端判定：桌面 / 移动应用按 RFC 8252 无法安全保存 client_secret，
+ * 故不参与密钥校验，改由 PKCE（S256）保护授权码兑换。
+ * 注意：审核通过时统一签发密钥，故不能用「密钥哈希为空」判定，必须看注册类型。
+ */
+function iGM_IsPublicClient(client: iGM_OAuthClientRow): boolean {
+  const type = client.iGM_Type.trim().toLowerCase();
+  return type === "desktop" || type === "mobile";
+}
+
+/** 校验客户端身份：公开客户端跳过密钥，机密客户端做 client_secret 哈希比对 */
 async function iGM_AuthenticateClient(
   credentials: iGM_ClientCredentials,
 ): Promise<iGM_OAuthClientRow> {
@@ -880,6 +892,10 @@ async function iGM_AuthenticateClient(
   }
   if (client.iGM_Status !== "approved") {
     throw new iGM_OAuthError("oauth.errors.clientNotApproved", 403);
+  }
+  // 公开客户端（桌面 / 移动）不持有密钥，直接放行；安全性由后续 PKCE 强制保证
+  if (iGM_IsPublicClient(client)) {
+    return client;
   }
   if (
     !client.iGM_ClientSecretHash ||
@@ -984,6 +1000,11 @@ export async function iGM_ExchangeAuthorizationCodeService(params: {
   }
   if (codeRow.iGM_RedirectUri !== params.redirectUri) {
     throw new iGM_OAuthError("oauth.errors.invalidRedirectUri", 400);
+  }
+  // 公开客户端必须使用 PKCE：授权码未绑定 code_challenge 时拒绝，
+  // 否则本地回调（localhost 监听）中的授权码可被同机进程窃取后直接兑换令牌
+  if (iGM_IsPublicClient(client) && !codeRow.iGM_CodeChallenge) {
+    throw new iGM_OAuthError("oauth.errors.pkceFailed", 400);
   }
   if (codeRow.iGM_CodeChallenge) {
     if (

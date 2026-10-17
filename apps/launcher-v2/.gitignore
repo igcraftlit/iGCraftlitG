@@ -1,0 +1,20 @@
+node_modules
+.next
+out
+# Rust 构建产物
+target/
+# Electrobun / Hutch 构建缓存
+.hutch/
+.cottontail-tmp/
+# 打包资源目录（由同步脚本生成）
+apps/shell/iGM_LauncherV2_Assets/launcher/
+apps/shell/iGM_LauncherV2_Assets/core/
+# Electrobun 打包产物（安装包与压缩包，不入库）
+apps/shell/build/
+apps/shell/artifacts/
+# 本地环境变量与运行时数据
+.env*
+.dev.vars*
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts

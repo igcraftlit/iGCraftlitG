@@ -1,0 +1,33 @@
+/**
+ * 文件路径：apps/launcher-ui/components/iGM_LauncherV2_FluidBackground/iGM_LauncherV2_FluidBackground.module.css
+ * 所属层：前端 / 通用组件样式层
+ * 路由：全局（欢迎首页 / 登录页 / 安装向导背景）
+ * 模块：iGM_LauncherV2_FluidBackground
+ * 作用：流体云背景容器与画布样式，并提供无 WebGL 时的 CSS 静态渐变兜底
+ * 内容：绝对铺满的容器、径向渐变兜底层、铺满的画布
+ */
+
+/* 导入依赖 */
+/* （CSS Modules，无外部导入） */
+
+/* ---------- 容器与兜底渐变 ---------- */
+.host {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 20% 15%, rgba(77, 107, 254, 0.55), transparent 55%),
+    radial-gradient(110% 85% at 85% 22%, rgba(126, 77, 254, 0.42), transparent 60%),
+    radial-gradient(120% 100% at 50% 96%, rgba(34, 211, 238, 0.28), transparent 62%),
+    linear-gradient(160deg, #060814 0%, #070a18 55%, #04050c 100%);
+}
+
+/* ---------- WebGL 画布 ---------- */
+.canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}

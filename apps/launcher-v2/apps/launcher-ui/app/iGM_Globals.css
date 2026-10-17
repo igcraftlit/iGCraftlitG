@@ -1,0 +1,144 @@
+/**
+ * 文件路径：apps/launcher-ui/app/iGM_Globals.css
+ * 所属层：前端 / 全局样式层
+ * 路由：全局
+ * 模块：iGM_LauncherV2_Globals
+ * 作用：启动器界面全局设计规范与基础样式
+ * 内容：品牌色阶 CSS 变量（深空底色 + 品牌蓝 #4d6bfe）、圆角/阴影/字体族、
+ *       无边框窗口拖动区工具类、滚动条与静音动画的全局约定
+ * 说明：团队宗旨「创新、轻量、简约、艺术美观」，不做花哨装饰与无意义动画
+ */
+
+/* 导入依赖 */
+/* （原生 CSS，无外部导入） */
+
+/* ---------- 设计令牌 ---------- */
+:root {
+  /* 底色与层次 */
+  --igm-bg: #05070f;
+  --igm-surface: rgba(19, 25, 45, 0.66);
+  --igm-surface-strong: rgba(13, 18, 32, 0.9);
+  --igm-border: rgba(255, 255, 255, 0.1);
+  --igm-border-strong: rgba(255, 255, 255, 0.18);
+
+  /* 文本 */
+  --igm-text: #eef1f8;
+  --igm-text-dim: #a7b0c8;
+  --igm-text-mute: #6f7893;
+
+  /* 品牌色阶 */
+  --igm-brand: #4d6bfe;
+  --igm-brand-soft: #7d92ff;
+  --igm-brand-deep: #2b3c96;
+  --igm-accent-cyan: #22d3ee;
+
+  /* 形状与阴影 */
+  --igm-radius-lg: 22px;
+  --igm-radius-md: 14px;
+  --igm-radius-sm: 10px;
+  --igm-shadow-lg: 0 28px 70px rgba(0, 0, 0, 0.5);
+  --igm-shadow-md: 0 14px 36px rgba(0, 0, 0, 0.35);
+
+  /* 字体 */
+  --igm-font: "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system,
+    "Microsoft YaHei", "PingFang SC", sans-serif;
+
+  /* 动效 */
+  --igm-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --igm-dur: 320ms;
+}
+
+/* ---------- 基础重置 ---------- */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--igm-bg);
+  color: var(--igm-text);
+  font-family: var(--igm-font);
+  overflow: hidden;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button {
+  font-family: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ---------- 无边框窗口拖动区 ---------- */
+/* 顶栏作为拖动区，交互元素须显式声明 no-drag */
+.igm-drag {
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+.igm-no-drag {
+  -webkit-app-region: no-drag;
+}
+
+/* ---------- 全屏页面骨架与路由过渡 ---------- */
+/* 所有页面根容器统一使用，保证流体背景铺满且内容不产生滚动溢出 */
+.igm-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 路由切换过渡：淡入 + 轻微上浮，简约不过度 */
+@keyframes igm-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.994);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.igm-page {
+  animation: igm-page-in var(--igm-dur) var(--igm-ease) both;
+}
+
+/* ---------- 滚动条 ---------- */
+.igm-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+.igm-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.igm-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+}
+
+/* ---------- 无障碍：尊重「减少动态效果」偏好 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* 导出 */
+/* （全局样式文件，无导出） */

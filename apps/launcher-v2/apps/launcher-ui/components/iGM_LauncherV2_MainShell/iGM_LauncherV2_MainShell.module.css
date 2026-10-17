@@ -1,0 +1,90 @@
+/**
+ * 文件路径：apps/launcher-ui/components/iGM_LauncherV2_MainShell/iGM_LauncherV2_MainShell.module.css
+ * 所属层：前端 / 页面组件样式层
+ * 路由：G_Main
+ * 模块：iGM_LauncherV2_MainShell
+ * 作用：主界面骨架样式
+ * 内容：居中占位卡片、环形加载指示、状态清单
+ */
+
+/* 导入依赖 */
+/* （CSS Modules，无外部导入） */
+
+.main {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 48px;
+}
+
+.panel {
+  width: 440px;
+  max-width: 100%;
+  padding: 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+}
+
+.loader {
+  margin: 2px 0 6px;
+}
+
+/* 环形加载指示：以边框色阶缓慢旋转，克制且不喧宾夺主 */
+.ring {
+  display: block;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-top-color: var(--igm-brand-soft);
+}
+
+.ringOn {
+  animation: igm-launcher-ring 900ms linear infinite;
+}
+
+@keyframes igm-launcher-ring {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.desc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+}
+
+.statusList {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--igm-radius-md);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--igm-border);
+}
+
+.actions {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}

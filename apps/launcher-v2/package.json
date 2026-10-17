@@ -1,0 +1,20 @@
+{
+  "name": "igm-launcher-v2-workspace",
+  "version": "26.4.0",
+  "private": true,
+  "description": "iGM CraftCeon Launcher v2 monorepo (Electrobun + Bun + Rust + Next.js static export)",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "bun run --cwd apps/launcher-ui dev",
+    "core:build": "cargo build --manifest-path crates/core/Cargo.toml",
+    "core:build:release": "cargo build --manifest-path crates/core/Cargo.toml --release",
+    "ui:dev": "bun run --cwd apps/launcher-ui dev",
+    "ui:build": "bun run --cwd apps/launcher-ui build",
+    "sync:ui": "bun run --cwd apps/shell sync:ui",
+    "shell:dev": "bun run --cwd apps/shell dev",
+    "shell:build": "bun run --cwd apps/shell build",
+    "typecheck": "bun run --cwd apps/launcher-ui typecheck && bun run --cwd apps/shell typecheck"
+  }
+}
