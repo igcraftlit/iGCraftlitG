@@ -345,6 +345,10 @@
       "title": "重設密碼",
       "description": "設定新的帳戶密碼"
     },
+    "authMuoceon": {
+      "title": "MuoCeon 授權",
+      "description": "使用 MuoCeon 帳號登入 iGCraftLit Community"
+    },
     "adminDashboard": {
       "title": "資料概覽",
       "description": "站點使用者、內容與營運指標總覽"
@@ -560,6 +564,13 @@
       "requestNewReset": "重新申請重設郵件",
       "accountSettings": "前往帳戶設定",
       "verifyNow": "立即驗證"
+    },
+    "muoceon": {
+      "otherLogin": "使用其他帳號登入",
+      "pageTitle": "使用 MuoCeon 帳號登入",
+      "authorize": "前往 MuoCeon 授權",
+      "backToLogin": "返回 iGCraftLit 登入",
+      "failed": "MuoCeon 授權未完成，請重新嘗試。"
     },
     "roles": {
       "user": "普通使用者",

@@ -58,9 +58,22 @@ export function iGM_IsAuthFullscreenPath(pathname: string): boolean {
   return /^\/G_Auth\/(login|register)\/?$/.test(stripped);
 }
 
-/** 判断路径是否豁免控制台外壳：门户落地页、全屏登录/注册页、规定独立页 */
+/**
+ * 判断路径是否为 MuoCeon 独立授权中转页：
+ * /auth/muoceon（含语言前缀）不挂载控制台外壳，
+ * 以全屏居中卡片独立呈现，无左侧导航与顶部栏
+ */
+export function iGM_IsMuoCeonAuthPath(pathname: string): boolean {
+  return /^\/auth\/muoceon\/?$/.test(iGM_StripLocalePrefix(pathname));
+}
+
+/** 判断路径是否豁免控制台外壳：门户落地页、全屏登录/注册页、MuoCeon 授权页、规定独立页 */
 export function iGM_IsShellExemptPath(pathname: string): boolean {
-  if (iGM_IsLandingPath(pathname) || iGM_IsAuthFullscreenPath(pathname)) {
+  if (
+    iGM_IsLandingPath(pathname) ||
+    iGM_IsAuthFullscreenPath(pathname) ||
+    iGM_IsMuoCeonAuthPath(pathname)
+  ) {
     return true;
   }
   // 《用户管理规定》为独立阅读界面：无左侧控制台导航，仅保留右侧目录

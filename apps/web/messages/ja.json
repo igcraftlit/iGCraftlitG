@@ -345,6 +345,10 @@
       "title": "パスワードリセット",
       "description": "新しいパスワードを設定"
     },
+    "authMuoceon": {
+      "title": "MuoCeon 認可",
+      "description": "MuoCeon アカウントで iGCraftLit Community にログイン"
+    },
     "adminDashboard": {
       "title": "データ概要",
       "description": "サイトのユーザー・コンテンツ・運営指標の総覧"
@@ -560,6 +564,13 @@
       "requestNewReset": "リセットメールを再申請",
       "accountSettings": "アカウント設定へ",
       "verifyNow": "今すぐ認証"
+    },
+    "muoceon": {
+      "otherLogin": "別のアカウントでログイン",
+      "pageTitle": "MuoCeon アカウントでログイン",
+      "authorize": "MuoCeon の認可へ進む",
+      "backToLogin": "iGCraftLit のログインに戻る",
+      "failed": "MuoCeon の認可が完了しませんでした。もう一度お試しください。"
     },
     "roles": {
       "user": "一般ユーザー",

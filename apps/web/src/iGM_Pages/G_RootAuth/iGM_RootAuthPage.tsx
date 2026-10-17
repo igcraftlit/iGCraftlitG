@@ -35,6 +35,7 @@ import {
   iGM_SecondaryButton as IGM_SecondaryButton,
   iGM_SubmitButton as IGM_SubmitButton,
 } from "../../iGM_Components/iGM_AuthUI/iGM_AuthUI";
+import { iGM_MuoCeonLogo as IGM_MuoCeonLogo } from "../../iGM_Components/iGM_MuoCeonLogo/iGM_MuoCeonLogo";
 import authStyles from "../../iGM_Components/iGM_AuthUI/iGM_AuthUI.module.css";
 import {
   iGM_ClearRegisterDraft,
@@ -193,6 +194,20 @@ function iGM_LoginPanel({ onSwitchTab }: { onSwitchTab: () => void }) {
           </button>
         </span>
       </footer>
+
+      {/* 其他账号登录入口：分割线 + 文案 + MuoCeon 图标（跳转独立授权页） */}
+      <div className={styles.otherLogin}>
+        <div className={styles.otherLoginDivider} aria-hidden="true" />
+        <p className={styles.otherLoginLabel}>{t("auth.muoceon.otherLogin")}</p>
+        <button
+          type="button"
+          className={styles.muoceonEntry}
+          onClick={() => router.push("/auth/muoceon")}
+          aria-label={t("auth.muoceon.pageTitle")}
+        >
+          <IGM_MuoCeonLogo size={34} />
+        </button>
+      </div>
     </>
   );
 }

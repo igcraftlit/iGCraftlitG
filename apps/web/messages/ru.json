@@ -345,6 +345,10 @@
       "title": "Сброс пароля",
       "description": "Установите новый пароль аккаунта"
     },
+    "authMuoceon": {
+      "title": "Авторизация MuoCeon",
+      "description": "Вход в iGCraftLit Community через аккаунт MuoCeon"
+    },
     "adminDashboard": {
       "title": "Обзор",
       "description": "Пользователи, контент и показатели сайта"
@@ -560,6 +564,13 @@
       "requestNewReset": "Запросить новое письмо",
       "accountSettings": "К настройкам аккаунта",
       "verifyNow": "Подтвердить сейчас"
+    },
+    "muoceon": {
+      "otherLogin": "Войти через другой аккаунт",
+      "pageTitle": "Войти через аккаунт MuoCeon",
+      "authorize": "Перейти к авторизации MuoCeon",
+      "backToLogin": "Вернуться ко входу в iGCraftLit",
+      "failed": "Авторизация MuoCeon не завершена. Попробуйте ещё раз."
     },
     "roles": {
       "user": "Пользователь",

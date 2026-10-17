@@ -55,6 +55,7 @@ import { iGM_ThirdPartyError } from "./iGM_Services/iGM_ThirdPartyService";
 // 模块二十一：OAuth 2.0 + OpenID Connect 身份提供方
 import { G_OAuth } from "./iGM_Routes/G_OAuth";
 import { G_ExamOAuth } from "./iGM_Routes/G_ExamOAuth";
+import { G_MuoCeon } from "./iGM_Routes/G_MuoCeon";
 import { iGM_OAuthError } from "./iGM_Services/iGM_OAuthService";
 // 模块二十六（启动器 26.3.2）：启动器发布历史
 import { G_LauncherRelease } from "./iGM_Routes/G_LauncherRelease";
@@ -234,6 +235,8 @@ const iGM_Server = new Elysia()
   .use(G_AdminExaminer)
   // 考试系统：OAuth Client 登录主站 IdP（/api/exam/oauth/*）
   .use(G_ExamOAuth)
+  // 主站作为 OAuth 客户端接入 MuoCeon 账号体系（/api/auth/muoceon/*）
+  .use(G_MuoCeon)
   // 根路径占位
   .get("/", () => ({
     success: true,

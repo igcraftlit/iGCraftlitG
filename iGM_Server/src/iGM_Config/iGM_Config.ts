@@ -8,6 +8,7 @@
  *       邮箱验证码与重置令牌时效、基础限流参数、163 邮箱 SMTP 邮件配置、
  *       模块四本地文件上传存储配置、模块十七 Minecraft 本体下载配置、
  *       模块二十第三方资源（Modrinth）接入配置、
+ *       MuoCeon 账号体系接入配置（主站作为 OAuth Client，PKCE）、
  *       账户额度配置（UQ / Coin 注册赠送）
  */
 
@@ -191,6 +192,36 @@ export interface iGM_ExamOAuthClientConfig {
 }
 
 /**
+ * MuoCeon 账号体系接入配置（主站作为 OAuth Client）
+ * 说明：采用授权码 + PKCE（S256）；client_secret 仅本地 .env 持有，
+ *       严禁写入前端、日志或数据库
+ */
+export interface iGM_MuoCeonConfig {
+  /** MuoCeon 分配的 client_id */
+  clientId: string;
+  /** MuoCeon 分配的 client_secret（仅后端持有） */
+  clientSecret: string;
+  /** 生产回调地址（已在 MuoCeon 登记，落在主站静态站点的中转页） */
+  redirectUri: string;
+  /** 本地开发回调地址（仅 MUOCEON_USE_LOCAL_REDIRECT=true 时启用） */
+  localRedirectUri: string;
+  /** 是否改用本地回调地址做联调 */
+  useLocalRedirect: boolean;
+  /** MuoCeon 授权端点 */
+  authorizeUrl: string;
+  /** MuoCeon 令牌端点 */
+  tokenUrl: string;
+  /** MuoCeon 用户信息端点 */
+  userinfoUrl: string;
+  /** 请求 scope（空格分隔） */
+  scope: string;
+  /** 授权成功后回跳的主站地址（本地 / 线上） */
+  homeUrl: string;
+  /** PKCE 授权流缓存有效期（毫秒），默认 5 分钟 */
+  flowTtlMs: number;
+}
+
+/**
  * UQ / Coin 双币种账户配置
  * 说明：AI 功能模块已整体移除，此处仅保留账户体系所需的注册赠送额度
  */
@@ -226,6 +257,8 @@ export interface iGM_AppConfig {
   oauth: iGM_OAuthConfig;
   /** 考试站 OAuth Client（对接主站 IdP）配置 */
   examOAuth: iGM_ExamOAuthClientConfig;
+  /** MuoCeon 账号体系接入配置（主站作为 OAuth Client） */
+  muoceon: iGM_MuoCeonConfig;
   /** UQ / Coin 双币种账户配置 */
   quota: iGM_QuotaConfig;
 }
@@ -498,6 +531,35 @@ export const iGM_Config: iGM_AppConfig = {
     // 考试站独立会话 Cookie：host-only 签发（不写 Domain），与主站 .igcraftlit.com 域隔离
     sessionCookieName: "igm_exam_session",
     appName: "iGCraftLit 考试站",
+  },
+  // 主站作为 OAuth Client（PKCE）接入 MuoCeon 账号体系
+  muoceon: {
+    clientId: process.env.MUOCEON_CLIENT_ID ?? "",
+    clientSecret: process.env.MUOCEON_CLIENT_SECRET ?? "",
+    // 生产回调地址：落在主站静态站点的中转页，再由前端转交后端换令牌
+    redirectUri:
+      process.env.MUOCEON_REDIRECT_URI ??
+      "https://igcraftlit.com/connect/callback",
+    // 本地联调回调地址（需在 MuoCeon 后台额外登记后开启）
+    localRedirectUri:
+      process.env.MUOCEON_LOCAL_REDIRECT_URI ??
+      "http://localhost:3000/connect/callback",
+    useLocalRedirect:
+      (process.env.MUOCEON_USE_LOCAL_REDIRECT ?? "false") === "true",
+    authorizeUrl:
+      process.env.MUOCEON_AUTHORIZE_URL ??
+      "https://auth.muoceon.com/authorize",
+    tokenUrl:
+      process.env.MUOCEON_TOKEN_URL ??
+      "https://api.muoceon.com/v1/oauth/token",
+    userinfoUrl:
+      process.env.MUOCEON_USERINFO_URL ??
+      "https://api.muoceon.com/v1/auth/userinfo",
+    scope: process.env.MUOCEON_SCOPE ?? "openid profile",
+    // 授权成功后回跳的主站地址：本地开发回退 localhost
+    homeUrl: process.env.IGM_WEB_BASE_URL ?? "http://localhost:3000",
+    // 授权流 5 分钟有效
+    flowTtlMs: Number(process.env.MUOCEON_FLOW_TTL_MS ?? 5 * 60 * 1000),
   },
   quota: {
     // UQ / Coin 双币种：注册赠送 UQ 10 + Coin 5

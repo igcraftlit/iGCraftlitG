@@ -345,6 +345,10 @@
       "title": "Reset password",
       "description": "Set a new account password"
     },
+    "authMuoceon": {
+      "title": "MuoCeon Authorization",
+      "description": "Sign in to iGCraftLit Community with your MuoCeon account"
+    },
     "adminDashboard": {
       "title": "Overview",
       "description": "Site users, content and operations at a glance"
@@ -560,6 +564,13 @@
       "requestNewReset": "Request a new reset email",
       "accountSettings": "Go to account settings",
       "verifyNow": "Verify now"
+    },
+    "muoceon": {
+      "otherLogin": "Sign in with another account",
+      "pageTitle": "Sign in with your MuoCeon account",
+      "authorize": "Continue to MuoCeon",
+      "backToLogin": "Back to iGCraftLit sign in",
+      "failed": "MuoCeon authorization was not completed. Please try again."
     },
     "roles": {
       "user": "User",

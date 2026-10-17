@@ -345,6 +345,10 @@
       "title": "重置密码",
       "description": "设置新的账户密码"
     },
+    "authMuoceon": {
+      "title": "MuoCeon 授权",
+      "description": "使用 MuoCeon 账号登录 iGCraftLit Community"
+    },
     "adminDashboard": {
       "title": "数据概览",
       "description": "站点用户、内容与运营指标总览"
@@ -560,6 +564,13 @@
       "requestNewReset": "重新申请重置邮件",
       "accountSettings": "前往账户设置",
       "verifyNow": "立即验证"
+    },
+    "muoceon": {
+      "otherLogin": "使用其他账号登录",
+      "pageTitle": "使用 MuoCeon 账号登录",
+      "authorize": "前往 MuoCeon 授权",
+      "backToLogin": "返回 iGCraftLit 登录",
+      "failed": "MuoCeon 授权未完成，请重新尝试。"
     },
     "roles": {
       "user": "普通用户",

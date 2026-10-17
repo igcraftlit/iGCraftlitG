@@ -1,0 +1,88 @@
+/*
+ * 文件路径：apps/web/src/iGM_Pages/G_MuoCeonAuth/iGM_MuoCeonAuth.module.css
+ * 所属层：前端 / 页面样式（CSS Modules）
+ * 路由：/auth/muoceon（独立全屏授权中转页）
+ * 模块：G_MuoCeonAuth
+ * 作用：授权中转页样式——全屏居中、极简渐变背景、品牌卡片、主按钮与返回链接
+ * 说明：本页不使用控制台外壳，故自带全屏容器；配色沿用全局 CSS 变量
+ */
+
+/* ===== 页面外层：全屏居中 ===== */
+.page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 32px 20px;
+  background:
+    radial-gradient(
+      1100px 560px at 50% -10%,
+      var(--igm-accent-soft),
+      transparent 70%
+    ),
+    var(--igm-bg);
+}
+
+/* ===== 授权卡片 ===== */
+.card {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 36px 28px;
+  text-align: center;
+  background: var(--igm-surface);
+  border: 1px solid var(--igm-border);
+  border-radius: var(--igm-radius-lg);
+  box-shadow: var(--igm-shadow);
+}
+
+.title {
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--igm-text);
+}
+
+/* 授权失败提示（?error=1 回跳时展示） */
+.error {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--igm-danger);
+}
+
+/* ===== 主按钮：前往 MuoCeon 授权 ===== */
+.primaryButton {
+  width: 100%;
+  padding: 11px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--igm-accent-contrast);
+  background: var(--igm-accent);
+  border-radius: var(--igm-radius);
+  transition: background-color 0.15s var(--igm-motion-ease);
+}
+
+.primaryButton:hover {
+  background: var(--igm-accent-hover);
+}
+
+/* ===== 辅助链接：返回 iGCraftLit 登录 ===== */
+.linkButton {
+  font-size: 13px;
+  color: var(--igm-text-muted);
+  transition: color 0.15s var(--igm-motion-ease);
+}
+
+.linkButton:hover {
+  color: var(--igm-text);
+}
+
+/* ===== 响应式 ===== */
+@media (max-width: 480px) {
+  .card {
+    padding: 30px 20px;
+  }
+}

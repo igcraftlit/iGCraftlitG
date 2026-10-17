@@ -1,0 +1,26 @@
+/*
+ * 文件路径：apps/web/src/app/connect/callback/iGM_MuoCeonCallback.module.css
+ * 所属层：前端 / 路由入口样式（CSS Modules）
+ * 路由：/connect/callback（MuoCeon 授权回跳中转页）
+ * 模块：G_MuoCeonCallback
+ * 作用：中转过渡界面样式——全屏居中显示品牌图标与提示文案
+ * 说明：本页为瞬时页（随即整页跳转后端），仅需极简样式
+ */
+
+/* ===== 全屏居中容器 ===== */
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 100vh;
+  padding: 32px 20px;
+  background: var(--igm-bg);
+}
+
+/* ===== 过渡提示文案 ===== */
+.text {
+  font-size: 14px;
+  color: var(--igm-text-muted);
+}
