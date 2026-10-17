@@ -311,12 +311,15 @@
   z-index: 0;
 }
 
-/* 网站名称作为真正的主标题：页面最大字号 */
+/* 网站名称作为真正的主标题：页面最大字号
+   Cinzel 艺术字体经 next/font/google 在根布局注入为 --font-cinzel（仅品牌文案使用），
+   字间距较正文放宽以增强铭刻感；700 为已加载字重，不会触发合成加粗 */
 .heroTitle {
+  font-family: var(--font-cinzel), Georgia, serif;
   font-size: clamp(32px, 4.6vw, 62px);
   font-weight: 700;
   line-height: 1.12;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.04em;
   color: var(--igm-text);
 }
 

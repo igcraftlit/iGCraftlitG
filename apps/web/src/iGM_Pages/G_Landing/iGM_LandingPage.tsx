@@ -209,7 +209,7 @@ export function iGM_LandingPage() {
         <div className={styles.heroInner}>
           <div className={styles.heroText}>
             <IGM_Reveal direction="right" duration={800}>
-              {/* 真正的主标题：网站名称，页面最大字号（使用全局原始无衬线字体） */}
+              {/* 真正的主标题：网站名称，页面最大字号（Cinzel 艺术字体，字体仅在 .heroTitle 中生效） */}
               <h1 className={styles.heroTitle}>
                 {t("home.heading")}
               </h1>
