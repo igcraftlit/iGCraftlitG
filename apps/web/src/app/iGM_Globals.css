@@ -37,9 +37,11 @@ html[data-theme="light"] {
   --igm-shadow: 0 1px 2px rgba(24, 24, 27, 0.06);
   --igm-shadow-hover: 0 4px 16px rgba(24, 24, 27, 0.1);
   --igm-mask: rgba(24, 24, 27, 0.45);
-  --igm-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB",
-    "Microsoft YaHei", sans-serif;
+  /* 全局无衬线字体：项目最初设定的字体栈（含 Noto Sans SC / Noto Sans JP 与 system-ui），
+     勿再改动——曾因改写该变量导致中英文回退字体发生变化 */
+  --igm-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", "Noto Sans JP",
+    system-ui, sans-serif;
   --igm-radius: 8px;
   --igm-radius-lg: 12px;
   --igm-sidebar-width: 256px;

@@ -4,7 +4,8 @@
  * 路由：/（控制台之前的门户落地页）
  * 模块：G_Landing
  * 作用：进入控制台之前的品牌门户主页，介绍社区理念、领域、活动与价值观
- * 内容：固定磨砂导航（含 LOGO 与登录头像）、双栏 Hero（WebGL 流体背景 + 站名 / 主标题 / 副标题）、
+ * 内容：磨砂导航（LOGO、四个导航链接、语言 / 主题 / 头像；向下滚动收缩为居中磨砂条形框，
+ *       条形框内保留四个导航链接的横向排列）、双栏 Hero（WebGL 流体背景 + 站名 / 主标题 / 副标题）、
  *       WHY / FOCUS / WHAT / VALUES 区块、加入我们 CTA、极简页脚
  * 动效：Hero 阶梯拉出、区块滚动进场、卡片悬停、滚动指示（均支持 reduce-motion 降级）
  */
@@ -130,12 +131,12 @@ export function iGM_LandingPage() {
 
   return (
     <div className={styles.landing} id="top">
-      {/* ===== 磨砂导航：sticky 吸顶跟随滚动，滚动后切换为紧凑搜索条 ===== */}
+      {/* ===== 磨砂导航：sticky 吸顶跟随滚动，向下滚动收缩为居中紧凑条形框 ===== */}
       <header
         className={`${styles.topnav} ${iGM_NavCompact ? styles.isCompact : ""}`}
       >
         <div className={styles.topnavInner}>
-          <a href="#top" className={`igm-font-brand ${styles.brand}`}>
+          <a href="#top" className={styles.brand}>
             {/* 站点 LOGO：静态资源位于 public 根目录 */}
             <img
               src="/iGM_save1.ico"
@@ -158,15 +159,24 @@ export function iGM_LandingPage() {
             </a>
           </nav>
 
-          {/* 紧凑形态专用的搜索 / 命令入口 */}
-          <Link
-            href="/G_Search"
-            className={styles.navSearch}
-            aria-label={t("topbar.search")}
+          {/* 紧凑形态专用：四个导航链接在条形框内横向排列 */}
+          <nav
+            className={styles.navCompactLinks}
+            aria-label={t("nav.groupMain")}
           >
-            <Search size={15} strokeWidth={2} aria-hidden />
-            <span className={styles.navSearchLabel}>{t("topbar.search")}</span>
-          </Link>
+            <a href="#top" className={styles.navCompactAnchor}>
+              {t("landing.nav.home")}
+            </a>
+            <Link href="/G_Community" className={styles.navCompactAnchor}>
+              {t("landing.nav.community")}
+            </Link>
+            <a href="#cta" className={styles.navCompactAnchor}>
+              {t("landing.nav.join")}
+            </a>
+            <Link href="/G_Home" className={styles.navCompactAnchor}>
+              {t("landing.nav.console")}
+            </Link>
+          </nav>
 
           <div className={styles.navActions}>
             {user ? (
@@ -199,8 +209,8 @@ export function iGM_LandingPage() {
         <div className={styles.heroInner}>
           <div className={styles.heroText}>
             <IGM_Reveal direction="right" duration={800}>
-              {/* 真正的主标题：网站名称，页面最大字号 */}
-              <h1 className={`igm-font-brand ${styles.heroTitle}`}>
+              {/* 真正的主标题：网站名称，页面最大字号（使用全局原始无衬线字体） */}
+              <h1 className={styles.heroTitle}>
                 {t("home.heading")}
               </h1>
             </IGM_Reveal>

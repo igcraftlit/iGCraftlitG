@@ -121,10 +121,10 @@
   }
 
   .isCompact .topnavInner {
-    max-width: 520px;
+    max-width: 560px;
     height: calc(var(--igm-topbar-height) - 12px);
     margin: 6px auto 0;
-    padding: 0 10px 0 14px;
+    padding: 0 14px;
     justify-content: center;
     gap: 12px;
     border: 1px solid var(--igm-border);
@@ -136,7 +136,7 @@
     animation: iGM_NavSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* 紧凑形态仅保留小号 Logo 与搜索入口 */
+  /* 紧凑形态仅保留小号 Logo 与四个导航链接 */
   .isCompact .brandText,
   .isCompact .navLinks,
   .isCompact .navActions {
@@ -147,7 +147,7 @@
     height: 22px;
   }
 
-  .isCompact .navSearch {
+  .isCompact .navCompactLinks {
     display: inline-flex;
   }
 }
@@ -175,36 +175,28 @@
   white-space: nowrap;
 }
 
-/* 紧凑形态专用的搜索入口：默认隐藏，滚动收缩后显示 */
-.navSearch {
+/* 紧凑条形框内的四个导航链接：默认隐藏，滚动收缩后横排显示 */
+.navCompactLinks {
   display: none;
   align-items: center;
-  gap: 7px;
-  flex: 1;
+  justify-content: center;
+  gap: 2px;
   min-width: 0;
-  height: 34px;
-  padding: 0 14px;
+}
+
+/* 条形框内导航项：悬停出现圆角高亮，字号与完整导航一致略收敛 */
+.navCompactAnchor {
+  padding: 6px 12px;
   border-radius: 999px;
-  border: 1px solid var(--igm-border-strong);
-  background-color: var(--igm-surface-subtle);
+  font-size: 13.5px;
   color: var(--igm-text-muted);
-  font-size: 13px;
-  transition:
-    border-color 0.15s ease,
-    background-color 0.15s ease,
-    color 0.15s ease;
-}
-
-.navSearch:hover {
-  color: var(--igm-text);
-  border-color: var(--igm-accent);
-  background-color: var(--igm-accent-soft);
-}
-
-.navSearchLabel {
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.navCompactAnchor:hover {
+  color: var(--igm-text);
+  background: var(--igm-surface-subtle);
 }
 
 .navLinks {
@@ -453,10 +445,10 @@
   align-items: start;
 }
 
+/* 区块标签（WHY / FOCUS / WHAT / VALUES 等英文短语）：沿用全局原始无衬线字体 */
 .sectionLabel {
   position: sticky;
   top: 96px;
-  font-family: var(--font-cinzel), Georgia, serif;
   font-size: clamp(28px, 3.4vw, 38px);
   font-weight: 700;
   letter-spacing: 0.02em;
