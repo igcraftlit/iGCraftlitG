@@ -98,6 +98,16 @@ export class iGM_MuoCeonError extends Error {
 
 // 核心逻辑 //
 
+/* ---------- 启动自检：确认 MuoCeon 客户端配置已从环境变量加载 ---------- */
+// 仅输出 client_id（公开信息，本就会出现在授权 URL 中）与 client_secret 是否已配置，
+// 绝不打印密钥明文；用于排查「环境变量未加载导致的发起授权失败」
+console.log(
+  `[iGM_MuoCeon] 配置自检：client_id=${iGM_Config.muoceon.clientId || "(未配置)"}` +
+    `，client_secret=${iGM_Config.muoceon.clientSecret ? "已配置" : "(未配置)"}` +
+    `，authorize=${iGM_Config.muoceon.authorizeUrl}` +
+    `，redirect_uri=${iGM_ResolveRedirectUri()}`,
+);
+
 /* ---------- 进程内临时缓存：state + code_verifier ---------- */
 const iGM_FlowCache = new Map<string, iGM_MuoCeonFlow>();
 
