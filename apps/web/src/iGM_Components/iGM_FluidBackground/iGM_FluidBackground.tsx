@@ -6,7 +6,8 @@
  * 作用：WebGL 流体 / 液态渐变背景，品牌色系色带缓慢流动，鼠标移动产生轻微扰动与跟随
  * 内容：OGL 渲染器与全屏三角网格、Simplex/FBM 流体片元着色器、均匀量更新、
  *       30fps 帧节流、document.hidden 暂停、半分辨率渲染、鼠标平滑跟随、
- *       明暗主题取色、低端设备与 prefers-reduced-motion 静态渐变降级
+ *       明暗主题取色、低端设备与 prefers-reduced-motion 静态渐变降级、
+ *       画布由副作用自建自销（避免 StrictMode / Fast Refresh 复用已释放的 WebGL 上下文）
  * 说明：基于轻量 WebGL 库 OGL；渲染失败或无 WebGL 支持时自动回退为 CSS 静态渐变
  */
 
@@ -191,15 +192,24 @@ export function iGM_FluidBackground({
   className = "",
 }: iGM_FluidBackgroundProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
     const host = hostRef.current;
-    const canvas = canvasRef.current;
 
     // 静态降级：不初始化 WebGL，直接透出容器上的 CSS 渐变背景
     if (iGM_ShouldFallback()) return;
-    if (!host || !canvas) return;
+    if (!host) return;
+
+    /*
+     * 画布由副作用自建自销，而非写在 JSX 里复用：
+     * StrictMode（开发环境）与 Fast Refresh 会重复执行副作用，
+     * 复用同一 canvas 时，上一次清理释放掉的 WebGL 上下文会被再次取回，
+     * 着色器因此编译失败，OGL 的 program.uniformLocations 保持 undefined，
+     * 每逢渲染帧即在 Program.use() 抛出 TypeError。
+     */
+    const canvas = document.createElement("canvas");
+    canvas.className = styles.canvas;
+    host.appendChild(canvas);
 
     let renderer: Renderer | null;
     try {
@@ -211,7 +221,8 @@ export function iGM_FluidBackground({
         dpr: Math.max(0.5, (window.devicePixelRatio || 1) * 0.5),
       });
     } catch {
-      // 无 WebGL 支持或上下文创建失败：保持透明画布，透出静态渐变
+      // 无 WebGL 支持或上下文创建失败：移除画布，透出静态渐变
+      canvas.remove();
       return;
     }
 
@@ -321,8 +332,9 @@ export function iGM_FluidBackground({
       window.removeEventListener("pointermove", iGM_HandlePointerMove);
       window.removeEventListener("pointerleave", iGM_HandlePointerLeave);
       window.removeEventListener("blur", iGM_HandlePointerLeave);
-      // 主动释放 WebGL 上下文，避免长会话下的上下文泄漏
+      // 主动释放本次副作用独占的 WebGL 上下文并移除画布，避免长会话下的上下文泄漏
       gl.getExtension("WEBGL_lose_context")?.loseContext();
+      canvas.remove();
     };
   }, []);
 
@@ -331,9 +343,7 @@ export function iGM_FluidBackground({
       ref={hostRef}
       className={`${styles.host} ${className}`}
       aria-hidden
-    >
-      <canvas ref={canvasRef} className={styles.canvas} />
-    </div>
+    />
   );
 }
 
