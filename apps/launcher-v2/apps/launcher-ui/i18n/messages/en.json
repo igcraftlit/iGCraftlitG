@@ -386,7 +386,7 @@
   },
   "plaza": {
     "title": "Block Plaza",
-    "desc": "One-stop entry for P2P rooms, third-party servers and horizon management.",
+    "desc": "One-stop entry for P2P rooms, the client sync hall and horizon management.",
     "tabs": {
       "p2p": "P2P Rooms",
       "servers": "Third-Party Servers",
