@@ -4,7 +4,8 @@
  * 路由：全局（欢迎首页 / 登录页 / 安装向导背景）
  * 模块：iGM_LauncherV2_FluidBackground
  * 作用：流体云背景容器与画布样式，并提供无 WebGL 时的 CSS 静态渐变兜底
- * 内容：绝对铺满的容器、径向渐变兜底层、铺满的画布
+ * 内容：绝对铺满的容器、三套配色对应的径向渐变兜底层、铺满的画布
+ * 说明：配色由 data-palette 决定，与着色器 uniform 配色保持一致
  */
 
 /* 导入依赖 */
@@ -16,11 +17,31 @@
   inset: 0;
   overflow: hidden;
   pointer-events: none;
+  /* 兜底默认配色：经典深紫 */
   background:
     radial-gradient(120% 90% at 20% 15%, rgba(77, 107, 254, 0.55), transparent 55%),
     radial-gradient(110% 85% at 85% 22%, rgba(126, 77, 254, 0.42), transparent 60%),
     radial-gradient(120% 100% at 50% 96%, rgba(34, 211, 238, 0.28), transparent 62%),
     linear-gradient(160deg, #060814 0%, #070a18 55%, #04050c 100%);
+  transition: background var(--igm-dur) var(--igm-ease);
+}
+
+/* 梦幻冷蓝兜底渐变 */
+.host[data-palette="blue"] {
+  background:
+    radial-gradient(120% 90% at 20% 15%, rgba(60, 140, 255, 0.52), transparent 55%),
+    radial-gradient(110% 85% at 85% 22%, rgba(34, 211, 238, 0.4), transparent 60%),
+    radial-gradient(120% 100% at 50% 96%, rgba(103, 232, 249, 0.24), transparent 62%),
+    linear-gradient(160deg, #061024 0%, #04101f 55%, #02060f 100%);
+}
+
+/* 极光幻粉兜底渐变 */
+.host[data-palette="pink"] {
+  background:
+    radial-gradient(120% 90% at 20% 15%, rgba(140, 71, 235, 0.52), transparent 55%),
+    radial-gradient(110% 85% at 85% 22%, rgba(250, 115, 184, 0.4), transparent 60%),
+    radial-gradient(120% 100% at 50% 96%, rgba(192, 132, 252, 0.26), transparent 62%),
+    linear-gradient(160deg, #14071f 0%, #0f0520 55%, #07030f 100%);
 }
 
 /* ---------- WebGL 画布 ---------- */

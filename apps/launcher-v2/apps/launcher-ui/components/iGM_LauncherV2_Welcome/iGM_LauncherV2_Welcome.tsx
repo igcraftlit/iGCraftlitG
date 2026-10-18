@@ -12,15 +12,17 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
-import { iGM_LauncherV2_FluidBackground as IGM_LauncherV2_FluidBackground } from "@/components/iGM_LauncherV2_FluidBackground/iGM_LauncherV2_FluidBackground";
+import { iGM_LauncherV2_AppearanceHost as IGM_LauncherV2_AppearanceHost } from "@/components/iGM_LauncherV2_AppearanceHost/iGM_LauncherV2_AppearanceHost";
 import {
   iGM_LauncherV2_Button as IGM_LauncherV2_Button,
   iGM_LauncherV2_StatusDot as IGM_LauncherV2_StatusDot,
   iGM_LauncherV2_WindowChrome as IGM_LauncherV2_WindowChrome,
 } from "@/components/iGM_LauncherV2_Primitives/iGM_LauncherV2_Primitives";
-import { iGM_LauncherV2_UseAuth as IGM_LauncherV2_UseAuth } from "@/components/iGM_LauncherV2_HostBridge/iGM_LauncherV2_HostBridge";
+import {
+  iGM_LauncherV2_Navigate,
+  iGM_LauncherV2_UseAuth as IGM_LauncherV2_UseAuth,
+} from "@/components/iGM_LauncherV2_HostBridge/iGM_LauncherV2_HostBridge";
 import {
   IGM_LAUNCHERV2_APP_NAME,
   IGM_LAUNCHERV2_VERSION,
@@ -32,12 +34,11 @@ import styles from "./iGM_LauncherV2_Welcome.module.css";
 
 // 核心逻辑 //
 export function iGM_LauncherV2_Welcome() {
-  const router = useRouter();
   const auth = IGM_LauncherV2_UseAuth();
 
   /** 开始探索：未登录先完成社区授权，已登录直接进入主界面 */
   const handleStart = () => {
-    router.push(auth.state === "logged-in" ? "/G_Main" : "/G_Login");
+    iGM_LauncherV2_Navigate(auth.state === "logged-in" ? "/G_Main" : "/G_Login");
   };
 
   const authTone = auth.state === "logged-in" ? "ok" : "idle";
@@ -50,7 +51,7 @@ export function iGM_LauncherV2_Welcome() {
 
   return (
     <div className={`igm-screen igm-page ${styles.screen}`}>
-      <IGM_LauncherV2_FluidBackground />
+      <IGM_LauncherV2_AppearanceHost />
       <IGM_LauncherV2_WindowChrome label={IGM_LAUNCHERV2_APP_NAME} version={`v${IGM_LAUNCHERV2_VERSION}`} />
 
       <main className={styles.main}>

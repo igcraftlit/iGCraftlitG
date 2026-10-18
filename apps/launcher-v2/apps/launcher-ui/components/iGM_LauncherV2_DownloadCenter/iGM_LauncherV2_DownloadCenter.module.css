@@ -1,0 +1,399 @@
+/**
+ * 文件路径：apps/launcher-ui/components/iGM_LauncherV2_DownloadCenter/iGM_LauncherV2_DownloadCenter.module.css
+ * 所属层：前端 / 样式层
+ * 路由：G_Main（全局浮层）
+ * 模块：iGM_LauncherV2_DownloadCenter
+ * 作用：右下角悬浮下载中心样式：圆形悬浮按钮、磨砂玻璃任务管理器面板、彩色圆点与流光进度线条
+ * 内容：悬浮按钮带呼吸灯（以示有任务在进行）；面板为左右两栏——左侧分组导航（进行中 /
+ *       已完成 / 历史记录），右侧任务列表；进度线条为渐变填充 + 进行中叠加流动高光；
+ *       指标文字使用等宽字体
+ * 说明：呼吸灯与流光均用于表达「任务进行中」的状态，属于有意义的反馈动画
+ */
+
+/* ---- 右下角悬浮容器 ---- */
+
+.dock {
+  position: fixed;
+  right: 22px;
+  /* 抬高到首页右下角「启动游戏」按钮之上，避免两者同时出现时互相遮挡 */
+  bottom: 88px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.dock > * {
+  pointer-events: auto;
+}
+
+/* ---- 圆形悬浮按钮 ---- */
+
+.fab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1px solid var(--igm-border-strong);
+  background: linear-gradient(160deg, rgba(77, 107, 254, 0.9), rgba(43, 60, 150, 0.9));
+  color: #ffffff;
+  cursor: pointer;
+  animation: igm-breath 2.4s ease-in-out infinite;
+  transition: transform var(--igm-dur) var(--igm-ease);
+}
+
+.fab:hover {
+  transform: translateY(-2px);
+}
+
+/* 进行中任务数量角标 */
+.badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--igm-accent-cyan);
+  color: #04121a;
+  font-family: var(--igm-font-mono);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ---- 磨砂玻璃任务管理器面板 ---- */
+
+.panel {
+  width: 560px;
+  max-width: min(760px, calc(100vw - 48px));
+  height: min(70vh, 640px);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border-radius: var(--igm-radius-lg);
+  border: 1px solid var(--igm-border-strong);
+  background: var(--igm-glass-strong);
+  backdrop-filter: blur(var(--igm-blur)) saturate(140%);
+  box-shadow: var(--igm-shadow-lg);
+}
+
+.panelHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.panelTitle {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+/* 游戏运行限速联动提示条：面板顶部常驻，强调挑出以防止用户误以为下载变慢 */
+.throttleBar {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 12px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid rgba(91, 124, 245, 0.46);
+  background: rgba(91, 124, 245, 0.16);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--igm-text);
+}
+
+/* 左右两栏容器：左导航 + 右列表 */
+.body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  gap: 16px;
+}
+
+/* ---- 左侧分组导航 ---- */
+
+.tabs {
+  flex: 0 0 140px;
+  width: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 14px;
+  border-right: 1px solid var(--igm-border);
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--igm-text-dim);
+  font: inherit;
+  font-size: 13.5px;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    color var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease),
+    background var(--igm-dur) var(--igm-ease);
+}
+
+.tab:hover {
+  color: var(--igm-text);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tabOn {
+  border-color: rgba(77, 107, 254, 0.52);
+  background: rgba(77, 107, 254, 0.18);
+  color: var(--igm-text);
+}
+
+.tabCount {
+  font-family: var(--igm-font-mono);
+  font-size: 11.5px;
+  color: var(--igm-text-mute);
+}
+
+.tabOn .tabCount {
+  color: var(--igm-brand-soft);
+}
+
+/* ---- 右侧任务列表 ---- */
+
+.list {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0 2px 0 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.listEmpty {
+  margin: 0;
+  padding: 14px;
+  border-radius: var(--igm-radius-md);
+  border: 1px dashed var(--igm-border);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-mute);
+}
+
+/* ---- 单个任务 ---- */
+
+.taskRow {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.taskHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 彩色圆点：按任务色系着色并带同色光晕 */
+.dot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+}
+
+.taskName {
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--igm-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.taskState {
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: var(--igm-text-mute);
+}
+
+/* 任务行尾部操作区：暂停 / 继续 + 取消 / 清除，右对齐 */
+.taskActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+/* 视界名称 / 完成时间 */
+.taskMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.taskHorizon {
+  min-width: 0;
+  font-family: var(--igm-font-mono);
+  font-size: 12px;
+  color: var(--igm-text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.taskTime {
+  flex: 0 0 auto;
+  font-family: var(--igm-font-mono);
+  font-size: 11.5px;
+  color: var(--igm-text-mute);
+}
+
+/* ---- 流光进度线条 ---- */
+
+.progressTrack {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    hsl(var(--igm-hue, 205) 82% 58%),
+    hsl(calc(var(--igm-hue, 205) + 38) 84% 62%)
+  );
+  transition: width 320ms var(--igm-ease);
+}
+
+/* 流动高光：表示任务正在推进 */
+.shimmer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 32%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  animation: igm-flow 1.7s linear infinite;
+}
+
+/* ---- 等宽字体指标 ---- */
+
+.metrics {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: var(--igm-font-mono);
+  font-size: 12.5px;
+  color: var(--igm-text-dim);
+}
+
+.taskMessage {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #e8b27d;
+}
+
+/* ---- 提示条 ---- */
+
+.noticeBar {
+  position: fixed;
+  right: 22px;
+  bottom: 88px;
+  z-index: 31;
+  max-width: 380px;
+  padding: 11px 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid rgba(232, 178, 125, 0.42);
+  background: var(--igm-glass-strong);
+  backdrop-filter: blur(14px);
+  box-shadow: var(--igm-shadow-md);
+}
+
+.noticeText {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #e8b27d;
+}
+
+/* ---- 图标按钮 ---- */
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--igm-text-dim);
+  cursor: pointer;
+  transition: color var(--igm-dur) var(--igm-ease);
+}
+
+.iconButton:hover {
+  color: var(--igm-text);
+}
+
+/* ---- 动画 ---- */
+
+/* 呼吸灯：仅用于提示存在进行中的下载任务 */
+@keyframes igm-breath {
+  0%,
+  100% {
+    box-shadow:
+      0 12px 30px rgba(0, 0, 0, 0.45),
+      0 0 0 0 rgba(77, 107, 254, 0.5);
+  }
+  50% {
+    box-shadow:
+      0 12px 30px rgba(0, 0, 0, 0.45),
+      0 0 0 12px rgba(77, 107, 254, 0);
+  }
+}
+
+/* 流光：进度线条上的高光自左向右流动 */
+@keyframes igm-flow {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(420%);
+  }
+}

@@ -1,0 +1,587 @@
+/**
+ * 文件路径：apps/launcher-ui/components/iGM_LauncherV2_SkinLibrary/iGM_LauncherV2_SkinLibrary.module.css
+ * 所属层：前端 / 页面组件样式层
+ * 路由：G_Main（皮肤库页签）
+ * 模块：iGM_LauncherV2_SkinLibrary
+ * 作用：皮肤库页面样式（左分类、中标签与网格、右 3D 预览）
+ * 内容：三栏 Flex 自适应布局（垂直居中、全屏放大间距、窄屏收窄）、
+ *       分类按钮、中部标签、卡片网格与骨架屏、分页条、在线查询行、
+ *       详情字段与应用操作区
+ * 说明：间距与列宽使用 clamp 随视口平滑变化，页面不放装饰性动画
+ */
+
+/* 导入依赖 */
+/* （CSS Modules，无外部导入） */
+
+.screen {
+  width: 100%;
+  /* 在页签内容区内拉伸铺满，网格区按剩余高度自行滚动 */
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.head {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--igm-text);
+}
+
+.desc {
+  margin: 6px 0 0;
+  max-width: 720px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+}
+
+.notice {
+  width: 100%;
+  margin: 12px 0 0;
+  padding: 10px 14px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid rgba(77, 107, 254, 0.34);
+  background: rgba(77, 107, 254, 0.1);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+}
+
+/* ---- 三栏 Flex 自适应布局 ---- */
+
+.layout {
+  width: 100%;
+  margin-top: 16px;
+  /* 三栏纵向拉伸填满剩余高度 */
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: stretch;
+  gap: clamp(12px, 1.6vw, 28px);
+}
+
+.sideCard {
+  flex: 0 0 auto;
+  width: clamp(178px, 14vw, 232px);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 中栏随视口放宽，全屏时占据主要空间 */
+.gridCard {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 右栏随视口加宽，模型在画布中居中 */
+.previewCard {
+  flex: 0 0 auto;
+  width: clamp(228px, 21vw, 340px);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- 左侧分类 ---- */
+
+.categoryList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.category {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 11px;
+  border: 1px solid transparent;
+  border-radius: var(--igm-radius-md);
+  background: transparent;
+  color: var(--igm-text-dim);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    color var(--igm-dur) var(--igm-ease),
+    background var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease);
+}
+
+.category:hover {
+  color: var(--igm-text);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.categoryOn {
+  color: var(--igm-text);
+  border-color: var(--igm-border-strong);
+  background: linear-gradient(135deg, rgba(77, 107, 254, 0.24), rgba(34, 211, 238, 0.14));
+}
+
+.categoryText {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.categoryLabel {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.categoryDesc {
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--igm-text-mute);
+}
+
+/* ---- 中部标签 ---- */
+
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.03);
+  align-self: flex-start;
+}
+
+.tab {
+  padding: 6px 16px;
+  border: 1px solid transparent;
+  border-radius: var(--igm-radius-sm);
+  background: transparent;
+  color: var(--igm-text-dim);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color var(--igm-dur) var(--igm-ease),
+    background var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease);
+}
+
+.tab:hover {
+  color: var(--igm-text);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.tabOn {
+  color: var(--igm-text);
+  border-color: var(--igm-border-strong);
+  background: linear-gradient(135deg, rgba(77, 107, 254, 0.26), rgba(34, 211, 238, 0.14));
+}
+
+/* ---- 网格头部 ---- */
+
+.gridHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--igm-border);
+}
+
+.gridTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.gridCount {
+  font-size: 11.5px;
+  color: var(--igm-text-mute);
+}
+
+/* ---- 卡片网格（卡片与间距随视口放大） ---- */
+
+.grid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(clamp(84px, 7vw, 116px), 1fr));
+  gap: clamp(8px, 0.9vw, 18px);
+  /* 网格在剩余高度内自行滚动，滚轮不穿透到整页 */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid transparent;
+  border-radius: var(--igm-radius-md);
+  background: rgba(255, 255, 255, 0.03);
+  transition:
+    border-color var(--igm-dur) var(--igm-ease),
+    background var(--igm-dur) var(--igm-ease);
+}
+
+.card:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.cardOn {
+  border-color: var(--igm-border-strong);
+  background: rgba(77, 107, 254, 0.16);
+}
+
+.cardMain {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border: none;
+  border-radius: var(--igm-radius-md);
+  background: transparent;
+  color: var(--igm-text-dim);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.cardThumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  color: var(--igm-text-mute);
+}
+
+.cardThumbImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.cardName {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--igm-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardMeta {
+  font-size: 10.5px;
+  color: var(--igm-text-mute);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardRemove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid transparent;
+  border-radius: var(--igm-radius-sm);
+  background: rgba(12, 14, 22, 0.72);
+  color: var(--igm-text-mute);
+  cursor: pointer;
+  transition:
+    color var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease);
+}
+
+.cardRemove:hover {
+  color: #e8848c;
+  border-color: rgba(232, 132, 140, 0.42);
+}
+
+/* ---- 骨架屏 ---- */
+
+.skeleton {
+  display: block;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.045);
+  min-height: 108px;
+}
+
+/* ---- 分页 ---- */
+
+.pager {
+  margin-top: 14px;
+  padding-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  border-top: 1px solid var(--igm-border);
+}
+
+.pageButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--igm-text-dim);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    background var(--igm-dur) var(--igm-ease),
+    color var(--igm-dur) var(--igm-ease),
+    opacity var(--igm-dur) var(--igm-ease);
+}
+
+.pageButton:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--igm-text);
+}
+
+.pageButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pageNumber {
+  min-width: 30px;
+  padding: 6px 4px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--igm-text-dim);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    background var(--igm-dur) var(--igm-ease),
+    color var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease);
+}
+
+.pageNumber:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--igm-text);
+}
+
+.pageNumber:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pageOn {
+  border-color: var(--igm-border-strong);
+  background: rgba(77, 107, 254, 0.2);
+  color: var(--igm-text);
+}
+
+.empty {
+  margin: 14px 0 0;
+  padding: 14px;
+  border-radius: var(--igm-radius-md);
+  border: 1px dashed var(--igm-border);
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--igm-text-mute);
+}
+
+/* ---- 在线查询 ---- */
+
+.probeBox {
+  margin-top: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.probeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--igm-text);
+  font: inherit;
+  font-size: 12.5px;
+  outline: none;
+  transition: border-color var(--igm-dur) var(--igm-ease);
+}
+
+.input::placeholder {
+  color: var(--igm-text-mute);
+}
+
+.input:focus {
+  border-color: var(--igm-border-strong);
+}
+
+.probeHint {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: var(--igm-text-mute);
+}
+
+.spin {
+  animation: igmSpin 900ms linear infinite;
+}
+
+@keyframes igmSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---- 右栏：3D 预览与操作 ---- */
+
+.previewStage {
+  height: clamp(258px, 21vw, 380px);
+}
+
+.detail {
+  margin-top: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.detailRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.detailLabel {
+  font-size: 12px;
+  color: var(--igm-text-dim);
+}
+
+.detailValue {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--igm-text);
+  text-align: right;
+  word-break: break-all;
+}
+
+.applyBox {
+  margin-top: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 9px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.applyHint {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: var(--igm-text-mute);
+}
+
+/* ---- 操作按钮 ---- */
+
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 13px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border-strong);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--igm-text);
+  font: inherit;
+  font-size: 12.5px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease),
+    opacity var(--igm-dur) var(--igm-ease);
+}
+
+.actionButton:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.actionButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* 窄窗口下退化为单列，内容仍保持居中 */
+@media (max-width: 980px) {
+  .layout {
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .sideCard,
+  .gridCard,
+  .previewCard {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .previewStage {
+    height: 280px;
+  }
+}

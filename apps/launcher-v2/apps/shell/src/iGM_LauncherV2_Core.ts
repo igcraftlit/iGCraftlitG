@@ -63,12 +63,18 @@ let iGM_LauncherV2_CoreStderr = "";
 /** 核心进程是否已退出 */
 let iGM_LauncherV2_CoreExited = false;
 
+/** Rust 构建产物目录：由 apps/launcher-v2/.cargo/config.toml 的 target-dir 指向 D 盘缓存 */
+const IGM_LAUNCHERV2_RUST_TARGET_DIR = "D:/IGWEB/.cache/rust-target";
+
 /** 候选可执行文件路径（按优先级排列，便于日志与排查） */
 function iGM_LauncherV2_CoreCandidates(): string[] {
   const fromEnv = process.env.IGM_CORE_PATH?.trim();
   const candidates = [
     fromEnv,
-    // 开发构建产物（cargo build --release / cargo build）
+    // 开发构建产物：cargo 产物固定输出到 D 盘缓存（release 优先，debug 兜底）
+    join(IGM_LAUNCHERV2_RUST_TARGET_DIR, "release", IGM_LAUNCHERV2_CORE_BINARY),
+    join(IGM_LAUNCHERV2_RUST_TARGET_DIR, "debug", IGM_LAUNCHERV2_CORE_BINARY),
+    // 未启用 .cargo/config.toml 时 crate 内默认产物兜底
     join(IGM_LAUNCHERV2_PROJECT_ROOT, "crates", "core", "target", "release", IGM_LAUNCHERV2_CORE_BINARY),
     join(IGM_LAUNCHERV2_PROJECT_ROOT, "crates", "core", "target", "debug", IGM_LAUNCHERV2_CORE_BINARY),
     // 同步脚本产出的打包资源目录（Electrobun build.copy 映射为包内 core 目录）

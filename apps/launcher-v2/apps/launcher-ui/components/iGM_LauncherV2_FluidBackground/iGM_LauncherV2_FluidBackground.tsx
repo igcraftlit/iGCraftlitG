@@ -8,7 +8,8 @@
  *       document.hidden 暂停、半分辨率渲染、指针平滑跟随、
  *       低端设备与 prefers-reduced-motion 静态渐变降级、
  *       画布由副作用自建自销（避免 StrictMode / Fast Refresh 复用已释放的 WebGL 上下文）
- * 说明：与主站 iGM_FluidBackground 同源，按启动器场景固定为深空暗色，不随主题切换
+ * 说明：与主站 iGM_FluidBackground 同源；配色由 palette 决定（经典深紫 / 梦幻冷蓝 / 极光幻粉），
+ *       仅改变背景色调，不影响界面主题色；配色切换通过 uniform 实时改写，不重建 WebGL 上下文
  */
 
 // 导入依赖 //
@@ -16,12 +17,24 @@
 
 import { useEffect, useRef } from "react";
 import { Mesh, Program, Renderer, Triangle } from "ogl";
+import type { iGM_LauncherV2_CloudPalette } from "@/lib/iGM_LauncherV2_Constants";
 import styles from "./iGM_LauncherV2_FluidBackground.module.css";
 
 // 类型定义 //
 export interface iGM_LauncherV2_FluidBackgroundProps {
   /** 追加到容器上的样式类 */
   className?: string;
+  /** 流体云配色方案，默认经典深紫 */
+  palette?: iGM_LauncherV2_CloudPalette;
+}
+
+/** 单套配色的四个色相与底色（归一化 RGB，供着色器 uniform 使用） */
+interface iGM_LauncherV2_FluidPalette {
+  brand: [number, number, number];
+  deep: [number, number, number];
+  mid: [number, number, number];
+  accent: [number, number, number];
+  base: [number, number, number];
 }
 
 // 常量与着色器 //
@@ -41,7 +54,8 @@ void main() {
 /**
  * 流体云片元着色器：
  * 3D Simplex 噪声（Ashima Arts / Stefan Gustavson）叠加 4 个八度 FBM，
- * 以品牌蓝 #4d6bfe 为核心，混合深蓝 / 紫 / 青，形成缓慢流动的柔和色带。
+ * 以品牌色为核心，混合深色 / 中间色 / 点缀色，形成缓慢流动的柔和色带。
+ * 五个色值全部由 uniform 传入，配色切换无需重建程序。
  */
 const IGM_FRAGMENT_SHADER = `
 precision highp float;
@@ -52,6 +66,11 @@ uniform float uTime;
 uniform float uAspect;
 uniform float uMouseX;
 uniform float uMouseY;
+uniform vec3 uBrand;
+uniform vec3 uDeep;
+uniform vec3 uMid;
+uniform vec3 uAccent;
+uniform vec3 uBase;
 
 /* ---------- Simplex 噪声 3D ---------- */
 vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -143,18 +162,13 @@ void main() {
   float n2 = fbm(q + vec3(2.7, 1.3, 0.0) + n1 * 0.7);
   float band = smoothstep(-0.7, 0.9, n2 + n1 * 0.35);
 
-  /* 品牌色系：品牌蓝 / 深蓝 / 紫 / 青 */
-  vec3 cBrand  = vec3(0.302, 0.420, 0.996);
-  vec3 cDeep   = vec3(0.075, 0.106, 0.396);
-  vec3 cPurple = vec3(0.494, 0.302, 0.996);
-  vec3 cCyan   = vec3(0.133, 0.827, 0.933);
-
-  vec3 col = mix(cDeep, cBrand, band);
-  col = mix(col, cPurple, smoothstep(0.25, 1.0, n1 + 0.45));
-  col = mix(col, cCyan, smoothstep(0.35, 1.0, -n2) * 0.65);
+  /* 品牌色系：品牌色 / 深色 / 中间色 / 点缀色，全部由 uniform 传入 */
+  vec3 col = mix(uDeep, uBrand, band);
+  col = mix(col, uMid, smoothstep(0.25, 1.0, n1 + 0.45));
+  col = mix(col, uAccent, smoothstep(0.35, 1.0, -n2) * 0.65);
 
   /* 深空基调：整体压暗，保证前景文字与卡片始终清晰 */
-  col = mix(col, vec3(0.02, 0.024, 0.055), 0.5);
+  col = mix(col, uBase, 0.5);
 
   /* 中心柔光：内容区域更干净，边缘自然融入窗口底色 */
   float vignette = 1.0 - smoothstep(0.18, 1.1, length((uv - 0.5) * vec2(uAspect, 1.0)));
@@ -166,6 +180,36 @@ void main() {
 
 /** 帧节流间隔：约 30fps，兼顾流畅与能耗 */
 const IGM_FRAME_INTERVAL = 1000 / 30;
+
+/**
+ * 三套流体云配色的色值表（归一化 RGB）。
+ * - purple 经典深紫：深蓝与紫色交融，即启动器原有默认观感
+ * - blue 梦幻冷蓝：冷蓝与青色交融
+ * - pink 极光幻粉：深紫与粉色交融
+ */
+const IGM_FLUID_PALETTES: Record<iGM_LauncherV2_CloudPalette, iGM_LauncherV2_FluidPalette> = {
+  purple: {
+    brand: [0.302, 0.42, 0.996],
+    deep: [0.075, 0.106, 0.396],
+    mid: [0.494, 0.302, 0.996],
+    accent: [0.133, 0.827, 0.933],
+    base: [0.02, 0.024, 0.055],
+  },
+  blue: {
+    brand: [0.235, 0.549, 1.0],
+    deep: [0.039, 0.122, 0.302],
+    mid: [0.133, 0.827, 0.933],
+    accent: [0.404, 0.91, 0.976],
+    base: [0.008, 0.039, 0.102],
+  },
+  pink: {
+    brand: [0.549, 0.278, 0.922],
+    deep: [0.165, 0.059, 0.341],
+    mid: [0.98, 0.451, 0.722],
+    accent: [0.753, 0.518, 0.988],
+    base: [0.071, 0.02, 0.141],
+  },
+};
 
 /** 判定是否走静态渐变降级：减少动态偏好 / 核心数过低 / 内存过低 */
 function iGM_ShouldFallback(): boolean {
@@ -183,8 +227,11 @@ function iGM_ShouldFallback(): boolean {
 // 核心逻辑 //
 export function iGM_LauncherV2_FluidBackground({
   className = "",
+  palette = "purple",
 }: iGM_LauncherV2_FluidBackgroundProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
+  /** 着色器程序实例：供配色切换时实时改写 uniform，不重建 WebGL 上下文 */
+  const programRef = useRef<Program | null>(null);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -230,8 +277,15 @@ export function iGM_LauncherV2_FluidBackground({
         uAspect: { value: 1 },
         uMouseX: { value: 0 },
         uMouseY: { value: 0 },
+        // 初始配色固定为经典深紫，挂载后由配色副作用立即改写为实际配色
+        uBrand: { value: [...IGM_FLUID_PALETTES.purple.brand] },
+        uDeep: { value: [...IGM_FLUID_PALETTES.purple.deep] },
+        uMid: { value: [...IGM_FLUID_PALETTES.purple.mid] },
+        uAccent: { value: [...IGM_FLUID_PALETTES.purple.accent] },
+        uBase: { value: [...IGM_FLUID_PALETTES.purple.base] },
       },
     });
+    programRef.current = program;
 
     const mesh = new Mesh(gl, { geometry: new Triangle(gl), program });
 
@@ -302,6 +356,7 @@ export function iGM_LauncherV2_FluidBackground({
 
     return () => {
       disposed = true;
+      programRef.current = null;
       window.cancelAnimationFrame(raf);
       resizeObserver.disconnect();
       document.removeEventListener("visibilitychange", handleVisibility);
@@ -314,7 +369,26 @@ export function iGM_LauncherV2_FluidBackground({
     };
   }, []);
 
-  return <div ref={hostRef} className={`${styles.host} ${className}`} aria-hidden />;
+  // 配色切换：实时改写着色器 uniform，画布持续渲染，无需重建上下文
+  useEffect(() => {
+    const program = programRef.current;
+    if (!program) return;
+    const preset = IGM_FLUID_PALETTES[palette] ?? IGM_FLUID_PALETTES.purple;
+    program.uniforms.uBrand.value = [...preset.brand];
+    program.uniforms.uDeep.value = [...preset.deep];
+    program.uniforms.uMid.value = [...preset.mid];
+    program.uniforms.uAccent.value = [...preset.accent];
+    program.uniforms.uBase.value = [...preset.base];
+  }, [palette]);
+
+  return (
+    <div
+      ref={hostRef}
+      className={`${styles.host} ${className}`}
+      data-palette={palette}
+      aria-hidden
+    />
+  );
 }
 
 // 导出 //

@@ -1,0 +1,189 @@
+/**
+ * 文件路径：apps/launcher-ui/components/iGM_LauncherV2_SkinProfile/iGM_LauncherV2_SkinProfile.module.css
+ * 所属层：前端 / 页面组件样式层
+ * 路由：G_Main（账号中心 - 正版档案详情）
+ * 模块：iGM_LauncherV2_SkinProfile
+ * 作用：正版档案详情页样式（3D 舞台与账号纹理信息）
+ * 内容：返回与操作按钮行、两栏布局、3D 舞台高度、信息字段与等宽 UUID 展示
+ * 说明：延续主界面的玻璃拟态与低饱和配色，不使用装饰性动画
+ */
+
+/* 导入依赖 */
+/* （CSS Modules，无外部导入） */
+
+.screen {
+  width: 100%;
+  max-width: 1000px;
+  display: flex;
+  flex-direction: column;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.headActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.title {
+  margin: 14px 0 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--igm-text);
+}
+
+.desc {
+  margin: 6px 0 0;
+  max-width: 620px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+}
+
+.layout {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+  gap: 16px;
+  align-items: start;
+}
+
+.stageCard {
+  padding: 14px;
+}
+
+.infoCard {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stage {
+  height: 420px;
+}
+
+.emptyCard {
+  margin-top: 16px;
+  padding: 16px;
+}
+
+.emptyText {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.75;
+  color: var(--igm-text-mute);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--igm-border);
+}
+
+.fieldLabel {
+  font-size: 11.5px;
+  color: var(--igm-text-mute);
+}
+
+.fieldValue {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+  word-break: break-all;
+}
+
+.fieldValueMono {
+  font-family: var(--igm-font-mono);
+  font-size: 12px;
+  color: var(--igm-text);
+  word-break: break-all;
+  letter-spacing: 0.02em;
+}
+
+.infoActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.notice {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid rgba(232, 132, 140, 0.36);
+  background: rgba(232, 132, 140, 0.1);
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+}
+
+/* ---- 按钮 ---- */
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--igm-text-dim);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition:
+    color var(--igm-dur) var(--igm-ease),
+    background var(--igm-dur) var(--igm-ease);
+}
+
+.backButton:hover {
+  color: var(--igm-text);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 13px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border-strong);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--igm-text);
+  font: inherit;
+  font-size: 12.5px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--igm-dur) var(--igm-ease),
+    opacity var(--igm-dur) var(--igm-ease);
+}
+
+.actionButton:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.actionButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* 窄窗口下退化为单列，3D 舞台与信息卡均可完整使用 */
+@media (max-width: 860px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .stage {
+    height: 340px;
+  }
+}

@@ -1,0 +1,611 @@
+/**
+ * 文件路径：apps/launcher-ui/components/iGM_LauncherV2_Market/iGM_LauncherV2_Market.module.css
+ * 所属层：前端 / 样式层
+ * 路由：G_Main（资源中心 · 资源市场）
+ * 模块：iGM_LauncherV2_Market
+ * 作用：资源市场样式：三层筛选栏、结果卡片网格、加载器标签与一卡式下载弹窗
+ * 内容：沿用全站设计令牌（--igm-*）；加载器标签按 Fabric / Forge / NeoForge 区分配色；
+ *       结果网格固定高度内滚动并锁定滚动链；下载弹窗以固定遮罩铺满整窗
+ * 说明：仅保留 hover / focus / 加载旋转的必要过渡，不使用无意义动画
+ */
+
+/* ---- 外层 ---- */
+
+.wrap {
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.panel {
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.panelHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.panelDesc {
+  margin: 8px 0 0;
+  max-width: 780px;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--igm-text-dim);
+}
+
+.sourceRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+/* ---- 筛选栏 ---- */
+
+.filterRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filterLabel {
+  min-width: 44px;
+  font-size: 13px;
+  color: var(--igm-text-mute);
+}
+
+.chip {
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--igm-text-dim);
+  font: inherit;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition:
+    color var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease),
+    background var(--igm-dur) var(--igm-ease);
+}
+
+.chip:hover {
+  color: var(--igm-text);
+  border-color: var(--igm-border-strong);
+}
+
+.chipOn {
+  border-color: rgba(77, 107, 254, 0.52);
+  background: rgba(77, 107, 254, 0.18);
+  color: var(--igm-text);
+}
+
+/* ---- 搜索与状态 ---- */
+
+.searchRow {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 8px 0 16px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.searchIcon {
+  color: var(--igm-text-mute);
+  flex: 0 0 auto;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  padding: 13px 0;
+  border: none;
+  background: transparent;
+  color: var(--igm-text);
+  font: inherit;
+  font-size: 14.5px;
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--igm-text-mute);
+}
+
+.status {
+  margin: 4px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--igm-text-mute);
+}
+
+.spin {
+  animation: igm-market-spin 1s linear infinite;
+}
+
+@keyframes igm-market-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.empty {
+  margin: 14px 0 0;
+  padding: 14px;
+  border-radius: var(--igm-radius-md);
+  border: 1px dashed var(--igm-border);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-mute);
+}
+
+/* ---- 结果卡片网格 ---- */
+
+.grid {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(258px, 1fr));
+  gap: 10px;
+  max-height: 620px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.card {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 15px 16px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--igm-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease);
+}
+
+.card:hover {
+  border-color: rgba(77, 107, 254, 0.5);
+  background: rgba(77, 107, 254, 0.14);
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+
+.icon {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  border-radius: var(--igm-radius-sm);
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.iconFallback {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--igm-radius-sm);
+  background: rgba(77, 107, 254, 0.18);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.cardTitleBox {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.cardName {
+  font-size: 14.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardAuthor {
+  font-size: 12px;
+  color: var(--igm-text-mute);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardDesc {
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--igm-text-dim);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cardFoot {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.downloads {
+  font-family: var(--igm-font-mono);
+  font-size: 11.5px;
+  color: var(--igm-text-mute);
+}
+
+/* ---- 加载器标签 ---- */
+
+.tagRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag {
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 11.5px;
+  line-height: 1.6;
+}
+
+.tagFabric {
+  border-color: rgba(97, 175, 239, 0.5);
+  background: rgba(97, 175, 239, 0.15);
+  color: #b9d9f7;
+}
+
+.tagForge {
+  border-color: rgba(233, 168, 91, 0.5);
+  background: rgba(233, 168, 91, 0.15);
+  color: #f0d3a8;
+}
+
+.tagNeoforge {
+  border-color: rgba(196, 128, 236, 0.5);
+  background: rgba(196, 128, 236, 0.15);
+  color: #dcc0f0;
+}
+
+.tagPlain {
+  border-color: var(--igm-border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--igm-text-mute);
+}
+
+.moreRow {
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+}
+
+/* ---- 按钮 ---- */
+
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border-strong);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--igm-text);
+  font: inherit;
+  font-size: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease);
+}
+
+.actionButton:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.actionButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.actionButtonPrimary {
+  border-color: rgba(77, 107, 254, 0.6);
+  background: rgba(77, 107, 254, 0.22);
+}
+
+.actionButtonPrimary:hover:not(:disabled) {
+  background: rgba(77, 107, 254, 0.32);
+}
+
+/* 游客模式下替代 SDK 通道按钮的提示文案 */
+.channelHint {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 4px;
+  font-size: 12.5px;
+  color: var(--igm-text-mute);
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--igm-text-dim);
+  cursor: pointer;
+  transition: color var(--igm-dur) var(--igm-ease);
+}
+
+.iconButton:hover {
+  color: var(--igm-text);
+}
+
+/* ---- 一卡式下载弹窗 ---- */
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--igm-veil);
+  backdrop-filter: blur(6px);
+}
+
+.modalCard {
+  width: min(560px, calc(100vw - 48px));
+  max-height: calc(100vh - 48px);
+  padding: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.modalHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.modalTitleBox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.modalIcon {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 auto;
+  border-radius: var(--igm-radius-sm);
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--igm-text);
+  word-break: break-all;
+}
+
+.modalSub {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  color: var(--igm-text-mute);
+}
+
+.modalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modalField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modalLabel {
+  font-size: 13px;
+  color: var(--igm-text-dim);
+}
+
+.modalHint {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-mute);
+}
+
+.modalBodyText {
+  margin: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 12px 14px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--igm-text-dim);
+  white-space: pre-wrap;
+}
+
+.versionRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 96px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.versionChip {
+  padding: 3px 9px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.04);
+  font-family: var(--igm-font-mono);
+  font-size: 11.5px;
+  color: var(--igm-text-dim);
+}
+
+/* 安装确认对话框：安装方式单选卡片 */
+.modeRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.modeCard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 15px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--igm-text-dim);
+  text-align: left;
+  transition: border-color var(--igm-dur) var(--igm-ease),
+    background var(--igm-dur) var(--igm-ease),
+    color var(--igm-dur) var(--igm-ease);
+}
+
+.modeCard:hover {
+  border-color: var(--igm-border-strong);
+  color: var(--igm-text);
+}
+
+.modeCardOn {
+  border-color: var(--igm-accent);
+  background: var(--igm-accent-wash);
+  color: var(--igm-text);
+}
+
+.modeTitle {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.modeDesc {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--igm-text-mute);
+}
+
+/* 保存目录行：只读输入框 + 浏览按钮 */
+.folderRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.folderRow .input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* 视界下拉 */
+.select {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-surface);
+  color: var(--igm-text);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.select:focus {
+  border-color: var(--igm-accent);
+}
+
+.modalFoot {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* 窄窗口：按钮纵向铺满，避免三枚按钮挤压换行错位 */
+@media (max-width: 620px) {
+  .modalCard {
+    padding: 20px;
+    gap: 14px;
+  }
+
+  .modalFoot {
+    flex-direction: column-reverse;
+  }
+
+  .modalFoot > button {
+    justify-content: center;
+  }
+
+  .modeRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

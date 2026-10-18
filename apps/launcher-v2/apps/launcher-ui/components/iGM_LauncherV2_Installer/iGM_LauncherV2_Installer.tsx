@@ -14,7 +14,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Check, ChevronRight, FolderOpen, Laptop } from "lucide-react";
-import { iGM_LauncherV2_FluidBackground as IGM_LauncherV2_FluidBackground } from "@/components/iGM_LauncherV2_FluidBackground/iGM_LauncherV2_FluidBackground";
+import { iGM_LauncherV2_AppearanceHost as IGM_LauncherV2_AppearanceHost } from "@/components/iGM_LauncherV2_AppearanceHost/iGM_LauncherV2_AppearanceHost";
+import {
+  iGM_LauncherV2_BrowseFolder,
+  iGM_LauncherV2_CompleteInstall,
+  iGM_LauncherV2_Navigate,
+  iGM_LauncherV2_OnFolderPicked,
+} from "@/components/iGM_LauncherV2_HostBridge/iGM_LauncherV2_HostBridge";
 import {
   iGM_LauncherV2_Button as IGM_LauncherV2_Button,
   iGM_LauncherV2_Card as IGM_LauncherV2_Card,
@@ -52,10 +58,10 @@ const IGM_REQUIRED_SPACE = "约 180 MB";
 const IGM_LICENSE_TEXT = [
   "iGM CraftCeon Launcher 最终用户许可协议（Windows 版本）",
   "",
-  "一、本软件由 iGCraftLit Community 团队开发并向社区免费提供，用于启动与管理 Minecraft 游戏实例。",
+  "一、本软件由 iGCraftLit Community 团队开发并向社区免费提供，用于启动与管理 Minecraft 游戏与视界。",
   "二、使用本软件需遵守 iGCraftLit 社区用户管理规定。请勿将本软件用于任何违反当地法律法规的用途。",
   "三、本软件按「现状」提供，不附带任何形式的明示或默示担保。因使用本软件造成的游戏存档、资源文件损失，团队不承担赔偿责任。",
-  "四、本软件会读取本机游戏目录与日志文件，用于实例管理与故障排查；所有数据仅保存在本地，不会自动上传至服务器。",
+  "四、本软件会读取本机游戏目录与日志文件，用于视界管理与故障排查；所有数据仅保存在本地，不会自动上传至服务器。",
   "五、社区账号授权采用 OAuth 2.0 + PKCE 公开客户端流程，启动器不存储您的社区账号密码。",
   "六、团队保留在不另行通知的情况下更新本协议与软件功能的权利。继续使用即视为接受更新后的条款。",
   "",
@@ -92,6 +98,22 @@ export function iGM_LauncherV2_Installer() {
     return () => window.clearTimeout(timer);
   }, [step, progress]);
 
+  // 订阅外壳回推的目录选择结果，选中后写入安装路径
+  useEffect(
+    () => iGM_LauncherV2_OnFolderPicked((path) => setInstallPath(path)),
+    [],
+  );
+
+  /** 打开原生目录选择器；浏览器预览下无原生对话框，保留手动输入 */
+  const handleBrowse = () => {
+    iGM_LauncherV2_BrowseFolder(installPath);
+  };
+
+  /** 完成安装：外壳内写入标记并进入主界面；浏览器预览下跳转到欢迎页 */
+  const handleFinish = () => {
+    if (!iGM_LauncherV2_CompleteInstall()) iGM_LauncherV2_Navigate("/");
+  };
+
   /** 协议正文滚动到底部后才允许勾选 */
   const handleLicenseScroll = () => {
     const box = licenseBoxRef.current;
@@ -103,7 +125,7 @@ export function iGM_LauncherV2_Installer() {
 
   return (
     <div className={`igm-screen igm-page ${styles.screen}`}>
-      <IGM_LauncherV2_FluidBackground />
+      <IGM_LauncherV2_AppearanceHost />
 
       <main className={styles.main}>
         <header className={styles.header}>
@@ -155,7 +177,7 @@ export function iGM_LauncherV2_Installer() {
                   <IGM_LauncherV2_Button
                     variant="secondary"
                     icon={<FolderOpen size={15} strokeWidth={2.1} />}
-                    onClick={() => undefined}
+                    onClick={handleBrowse}
                   >
                     浏览
                   </IGM_LauncherV2_Button>
@@ -250,8 +272,8 @@ export function iGM_LauncherV2_Installer() {
                 </IGM_LauncherV2_Button>
               ) : null}
               {step === 3 ? (
-                <IGM_LauncherV2_Button variant="primary" onClick={() => setStep(0)}>
-                  重新演示
+                <IGM_LauncherV2_Button variant="primary" onClick={handleFinish}>
+                  完成并进入启动器
                 </IGM_LauncherV2_Button>
               ) : null}
             </div>

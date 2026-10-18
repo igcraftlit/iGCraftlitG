@@ -1,0 +1,604 @@
+/**
+ * 文件路径：apps/launcher-ui/components/iGM_LauncherV2_Horizon/iGM_LauncherV2_Horizon.module.css
+ * 所属层：前端 / 样式层
+ * 路由：G_Main（视界页签）
+ * 模块：iGM_LauncherV2_Horizon
+ * 作用：视界管理页样式：新建表单弹窗、视界列表、当前视界标记与视界详情
+ * 内容：沿用全站设计令牌（--igm-*），与设置页保持同一套面板、按钮与列表规则；
+ *       新建表单为居中遮罩弹窗（名称 / 版本 / 加载器 + 行内错误与告警）；
+ *       详情视图含标签栏、目录树（层级缩进 + 折叠）与存档列表，长内容容器内滚动
+ * 说明：仅保留 hover / disabled 的必要过渡，不使用无意义动画
+ */
+
+/* ---- 外层 ---- */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.panelHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.panelDesc {
+  margin: 6px 0 0;
+  max-width: 620px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+}
+
+.rootHint {
+  flex: 0 0 auto;
+  max-width: 46%;
+  font-family: var(--igm-font-mono);
+  font-size: 11px;
+  color: var(--igm-text-mute);
+  text-align: right;
+  word-break: break-all;
+}
+
+/* ---- 按钮 ---- */
+
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 13px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border-strong);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--igm-text);
+  font: inherit;
+  font-size: 12.5px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease),
+    opacity var(--igm-dur) var(--igm-ease);
+}
+
+.actionButton:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.actionButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.actionButtonDanger:hover:not(:disabled) {
+  color: #e8848c;
+  border-color: rgba(232, 132, 140, 0.42);
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--igm-text-dim);
+  cursor: pointer;
+  transition:
+    color var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease);
+}
+
+.iconButton:hover:not(:disabled) {
+  color: var(--igm-text);
+  border-color: var(--igm-border-strong);
+}
+
+.iconButtonDanger:hover:not(:disabled) {
+  color: #e8848c;
+  border-color: rgba(232, 132, 140, 0.42);
+}
+
+/* ---- 新建视界表单 ---- */
+
+/* 面板右上角按钮组：刷新 + 新建视界 */
+.headActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.actionButtonPrimary {
+  border-color: rgba(77, 107, 254, 0.6);
+  background: rgba(77, 107, 254, 0.22);
+}
+
+.actionButtonPrimary:hover:not(:disabled) {
+  background: rgba(77, 107, 254, 0.32);
+}
+
+/* 固定遮罩：铺满整窗，居中承载新建表单卡片 */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--igm-veil);
+  backdrop-filter: blur(6px);
+}
+
+.modalCard {
+  width: min(480px, calc(100vw - 48px));
+  max-height: calc(100vh - 48px);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.modalHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.modalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modalField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modalLabel {
+  font-size: 13px;
+  color: var(--igm-text-dim);
+}
+
+.modalInput {
+  width: 100%;
+  padding: 10px 13px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--igm-text);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color var(--igm-dur) var(--igm-ease);
+}
+
+.modalInput::placeholder {
+  color: var(--igm-text-mute);
+}
+
+.modalInput:focus {
+  border-color: rgba(77, 107, 254, 0.55);
+}
+
+.select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--igm-text);
+  font-family: var(--igm-font-mono);
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--igm-dur) var(--igm-ease);
+}
+
+.select:hover:not(:disabled) {
+  border-color: var(--igm-border-strong);
+}
+
+.select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 下拉选项面板由系统渲染，使用深色底避免白底刺眼 */
+.select option {
+  background: #0d1220;
+  color: var(--igm-text);
+}
+
+/* 无可用版本时的告警提示：不阻断创建，仅作提醒 */
+.modalHintWarn {
+  margin: 0;
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #e8b27d;
+}
+
+/* 表单校验 / 创建失败的错误提示：行内展示，确保点击必有反馈 */
+.modalError {
+  margin: 0;
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 9px 12px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid rgba(232, 132, 140, 0.42);
+  background: rgba(232, 132, 140, 0.12);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #e8848c;
+}
+
+.modalFoot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* ---- 提示与空态 ---- */
+
+.notice {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: #e8b27d;
+}
+
+.empty {
+  margin: 14px 0 0;
+  padding: 14px;
+  border-radius: var(--igm-radius-md);
+  border: 1px dashed var(--igm-border);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-mute);
+}
+
+/* ---- 视界列表 ---- */
+
+.list {
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.listRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.rowMain {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: color var(--igm-dur) var(--igm-ease);
+}
+
+.rowMain:hover .rowTitle {
+  color: var(--igm-brand-soft);
+}
+
+.rowMain:focus-visible {
+  outline: 2px solid var(--igm-border-strong);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.rowTitleLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.rowTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.rowTagOn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(77, 107, 254, 0.5);
+  background: rgba(77, 107, 254, 0.18);
+  font-size: 11px;
+  color: var(--igm-brand-soft);
+  white-space: nowrap;
+}
+
+.rowSub {
+  font-size: 11.5px;
+  color: var(--igm-text-mute);
+  word-break: break-all;
+}
+
+.rowMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--igm-font-mono);
+  font-size: 11px;
+  color: var(--igm-text-mute);
+}
+
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.iconDim {
+  color: var(--igm-text-dim);
+}
+
+/* ---- 视界详情：标题区 ---- */
+
+.detailHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.detailMain {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* ---- 视界详情：标签栏 ---- */
+
+.tabBar {
+  margin-top: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--igm-border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tabBarTabs {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--igm-text-dim);
+  font: inherit;
+  font-size: 12.5px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease),
+    background var(--igm-dur) var(--igm-ease);
+}
+
+.tab:hover {
+  color: var(--igm-text);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tabOn {
+  border-color: rgba(77, 107, 254, 0.52);
+  background: rgba(77, 107, 254, 0.18);
+  color: var(--igm-text);
+}
+
+/* ---- 视界详情：目录树 ---- */
+
+.treeScroll {
+  margin-top: 12px;
+  max-height: 52vh;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+}
+
+.treeRoot,
+.treeList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.treeRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  border-radius: var(--igm-radius-sm);
+}
+
+.treeRow:hover {
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.treeToggle {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--igm-text-dim);
+  cursor: pointer;
+  transition: color var(--igm-dur) var(--igm-ease);
+}
+
+.treeToggle:hover {
+  color: var(--igm-brand-soft);
+}
+
+.treeIcon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: var(--igm-text-mute);
+}
+
+.treeName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12.5px;
+  color: var(--igm-text-dim);
+}
+
+.treeSize {
+  flex: 0 0 auto;
+  margin-left: auto;
+  font-family: var(--igm-font-mono);
+  font-size: 11px;
+  color: var(--igm-text-mute);
+}
+
+/* ---- 视界详情：世界列表 ---- */
+
+.worldScroll {
+  margin-top: 12px;
+  max-height: 52vh;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+}
+
+.worldList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.worldRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 13px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.worldIcon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  color: var(--igm-text-dim);
+}
+
+.worldMain {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.worldName {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.worldPath {
+  font-size: 11.5px;
+  color: var(--igm-text-mute);
+  word-break: break-all;
+}
+
+.worldSize,
+.worldTime {
+  flex: 0 0 auto;
+  font-family: var(--igm-font-mono);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.worldSize {
+  color: var(--igm-text-dim);
+}
+
+.worldTime {
+  color: var(--igm-text-mute);
+}

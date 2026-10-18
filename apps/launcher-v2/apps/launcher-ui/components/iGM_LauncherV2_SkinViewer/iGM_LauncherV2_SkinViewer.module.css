@@ -1,0 +1,68 @@
+/**
+ * 文件路径：apps/launcher-ui/components/iGM_LauncherV2_SkinViewer/iGM_LauncherV2_SkinViewer.module.css
+ * 所属层：前端 / 3D 渲染组件样式层
+ * 路由：全局（皮肤库与正版档案共用）
+ * 模块：iGM_LauncherV2_SkinViewer
+ * 作用：3D 查看器视口样式（画布铺满、空态与加载态居中）
+ * 内容：viewport 提供相对定位容器，canvas 绝对铺满并隐藏溢出；
+ *       空态与加载态使用 muted 文案，保持与主界面一致的克制观感
+ * 说明：画布尺寸由脚本按容器实测尺寸设置，样式不写死宽高
+ */
+
+/* 导入依赖 */
+/* （CSS Modules，无外部导入） */
+
+.viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 260px;
+  border-radius: var(--igm-radius-md);
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 34%, rgba(77, 107, 254, 0.16), transparent 62%),
+    rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--igm-border);
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+
+.canvas:active {
+  cursor: grabbing;
+}
+
+.viewportHint {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  font-size: 11px;
+  color: var(--igm-text-mute);
+  pointer-events: none;
+}
+
+.viewportLoading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12.5px;
+  color: var(--igm-text-mute);
+}
+
+.viewportEmpty {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--igm-radius-md);
+  border: 1px dashed var(--igm-border);
+  background: rgba(255, 255, 255, 0.02);
+}

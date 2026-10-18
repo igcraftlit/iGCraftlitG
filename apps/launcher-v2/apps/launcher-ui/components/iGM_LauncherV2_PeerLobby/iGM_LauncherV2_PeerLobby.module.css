@@ -1,0 +1,319 @@
+/**
+ * 文件路径：apps/launcher-ui/components/iGM_LauncherV2_PeerLobby/iGM_LauncherV2_PeerLobby.module.css
+ * 所属层：前端 / 页面组件样式层
+ * 路由：G_Main·联机大厅（P2P）
+ * 模块：iGM_LauncherV2_PeerLobby
+ * 作用：联机大厅样式（连接状态区、房间操作区、双方案说明区块）
+ * 内容：全部使用全局设计令牌（--igm-fill / --igm-surface / --igm-accent / --igm-text 等），
+ *       令牌在浅色主题下自动翻转，避免出现刺眼白底与低对比文字；
+ *       状态点为本页唯一使用字面量颜色的位置：绿 #22c55e（主站高速）/ 黄 #f59e0b（公共节点），
+ *       连接中与未连接使用中性 / 静默令牌色，连接中额外叠加脉冲动画
+ * 说明：不使用写死的纯白 / 纯黑底色，浅色背景下文字对比度仍可读
+ */
+
+/* 导入依赖 */
+/* （CSS Modules，无外部导入） */
+
+/* ---- 页面骨架 ---- */
+
+.lobby {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ---- 通用按钮（令牌底衬，随主题翻转） ---- */
+
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 13px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border-strong);
+  background: var(--igm-fill);
+  color: var(--igm-text);
+  font: inherit;
+  font-size: 12.5px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease),
+    opacity var(--igm-dur) var(--igm-ease);
+}
+
+.actionButton:hover:not(:disabled) {
+  background: var(--igm-fill-strong);
+}
+
+.actionButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* 主操作：主题色描边 + 主题色淡底衬 */
+.actionButtonPrimary {
+  border-color: var(--igm-accent);
+  background: var(--igm-accent-wash);
+  color: var(--igm-text);
+}
+
+.actionButtonPrimary:hover:not(:disabled) {
+  border-color: var(--igm-accent-soft);
+  background: var(--igm-accent-wash);
+}
+
+/* ---- 连接状态区 ---- */
+
+.statusCard {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.statusLine {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+/* 状态点基类：字面量颜色仅用于圆点本身 */
+.dot {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--igm-text-mute);
+  display: inline-block;
+}
+
+/* 主站高速联机节点：绿色 */
+.dotCommunity {
+  background: #22c55e;
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.7);
+}
+
+/* 公共联机节点：黄色（可能稍有延迟） */
+.dotPublic {
+  background: #f59e0b;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
+}
+
+/* 连接中：中性色 + 脉冲动画 */
+.dotConnecting {
+  background: var(--igm-text-mute);
+  animation: igmDotPulse 1.2s var(--igm-ease) infinite;
+}
+
+/* 未连接：静默色圆点 */
+.dotIdle {
+  background: var(--igm-text-mute);
+}
+
+@keyframes igmDotPulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.86);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.statusText {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.statusExtra {
+  font-size: 12.5px;
+  color: var(--igm-text-dim);
+}
+
+.statusActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ---- 次级提示行 ---- */
+
+.notice {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+}
+
+/* ---- 房间操作区 ---- */
+
+.panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.panel {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.panelHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sectionLabel {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+/* 房主标记：主题色描边 + 主题色淡底衬 */
+.hostBadge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-accent);
+  background: var(--igm-accent-wash);
+  font-size: 11px;
+  color: var(--igm-text);
+  white-space: nowrap;
+}
+
+.panelDesc {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+}
+
+/* ---- 房间码展示 ---- */
+
+.codeRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.codeBlock {
+  padding: 8px 16px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-accent);
+  background: var(--igm-accent-wash);
+  color: var(--igm-text);
+  font-family: var(--igm-font-mono);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-indent: 0.28em;
+  line-height: 1.2;
+}
+
+.roomMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.roomPeers {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+  font-size: 11.5px;
+  color: var(--igm-text-dim);
+  white-space: nowrap;
+}
+
+/* ---- 加入房间表单 ---- */
+
+.joinRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.input {
+  flex: 1 1 160px;
+  min-width: 0;
+  padding: 9px 13px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+  color: var(--igm-text);
+  font: inherit;
+  font-size: 13px;
+  font-family: var(--igm-font-mono);
+  letter-spacing: 0.12em;
+  outline: none;
+  transition: border-color var(--igm-dur) var(--igm-ease);
+}
+
+.input::placeholder {
+  font-family: var(--igm-font-mono);
+  letter-spacing: normal;
+  color: var(--igm-text-mute);
+}
+
+.input:focus {
+  border-color: var(--igm-border-strong);
+}
+
+.joinHint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--igm-text-mute);
+}
+
+/* ---- 双方案说明 ---- */
+
+.infoCard {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.infoHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--igm-text-dim);
+}
+
+.infoTitle {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.infoText {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+}

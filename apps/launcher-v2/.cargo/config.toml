@@ -1,0 +1,11 @@
+# 文件路径：apps/launcher-v2/.cargo/config.toml
+# 所属层：工作区配置层（Cargo 构建期）
+# 模块：iGM_LauncherV2_CargoConfig
+# 作用：强制 Rust 编译缓存产物输出到 D 盘，避免撑爆 C 盘
+# 内容：[build] target-dir 指向 D:/IGWEB/.cache/rust-target；
+#       cargo 按「当前工作目录向上」查找配置，故在 apps/launcher-v2 根目录执行
+#       （bun run core:build:release）与在 apps/shell 目录执行均可命中本配置
+# 说明：本文件仅改变产物落盘位置，不影响 crate 源码与依赖解析
+
+[build]
+target-dir = "D:/IGWEB/.cache/rust-target"

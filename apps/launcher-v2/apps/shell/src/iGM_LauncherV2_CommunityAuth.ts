@@ -8,8 +8,10 @@
  *       生成 code_verifier（48 字节随机数）与 code_challenge（SHA256 + Base64URL，S256）；
  *       拼装授权地址并调起默认浏览器；
  *       回调到达后以 client_id + code + code_verifier + redirect_uri 换取令牌，
- *       【严禁传输 client_secret】，随后拉取 userinfo 并落盘 auth.json；
- *       同时提供登录态恢复与刷新令牌能力。
+ *       【严禁传输 client_secret】，随后拉取 userinfo 并落盘 accounts.json；
+ *       同时提供登录态恢复、刷新令牌与历史账号一键登录能力；
+ *       启动时只读取本地会话记录「历史账号」（不自动登录），供登录界面展示头像、
+ *       昵称与【一键登录社区账号】入口；未登录社区账号的用户可选择游客模式继续使用
  * 安全：state 随机生成并在回调时严格比对（防 CSRF）；令牌只落盘本地 0600 文件，
  *       回推给界面的载荷只含 uid / 昵称 / 头像，永不包含任何令牌
  */
@@ -18,12 +20,16 @@
 import { createHash, randomBytes } from "node:crypto";
 import {
   IGM_LAUNCHERV2_AUTH_WAIT_MS,
+  IGM_LAUNCHERV2_CALLBACK_HOSTS,
   IGM_LAUNCHERV2_CALLBACK_PATH,
   IGM_LAUNCHERV2_CALLBACK_PORT,
   IGM_LAUNCHERV2_COMMUNITY_AUTHORIZE_URL,
+  IGM_LAUNCHERV2_COMMUNITY_ISSUER,
+  IGM_LAUNCHERV2_COMMUNITY_PROFILE_PATH,
   IGM_LAUNCHERV2_COMMUNITY_SCOPE,
   IGM_LAUNCHERV2_COMMUNITY_TOKEN_URL,
   IGM_LAUNCHERV2_COMMUNITY_USERINFO_URL,
+  IGM_LAUNCHERV2_COMMUNITY_WEB,
   IGM_LAUNCHERV2_ENV_CLIENT_ID,
   IGM_LAUNCHERV2_REDIRECT_URI,
 } from "./iGM_LauncherV2_Constants";
@@ -50,8 +56,8 @@ interface iGM_LauncherV2_AuthFlow {
   /** 回调 resolve/reject */
   resolveCode: ((code: string) => void) | null;
   rejectCode: ((error: Error) => void) | null;
-  /** 本地回调服务器句柄 */
-  server: { stop: (closeActiveConnections?: boolean) => void } | null;
+  /** 本地回调服务器句柄（IPv4 + IPv6 双栈各一个） */
+  servers: Array<{ stop: (closeActiveConnections?: boolean) => void }>;
 }
 
 /** 令牌端点成功响应 */
@@ -84,6 +90,9 @@ let iGM_LauncherV2_CurrentUser: iGM_LauncherV2_AuthUser | null = null;
 /** 最近一次失败原因，供界面展示 */
 let iGM_LauncherV2_LastMessage = "";
 
+/** 记忆中的社区账号视图（来自本地 accounts.json 的历史登录记录，不含任何令牌） */
+let iGM_LauncherV2_Remembered: iGM_LauncherV2_AuthUser | null = null;
+
 /** 读取社区应用 client_id（仅公开客户端标识，不含密钥） */
 function iGM_LauncherV2_ClientId(): string {
   return iGM_LauncherV2_EnvGet(IGM_LAUNCHERV2_ENV_CLIENT_ID) ?? "";
@@ -104,7 +113,7 @@ function iGM_LauncherV2_CodeChallenge(verifier: string): string {
  * 优先使用 Electrobun 的 Utils.openExternal（原生调用，无终端弹窗）；
  * 不可用时按平台回退到系统命令（Windows 用 cmd start，macOS 用 open，Linux 用 xdg-open）。
  */
-async function iGM_LauncherV2_OpenExternal(url: string): Promise<boolean> {
+export async function iGM_LauncherV2_OpenExternal(url: string): Promise<boolean> {
   try {
     const electrobun = (await import("electrobun/main")) as {
       Utils?: { openExternal?: (target: string) => boolean };
@@ -153,72 +162,101 @@ function iGM_LauncherV2_CallbackPage(params: {
   });
 }
 
-/** 启动本地回调服务器并等待授权码；端口被占用时抛出可读错误 */
+/**
+ * 启动本地回调服务器并等待授权码。
+ * 同时绑定 IPv4（127.0.0.1）与 IPv6（::1）回环，避免浏览器把 localhost 解析为 ::1
+ * 时出现「拒绝连接」；只要有一个绑定成功即可工作，全部失败才抛出可读错误。
+ */
 function iGM_LauncherV2_ListenCallback(flow: iGM_LauncherV2_AuthFlow): void {
-  const server = Bun.serve({
-    port: IGM_LAUNCHERV2_CALLBACK_PORT,
-    hostname: "127.0.0.1",
-    fetch: (request) => {
-      const url = new URL(request.url);
-      if (url.pathname !== IGM_LAUNCHERV2_CALLBACK_PATH) {
-        return new Response("Not Found", { status: 404 });
-      }
+  const handler = (request: Request): Response => {
+    const url = new URL(request.url);
+    if (url.pathname !== IGM_LAUNCHERV2_CALLBACK_PATH) {
+      return new Response("Not Found", { status: 404 });
+    }
 
-      const error = url.searchParams.get("error_description") ?? url.searchParams.get("error");
-      if (error) {
-        flow.rejectCode?.(new Error(error));
-        return iGM_LauncherV2_CallbackPage({
-          title: "授权未完成",
-          detail: `${error}。请返回启动器重试。`,
-          tone: "error",
-        });
-      }
-
-      const code = url.searchParams.get("code") ?? "";
-      const state = url.searchParams.get("state") ?? "";
-      if (!code) {
-        return iGM_LauncherV2_CallbackPage({
-          title: "授权未完成",
-          detail: "回调未携带授权码。请返回启动器重试。",
-          tone: "error",
-        });
-      }
-      // CSRF 校验：state 必须与本次授权流一致
-      if (state !== flow.state) {
-        flow.rejectCode?.(new Error("state 校验失败，授权可能被劫持"));
-        return iGM_LauncherV2_CallbackPage({
-          title: "授权失败",
-          detail: "state 校验失败，请返回启动器重新授权。",
-          tone: "error",
-        });
-      }
-
-      flow.resolveCode?.(code);
+    const error = url.searchParams.get("error_description") ?? url.searchParams.get("error");
+    if (error) {
+      flow.rejectCode?.(new Error(error));
       return iGM_LauncherV2_CallbackPage({
-        title: "授权已完成",
-        detail: "请返回 iGM CraftCeon Launcher 继续操作。",
-        tone: "ok",
+        title: "授权未完成",
+        detail: `${error}。请返回启动器重试。`,
+        tone: "error",
       });
-    },
-  });
+    }
 
-  flow.server = server;
+    const code = url.searchParams.get("code") ?? "";
+    const state = url.searchParams.get("state") ?? "";
+    if (!code) {
+      return iGM_LauncherV2_CallbackPage({
+        title: "授权未完成",
+        detail: "回调未携带授权码。请返回启动器重试。",
+        tone: "error",
+      });
+    }
+    // CSRF 校验：state 必须与本次授权流一致
+    if (state !== flow.state) {
+      flow.rejectCode?.(new Error("state 校验失败，授权可能被劫持"));
+      return iGM_LauncherV2_CallbackPage({
+        title: "授权失败",
+        detail: "state 校验失败，请返回启动器重新授权。",
+        tone: "error",
+      });
+    }
+
+    flow.resolveCode?.(code);
+    return iGM_LauncherV2_CallbackPage({
+      title: "授权已完成",
+      detail: "请返回 iGM CraftCeon Launcher 继续操作。",
+      tone: "ok",
+    });
+  };
+
+  const servers: Array<{ stop: (closeActiveConnections?: boolean) => void }> = [];
+  const failures: string[] = [];
+
+  for (const hostname of IGM_LAUNCHERV2_CALLBACK_HOSTS) {
+    try {
+      servers.push(
+        Bun.serve({
+          port: IGM_LAUNCHERV2_CALLBACK_PORT,
+          hostname,
+          fetch: handler,
+        }),
+      );
+    } catch (error) {
+      failures.push(`${hostname}：${error instanceof Error ? error.message : "监听失败"}`);
+    }
+  }
+
+  if (servers.length === 0) {
+    throw new Error(failures.join("；") || `本地回调端口 ${IGM_LAUNCHERV2_CALLBACK_PORT} 不可用`);
+  }
+  if (failures.length > 0) {
+    console.warn(
+      "[iGM CraftCeon Launcher] 部分回环地址监听失败（不影响授权，其余地址仍可用）：",
+      failures.join("；"),
+    );
+  }
+
+  flow.servers = servers;
 }
 
-/** 关闭本地回调服务器 */
+/** 关闭全部本地回调服务器 */
 function iGM_LauncherV2_CloseCallback(flow: iGM_LauncherV2_AuthFlow): void {
-  try {
-    flow.server?.stop(true);
-  } catch (error) {
-    console.warn("[iGM CraftCeon Launcher] 关闭本地回调服务器失败：", error);
+  for (const server of flow.servers) {
+    try {
+      server.stop(true);
+    } catch (error) {
+      console.warn("[iGM CraftCeon Launcher] 关闭本地回调服务器失败：", error);
+    }
   }
-  flow.server = null;
+  flow.servers = [];
 }
 
 /**
  * 以授权码换取令牌。
  * 公开客户端务必只传 client_id + code + code_verifier + redirect_uri，
- * 绝不携带 client_secret；后端若因缺少密钥拒绝，需在后端放开公开客户端 PKCE。
+ * 绝不携带 client_secret；服务端对公开客户端（桌面 / 单页应用）强制校验 PKCE（S256）。
  */
 async function iGM_LauncherV2_ExchangeCode(params: {
   code: string;
@@ -280,6 +318,21 @@ async function iGM_LauncherV2_RefreshToken(params: {
   return payload;
 }
 
+/**
+ * 解析社区头像地址，规则与主站 iGM_ResolveMediaUrl 保持一致：
+ * 完整 http(s) 地址原样返回；站内相对路径（以 / 开头）补全 API 域名；
+ * 其余情况（裸文件 ID）按文件预览接口拼装。
+ * 说明：userinfo 的 picture 为站内相对路径（形如 /G_File/preview?fileId=...），
+ *       若不补全域名，界面会按启动器资源协议请求而 404，表现为头像破损。
+ */
+function iGM_LauncherV2_ResolveAvatar(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  if (trimmed.startsWith("/")) return `${IGM_LAUNCHERV2_COMMUNITY_ISSUER}${trimmed}`;
+  return `${IGM_LAUNCHERV2_COMMUNITY_ISSUER}/G_File/preview?fileId=${encodeURIComponent(trimmed)}`;
+}
+
 /** 拉取账号公开信息：sub 为社区 UID，profile scope 下附带昵称与头像 */
 async function iGM_LauncherV2_FetchUser(accessToken: string): Promise<iGM_LauncherV2_AuthUser> {
   const response = await fetch(IGM_LAUNCHERV2_COMMUNITY_USERINFO_URL, {
@@ -296,7 +349,7 @@ async function iGM_LauncherV2_FetchUser(accessToken: string): Promise<iGM_Launch
   return {
     uid,
     nickname: String(info.name ?? info.preferred_username ?? uid),
-    avatar: String(info.picture ?? ""),
+    avatar: iGM_LauncherV2_ResolveAvatar(String(info.picture ?? "")),
   };
 }
 
@@ -314,6 +367,52 @@ function iGM_LauncherV2_PushAuth(
   message = "",
 ): void {
   notify({ type: "auth:state", state, user, message });
+}
+
+/** 当前已登录的社区用户（未登录返回 null）；供微软正版验证校验前置条件 */
+export function iGM_LauncherV2_Auth_CurrentUser(): iGM_LauncherV2_AuthUser | null {
+  return iGM_LauncherV2_CurrentUser;
+}
+
+/**
+ * 重新拉取社区用户信息并回推登录态。
+ * 用于「更换头像」后把社区侧的最新头像同步到启动器；
+ * 令牌失效或未登录时如实回推未登录状态，不抛出异常。
+ */
+export async function iGM_LauncherV2_Auth_Refresh(
+  notify: iGM_LauncherV2_Notifier,
+): Promise<void> {
+  const session = await iGM_LauncherV2_StoreLoad();
+  if (!session) {
+    iGM_LauncherV2_CurrentUser = null;
+    iGM_LauncherV2_PushAuth(notify, "logged-out", null, iGM_LauncherV2_LastMessage);
+    return;
+  }
+
+  try {
+    const user = await iGM_LauncherV2_FetchUser(session.accessToken);
+    iGM_LauncherV2_CurrentUser = user;
+    const next: iGM_LauncherV2_Session = { ...session, user };
+    await iGM_LauncherV2_StoreSave(next);
+    iGM_LauncherV2_PushAuth(notify, "logged-in", user);
+  } catch (error) {
+    // 头像同步失败不影响既有登录态，仅保留原用户视图
+    iGM_LauncherV2_PushAuth(
+      notify,
+      iGM_LauncherV2_CurrentUser ? "logged-in" : "logged-out",
+      iGM_LauncherV2_CurrentUser,
+      error instanceof Error ? error.message : "社区资料同步失败",
+    );
+  }
+}
+
+/** 打开社区个人资料设置页（头像在社区侧修改，返回启动器后自动重新同步） */
+export async function iGM_LauncherV2_Auth_OpenProfilePage(): Promise<boolean> {
+  const target = new URL(
+    IGM_LAUNCHERV2_COMMUNITY_PROFILE_PATH,
+    IGM_LAUNCHERV2_COMMUNITY_WEB,
+  ).toString();
+  return iGM_LauncherV2_OpenExternal(target);
 }
 
 /** 构造当前登录态快照（供界面主动查询） */
@@ -335,6 +434,46 @@ export async function iGM_LauncherV2_Auth_Snapshot(): Promise<iGM_LauncherV2_Inb
 }
 
 /**
+ * 启动时读取本地会话，仅记录「曾登录过的社区账号」，不恢复登录态。
+ * 登录界面据此展示历史账号卡片与【一键登录社区账号】入口；
+ * 是否真的可用交由用户点击后再判定（见 Auth_QuickLogin）。
+ */
+export async function iGM_LauncherV2_Auth_Remember(): Promise<iGM_LauncherV2_AuthUser | null> {
+  const session = await iGM_LauncherV2_StoreLoad();
+  iGM_LauncherV2_Remembered = session?.user ?? null;
+  return iGM_LauncherV2_Remembered;
+}
+
+/** 构造历史账号快照（供登录界面展示头像与昵称）；无记录时 user 为 null */
+export async function iGM_LauncherV2_Auth_RememberedSnapshot(): Promise<iGM_LauncherV2_InboundMessage> {
+  if (!iGM_LauncherV2_Remembered) await iGM_LauncherV2_Auth_Remember();
+  return { type: "auth:remembered", user: iGM_LauncherV2_Remembered };
+}
+
+/**
+ * 一键登录社区账号。
+ * 直接复用本地长效令牌恢复登录态，无需重新走浏览器 OAuth 授权；
+ * 访问令牌过期时经刷新令牌静默续期，续期失败则按未登录处理并提示重新授权。
+ */
+export async function iGM_LauncherV2_Auth_QuickLogin(
+  notify: iGM_LauncherV2_Notifier,
+): Promise<void> {
+  const user = await iGM_LauncherV2_Auth_Restore();
+  if (user) {
+    iGM_LauncherV2_Remembered = user;
+    iGM_LauncherV2_PushAuth(notify, "logged-in", user);
+    return;
+  }
+
+  // 本地已无可用记录：清空历史卡片，并保证界面拿到一条可读原因
+  iGM_LauncherV2_Remembered = null;
+  if (!iGM_LauncherV2_LastMessage) {
+    iGM_LauncherV2_LastMessage = "本地未找到可用的社区登录记录，请重新授权";
+  }
+  iGM_LauncherV2_PushAuth(notify, "logged-out", null, iGM_LauncherV2_LastMessage);
+}
+
+/**
  * 启动时恢复登录态：
  * 有会话且访问令牌未过期 → 直接登录；
  * 已过期但有刷新令牌 → 静默续期；
@@ -343,6 +482,10 @@ export async function iGM_LauncherV2_Auth_Snapshot(): Promise<iGM_LauncherV2_Inb
 export async function iGM_LauncherV2_Auth_Restore(): Promise<iGM_LauncherV2_AuthUser | null> {
   const session = await iGM_LauncherV2_StoreLoad();
   if (!session) return null;
+
+  // 先在内存中记下这位「历史账号」，再决定是否恢复登录态：
+  // 即使后续续期失败导致会话文件被清除，登录界面依旧能展示该账号卡片引导重新授权
+  iGM_LauncherV2_Remembered = session.user;
 
   // 访问令牌仍然有效：直接沿用
   if (session.expiresAt > Date.now() + 30_000) {
@@ -381,6 +524,7 @@ export async function iGM_LauncherV2_Auth_Restore(): Promise<iGM_LauncherV2_Auth
     };
     await iGM_LauncherV2_StoreSave(next);
     iGM_LauncherV2_CurrentUser = user;
+    iGM_LauncherV2_Remembered = user;
     iGM_LauncherV2_LastMessage = "";
     return user;
   } catch (error) {
@@ -416,7 +560,7 @@ export async function iGM_LauncherV2_Auth_Login(notify: iGM_LauncherV2_Notifier)
     codeVerifier,
     resolveCode: null,
     rejectCode: null,
-    server: null,
+    servers: [],
   };
 
   const authorizeUrl = new URL(IGM_LAUNCHERV2_COMMUNITY_AUTHORIZE_URL);
@@ -475,10 +619,8 @@ export async function iGM_LauncherV2_Auth_Login(notify: iGM_LauncherV2_Notifier)
     iGM_LauncherV2_LastMessage = error instanceof Error ? error.message : "授权失败";
     iGM_LauncherV2_PushAuth(notify, "logged-out", null, iGM_LauncherV2_LastMessage);
     return;
-  } finally {
-    // 无论成功与否，回调端口只服务一次
-    iGM_LauncherV2_CloseCallback(flow);
   }
+  // 注意：拿到 code 后不立即关闭回调端口，需等后台换令牌完成后统一关闭
 
   try {
     const tokens = await iGM_LauncherV2_ExchangeCode({
@@ -500,6 +642,7 @@ export async function iGM_LauncherV2_Auth_Login(notify: iGM_LauncherV2_Notifier)
     await iGM_LauncherV2_StoreSave(session);
 
     iGM_LauncherV2_CurrentUser = user;
+    iGM_LauncherV2_Remembered = user;
     iGM_LauncherV2_LastMessage = "";
     console.log(`[iGM CraftCeon Launcher] 社区授权成功：${user.nickname}（${user.uid}）`);
     iGM_LauncherV2_PushAuth(notify, "logged-in", user);
@@ -509,6 +652,8 @@ export async function iGM_LauncherV2_Auth_Login(notify: iGM_LauncherV2_Notifier)
     console.warn("[iGM CraftCeon Launcher] 社区授权失败：", iGM_LauncherV2_LastMessage);
     iGM_LauncherV2_PushAuth(notify, "logged-out", null, iGM_LauncherV2_LastMessage);
   } finally {
+    // 换取令牌流程结束（成功或失败）后，立即关闭回调端口
+    iGM_LauncherV2_CloseCallback(flow);
     iGM_LauncherV2_ActiveFlow = null;
   }
 }
@@ -526,6 +671,7 @@ export async function iGM_LauncherV2_Auth_Logout(
   }
 
   iGM_LauncherV2_CurrentUser = null;
+  iGM_LauncherV2_Remembered = null;
   iGM_LauncherV2_LastMessage = "";
   await iGM_LauncherV2_StoreClear().catch(() => undefined);
   iGM_LauncherV2_PushAuth(notify, "logged-out", null);

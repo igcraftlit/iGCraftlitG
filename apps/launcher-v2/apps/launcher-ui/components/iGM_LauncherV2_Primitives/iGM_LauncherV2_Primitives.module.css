@@ -145,13 +145,14 @@
 }
 
 /* ---------- 玻璃卡片 ---------- */
+/* 模糊度引用 --igm-blur，由「设置 · 外观」滑动条实时改写 */
 .card {
   background: var(--igm-surface);
   border: 1px solid var(--igm-border);
   border-radius: var(--igm-radius-lg);
   box-shadow: var(--igm-shadow-md);
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(var(--igm-blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--igm-blur)) saturate(140%);
 }
 
 /* ---------- 状态标记 ---------- */

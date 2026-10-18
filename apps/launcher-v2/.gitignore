@@ -9,6 +9,8 @@ target/
 # 打包资源目录（由同步脚本生成）
 apps/shell/iGM_LauncherV2_Assets/launcher/
 apps/shell/iGM_LauncherV2_Assets/core/
+# 随包分发的配置文件：含 Mineskin 上传密钥，禁止入库
+apps/shell/iGM_LauncherV2_Assets/iGM_LauncherV2_Config.env
 # Electrobun 打包产物（安装包与压缩包，不入库）
 apps/shell/build/
 apps/shell/artifacts/

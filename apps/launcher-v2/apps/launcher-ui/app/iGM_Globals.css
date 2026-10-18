@@ -21,6 +21,22 @@
   --igm-border: rgba(255, 255, 255, 0.1);
   --igm-border-strong: rgba(255, 255, 255, 0.18);
 
+  /*
+   * 次级底衬与悬停底衬：用于列表行、选项卡片、次级按钮等浅色叠加。
+   * 抽成令牌是为了让「纯色 · 明亮浅色」背景时能整体翻转为深色叠加，
+   * 避免浅色背景下白叠加失效导致可读性下降。
+   */
+  --igm-fill: rgba(255, 255, 255, 0.04);
+  --igm-fill-strong: rgba(255, 255, 255, 0.08);
+
+  /*
+   * 磨砂玻璃面三级：导航栏等主玻璃面 / 浮层与弹窗玻璃面 / 遮罩幕布。
+   * 同样为令牌，以便「明亮浅色」背景下整体转为浅色玻璃 + 深色遮罩。
+   */
+  --igm-glass: rgba(16, 21, 39, 0.74);
+  --igm-glass-strong: rgba(13, 18, 32, 0.88);
+  --igm-veil: rgba(4, 6, 12, 0.62);
+
   /* 文本 */
   --igm-text: #eef1f8;
   --igm-text-dim: #a7b0c8;
@@ -32,6 +48,21 @@
   --igm-brand-deep: #2b3c96;
   --igm-accent-cyan: #22d3ee;
 
+  /*
+   * 主题色令牌：由「设置 · 外观」实时改写（默认靛蓝）。
+   * --igm-accent 用于按钮与高亮描边，--igm-accent-soft 用于渐变与悬浮态，
+   * --igm-accent-wash 为极淡的主题色底衬（选中卡片、标签底色）。
+   */
+  --igm-accent: #5b7cf5;
+  --igm-accent-soft: #8aa2ff;
+  --igm-accent-wash: rgba(91, 124, 245, 0.16);
+
+  /*
+   * 毛玻璃模糊度（px）：由「设置 · 外观」滑动条实时改写（0-30）。
+   * 导航栏、卡片等元素的 backdrop-filter 统一引用该变量，改一处即全站生效。
+   */
+  --igm-blur: 14px;
+
   /* 形状与阴影 */
   --igm-radius-lg: 22px;
   --igm-radius-md: 14px;
@@ -42,10 +73,55 @@
   /* 字体 */
   --igm-font: "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system,
     "Microsoft YaHei", "PingFang SC", sans-serif;
+  /* 艺术字体：品牌名与应用名使用（本地可变字体，随包分发，不依赖外网） */
+  --igm-font-display: "iGM Orbitron", "Orbitron", var(--igm-font);
+
+  /* 等宽字体：UUID 等技术标识展示使用 */
+  --igm-font-mono: "Cascadia Mono", "Consolas", ui-monospace, SFMono-Regular, monospace;
 
   /* 动效 */
   --igm-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
   --igm-dur: 320ms;
+}
+
+/*
+ * 明暗令牌翻转：外观设置为「纯色 · 明亮浅色」时，
+ * 由 iGM_LauncherV2_AppearanceHost 在根节点写入 data-bg-theme="light"。
+ * 只在此处覆写令牌，全局文字 / 面板 / 边框 / 阴影随之切换为深色系，
+ * 避免逐组件写死颜色导致遗漏。
+ */
+:root[data-bg-theme="light"] {
+  --igm-bg: #eef1f6;
+  --igm-surface: rgba(255, 255, 255, 0.62);
+  --igm-surface-strong: rgba(255, 255, 255, 0.88);
+  --igm-border: rgba(22, 28, 48, 0.12);
+  --igm-border-strong: rgba(22, 28, 48, 0.22);
+
+  /* 浅色背景下把白色叠加翻转为深色叠加，保证次级底衬仍可见 */
+  --igm-fill: rgba(22, 28, 48, 0.05);
+  --igm-fill-strong: rgba(22, 28, 48, 0.1);
+
+  /* 磨砂玻璃面整体转为浅色玻璃，遮罩转为浅色幕布，避免深色底衬压住深色文字 */
+  --igm-glass: rgba(255, 255, 255, 0.78);
+  --igm-glass-strong: rgba(255, 255, 255, 0.92);
+  --igm-veil: rgba(24, 32, 56, 0.26);
+
+  --igm-text: #16192a;
+  --igm-text-dim: #4b5468;
+  --igm-text-mute: #7a8291;
+
+  --igm-shadow-lg: 0 24px 60px rgba(24, 32, 56, 0.18);
+  --igm-shadow-md: 0 12px 30px rgba(24, 32, 56, 0.12);
+}
+
+/* ---------- 艺术字体（本地可变字体） ---------- */
+/* 仅用于品牌名与应用名，字号与字重由使用处控制 */
+@font-face {
+  font-family: "iGM Orbitron";
+  src: url("/fonts/iGM_Orbitron_Variable.woff2") format("woff2-variations");
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
 }
 
 /* ---------- 基础重置 ---------- */

@@ -4,11 +4,18 @@
  * 路由：全局
  * 模块：iGM_LauncherV2_RootLayout
  * 作用：Next.js 根布局，输出纯静态 HTML 骨架
- * 内容：固定深空底色与中文语言标记；挂载全局样式；不引入任何服务端能力
+ * 内容：固定深空底色与中文语言标记；挂载全局样式与本地自托管艺术字体
+ *       （加载器名称、首页欢迎词中文艺术字体、用户名英文签名体）；
+ *       不引入任何服务端能力
  */
 
 // 导入依赖 //
 import type { Metadata, Viewport } from "next";
+import {
+  iGM_LauncherV2_GreetEnFont,
+  iGM_LauncherV2_GreetZhFont,
+  iGM_LauncherV2_LoaderFont,
+} from "./iGM_LauncherV2_Fonts";
 import { IGM_LAUNCHERV2_APP_NAME } from "@/lib/iGM_LauncherV2_Constants";
 import "./iGM_Globals.css";
 
@@ -36,7 +43,10 @@ export default function iGM_LauncherV2_RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="zh-CN">
+    <html
+      lang="zh-CN"
+      className={`${iGM_LauncherV2_LoaderFont.variable} ${iGM_LauncherV2_GreetZhFont.variable} ${iGM_LauncherV2_GreetEnFont.variable}`}
+    >
       <body>{children}</body>
     </html>
   );

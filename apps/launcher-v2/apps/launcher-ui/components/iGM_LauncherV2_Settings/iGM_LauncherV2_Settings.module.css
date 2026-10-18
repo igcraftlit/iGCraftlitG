@@ -1,0 +1,857 @@
+/**
+ * 文件路径：apps/launcher-ui/components/iGM_LauncherV2_Settings/iGM_LauncherV2_Settings.module.css
+ * 所属层：前端 / 样式层
+ * 路由：G_Main（设置页签）
+ * 模块：iGM_LauncherV2_Settings
+ * 作用：设置页样式：分页签、总目录结构树、路径清单、扫描结果列表、下载通道选择与外观设置
+ * 内容：沿用全站设计令牌（--igm-*），与其余面板保持一致的圆角、边框与过渡；
+ *       所有卡片与选项均使用半透明磨砂玻璃底衬（--igm-fill / --igm-surface），
+ *       选中态统一引用主题色令牌（--igm-accent / --igm-accent-wash），不出现系统默认白底
+ * 说明：不使用花哨动画，仅保留 hover / active 的必要过渡反馈；
+ *       在「纯色 · 明亮浅色」背景下，上述令牌会整体翻转为深色叠加，文字自动转深色
+ */
+
+/* ---- 外层 ---- */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.panelHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.panelDesc {
+  margin: 6px 0 0;
+  max-width: 620px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+}
+
+.panelActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* ---- 设置页签（通用 / 外观 / 关于）---- */
+
+.tabs {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-surface);
+  backdrop-filter: blur(var(--igm-blur)) saturate(150%);
+  -webkit-backdrop-filter: blur(var(--igm-blur)) saturate(150%);
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  border-radius: var(--igm-radius-sm);
+  background: transparent;
+  color: var(--igm-text-dim);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    color var(--igm-dur) var(--igm-ease),
+    background var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease);
+}
+
+.tab:hover {
+  color: var(--igm-text);
+  background: var(--igm-fill);
+}
+
+/* 选中态：使用主题色底衬与描边，绝不出现系统默认白底 */
+.tabOn {
+  color: var(--igm-text);
+  background: var(--igm-accent-wash);
+  border-color: var(--igm-accent-soft);
+}
+
+.tabOn:hover {
+  background: var(--igm-accent-wash);
+}
+
+/* ---- 分区块与选项 ---- */
+
+.section {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sectionTitle {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--igm-text);
+}
+
+.optionRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.optionCard {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 13px 14px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease);
+}
+
+.optionCard:hover {
+  border-color: var(--igm-border-strong);
+  background: var(--igm-fill-strong);
+}
+
+.optionCardOn {
+  border-color: var(--igm-accent-soft);
+  background: var(--igm-accent-wash);
+}
+
+.optionCardOn:hover {
+  background: var(--igm-accent-wash);
+}
+
+/* ---- 配色方案选择（动态云 / 纯色）---- */
+
+.swatchRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.swatch {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 13px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease);
+}
+
+.swatch:hover {
+  border-color: var(--igm-border-strong);
+  background: var(--igm-fill-strong);
+}
+
+.swatchOn {
+  border-color: var(--igm-accent-soft);
+  background: var(--igm-accent-wash);
+}
+
+.swatchOn:hover {
+  background: var(--igm-accent-wash);
+}
+
+/* 配色预览块：颜色由选项数据决定 */
+.swatchThumb {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  border: 1px solid var(--igm-border-strong);
+}
+
+/* 浅色配色预览加一道内描边，避免在浅色界面里糊成一片 */
+.swatchThumbLight {
+  box-shadow: inset 0 0 0 1px rgba(22, 28, 48, 0.16);
+}
+
+.swatchText {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+/* ---- 模糊度滑动条 ---- */
+
+.sliderRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.slider {
+  flex: 1;
+  min-width: 0;
+  height: 5px;
+  margin: 0;
+  border-radius: 999px;
+  background: var(--igm-fill-strong);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.slider:focus-visible {
+  outline: 2px solid var(--igm-accent-soft);
+  outline-offset: 4px;
+}
+
+/* 滑块：主题色填充，避免浏览器默认的白色圆点 */
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--igm-accent);
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--igm-accent);
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+}
+
+.sliderValue {
+  flex: 0 0 auto;
+  min-width: 46px;
+  text-align: right;
+  font-family: var(--igm-font-mono);
+  font-size: 11.5px;
+  color: var(--igm-text-dim);
+}
+
+/* ---- 主题色 ---- */
+
+.themeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.theme {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 13px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+  color: var(--igm-text-dim);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition:
+    color var(--igm-dur) var(--igm-ease),
+    background var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease);
+}
+
+.theme:hover {
+  color: var(--igm-text);
+  border-color: var(--igm-border-strong);
+  background: var(--igm-fill-strong);
+}
+
+.themeOn {
+  color: var(--igm-text);
+  border-color: var(--igm-accent-soft);
+  background: var(--igm-accent-wash);
+}
+
+.themeSwatch {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+}
+
+.themeLabel {
+  white-space: nowrap;
+}
+
+/* ---- 关于页操作区 ---- */
+
+.aboutActions {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ---- 按钮 ---- */
+
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 13px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border-strong);
+  background: var(--igm-fill);
+  color: var(--igm-text);
+  font: inherit;
+  font-size: 12.5px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease),
+    opacity var(--igm-dur) var(--igm-ease);
+}
+
+.actionButton:hover:not(:disabled) {
+  background: var(--igm-fill-strong);
+}
+
+.actionButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.actionButtonDanger:hover:not(:disabled) {
+  color: #e8848c;
+  border-color: rgba(232, 132, 140, 0.42);
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+  color: var(--igm-text-dim);
+  cursor: pointer;
+  transition:
+    color var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease);
+}
+
+.iconButton:hover:not(:disabled) {
+  color: var(--igm-text);
+  border-color: var(--igm-border-strong);
+}
+
+.iconButton:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.iconButtonDanger:hover:not(:disabled) {
+  color: #e8848c;
+  border-color: rgba(232, 132, 140, 0.42);
+}
+
+/* ---- 目录结构树 ---- */
+
+.treeBox {
+  margin-top: 14px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+}
+
+.treeLine {
+  font-family: var(--igm-font-mono);
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+  white-space: pre;
+}
+
+/* ---- 路径清单 ---- */
+
+.pathGrid {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pathRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 14px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+}
+
+.pathLabel {
+  flex: 0 0 auto;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.pathValue {
+  min-width: 0;
+  font-family: var(--igm-font-mono);
+  font-size: 11.5px;
+  color: var(--igm-text-dim);
+  text-align: right;
+  word-break: break-all;
+}
+
+/* ---- 提示与空态 ---- */
+
+.notice {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: #e8b27d;
+}
+
+.empty {
+  margin: 14px 0 0;
+  padding: 14px;
+  border-radius: var(--igm-radius-md);
+  border: 1px dashed var(--igm-border);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-mute);
+}
+
+/* ---- 扫描结果列表 ---- */
+
+.list {
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.listRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+}
+
+.rowMain {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.rowTitleLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.rowTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.rowTag {
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border);
+  font-size: 11px;
+  color: var(--igm-text-dim);
+}
+
+.rowTagOn {
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-accent-soft);
+  background: var(--igm-accent-wash);
+  font-size: 11px;
+  color: var(--igm-text);
+  white-space: nowrap;
+}
+
+.rowSub {
+  font-size: 11.5px;
+  color: var(--igm-text-mute);
+  word-break: break-all;
+}
+
+.rowMeta {
+  font-family: var(--igm-font-mono);
+  font-size: 11px;
+  color: var(--igm-text-mute);
+}
+
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.iconOk {
+  color: #63c98f;
+}
+
+.iconWarn {
+  color: #e8b27d;
+}
+
+/* ---- 下载通道 ---- */
+
+.channelList {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.channelItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--igm-dur) var(--igm-ease),
+    background var(--igm-dur) var(--igm-ease);
+}
+
+.channelItem:hover {
+  border-color: var(--igm-border-strong);
+  background: var(--igm-fill-strong);
+}
+
+.channelItemOn {
+  border-color: var(--igm-accent-soft);
+  background: var(--igm-accent-wash);
+}
+
+.channelIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+  color: var(--igm-text-dim);
+}
+
+.channelText {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  flex: 1;
+}
+
+.channelMark {
+  flex: 0 0 auto;
+  font-size: 11.5px;
+  color: var(--igm-text-mute);
+}
+
+/* ---- 关于页 · 语言切换 ---- */
+
+.langToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-surface);
+}
+
+.langButton {
+  padding: 6px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--igm-radius-sm);
+  background: transparent;
+  color: var(--igm-text-dim);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    color var(--igm-dur) var(--igm-ease),
+    background var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease);
+}
+
+.langButton:hover {
+  color: var(--igm-text);
+  background: var(--igm-fill);
+}
+
+.langButtonOn {
+  color: var(--igm-text);
+  background: var(--igm-accent-wash);
+  border-color: var(--igm-accent-soft);
+}
+
+/* ---- 关于页 · 分区块 ---- */
+
+.aboutSection {
+  margin-top: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.aboutSectionTitle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--igm-text);
+}
+
+/* ---- 关于页 · 鸣谢名单 ---- */
+
+.creditList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.creditRow {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 12px 14px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+}
+
+.creditAvatar {
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--igm-border-strong);
+}
+
+.creditAvatarFallback {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid var(--igm-border-strong);
+  background: var(--igm-fill-strong);
+  color: var(--igm-text-dim);
+}
+
+.creditText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.creditName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--igm-text);
+  word-break: break-word;
+}
+
+.creditRole {
+  font-size: 11.5px;
+  color: var(--igm-text-mute);
+}
+
+/* ---- 关于页 · 开发团队 ---- */
+
+.teamRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.teamCard {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 14px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+}
+
+.teamLogo {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border-strong);
+  background: var(--igm-surface-strong);
+  overflow: hidden;
+}
+
+.teamLogoImage {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+}
+
+.teamLogoMuo {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+}
+
+.teamName {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+/* ---- 关于页 · 版权声明 ---- */
+
+.copyrightBox {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+}
+
+.copyrightLine {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 12.5px;
+}
+
+.copyrightLabel {
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.copyrightValue {
+  font-family: var(--igm-font-mono);
+  font-size: 12px;
+  color: var(--igm-text-dim);
+}
+
+.copyrightText {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.75;
+  color: var(--igm-text-mute);
+  word-break: break-word;
+}
+
+/* ---- 窄屏适配 ---- */
+
+@media (max-width: 720px) {
+  .optionRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .swatchRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .panelHead {
+    flex-direction: column;
+  }
+
+  .panelActions {
+    justify-content: flex-start;
+  }
+
+  .teamRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

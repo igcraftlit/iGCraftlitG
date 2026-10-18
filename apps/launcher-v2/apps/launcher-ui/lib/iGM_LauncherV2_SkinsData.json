@@ -1,0 +1,802 @@
+[
+  {
+    "id": "iGM_Skin_001",
+    "name": "Notch",
+    "author": "SableMint",
+    "downloads": 44294,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Notch"
+  },
+  {
+    "id": "iGM_Skin_002",
+    "name": "jeb_",
+    "author": "QuartzLane",
+    "downloads": 88696,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/jeb_"
+  },
+  {
+    "id": "iGM_Skin_003",
+    "name": "Dinnerbone",
+    "author": "CobaltCraft",
+    "downloads": 98237,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/Dinnerbone"
+  },
+  {
+    "id": "iGM_Skin_004",
+    "name": "Grumm",
+    "author": "SableMint",
+    "downloads": 48674,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Grumm"
+  },
+  {
+    "id": "iGM_Skin_005",
+    "name": "Searge",
+    "author": "IvoryLine",
+    "downloads": 75940,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Searge"
+  },
+  {
+    "id": "iGM_Skin_006",
+    "name": "Marc_IRL",
+    "author": "CraftCeon",
+    "downloads": 77724,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Marc_IRL"
+  },
+  {
+    "id": "iGM_Skin_007",
+    "name": "Kappische",
+    "author": "OnyxVault",
+    "downloads": 19593,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/Kappische"
+  },
+  {
+    "id": "iGM_Skin_008",
+    "name": "Carnalizer",
+    "author": "MonoChrome",
+    "downloads": 18103,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/Carnalizer"
+  },
+  {
+    "id": "iGM_Skin_009",
+    "name": "Cojomax99",
+    "author": "VoyagerInk",
+    "downloads": 23733,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/Cojomax99"
+  },
+  {
+    "id": "iGM_Skin_010",
+    "name": "EvilSeph",
+    "author": "CraftCeon",
+    "downloads": 82432,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/EvilSeph"
+  },
+  {
+    "id": "iGM_Skin_011",
+    "name": "Nathan_Adams",
+    "author": "OnyxVault",
+    "downloads": 19375,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Nathan_Adams"
+  },
+  {
+    "id": "iGM_Skin_012",
+    "name": "veggie",
+    "author": "IvoryLine",
+    "downloads": 17103,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/veggie"
+  },
+  {
+    "id": "iGM_Skin_013",
+    "name": "Mollstam",
+    "author": "IvoryLine",
+    "downloads": 79868,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Mollstam"
+  },
+  {
+    "id": "iGM_Skin_014",
+    "name": "pgeyser",
+    "author": "NomadPixel",
+    "downloads": 36034,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/pgeyser"
+  },
+  {
+    "id": "iGM_Skin_015",
+    "name": "slicedlime",
+    "author": "OnyxVault",
+    "downloads": 69231,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/slicedlime"
+  },
+  {
+    "id": "iGM_Skin_016",
+    "name": "Technoblade",
+    "author": "VesperDraw",
+    "downloads": 37602,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Technoblade"
+  },
+  {
+    "id": "iGM_Skin_017",
+    "name": "Dream",
+    "author": "SolsticeLab",
+    "downloads": 95298,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Dream"
+  },
+  {
+    "id": "iGM_Skin_018",
+    "name": "GeorgeNotFound",
+    "author": "OnyxVault",
+    "downloads": 52698,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/GeorgeNotFound"
+  },
+  {
+    "id": "iGM_Skin_019",
+    "name": "Sapnap",
+    "author": "NebulaForge",
+    "downloads": 67279,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Sapnap"
+  },
+  {
+    "id": "iGM_Skin_020",
+    "name": "BadBoyHalo",
+    "author": "MonoChrome",
+    "downloads": 4876,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/BadBoyHalo"
+  },
+  {
+    "id": "iGM_Skin_021",
+    "name": "Skeppy",
+    "author": "CobaltCraft",
+    "downloads": 9134,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Skeppy"
+  },
+  {
+    "id": "iGM_Skin_022",
+    "name": "a6d",
+    "author": "MonoChrome",
+    "downloads": 31674,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/a6d"
+  },
+  {
+    "id": "iGM_Skin_023",
+    "name": "Vikkstar123",
+    "author": "LumenStudio",
+    "downloads": 40439,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Vikkstar123"
+  },
+  {
+    "id": "iGM_Skin_024",
+    "name": "TommyInnit",
+    "author": "NebulaForge",
+    "downloads": 39077,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/TommyInnit"
+  },
+  {
+    "id": "iGM_Skin_025",
+    "name": "WilburSoot",
+    "author": "VoyagerInk",
+    "downloads": 26440,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/WilburSoot"
+  },
+  {
+    "id": "iGM_Skin_026",
+    "name": "Ph1LzA",
+    "author": "SolsticeLab",
+    "downloads": 84135,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Ph1LzA"
+  },
+  {
+    "id": "iGM_Skin_027",
+    "name": "CaptainSparklez",
+    "author": "MonoChrome",
+    "downloads": 3841,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/CaptainSparklez"
+  },
+  {
+    "id": "iGM_Skin_028",
+    "name": "DanTDM",
+    "author": "IvoryLine",
+    "downloads": 21450,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/DanTDM"
+  },
+  {
+    "id": "iGM_Skin_029",
+    "name": "Stampylonghead",
+    "author": "LumenStudio",
+    "downloads": 43365,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/Stampylonghead"
+  },
+  {
+    "id": "iGM_Skin_030",
+    "name": "SkyDoesMinecraft",
+    "author": "VoyagerInk",
+    "downloads": 51635,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/SkyDoesMinecraft"
+  },
+  {
+    "id": "iGM_Skin_031",
+    "name": "AntVenom",
+    "author": "OnyxVault",
+    "downloads": 87652,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/AntVenom"
+  },
+  {
+    "id": "iGM_Skin_032",
+    "name": "SethBling",
+    "author": "CraftCeon",
+    "downloads": 93326,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/SethBling"
+  },
+  {
+    "id": "iGM_Skin_033",
+    "name": "Etho",
+    "author": "IvoryLine",
+    "downloads": 41315,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/Etho"
+  },
+  {
+    "id": "iGM_Skin_034",
+    "name": "VintageBeef",
+    "author": "EmberLoft",
+    "downloads": 6518,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/VintageBeef"
+  },
+  {
+    "id": "iGM_Skin_035",
+    "name": "BdoubleO100",
+    "author": "StarWhisper",
+    "downloads": 68097,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/BdoubleO100"
+  },
+  {
+    "id": "iGM_Skin_036",
+    "name": "Guude",
+    "author": "NebulaForge",
+    "downloads": 44580,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Guude"
+  },
+  {
+    "id": "iGM_Skin_037",
+    "name": "Docm77",
+    "author": "HalcyonArt",
+    "downloads": 99982,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Docm77"
+  },
+  {
+    "id": "iGM_Skin_038",
+    "name": "GenerikB",
+    "author": "IvoryLine",
+    "downloads": 53106,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/GenerikB"
+  },
+  {
+    "id": "iGM_Skin_039",
+    "name": "xisumavoid",
+    "author": "Frostbyte",
+    "downloads": 61880,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/xisumavoid"
+  },
+  {
+    "id": "iGM_Skin_040",
+    "name": "MumboJumbo",
+    "author": "SableMint",
+    "downloads": 68817,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/MumboJumbo"
+  },
+  {
+    "id": "iGM_Skin_041",
+    "name": "Grian",
+    "author": "Frostbyte",
+    "downloads": 2652,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Grian"
+  },
+  {
+    "id": "iGM_Skin_042",
+    "name": "Iskall85",
+    "author": "ZephyrSkin",
+    "downloads": 71232,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Iskall85"
+  },
+  {
+    "id": "iGM_Skin_043",
+    "name": "Rendog",
+    "author": "HalcyonArt",
+    "downloads": 72240,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Rendog"
+  },
+  {
+    "id": "iGM_Skin_044",
+    "name": "impulseSV",
+    "author": "SableMint",
+    "downloads": 92711,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/impulseSV"
+  },
+  {
+    "id": "iGM_Skin_045",
+    "name": "TangoTek",
+    "author": "QuartzLane",
+    "downloads": 30681,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/TangoTek"
+  },
+  {
+    "id": "iGM_Skin_046",
+    "name": "Zedaph",
+    "author": "EnderAtelier",
+    "downloads": 68647,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Zedaph"
+  },
+  {
+    "id": "iGM_Skin_047",
+    "name": "cubfan135",
+    "author": "ZephyrSkin",
+    "downloads": 95863,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/cubfan135"
+  },
+  {
+    "id": "iGM_Skin_048",
+    "name": "FalseSymmetry",
+    "author": "VoyagerInk",
+    "downloads": 6900,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/FalseSymmetry"
+  },
+  {
+    "id": "iGM_Skin_049",
+    "name": "Stressmonster101",
+    "author": "EmberLoft",
+    "downloads": 73401,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/Stressmonster101"
+  },
+  {
+    "id": "iGM_Skin_050",
+    "name": "JoeHills",
+    "author": "CraftCeon",
+    "downloads": 35576,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/JoeHills"
+  },
+  {
+    "id": "iGM_Skin_051",
+    "name": "ZombieCleo",
+    "author": "AetherWorks",
+    "downloads": 27371,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/ZombieCleo"
+  },
+  {
+    "id": "iGM_Skin_052",
+    "name": "Keralis",
+    "author": "OnyxVault",
+    "downloads": 53854,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/Keralis"
+  },
+  {
+    "id": "iGM_Skin_053",
+    "name": "Hypixel",
+    "author": "SableMint",
+    "downloads": 98890,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/Hypixel"
+  },
+  {
+    "id": "iGM_Skin_054",
+    "name": "Rezzus",
+    "author": "OnyxVault",
+    "downloads": 17902,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Rezzus"
+  },
+  {
+    "id": "iGM_Skin_055",
+    "name": "TapL",
+    "author": "MonoChrome",
+    "downloads": 21647,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/TapL"
+  },
+  {
+    "id": "iGM_Skin_056",
+    "name": "Illumina",
+    "author": "HalcyonArt",
+    "downloads": 53707,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Illumina"
+  },
+  {
+    "id": "iGM_Skin_057",
+    "name": "Punz",
+    "author": "LumenStudio",
+    "downloads": 60939,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/Punz"
+  },
+  {
+    "id": "iGM_Skin_058",
+    "name": "Purpled",
+    "author": "EmberLoft",
+    "downloads": 51533,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/Purpled"
+  },
+  {
+    "id": "iGM_Skin_059",
+    "name": "Ranboo",
+    "author": "NebulaForge",
+    "downloads": 1255,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Ranboo"
+  },
+  {
+    "id": "iGM_Skin_060",
+    "name": "Fundy",
+    "author": "CobaltCraft",
+    "downloads": 70171,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/Fundy"
+  },
+  {
+    "id": "iGM_Skin_061",
+    "name": "KarlJacobs",
+    "author": "HalcyonArt",
+    "downloads": 39878,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/KarlJacobs"
+  },
+  {
+    "id": "iGM_Skin_062",
+    "name": "Quackity",
+    "author": "StarWhisper",
+    "downloads": 25052,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Quackity"
+  },
+  {
+    "id": "iGM_Skin_063",
+    "name": "xNestorio",
+    "author": "HalcyonArt",
+    "downloads": 18180,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/xNestorio"
+  },
+  {
+    "id": "iGM_Skin_064",
+    "name": "t3rr0r",
+    "author": "VoyagerInk",
+    "downloads": 48654,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/t3rr0r"
+  },
+  {
+    "id": "iGM_Skin_065",
+    "name": "Steve",
+    "author": "Frostbyte",
+    "downloads": 41252,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Steve"
+  },
+  {
+    "id": "iGM_Skin_066",
+    "name": "Alex",
+    "author": "VoyagerInk",
+    "downloads": 62266,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Alex"
+  },
+  {
+    "id": "iGM_Skin_067",
+    "name": "Ari",
+    "author": "HalcyonArt",
+    "downloads": 7296,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Ari"
+  },
+  {
+    "id": "iGM_Skin_068",
+    "name": "Zuri",
+    "author": "IvoryLine",
+    "downloads": 79639,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/Zuri"
+  },
+  {
+    "id": "iGM_Skin_069",
+    "name": "Kai",
+    "author": "IvoryLine",
+    "downloads": 258,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Kai"
+  },
+  {
+    "id": "iGM_Skin_070",
+    "name": "Efe",
+    "author": "EnderAtelier",
+    "downloads": 43213,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Efe"
+  },
+  {
+    "id": "iGM_Skin_071",
+    "name": "Noor",
+    "author": "SableMint",
+    "downloads": 91322,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Noor"
+  },
+  {
+    "id": "iGM_Skin_072",
+    "name": "Sunny",
+    "author": "CraftCeon",
+    "downloads": 68227,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/Sunny"
+  },
+  {
+    "id": "iGM_Skin_073",
+    "name": "Makena",
+    "author": "QuartzLane",
+    "downloads": 65288,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/Makena"
+  },
+  {
+    "id": "iGM_Skin_074",
+    "name": "Deadmau5",
+    "author": "LumenStudio",
+    "downloads": 4067,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/Deadmau5"
+  },
+  {
+    "id": "iGM_Skin_075",
+    "name": "iHasCupquake",
+    "author": "MonoChrome",
+    "downloads": 24637,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/iHasCupquake"
+  },
+  {
+    "id": "iGM_Skin_076",
+    "name": "LDShadowLady",
+    "author": "HalcyonArt",
+    "downloads": 13312,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/LDShadowLady"
+  },
+  {
+    "id": "iGM_Skin_077",
+    "name": "SmallishBeans",
+    "author": "NomadPixel",
+    "downloads": 60136,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/SmallishBeans"
+  },
+  {
+    "id": "iGM_Skin_078",
+    "name": "SolidarityGaming",
+    "author": "AetherWorks",
+    "downloads": 84484,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/SolidarityGaming"
+  },
+  {
+    "id": "iGM_Skin_079",
+    "name": "Smajor1995",
+    "author": "HalcyonArt",
+    "downloads": 84574,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Smajor1995"
+  },
+  {
+    "id": "iGM_Skin_080",
+    "name": "Shubble",
+    "author": "CraftCeon",
+    "downloads": 26973,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Shubble"
+  },
+  {
+    "id": "iGM_Skin_081",
+    "name": "PearlescentMoon",
+    "author": "Frostbyte",
+    "downloads": 46366,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/PearlescentMoon"
+  },
+  {
+    "id": "iGM_Skin_082",
+    "name": "InTheLittleWood",
+    "author": "EnderAtelier",
+    "downloads": 14547,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/InTheLittleWood"
+  },
+  {
+    "id": "iGM_Skin_083",
+    "name": "fWhip",
+    "author": "IvoryLine",
+    "downloads": 49478,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/fWhip"
+  },
+  {
+    "id": "iGM_Skin_084",
+    "name": "GeminiTay",
+    "author": "ZephyrSkin",
+    "downloads": 48784,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/GeminiTay"
+  },
+  {
+    "id": "iGM_Skin_085",
+    "name": "MythicalSausage",
+    "author": "VoyagerInk",
+    "downloads": 36239,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/MythicalSausage"
+  },
+  {
+    "id": "iGM_Skin_086",
+    "name": "Seapeekay",
+    "author": "Frostbyte",
+    "downloads": 56629,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Seapeekay"
+  },
+  {
+    "id": "iGM_Skin_087",
+    "name": "Nihachu",
+    "author": "ZephyrSkin",
+    "downloads": 20736,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Nihachu"
+  },
+  {
+    "id": "iGM_Skin_088",
+    "name": "JackManifoldTV",
+    "author": "CobaltCraft",
+    "downloads": 33978,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/JackManifoldTV"
+  },
+  {
+    "id": "iGM_Skin_089",
+    "name": "Eret",
+    "author": "VesperDraw",
+    "downloads": 28467,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Eret"
+  },
+  {
+    "id": "iGM_Skin_090",
+    "name": "awesamdude",
+    "author": "SolsticeLab",
+    "downloads": 47667,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/awesamdude"
+  },
+  {
+    "id": "iGM_Skin_091",
+    "name": "Ponk",
+    "author": "Frostbyte",
+    "downloads": 77704,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/Ponk"
+  },
+  {
+    "id": "iGM_Skin_092",
+    "name": "HBomb94",
+    "author": "QuartzLane",
+    "downloads": 20733,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/HBomb94"
+  },
+  {
+    "id": "iGM_Skin_093",
+    "name": "Wisp",
+    "author": "VoyagerInk",
+    "downloads": 65515,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Wisp"
+  },
+  {
+    "id": "iGM_Skin_094",
+    "name": "Sneegsnag",
+    "author": "LumenStudio",
+    "downloads": 5611,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/Sneegsnag"
+  },
+  {
+    "id": "iGM_Skin_095",
+    "name": "Vurb",
+    "author": "CraftCeon",
+    "downloads": 75169,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Vurb"
+  },
+  {
+    "id": "iGM_Skin_096",
+    "name": "Bitzel",
+    "author": "IvoryLine",
+    "downloads": 6337,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/Bitzel"
+  },
+  {
+    "id": "iGM_Skin_097",
+    "name": "FerrinHeight",
+    "author": "SolsticeLab",
+    "downloads": 36191,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/FerrinHeight"
+  },
+  {
+    "id": "iGM_Skin_098",
+    "name": "Ssundee",
+    "author": "CraftCeon",
+    "downloads": 94419,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/Ssundee"
+  },
+  {
+    "id": "iGM_Skin_099",
+    "name": "PrestonPlayz",
+    "author": "NomadPixel",
+    "downloads": 18845,
+    "type": "classic",
+    "skinUrl": "https://minotar.net/skin/PrestonPlayz"
+  },
+  {
+    "id": "iGM_Skin_100",
+    "name": "MrWoofless",
+    "author": "CraftCeon",
+    "downloads": 86474,
+    "type": "slim",
+    "skinUrl": "https://minotar.net/skin/MrWoofless"
+  }
+]

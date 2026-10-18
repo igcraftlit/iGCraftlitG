@@ -1,0 +1,10 @@
+# 文件路径：apps/launcher-v2/bunfig.toml
+# 所属层：工作区配置层（Bun 运行时）
+# 模块：iGM_LauncherV2_Bunfig
+# 作用：将 Bun 依赖安装缓存重定向到 D 盘，避免占用 C 盘空间
+# 内容：[install] cacheDir 指向 D:/IGWEB/.cache/bun，
+#       与命令行环境变量 BUN_INSTALL_CACHE_DIR 保持一致；
+#       亦可将依赖整体安装到 D 盘（bun install 的全局缓存与包体均不落 C 盘）
+
+[install]
+cacheDir = "D:/IGWEB/.cache/bun"

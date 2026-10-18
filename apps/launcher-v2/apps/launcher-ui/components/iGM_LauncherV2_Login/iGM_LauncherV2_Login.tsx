@@ -3,26 +3,32 @@
  * 所属层：前端 / 页面组件层
  * 路由：G_Login
  * 模块：iGM_LauncherV2_Login
- * 作用：社区账号授权登录页（启动器全部功能的前置步骤）
- * 内容：卡片中央仅保留一个星标入口（image/ig.png，64x64），图标本身即登录按钮；
- *       点击后由 Bun 主进程发起 PKCE 授权流程并调起默认浏览器；
- *       界面只接收不含令牌的登录状态，授权成功后自动进入主界面
+ * 作用：启动器登录页（社区账号授权 或 游客模式）
+ * 内容：卡片中央保留星标入口（image/ig.png，64x64），图标本身即社区授权按钮；
+ *       本地存在历史社区账号记录时，额外展示该账号头像与昵称，并提供
+ *       【一键登录社区账号】按钮，直接复用长效令牌恢复登录态而无需重新授权；
+ *       另提供【游客登录（跳过社区账号）】入口，点击后先弹出二次确认，
+ *       明确告知游客数据仅存本机、无法云同步，用户确认后才进入主界面
  * 说明：桌面端为公开客户端，全程不传输 client_secret，仅使用 PKCE（S256）；
- *       本页为纯 OAuth 授权入口，不提供账号密码表单、注册入口或其他登录方式
+ *       本页不提供账号密码表单与注册入口
  */
 
 // 导入依赖 //
 "use client";
 
 import Image from "next/image";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { iGM_LauncherV2_FluidBackground as IGM_LauncherV2_FluidBackground } from "@/components/iGM_LauncherV2_FluidBackground/iGM_LauncherV2_FluidBackground";
+import { UserRound } from "lucide-react";
+import { useEffect, useState } from "react";
+import { iGM_LauncherV2_AppearanceHost as IGM_LauncherV2_AppearanceHost } from "@/components/iGM_LauncherV2_AppearanceHost/iGM_LauncherV2_AppearanceHost";
 import {
   iGM_LauncherV2_Card as IGM_LauncherV2_Card,
   iGM_LauncherV2_WindowChrome as IGM_LauncherV2_WindowChrome,
 } from "@/components/iGM_LauncherV2_Primitives/iGM_LauncherV2_Primitives";
-import { iGM_LauncherV2_UseAuth as IGM_LauncherV2_UseAuth } from "@/components/iGM_LauncherV2_HostBridge/iGM_LauncherV2_HostBridge";
+import {
+  iGM_LauncherV2_Navigate,
+  iGM_LauncherV2_UseAuth as IGM_LauncherV2_UseAuth,
+  iGM_LauncherV2_UseRememberedAccount as IGM_LauncherV2_UseRememberedAccount,
+} from "@/components/iGM_LauncherV2_HostBridge/iGM_LauncherV2_HostBridge";
 import { IGM_LAUNCHERV2_APP_NAME } from "@/lib/iGM_LauncherV2_Constants";
 import styles from "./iGM_LauncherV2_Login.module.css";
 
@@ -30,25 +36,48 @@ import styles from "./iGM_LauncherV2_Login.module.css";
 /* （无外部入参） */
 
 // 核心逻辑 //
-export function iGM_LauncherV2_Login() {
-  const router = useRouter();
-  const auth = IGM_LauncherV2_UseAuth();
 
-  // 授权成功：平滑过渡到主界面
+/** 历史账号头像：地址为空或加载失败时回退到 lucide 默认头像，避免出现破损图片 */
+function IGM_LauncherV2_RememberedAvatar({ src, alt }: { src: string; alt: string }) {
+  const [failed, setFailed] = useState(false);
+
+  if (!src || failed) {
+    return <UserRound size={22} strokeWidth={2.2} className={styles.rememberedAvatar} aria-label={alt} />;
+  }
+
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      width={48}
+      height={48}
+      className={styles.rememberedAvatar}
+      unoptimized
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
+export function iGM_LauncherV2_Login() {
+  const auth = IGM_LauncherV2_UseAuth();
+  const remembered = IGM_LauncherV2_UseRememberedAccount();
+  const [guestPrompt, setGuestPrompt] = useState(false);
+
+  // 授权成功：平滑过渡到主界面（含历史账号一键登录成功的场景）
   useEffect(() => {
-    if (auth.state === "logged-in") router.replace("/G_Main");
-  }, [auth.state, router]);
+    if (auth.state === "logged-in") iGM_LauncherV2_Navigate("/G_Main");
+  }, [auth.state]);
 
   const pending = auth.state === "pending" || auth.state === "logged-in";
 
   return (
     <div className={`igm-screen igm-page ${styles.screen}`}>
-      <IGM_LauncherV2_FluidBackground />
+      <IGM_LauncherV2_AppearanceHost />
       <IGM_LauncherV2_WindowChrome label={IGM_LAUNCHERV2_APP_NAME} version="社区授权" />
 
       <main className={styles.main}>
         <IGM_LauncherV2_Card className={styles.panel}>
-          {/* 唯一登录入口：星标图标本身即按钮，点击直接触发社区授权 */}
+          {/* 社区授权入口：星标图标本身即按钮，点击直接触发社区授权 */}
           <button
             type="button"
             className={styles.entry}
@@ -70,12 +99,83 @@ export function iGM_LauncherV2_Login() {
             {pending ? "等待浏览器授权…" : "使用 iGCraftLit 社区账号登录"}
           </h1>
 
-          {auth.message ? <p className={styles.error}>{auth.message}</p> : null}
+          {/* 历史社区账号：本地存在长效令牌记录时展示头像与昵称，支持一键恢复登录态 */}
+          {remembered.user ? (
+            <div className={styles.remembered}>
+              <IGM_LauncherV2_RememberedAvatar
+                src={remembered.user.avatar}
+                alt={`${remembered.user.nickname} 的社区头像`}
+              />
+              <div className={styles.rememberedText}>
+                <span className={styles.rememberedName}>{remembered.user.nickname}</span>
+                <span className={styles.rememberedId}>上次登录的社区账号</span>
+              </div>
+              <button
+                type="button"
+                className={styles.quickLogin}
+                disabled={pending}
+                onClick={() => remembered.quickLogin()}
+              >
+                一键登录社区账号
+              </button>
+            </div>
+          ) : null}
+
+          {/* 游客入口：点击先弹二次确认，明确告知游客数据仅存本机 */}
+          <button
+            type="button"
+            className={styles.guest}
+            disabled={pending}
+            onClick={() => setGuestPrompt(true)}
+          >
+            游客登录（跳过社区账号）
+          </button>
+
+          {auth.state === "logged-out" && auth.message ? (
+            <p className={styles.error}>{auth.message}</p>
+          ) : null}
           {!auth.isShell ? (
             <p className={styles.hint}>当前为浏览器预览模式，授权流程需在桌面启动器内进行。</p>
           ) : null}
         </IGM_LauncherV2_Card>
       </main>
+
+      {/* 游客登录二次确认：确认后才进入主界面，避免用户误以为游客数据可云同步 */}
+      {guestPrompt ? (
+        <div className={styles.modalOverlay} role="presentation" onClick={() => setGuestPrompt(false)}>
+          <div
+            className={styles.modal}
+            role="dialog"
+            aria-modal="true"
+            aria-label="游客登录确认"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <p className={styles.modalTitle}>注意</p>
+            <p className={styles.modalText}>
+              游客登录产生的数据（如游玩记录、本地视界）将仅保存在当前设备，无法云同步或与社区生态互通，是否继续？
+            </p>
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.modalCancel}
+                onClick={() => setGuestPrompt(false)}
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                className={styles.modalConfirm}
+                onClick={() => {
+                  setGuestPrompt(false);
+                  iGM_LauncherV2_Navigate("/G_Main");
+                }}
+              >
+                继续
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

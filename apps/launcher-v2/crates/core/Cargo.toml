@@ -1,6 +1,6 @@
 [package]
 name = "igm_core"
-version = "26.4.0"
+version = "26.5.0"
 edition = "2021"
 description = "iGM CraftCeon Launcher native core sidecar (stdio JSON bridge over Tokio)"
 license = "MIT"

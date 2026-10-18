@@ -3,14 +3,19 @@
  * 所属层：桌面外壳 / 构建脚本层
  * 路由：全局（构建期）
  * 模块：iGM_LauncherV2_SyncUi
- * 作用：把 Next.js 静态导出产物、Rust 核心二进制与 LOGO 同步到外壳资源目录，供 Electrobun 打包
+ * 作用：把 Next.js 静态导出产物、Rust 核心二进制、LOGO 与公开配置同步到外壳资源目录，供 Electrobun 打包
  * 内容：清空并复制 apps/launcher-ui/out -> iGM_LauncherV2_Assets/launcher；
+ *       从项目根 .env 提取白名单键（client_id 等公开标识 + Mineskin 上传密钥
+ *       + 资源市场 CurseForge 检索密钥）
+ *       -> iGM_LauncherV2_Assets/iGM_LauncherV2_Config.env，随包分发；
  *       复制 crates/core 的 cargo 产物 -> iGM_LauncherV2_Assets/core（未编译时跳过）；
- *       复制 D:/IGWEB/image/save1.<ext> -> iGM_LauncherV2_Assets/icon.ico（缺失时跳过并提示）
+ *       复制 D:/IGWEB/image/save1.<ext> -> iGM_LauncherV2_Assets/iGM_LauncherV2_Icon.ico（缺失时跳过并提示）
+ * 说明：MINESKIN_API_KEY 为皮肤上传密钥，按交付要求随包内置以便解压即用；
+ *       安装包不得提交到 Git 或对外公开分发以外的渠道
  */
 
 // 导入依赖 //
-import { access, cp, mkdir, readdir, rm } from "node:fs/promises";
+import { access, cp, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 // 类型定义 //
@@ -39,16 +44,30 @@ const iGM_LauncherV2_UiTargetDir = join(iGM_LauncherV2_AssetsDir, "launcher");
 /** Rust 核心目标位置 */
 const iGM_LauncherV2_CoreTargetDir = join(iGM_LauncherV2_AssetsDir, "core");
 
-/** Windows 图标目标位置 */
-const iGM_LauncherV2_IconTarget = join(iGM_LauncherV2_AssetsDir, "icon.ico");
+/** Windows 图标目标位置（与 electrobun.config.ts 的 win.icon 一致） */
+const iGM_LauncherV2_IconTarget = join(iGM_LauncherV2_AssetsDir, "iGM_LauncherV2_Icon.ico");
+
+/** 随包分发的公开配置文件（与 electrobun.config.ts 的 build.copy 源路径一致） */
+const iGM_LauncherV2_ConfigTarget = join(iGM_LauncherV2_AssetsDir, "iGM_LauncherV2_Config.env");
+
+/** 公开配置来源：项目根 .env */
+const iGM_LauncherV2_EnvSource = join(iGM_LauncherV2_ProjectRoot, ".env");
+
+/**
+ * 允许进入安装包的白名单键前缀。
+ * 前缀内仅限公开客户端标识（client_id 等）、皮肤上传密钥 MINESKIN_API_KEY
+ * 与资源市场检索密钥 IGM_CURSEFORGE_API_KEY，
+ * 其余键（如 SMTP、数据库口令）一律不得随包分发。
+ */
+const iGM_LauncherV2_PublicKeyPrefixes = ["IGCRAFTLIT_", "MSA_", "MINESKIN_", "IGM_"];
 
 /** 各平台核心二进制文件名 */
 const iGM_LauncherV2_CoreNames = ["igm_core.exe", "igm_core"];
 
-/** cargo 产物目录（release 优先） */
+/** cargo 产物目录：由 apps/launcher-v2/.cargo/config.toml 的 target-dir 指向 D 盘缓存（release 优先） */
 const iGM_LauncherV2_CoreArtifactDirs = [
-  join(iGM_LauncherV2_ProjectRoot, "crates", "core", "target", "release"),
-  join(iGM_LauncherV2_ProjectRoot, "crates", "core", "target", "debug"),
+  "D:/IGWEB/.cache/rust-target/release",
+  "D:/IGWEB/.cache/rust-target/debug",
 ];
 
 async function iGM_LauncherV2_PathExists(path: string): Promise<boolean> {
@@ -120,10 +139,44 @@ async function iGM_LauncherV2_SyncIcon(): Promise<void> {
   console.log(`[iGM_LauncherV2_SyncUi] 已同步图标 -> ${iGM_LauncherV2_IconTarget}`);
 }
 
+/**
+ * 同步公开配置：从项目根 .env 提取白名单键，写入随包分发文件。
+ * 打包版主进程取不到源码树里的 .env（包内 app 目录之外无该文件），
+ * 因此必须把 client_id 等公开配置随包带上一份。
+ */
+async function iGM_LauncherV2_SyncConfig(): Promise<void> {
+  if (!(await iGM_LauncherV2_PathExists(iGM_LauncherV2_EnvSource))) {
+    console.warn(
+      `[iGM_LauncherV2_SyncUi] 未找到配置文件，跳过公开配置同步：${iGM_LauncherV2_EnvSource}`,
+    );
+    return;
+  }
+
+  const lines = (await readFile(iGM_LauncherV2_EnvSource, "utf8"))
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) =>
+      iGM_LauncherV2_PublicKeyPrefixes.some((prefix) => line.startsWith(prefix)),
+    );
+
+  await mkdir(iGM_LauncherV2_AssetsDir, { recursive: true });
+  // 头部注释由白名单前缀动态拼装，避免新增前缀后注释与实际过滤规则脱节
+  const header = `# 由 scripts/iGM_LauncherV2_SyncUi.ts 从 .env 提取（白名单：${iGM_LauncherV2_PublicKeyPrefixes.join(" / ")}）`;
+  await writeFile(
+    iGM_LauncherV2_ConfigTarget,
+    `${header}\n${lines.join("\n")}\n`,
+    "utf8",
+  );
+  console.log(
+    `[iGM_LauncherV2_SyncUi] 已同步公开配置 ${lines.length} 项 -> ${iGM_LauncherV2_ConfigTarget}`,
+  );
+}
+
 async function iGM_LauncherV2_Main(): Promise<void> {
   await iGM_LauncherV2_SyncUi();
   await iGM_LauncherV2_SyncCore();
   await iGM_LauncherV2_SyncIcon();
+  await iGM_LauncherV2_SyncConfig();
 }
 
 // 导出 //

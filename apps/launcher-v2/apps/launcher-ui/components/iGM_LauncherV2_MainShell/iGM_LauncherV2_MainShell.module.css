@@ -3,88 +3,1476 @@
  * 所属层：前端 / 页面组件样式层
  * 路由：G_Main
  * 模块：iGM_LauncherV2_MainShell
- * 作用：主界面骨架样式
- * 内容：居中占位卡片、环形加载指示、状态清单
+ * 作用：主界面样式（极简静态渐变底、图标导航悬停展开、用户下拉菜单、首页布局、账号中心面板）
+ * 内容：默认仅显示导航图标的收起态与悬停展开态过渡、用户菜单浮层、
+ *       首页欢迎词 / 启动按钮 / 快捷入口 / 最近更新 / 右侧账号栏与启动视界小窗、
+ *       Java / 微软正版 / 离线账号三块面板的列表与操作按钮
+ * 说明：不使用动态流体背景，主界面保持干净无干扰
  */
 
 /* 导入依赖 */
 /* （CSS Modules，无外部导入） */
 
+/* ---- 页面与主区 ---- */
+
+/* 极简静态线性渐变底：替代流体云，保证干净无干扰 */
+.screen {
+  background: linear-gradient(168deg, #0a1020 0%, #06080f 58%, #04060c 100%);
+}
+
 .main {
   position: relative;
   z-index: 2;
   flex: 1;
+  min-height: 0;
   display: flex;
+  /* 内容区上下拉伸铺满，避免屏幕底部出现大片留白 */
+  align-items: stretch;
+  justify-content: center;
+  padding: 22px 46px 34px;
+  overflow: auto;
+  /* 锁定滚动链：子区域滚动不穿透到整页 */
+  overscroll-behavior: contain;
+}
+
+/* ---- 顶部悬浮式导航栏 ---- */
+
+.nav {
+  position: relative;
+  z-index: 4;
+  margin: 10px 46px 0;
+  padding: 9px 12px 9px 14px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border-strong);
+  /* 磨砂玻璃加重：更高不透明度 + 更强模糊与饱和度，质感更厚重 */
+  /* 模糊度引用 --igm-blur，由「设置 · 外观」滑动条实时改写 */
+  /* 底色引用 --igm-glass，浅色背景方案下整体转为浅色玻璃以保持文字对比度 */
+  background: var(--igm-glass);
+  backdrop-filter: blur(var(--igm-blur)) saturate(170%);
+  -webkit-backdrop-filter: blur(var(--igm-blur)) saturate(170%);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.46),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.navBrand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding-left: 4px;
+  flex: 0 0 auto;
+}
+
+.navLogo {
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+/* 应用名使用 Orbitron 艺术字体 */
+.navBrandText {
+  font-family: var(--igm-font-display);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  color: var(--igm-text);
+}
+
+.navItems {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 auto;
+}
+
+/* 收起态：仅图标；悬停时横向展开显示文字 */
+.navItem {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 13px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--igm-text-dim);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    color var(--igm-dur) var(--igm-ease),
+    background var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease),
+    padding var(--igm-dur) var(--igm-ease);
+}
+
+.navItemLabel {
+  max-width: 0;
+  margin-left: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 0;
+  transition:
+    max-width var(--igm-dur) var(--igm-ease),
+    margin-left var(--igm-dur) var(--igm-ease),
+    opacity var(--igm-dur) var(--igm-ease);
+}
+
+.navItem:hover,
+.navItem:focus-visible {
+  color: var(--igm-text);
+  background: var(--igm-fill-strong);
+  padding: 8px 15px;
+}
+
+.navItem:hover .navItemLabel,
+.navItem:focus-visible .navItemLabel {
+  max-width: 88px;
+  margin-left: 8px;
+  opacity: 1;
+}
+
+/* 当前页签以底色标识，文字仍默认收起 */
+.navItemOn {
+  color: var(--igm-text);
+  background: linear-gradient(135deg, rgba(77, 107, 254, 0.34), rgba(34, 211, 238, 0.22));
+  border-color: var(--igm-border-strong);
+}
+
+/* ---- 右上角用户区与下拉菜单 ---- */
+
+.navUser {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.userButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px 5px 5px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+  color: var(--igm-text-dim);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition:
+    color var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease);
+}
+
+.userButton:hover {
+  color: var(--igm-text);
+  border-color: var(--igm-border-strong);
+}
+
+.userAvatar {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 48px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--igm-fill-strong);
+  color: var(--igm-text-dim);
 }
 
-.panel {
-  width: 440px;
-  max-width: 100%;
-  padding: 34px;
+.userAvatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.userName {
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 268px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 12px;
+  gap: 8px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border-strong);
+  background: var(--igm-surface-strong);
+  backdrop-filter: blur(20px);
+  box-shadow: var(--igm-shadow-lg);
+  animation: igm-menu-in 200ms var(--igm-ease) both;
 }
 
-.loader {
-  margin: 2px 0 6px;
-}
-
-/* 环形加载指示：以边框色阶缓慢旋转，克制且不喧宾夺主 */
-.ring {
-  display: block;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.12);
-  border-top-color: var(--igm-brand-soft);
-}
-
-.ringOn {
-  animation: igm-launcher-ring 900ms linear infinite;
-}
-
-@keyframes igm-launcher-ring {
+@keyframes igm-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
   to {
-    transform: rotate(360deg);
+    opacity: 1;
+    transform: none;
   }
 }
 
-.title {
+.menuIdentity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 8px 10px;
+  border-bottom: 1px solid var(--igm-border);
+}
+
+.menuAvatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--igm-text-dim);
+}
+
+.menuIdentityText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.menuName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--igm-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menuUid {
+  font-size: 11.5px;
+  color: var(--igm-text-mute);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--igm-radius-sm);
+  background: transparent;
+  color: var(--igm-text-dim);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    color var(--igm-dur) var(--igm-ease),
+    background var(--igm-dur) var(--igm-ease);
+}
+
+.menuItem:hover:not(:disabled) {
+  color: var(--igm-text);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.menuItem:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.menuItemDanger:hover:not(:disabled) {
+  color: #e8848c;
+  background: rgba(232, 132, 140, 0.1);
+}
+
+/* ---- 首页（欢迎区 + 启动中心 + 账号栏，无动态背景） ---- */
+
+.home {
+  width: 100%;
+  /* 主区已 align-items: stretch，home 需回到内容自身高度，窄屏时可纵向滚动 */
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  /* 右下角固定启动按钮的占位，避免遮挡末尾内容 */
+  padding-bottom: 78px;
+}
+
+.homeHead {
+  display: flex;
+  flex-direction: column;
+}
+
+.heroKicker {
   margin: 0;
-  font-size: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--igm-brand-soft);
+}
+
+.heroTitle {
+  margin: 12px 0 0;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--igm-text);
+}
+
+/* 欢迎词中的中文部分：中文艺术字体（Ma Shan Zheng，本地自托管） */
+.heroGreet {
+  font-family: var(--igm-font-greet-zh), "Ma Shan Zheng", cursive;
+  font-weight: 400;
+}
+
+/* 欢迎词中的用户名部分：英文签名体（Caveat，本地自托管），字号略大以突出签名感 */
+.heroSign {
+  margin-left: 6px;
+  font-family: var(--igm-font-greet-en), "Caveat", cursive;
+  font-size: 1.28em;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--igm-text);
+}
+
+/* 主区与右侧账号栏：宽屏左右并排，窄屏（半屏窗口）账号栏下移堆叠 */
+.homeBody {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 336px;
+  gap: 18px;
+  align-items: start;
+}
+
+.homeMain {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.homeAside {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+@media (max-width: 940px) {
+  .homeBody {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* 右下角启动入口：固定于页面右下角，尺寸刻意收小；
+   纵向位置略高于下载中心悬浮球，保证两者同时出现时互不遮挡 */
+.launchDock {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 24;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: 320px;
+  pointer-events: none;
+}
+
+.launchDock > * {
+  pointer-events: auto;
+}
+
+.launchStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 6px 11px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-glass-strong);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--igm-text-dim);
+}
+
+.launchButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border-strong);
+  background: linear-gradient(135deg, rgba(77, 107, 254, 0.5), rgba(34, 211, 238, 0.3));
+  color: var(--igm-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: var(--igm-shadow-md);
+  transition:
+    border-color var(--igm-dur) var(--igm-ease),
+    background var(--igm-dur) var(--igm-ease);
+}
+
+.launchButton:hover {
+  border-color: rgba(125, 146, 255, 0.72);
+  background: linear-gradient(135deg, rgba(77, 107, 254, 0.62), rgba(34, 211, 238, 0.4));
+}
+
+.tileGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+/* 快捷入口卡片：整体可点击，跳转到对应页签 */
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 18px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.035);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--igm-dur) var(--igm-ease),
+    background var(--igm-dur) var(--igm-ease);
+}
+
+.tile:hover {
+  border-color: var(--igm-border-strong);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.tileIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 10px;
+  border-radius: var(--igm-radius-sm);
+  background: linear-gradient(135deg, rgba(77, 107, 254, 0.34), rgba(34, 211, 238, 0.2));
+  color: var(--igm-brand-soft);
+}
+
+.tileTitle {
+  margin: 0;
+  font-size: 15px;
   font-weight: 700;
   color: var(--igm-text);
 }
 
-.desc {
+.tileDesc {
+  margin: 7px 0 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+}
+
+/* ---- 首页「最近更新」与账号栏 ---- */
+
+.recentCard {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.recentIcon {
+  flex: 0 0 auto;
+  color: var(--igm-text-mute);
+}
+
+.accountCard {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.accountBlock {
+  display: flex;
+  flex-direction: column;
+}
+
+.accountHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--igm-text-dim);
+}
+
+.accountTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.accountCount {
+  margin-left: auto;
+  font-size: 11.5px;
+  color: var(--igm-text-mute);
+}
+
+/* 当前启动账号标记：与行内选中标签同一视觉语言 */
+.accountActiveTag {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(77, 107, 254, 0.5);
+  background: rgba(77, 107, 254, 0.18);
+  font-size: 11px;
+  color: var(--igm-brand-soft);
+  white-space: nowrap;
+}
+
+.accountDivider {
+  height: 1px;
+  background: var(--igm-border);
+}
+
+.accountEmpty {
+  margin: 12px 0 0;
+  padding: 12px;
+  border-radius: var(--igm-radius-md);
+  border: 1px dashed var(--igm-border);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-mute);
+}
+
+.accountHint {
+  margin: 10px 0 0;
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: #e8b27d;
+}
+
+/* ---- 启动游戏小窗（遮罩 + 居中卡片） ---- */
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--igm-veil);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.modal {
+  width: 100%;
+  max-width: 520px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--igm-radius-lg);
+  border: 1px solid var(--igm-border-strong);
+  background: var(--igm-surface-strong);
+  box-shadow: var(--igm-shadow-lg);
+  animation: igm-menu-in 200ms var(--igm-ease) both;
+}
+
+.modalHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.modalTitle {
   margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.modalDesc {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+}
+
+/* 未选择当前启动账号时的拦截提示 */
+.modalWarn {
+  margin-top: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid rgba(232, 178, 125, 0.45);
+  background: rgba(232, 178, 125, 0.09);
+  color: #e8b27d;
+}
+
+.modalWarnBody {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.modalWarnTitle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #f2c59a;
+}
+
+.modalWarnDesc {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+}
+
+.modalEmpty {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.horizonOption {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.035);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--igm-dur) var(--igm-ease),
+    background var(--igm-dur) var(--igm-ease);
+}
+
+.horizonOption:hover {
+  border-color: var(--igm-border-strong);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+/* 未选择当前启动账号时禁止投递启动指令 */
+.horizonOption:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.horizonOption:disabled:hover {
+  border-color: var(--igm-border);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.horizonPlay {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border-strong);
+  background: linear-gradient(135deg, rgba(77, 107, 254, 0.4), rgba(34, 211, 238, 0.26));
+  color: var(--igm-brand-soft);
+}
+
+/* ---- 账号中心 / 设置 ---- */
+
+.section {
+  width: 100%;
+  max-width: 880px;
+  /* 拉伸填满内容区高度，并按自身滚动 */
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* 宽幅页面（皮肤库）：全屏时内容向左右扩宽，仍保持水平居中 */
+.sectionWide {
+  max-width: 1560px;
+}
+
+/* 满幅页面（资源中心）：废除固定 max-width，内容随窗口铺满全宽，消除两侧留白 */
+.sectionFull {
+  max-width: none;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--igm-text);
+}
+
+.sectionDesc {
+  margin: 6px 0 0;
   font-size: 13px;
   line-height: 1.7;
   color: var(--igm-text-dim);
 }
 
+.summaryCard {
+  margin-top: 18px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 14px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.fieldLabel {
+  font-size: 12.5px;
+  color: var(--igm-text-dim);
+}
+
+.fieldValue {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
 .statusList {
-  margin-top: 8px;
+  margin-top: 2px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 8px;
-  width: 100%;
-  padding: 12px 14px;
   border-radius: var(--igm-radius-md);
-  background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.04);
 }
 
-.actions {
+/* ---- 账号中心功能面板 ---- */
+
+.panel {
+  margin-top: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.panelHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.panelDesc {
+  margin: 6px 0 0;
+  max-width: 560px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+}
+
+.panelActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 13px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border-strong);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--igm-text);
+  font: inherit;
+  font-size: 12.5px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease),
+    opacity var(--igm-dur) var(--igm-ease);
+}
+
+.actionButton:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.actionButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.actionButtonDanger:hover:not(:disabled) {
+  color: #e8848c;
+  border-color: rgba(232, 132, 140, 0.42);
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--igm-text-dim);
+  cursor: pointer;
+  transition:
+    color var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease);
+}
+
+.iconButton:hover:not(:disabled) {
+  color: var(--igm-text);
+  border-color: var(--igm-border-strong);
+}
+
+.iconButton:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.iconButtonDanger:hover:not(:disabled) {
+  color: #e8848c;
+  border-color: rgba(232, 132, 140, 0.42);
+}
+
+.empty {
+  margin: 14px 0 0;
+  padding: 14px;
+  border-radius: var(--igm-radius-md);
+  border: 1px dashed var(--igm-border);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-mute);
+}
+
+/* 提示行：用于在有既有账号时仍反馈本次操作结果 */
+.notice {
+  margin: 10px 0 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: #e8b27d;
+}
+
+/* 空状态块：说明文案 + 醒目的人工补救入口（如手动添加 Java 路径） */
+.emptyAction {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.emptyAction .empty {
+  margin: 0;
+  width: 100%;
+}
+
+/* ---- 微软设备代码流展示区 ---- */
+
+.deviceBox {
+  margin-top: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.deviceHint {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+}
+
+.deviceCodeRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* 用户代码：加大字号与字距，便于对照输入 */
+.deviceCode {
+  padding: 10px 16px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border-strong);
+  background: rgba(77, 107, 254, 0.14);
+  font-family: var(--igm-font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--igm-text);
+}
+
+.deviceUri {
+  font-size: 12px;
+  color: var(--igm-brand-soft);
+  word-break: break-all;
+}
+
+.deviceActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.deviceMeta {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: var(--igm-text-mute);
+}
+
+.list {
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.listRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.rowMain {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.rowTitleLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.rowTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.rowTag {
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border);
+  font-size: 11px;
+  color: var(--igm-text-dim);
+}
+
+.rowTagOn {
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(77, 107, 254, 0.5);
+  background: rgba(77, 107, 254, 0.18);
+  font-size: 11px;
+  color: var(--igm-brand-soft);
+  white-space: nowrap;
+}
+
+.rowSub {
+  font-size: 11.5px;
+  color: var(--igm-text-mute);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+/* 离线账号整行可点击选为当前启动账号 */
+.rowSelect {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+
+.rowCheck {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border);
+  color: var(--igm-brand-soft);
+}
+
+/* 选中行：高亮边框 + 勾选图标，与全局当前账号一一对应 */
+.listRowActive {
+  border-color: rgba(77, 107, 254, 0.55);
+  background: rgba(77, 107, 254, 0.12);
+}
+
+.listRowActive .rowCheck {
+  border-color: rgba(77, 107, 254, 0.55);
+  background: rgba(77, 107, 254, 0.2);
+}
+
+.identity {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.identityAvatar {
+  border-radius: var(--igm-radius-sm);
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+
+.identityText {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  flex: 1;
+}
+
+/* 已绑定正版账号的身份块可点击进入 3D 档案页 */
+.identityClickable {
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--igm-dur) var(--igm-ease),
+    background var(--igm-dur) var(--igm-ease);
+}
+
+.identityClickable:hover {
+  border-color: var(--igm-border-strong);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+/* 正版身份块被选为当前启动账号：高亮边框 + 勾选图标 */
+.identityActive {
+  border-color: rgba(77, 107, 254, 0.55);
+  background: rgba(77, 107, 254, 0.12);
+}
+
+.identityCheck {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border);
+  color: var(--igm-brand-soft);
+}
+
+.identityActive .identityCheck {
+  border-color: rgba(77, 107, 254, 0.55);
+  background: rgba(77, 107, 254, 0.2);
+}
+
+.identityHint {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: var(--igm-text-mute);
+  white-space: nowrap;
+}
+
+.inputRow {
   margin-top: 14px;
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 13px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--igm-text);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color var(--igm-dur) var(--igm-ease);
+}
+
+.input::placeholder {
+  color: var(--igm-text-mute);
+}
+
+.input:focus {
+  border-color: var(--igm-border-strong);
+}
+
+/* 离线账号达到上限后输入框禁用 */
+.input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---- 设置 ---- */
+
+.settingsCard {
+  margin-top: 18px;
+  padding: 10px 18px;
+  display: flex;
+  flex-direction: column;
+}
+
+.settingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 2px;
+  border-bottom: 1px solid var(--igm-border);
+}
+
+.settingRow:last-child {
+  border-bottom: none;
+}
+
+.settingLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--igm-text);
+}
+
+.settingValue {
+  font-size: 12.5px;
+  color: var(--igm-text-dim);
+}
+
+/* ---- 启动进度遮罩（全屏居中：阶段清单 + 进度条 + 失败错误面板） ---- */
+
+.progressOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--igm-glass-strong);
+  backdrop-filter: blur(8px);
+}
+
+.progressCard {
+  width: min(520px, calc(100vw - 48px));
+  max-height: calc(100vh - 48px);
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-radius: var(--igm-radius-lg);
+  border: 1px solid var(--igm-border-strong);
+  background: var(--igm-surface);
+  box-shadow: var(--igm-shadow-lg);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* 失败态：整卡边框与描边转为红色警示 */
+.progressCardFailed {
+  border-color: rgba(239, 88, 88, 0.62);
+  box-shadow: 0 0 0 1px rgba(239, 88, 88, 0.24) inset;
+}
+
+.progressTitle {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.progressStage {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+  word-break: break-all;
+}
+
+.progressTrack {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(77, 107, 254, 0.9), rgba(120, 160, 255, 0.9));
+  transition: width 260ms var(--igm-ease);
+}
+
+.progressFillFailed {
+  background: linear-gradient(90deg, rgba(214, 68, 68, 0.9), rgba(239, 120, 120, 0.9));
+}
+
+.progressPercent {
+  margin: 0;
+  font-family: var(--igm-font-mono);
+  font-size: 12.5px;
+  text-align: right;
+  color: var(--igm-text-mute);
+}
+
+.progressSteps {
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.progressStep {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--igm-text-mute);
+}
+
+.progressStepOn {
+  color: var(--igm-text);
+}
+
+.progressStepFail {
+  color: var(--igm-text-mute);
+  text-decoration: line-through;
+}
+
+.progressStepDot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.progressStepOn .progressStepDot {
+  background: rgba(77, 107, 254, 0.9);
+}
+
+.progressStepFail .progressStepDot {
+  background: rgba(239, 88, 88, 0.7);
+}
+
+/* 失败面板：红色错误日志区 */
+.progressErrors {
+  margin-top: 4px;
+  padding: 12px 14px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid rgba(239, 88, 88, 0.5);
+  background: rgba(239, 88, 88, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.progressErrorsHead {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #f3b6b6;
+}
+
+.progressErrorLine {
+  margin: 0;
+  font-family: var(--igm-font-mono);
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: #f0c2c2;
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+.progressFoot {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.progressHint {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--igm-text-mute);
+}
+
+/* ---- 错误控制台（启动日志） ---- */
+
+.consoleCard {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.consoleActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.consoleIcon {
+  color: var(--igm-text-mute);
+}
+
+.consoleBody {
+  margin-top: 14px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 12px 14px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-glass-strong);
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 11.5px;
+  line-height: 1.65;
+}
+
+.consoleLine {
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--igm-text-dim);
+  word-break: break-all;
+}
+
+/* stderr 与启动器自身错误标红，便于直接定位崩溃原因 */
+.consoleLineError {
+  color: #ff9d9d;
+}
+
+.consoleTime {
+  flex: 0 0 auto;
+  color: var(--igm-text-mute);
+}
+
+.consoleStream {
+  flex: 0 0 auto;
+  color: var(--igm-text-mute);
+}
+
+.consoleText {
+  flex: 1;
+  min-width: 0;
+  white-space: pre-wrap;
+}
+
+.consoleEmpty {
+  margin: 0;
+  font-size: 12px;
+  color: var(--igm-text-mute);
 }

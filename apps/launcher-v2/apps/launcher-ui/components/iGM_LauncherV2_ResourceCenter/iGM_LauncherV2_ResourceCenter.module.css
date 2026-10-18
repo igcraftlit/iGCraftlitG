@@ -1,0 +1,422 @@
+/**
+ * 文件路径：apps/launcher-ui/components/iGM_LauncherV2_ResourceCenter/iGM_LauncherV2_ResourceCenter.module.css
+ * 所属层：前端 / 样式层
+ * 路由：G_Main（资源中心页签）
+ * 模块：iGM_LauncherV2_ResourceCenter
+ * 作用：资源中心样式：二级视图切换、版本分类芯片、搜索框、版本卡片网格与一卡式安装弹窗
+ * 内容：沿用全站设计令牌（--igm-*）；版本号使用等宽字体；安装弹窗以固定遮罩铺满整窗，
+ *       弹窗宽度 min(520px, calc(100vw - 48px))，窄窗口下配置项自动纵向堆叠
+ * 说明：仅保留 hover / focus 的必要过渡，不使用无意义动画
+ */
+
+/* ---- 外层 ---- */
+
+.wrap {
+  width: 100%;
+  /* 铺满页签内容区：随窗口放大纵向拉伸，消除两侧留白 */
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.panel {
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+}
+
+.panelHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.panelDesc {
+  margin: 8px 0 0;
+  max-width: 900px;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--igm-text-dim);
+}
+
+.empty {
+  margin: 14px 0 0;
+  padding: 14px;
+  border-radius: var(--igm-radius-md);
+  border: 1px dashed var(--igm-border);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-mute);
+}
+
+/* ---- 二级视图切换 ---- */
+
+.viewRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.viewTab {
+  padding: 10px 22px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--igm-text-dim);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    color var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease),
+    background var(--igm-dur) var(--igm-ease);
+}
+
+.viewTab:hover {
+  color: var(--igm-text);
+  border-color: var(--igm-border-strong);
+}
+
+.viewTabOn {
+  border-color: rgba(77, 107, 254, 0.52);
+  background: rgba(77, 107, 254, 0.18);
+  color: var(--igm-text);
+}
+
+/* ---- 按钮与过滤芯片 ---- */
+
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border-strong);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--igm-text);
+  font: inherit;
+  font-size: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease);
+}
+
+.actionButton:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.actionButtonPrimary {
+  border-color: rgba(77, 107, 254, 0.6);
+  background: rgba(77, 107, 254, 0.22);
+}
+
+.actionButtonPrimary:hover:not(:disabled) {
+  background: rgba(77, 107, 254, 0.32);
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--igm-text-dim);
+  cursor: pointer;
+  transition: color var(--igm-dur) var(--igm-ease);
+}
+
+.iconButton:hover {
+  color: var(--igm-text);
+}
+
+.filterRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.chip {
+  padding: 10px 17px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--igm-text-dim);
+  font: inherit;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition:
+    color var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease),
+    background var(--igm-dur) var(--igm-ease);
+}
+
+.chip:hover {
+  color: var(--igm-text);
+  border-color: var(--igm-border-strong);
+}
+
+.chipOn {
+  border-color: rgba(77, 107, 254, 0.52);
+  background: rgba(77, 107, 254, 0.18);
+  color: var(--igm-text);
+}
+
+/* ---- 搜索 ---- */
+
+.searchRow {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.searchIcon {
+  color: var(--igm-text-mute);
+  flex: 0 0 auto;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  padding: 13px 0;
+  border: none;
+  background: transparent;
+  color: var(--igm-text);
+  font: inherit;
+  font-size: 14.5px;
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--igm-text-mute);
+}
+
+/* ---- 版本卡片网格 ---- */
+
+.versionGrid {
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(206px, 1fr));
+  gap: 10px;
+  max-height: 640px;
+  overflow-y: auto;
+  /* 锁定滚动链：网格内滚动不穿透到整页 */
+  overscroll-behavior: contain;
+}
+
+.versionCard {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 16px 18px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--igm-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease);
+}
+
+.versionCard:hover {
+  border-color: rgba(77, 107, 254, 0.5);
+  background: rgba(77, 107, 254, 0.14);
+}
+
+.versionCardId {
+  font-family: var(--igm-font-mono);
+  font-size: 15.5px;
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.versionCardMeta {
+  font-family: var(--igm-font-mono);
+  font-size: 12px;
+  color: var(--igm-text-mute);
+}
+
+.dialogHint {
+  margin: 12px 0 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--igm-text-mute);
+}
+
+/* ---- 下拉框 ---- */
+
+.select {
+  width: 100%;
+  padding: 11px 13px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--igm-text);
+  font-family: var(--igm-font-mono);
+  font-size: 13.5px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--igm-dur) var(--igm-ease);
+}
+
+.select:hover:not(:disabled) {
+  border-color: var(--igm-border-strong);
+}
+
+.select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 下拉框的选项面板由系统渲染，使用深色底避免白底刺眼 */
+.select option {
+  background: #0d1220;
+  color: var(--igm-text);
+}
+
+/* ---- 一卡式安装弹窗 ---- */
+
+/* 固定遮罩：铺满整窗，居中承载安装卡片 */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--igm-veil);
+  backdrop-filter: blur(6px);
+}
+
+.modalCard {
+  width: min(520px, calc(100vw - 48px));
+  max-height: calc(100vh - 48px);
+  padding: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.modalHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--igm-text);
+  word-break: break-all;
+}
+
+.modalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modalField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modalLabel {
+  font-size: 13px;
+  color: var(--igm-text-dim);
+}
+
+.modalInput {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--igm-text);
+  font-family: var(--igm-font-mono);
+  font-size: 13.5px;
+  outline: none;
+  transition: border-color var(--igm-dur) var(--igm-ease);
+}
+
+.modalInput:focus {
+  border-color: rgba(77, 107, 254, 0.55);
+}
+
+.modalInput::placeholder {
+  color: var(--igm-text-mute);
+}
+
+.modalHint {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-mute);
+}
+
+/* 存放路径行：路径输入框占据剩余宽度，右侧为「浏览文件夹」按钮 */
+.pathRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pathRow .modalInput {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.modalFoot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* 窄窗口：配置项已纵向排列，弹窗内边距收紧，避免拥挤 */
+@media (max-width: 560px) {
+  .modalCard {
+    padding: 20px;
+    gap: 14px;
+  }
+
+  .modalFoot {
+    flex-direction: column-reverse;
+  }
+
+  .modalFoot > button {
+    justify-content: center;
+  }
+}

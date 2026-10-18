@@ -8,7 +8,10 @@
  *       scripts/iGM_LauncherV2_SyncUi.ts 同步到 iGM_LauncherV2_Assets/launcher，
  *       再由 build.copy 打包为 views://launcher；Rust 核心二进制同步到
  *       iGM_LauncherV2_Assets/core 并打包为包内 core 目录；
- *       Windows 图标仅在同步脚本已产出时声明（缺失不影响构建）
+ *       公开配置（client_id 等）同步到 iGM_LauncherV2_Assets/iGM_LauncherV2_Config.env
+ *       并打包到主进程同级目录，供主进程在打包环境下读取；
+ *       Windows 应用图标取自 iGM_LauncherV2_Assets/iGM_LauncherV2_Icon.ico
+ *       （多尺寸 ICO，窗口左上角与任务栏共用；缺失时不影响构建）
  */
 
 // 导入依赖 //
@@ -18,13 +21,13 @@ import type { ElectrobunConfig } from "electrobun";
 
 // 核心逻辑 //
 const iGM_LauncherV2_AssetsDir = join(import.meta.dir, "iGM_LauncherV2_Assets");
-const iGM_LauncherV2_IconPath = join(iGM_LauncherV2_AssetsDir, "icon.ico");
+const iGM_LauncherV2_IconPath = join(iGM_LauncherV2_AssetsDir, "iGM_LauncherV2_Icon.ico");
 
 const iGM_LauncherV2_ElectrobunConfig = {
   app: {
     name: "iGM CraftCeon Launcher",
     identifier: "com.igcraftlit.launcher.v2",
-    version: "26.4.0",
+    version: "26.5.0",
     description: "iGCraftLit official Minecraft launcher",
   },
   build: {
@@ -39,10 +42,12 @@ const iGM_LauncherV2_ElectrobunConfig = {
     copy: {
       "iGM_LauncherV2_Assets/launcher": "views/launcher",
       "iGM_LauncherV2_Assets/core": "core",
+      // 公开配置落在主进程（bun/）上一级，即 Resources/app 根，便于 import.meta.dir 定位
+      "iGM_LauncherV2_Assets/iGM_LauncherV2_Config.env": "iGM_LauncherV2_Config.env",
     },
-    // Windows（WebView2）构建选项：图标待资源就绪后再声明
+    // Windows（WebView2）构建选项：应用图标（多尺寸 ICO，窗口左上角与任务栏共用）
     win: existsSync(iGM_LauncherV2_IconPath)
-      ? { icon: "iGM_LauncherV2_Assets/icon.ico" }
+      ? { icon: "iGM_LauncherV2_Assets/iGM_LauncherV2_Icon.ico" }
       : undefined,
   },
   runtime: {
