@@ -37,6 +37,14 @@ export const IGM_LAUNCHERV2_NEWS_FILE = "news.json";
  */
 const IGM_LAUNCHERV2_NEWS_DEFAULT: iGM_LauncherV2_NewsItem[] = [
   {
+    id: "default-update-2655",
+    title: "版本更新 v26.5.5",
+    body: "开服中心版本列表改为从上游动态拉取全量版本（Vanilla / Paper / Fabric / Forge / NeoForge），支持输入搜索与一键刷新，最新版本不再缺失；导航栏重构为首页 / 视界管理 / 方块广场 / 资源中心 / 地图站 / 账号中心 / 设置，视界管理独立为顶层页面；新增地图站，内嵌 MCSeedShare 种子地图并支持用系统浏览器打开；方块广场移除手动添加第三方服务器入口，新增客户端同步大厅：服务端就绪（输出 Done）后自动同步本机局域网地址与端口，服主生成客户端清单外部直链即回填到大厅，玩家一键【启动并同步】即可拉取清单、补齐模组并进服。",
+    date: "2026-10-18",
+    tag: "update",
+    url: "",
+  },
+  {
     id: "default-update-2654",
     title: "版本更新 v26.5.4",
     body: "本版本修复了全部表单控件的系统白底问题，统一为深色半透明风格；开服中心新增客户端清单工作室，可勾选文件并一键生成 manifest.json 与客户端 ZIP 包；新增本地开服与地图站，联机房间按房主与好友彻底拆分。",

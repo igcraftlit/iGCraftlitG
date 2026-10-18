@@ -9,6 +9,9 @@
  *       window.__electrobun.receiveMessageFromHost，此处按官方做法接管该入口
  *       并排空预加载脚本在接管前缓存的消息；
  *       普通浏览器（next dev）中不存在宿主通道，所有指令静默忽略，界面退化为纯静态展示；
+ *       本次新增：服务端核心版本目录（core:versions，按核心分别缓存）、本地服务器启停
+ *       （server:start / server:stop）、实时运行日志（server:log / server:logs）
+ *       与客户端清单外部直链发布（server:publish）的快照；
  *       并提供环境感知的整页跳转 iGM_LauncherV2_Navigate，供各页面统一使用
  * 说明：对外只暴露单向指令投递与只读状态订阅，不暴露任何特权 RPC
  */
@@ -52,6 +55,8 @@ import type {
   iGM_LauncherV2_ServerFileNode,
   iGM_LauncherV2_LocalServer,
   iGM_LauncherV2_ServerStatus,
+  iGM_LauncherV2_ServerRuntime,
+  iGM_LauncherV2_ServerLogEntry,
   iGM_LauncherV2_ServerSyncState,
   iGM_LauncherV2_NewsItem,
   iGM_LauncherV2_PeerMode,
@@ -346,6 +351,14 @@ export interface iGM_LauncherV2_ServerSyncSnapshot {
   treeBusy: boolean;
 }
 
+/** 服务端核心版本目录快照（按核心维度分别缓存） */
+export interface iGM_LauncherV2_CoreVersionsSnapshot {
+  core: iGM_LauncherV2_ServerCore | "";
+  versions: string[];
+  message: string;
+  loading: boolean;
+}
+
 /** 本地服务器（本地开服）快照 */
 export interface iGM_LauncherV2_LocalServerSnapshot {
   /** 已创建的本地服务器列表 */
@@ -356,6 +369,12 @@ export interface iGM_LauncherV2_LocalServerSnapshot {
   loaded: boolean;
   /** 最近一次创建进度；创建结束后保留最后一次结果 */
   coreState: iGM_LauncherV2_ServerCoreState | null;
+  /** 全部本地服务器的运行状态（键为服务器 id） */
+  runtimes: Record<string, iGM_LauncherV2_ServerRuntime>;
+  /** 各服务器日志缓冲（键为服务器 id） */
+  logs: Record<string, iGM_LauncherV2_ServerLogEntry[]>;
+  /** 最近一次客户端清单发布结果 */
+  publishResult: { id: string; ok: boolean; url: string; message: string } | null;
 }
 
 /** 联机大厅（P2P）快照 */
@@ -448,11 +467,21 @@ const IGM_SERVER_SYNC_INITIAL: iGM_LauncherV2_ServerSyncSnapshot = {
   treeBusy: false,
 };
 
+const IGM_CORE_VERSIONS_INITIAL: iGM_LauncherV2_CoreVersionsSnapshot = {
+  core: "",
+  versions: [],
+  message: "",
+  loading: false,
+};
+
 const IGM_LOCAL_SERVER_INITIAL: iGM_LauncherV2_LocalServerSnapshot = {
   items: [],
   message: "",
   loaded: false,
   coreState: null,
+  runtimes: {},
+  logs: {},
+  publishResult: null,
 };
 
 const IGM_PEER_LOBBY_INITIAL: iGM_LauncherV2_PeerLobbySnapshot = {
@@ -607,6 +636,9 @@ const IGM_MARKET_DETAIL_INITIAL: iGM_LauncherV2_MarketDetailSnapshot = {
 /** 启动日志界面保留条数上限（与外壳环形缓冲保持一致） */
 const IGM_LAUNCH_LOG_LIMIT = 300;
 
+/** 本地服务器实时日志界面保留条数上限（超出丢弃最早条目） */
+const IGM_SERVER_LOG_LIMIT = 500;
+
 const IGM_VERSION_DETAIL_INITIAL: iGM_LauncherV2_VersionDetailSnapshot = {
   versionId: "",
   detail: null,
@@ -642,6 +674,13 @@ let iGM_LaunchProgressSnapshot: iGM_LauncherV2_LaunchProgressSnapshot = IGM_LAUN
 let iGM_MarketSnapshot: iGM_LauncherV2_MarketSnapshot = IGM_MARKET_INITIAL;
 let iGM_MarketDetailSnapshot: iGM_LauncherV2_MarketDetailSnapshot = IGM_MARKET_DETAIL_INITIAL;
 let iGM_VersionDetailSnapshot: iGM_LauncherV2_VersionDetailSnapshot = IGM_VERSION_DETAIL_INITIAL;
+
+/** 服务端核心版本目录快照：按核心分别缓存，切换核心时互不覆盖 */
+const iGM_CoreVersionsSnapshot = new Map<
+  iGM_LauncherV2_ServerCore,
+  iGM_LauncherV2_CoreVersionsSnapshot
+>();
+
 const iGM_Listeners = new Set<iGM_LauncherV2_Listener>();
 
 /** 视界目录树请求回调：按视界标识归位结果 */
@@ -1060,6 +1099,18 @@ function iGM_HandleInbound(payload: unknown): void {
     return;
   }
 
+  if (message.type === "core:versions") {
+    // 按核心分别缓存版本目录，切换核心时各自独立
+    iGM_CoreVersionsSnapshot.set(message.core, {
+      core: message.core,
+      versions: message.versions,
+      message: message.message,
+      loading: false,
+    });
+    iGM_Emit();
+    return;
+  }
+
   if (message.type === "server:local-list") {
     iGM_LocalServerSnapshot = {
       ...iGM_LocalServerSnapshot,
@@ -1073,6 +1124,63 @@ function iGM_HandleInbound(payload: unknown): void {
 
   if (message.type === "server:core") {
     iGM_LocalServerSnapshot = { ...iGM_LocalServerSnapshot, coreState: message.state };
+    iGM_Emit();
+    return;
+  }
+
+  if (message.type === "server:runtimes") {
+    // 批量运行状态：一次性重建全部条目，键为服务器 id
+    const runtimes: Record<string, iGM_LauncherV2_ServerRuntime> = {};
+    for (const runtime of message.items) runtimes[runtime.id] = runtime;
+    iGM_LocalServerSnapshot = { ...iGM_LocalServerSnapshot, runtimes };
+    iGM_Emit();
+    return;
+  }
+
+  if (message.type === "server:runtime") {
+    iGM_LocalServerSnapshot = {
+      ...iGM_LocalServerSnapshot,
+      runtimes: { ...iGM_LocalServerSnapshot.runtimes, [message.runtime.id]: message.runtime },
+    };
+    iGM_Emit();
+    return;
+  }
+
+  if (message.type === "server:log") {
+    // 保留上限与外壳日志缓冲一致，避免界面无限增长
+    const previous = iGM_LocalServerSnapshot.logs[message.id] ?? [];
+    const entries = [...previous, message.entry];
+    iGM_LocalServerSnapshot = {
+      ...iGM_LocalServerSnapshot,
+      logs: {
+        ...iGM_LocalServerSnapshot.logs,
+        [message.id]:
+          entries.length > IGM_SERVER_LOG_LIMIT ? entries.slice(-IGM_SERVER_LOG_LIMIT) : entries,
+      },
+    };
+    iGM_Emit();
+    return;
+  }
+
+  if (message.type === "server:logs") {
+    iGM_LocalServerSnapshot = {
+      ...iGM_LocalServerSnapshot,
+      logs: { ...iGM_LocalServerSnapshot.logs, [message.id]: message.entries },
+    };
+    iGM_Emit();
+    return;
+  }
+
+  if (message.type === "server:publish") {
+    iGM_LocalServerSnapshot = {
+      ...iGM_LocalServerSnapshot,
+      publishResult: {
+        id: message.id,
+        ok: message.ok,
+        url: message.url,
+        message: message.message,
+      },
+    };
     iGM_Emit();
     return;
   }
@@ -1324,6 +1432,13 @@ function iGM_GetAppearanceSnapshot(): iGM_LauncherV2_AppearanceSnapshot {
 
 function iGM_GetUpdateSnapshot(): iGM_LauncherV2_UpdateSnapshot {
   return iGM_UpdateSnapshot;
+}
+
+/** 按核心取版本目录快照；尚未拉取过的核心返回固定初值（引用稳定，避免重复渲染） */
+function iGM_GetCoreVersionsSnapshot(
+  core: iGM_LauncherV2_ServerCore,
+): iGM_LauncherV2_CoreVersionsSnapshot {
+  return iGM_CoreVersionsSnapshot.get(core) ?? IGM_CORE_VERSIONS_INITIAL;
 }
 
 // 导出 //
@@ -1722,6 +1837,58 @@ export function iGM_LauncherV2_UseServerCenter(): iGM_LauncherV2_ServerSyncSnaps
 }
 
 /**
+ * 开服中心版本目录订阅。
+ * 挂载即按核心拉取一次全量版本，可点【刷新版本列表】重新拉取；
+ * 版本列表由外壳按核心从上游动态取回，界面侧仅负责展示与搜索过滤。
+ */
+export function iGM_LauncherV2_UseCoreVersions(core: iGM_LauncherV2_ServerCore): {
+  versions: string[];
+  message: string;
+  loading: boolean;
+  refresh: () => void;
+} {
+  const getSnapshot = useCallback(() => iGM_GetCoreVersionsSnapshot(core), [core]);
+  const snapshot = useSyncExternalStore(iGM_Subscribe, getSnapshot, () => IGM_CORE_VERSIONS_INITIAL);
+
+  const load = useCallback(
+    (previewMessage: string) => {
+      const previous = iGM_CoreVersionsSnapshot.get(core) ?? IGM_CORE_VERSIONS_INITIAL;
+      if (!iGM_LauncherV2_SendHost({ type: "core:versions", core })) {
+        // 浏览器预览下无外壳：结束加载态并给出明确说明
+        iGM_CoreVersionsSnapshot.set(core, {
+          ...previous,
+          core,
+          message: previewMessage,
+          loading: false,
+        });
+        iGM_Emit();
+        return;
+      }
+      iGM_CoreVersionsSnapshot.set(core, {
+        ...previous,
+        core,
+        message: "正在拉取全量版本…",
+        loading: true,
+      });
+      iGM_Emit();
+    },
+    [core],
+  );
+
+  useEffect(() => {
+    iGM_InstallReceiver();
+    load("浏览器预览下不提供版本目录数据");
+  }, [load]);
+
+  return {
+    versions: snapshot.versions,
+    message: snapshot.message,
+    loading: snapshot.loading,
+    refresh: () => load("浏览器预览下不提供版本目录数据"),
+  };
+}
+
+/**
  * 本地服务器（本地开服）订阅。
  * 挂载即向外壳请求一次列表；create 选择核心与游戏版本，由外壳下载核心并创建目录，
  * 进度经 server:core 实时回推，完成后列表自动刷新。
@@ -1736,6 +1903,14 @@ export function iGM_LauncherV2_UseLocalServers(): iGM_LauncherV2_LocalServerSnap
   }) => void;
   remove: (id: string) => void;
   clearCore: () => void;
+  /** 启动该本地服务器的服务端进程 */
+  start: (id: string) => void;
+  /** 停止该本地服务器的服务端进程 */
+  stop: (id: string) => void;
+  /** 拉取一次该服务器的日志缓冲全量（打开控制台时调用） */
+  loadLogs: (id: string) => void;
+  /** 生成客户端清单的局域网外部直链并回填到方块广场「客户端同步大厅」记录 */
+  publish: (id: string) => void;
 } {
   const snapshot = useSyncExternalStore(
     iGM_Subscribe,
@@ -1746,6 +1921,8 @@ export function iGM_LauncherV2_UseLocalServers(): iGM_LauncherV2_LocalServerSnap
   useEffect(() => {
     iGM_InstallReceiver();
     iGM_LauncherV2_SendHost({ type: "server:local-list" });
+    // 运行状态不随列表回推，进入页面时单独补发一次批量运行状态
+    iGM_LauncherV2_SendHost({ type: "server:runtime-list" });
   }, []);
 
   return {
@@ -1808,6 +1985,67 @@ export function iGM_LauncherV2_UseLocalServers(): iGM_LauncherV2_LocalServerSnap
     clearCore: () => {
       iGM_LocalServerSnapshot = { ...iGM_LocalServerSnapshot, coreState: null };
       iGM_Emit();
+    },
+    start: (id) => {
+      if (!iGM_LauncherV2_SendHost({ type: "server:start", id })) {
+        iGM_LocalServerSnapshot = {
+          ...iGM_LocalServerSnapshot,
+          message: "浏览器预览模式下不支持启动本地服务器",
+        };
+        iGM_Emit();
+        return;
+      }
+      // 乐观置为启动中，等待外壳回推真实运行状态
+      const previous = iGM_LocalServerSnapshot.runtimes[id];
+      const runtime: iGM_LauncherV2_ServerRuntime = previous
+        ? { ...previous, state: "starting" }
+        : {
+            id,
+            state: "starting",
+            pid: 0,
+            lanIp: "",
+            port: 0,
+            startedAt: 0,
+            messageKey: "",
+            messageParams: {},
+          };
+      iGM_LocalServerSnapshot = {
+        ...iGM_LocalServerSnapshot,
+        runtimes: { ...iGM_LocalServerSnapshot.runtimes, [id]: runtime },
+      };
+      iGM_Emit();
+    },
+    stop: (id) => {
+      if (!iGM_LauncherV2_SendHost({ type: "server:stop", id })) {
+        iGM_LocalServerSnapshot = {
+          ...iGM_LocalServerSnapshot,
+          message: "浏览器预览模式下不支持停止本地服务器",
+        };
+        iGM_Emit();
+      }
+    },
+    loadLogs: (id) => {
+      if (!iGM_LauncherV2_SendHost({ type: "server:logs", id })) {
+        iGM_LocalServerSnapshot = {
+          ...iGM_LocalServerSnapshot,
+          message: "浏览器预览模式下不支持读取本地服务器日志",
+        };
+        iGM_Emit();
+      }
+    },
+    publish: (id) => {
+      if (!iGM_LauncherV2_SendHost({ type: "server:publish", id })) {
+        iGM_LocalServerSnapshot = {
+          ...iGM_LocalServerSnapshot,
+          publishResult: {
+            id,
+            ok: false,
+            url: "",
+            message: "浏览器预览模式下不支持生成客户端清单外部直链",
+          },
+        };
+        iGM_Emit();
+      }
     },
   };
 }

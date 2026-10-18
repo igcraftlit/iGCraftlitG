@@ -3,7 +3,7 @@
  * 所属层：桌面外壳 / 主进程
  * 路由：全局
  * 模块：iGM_LauncherV2_Main
- * 作用：iGM CraftCeon Launcher 26.5.4 主进程入口（Electrobun + Bun）
+ * 作用：iGM CraftCeon Launcher 26.5.5 主进程入口（Electrobun + Bun）
  * 内容：创建无边框主窗口（界面自绘标题栏与窗口控制按钮）；
  *       开发模式加载 3211 端口 dev server，打包模式加载 views://launcher/index.html；
  *       经 host-message 承接界面指令：窗口控制、社区登录状态查询 / 发起授权 / 退出登录、
@@ -14,6 +14,8 @@
  *       「启动并同步」直连外部清单补齐 mods/config）、开服中心（扫描视界生成客户端清单）、
  *       首页新闻流（读取本地 news.json，缺失回退内置默认）；
  *       联机大厅（主站高速节点优先、不可用时降级公共联机节点，含房间创建 / 加入 / 退出）；
+ *       本地开服运行（按核心从上游动态拉取全量版本目录、服务端进程启停与实时日志、
+ *       就绪后解析局域网 IP 与端口、把客户端清单发布为局域网直链并回填同步大厅）；
  *       启动时静默恢复本地会话并静默检查更新；进程级异常兜底写入崩溃日志
  * 说明：主进程不持有任何界面渲染逻辑，也不向界面下发令牌，只下发登录状态与账号公开信息
  */
@@ -155,6 +157,14 @@ import {
   iGM_LauncherV2_LocalServers_List,
   iGM_LauncherV2_LocalServers_Remove,
 } from "./iGM_LauncherV2_LocalServers";
+import {
+  iGM_LauncherV2_ServerRuntime_List,
+  iGM_LauncherV2_ServerRuntime_Logs,
+  iGM_LauncherV2_ServerRuntime_Publish,
+  iGM_LauncherV2_ServerRuntime_Start,
+  iGM_LauncherV2_ServerRuntime_Stop,
+} from "./iGM_LauncherV2_ServerRuntime";
+import { iGM_LauncherV2_VersionCatalog_List } from "./iGM_LauncherV2_VersionCatalog";
 import { iGM_LauncherV2_News_Load } from "./iGM_LauncherV2_News";
 import {
   iGM_LauncherV2_PeerSnapshotMessage,
@@ -1091,6 +1101,66 @@ function iGM_LauncherV2_HandleHostMessage(
         iGM_LauncherV2_PushLocalServers(push, await iGM_LauncherV2_LocalServers_List());
       })();
       break;
+    case "core:versions":
+      void (async () => {
+        // 全量版本目录：按核心从上游动态拉取（外壳不做硬编码版本表），结果经 core:versions 回推
+        const result = await iGM_LauncherV2_VersionCatalog_List(message.core);
+        push({
+          type: "core:versions",
+          core: message.core,
+          versions: result.versions,
+          message: result.message,
+        });
+      })();
+      break;
+    case "server:start":
+      void (async () => {
+        // 本地开服运行：拉起服务端进程，就绪后由运行层经 server:runtime 回推状态；随后刷新一次快照
+        await iGM_LauncherV2_ServerRuntime_Start(message.id, push);
+        push({ type: "server:runtimes", items: iGM_LauncherV2_ServerRuntime_List() });
+      })();
+      break;
+    case "server:stop":
+      void (async () => {
+        // 停止本地服务端进程（先优雅停机，超时强杀），随后刷新一次快照
+        await iGM_LauncherV2_ServerRuntime_Stop(message.id, push);
+        push({ type: "server:runtimes", items: iGM_LauncherV2_ServerRuntime_List() });
+      })();
+      break;
+    case "server:runtime-list":
+      push({ type: "server:runtimes", items: iGM_LauncherV2_ServerRuntime_List() });
+      break;
+    case "server:logs":
+      // 打开控制台时拉取一次日志缓冲全量
+      push({
+        type: "server:logs",
+        id: message.id,
+        entries: iGM_LauncherV2_ServerRuntime_Logs(message.id),
+      });
+      break;
+    case "server:publish":
+      void (async () => {
+        // 把服务器目录内已生成的 manifest.json 与客户端 ZIP 发布为局域网直链，
+        // 并回填到方块广场「客户端同步大厅」记录；成功后重推列表刷新大厅
+        const result = await iGM_LauncherV2_ServerRuntime_Publish(message.id);
+        push({
+          type: "server:publish",
+          ok: result.ok,
+          id: message.id,
+          url: result.url,
+          message: result.message,
+        });
+        if (result.ok) {
+          const list = await iGM_LauncherV2_Servers_List();
+          push({
+            type: "server:list",
+            items: list.items,
+            source: list.source,
+            message: list.message,
+          });
+        }
+      })();
+      break;
     case "news:list":
       void (async () => {
         // 首页新闻流：读取本地 news.json，缺失或损坏时回退内置默认内容
@@ -1268,7 +1338,7 @@ async function iGM_LauncherV2_Bootstrap(): Promise<void> {
   const mode = iGM_LauncherV2_ResolveRunMode();
   iGM_LauncherV2_ActiveMode = mode;
 
-  console.log(`[iGM CraftCeon Launcher] 版本 26.5.4；启动模式：${mode}`);
+  console.log(`[iGM CraftCeon Launcher] 版本 26.5.5；启动模式：${mode}`);
 
   // 初始化路径与设置（读取根目录指针、生成 iGML_Matrix 结构、载入 settings.json）
   const paths = await iGM_LauncherV2_PathsInit().catch((error) => {

@@ -27,7 +27,7 @@ const iGM_LauncherV2_ElectrobunConfig = {
   app: {
     name: "iGM CraftCeon Launcher",
     identifier: "com.igcraftlit.launcher.v2",
-    version: "26.5.4",
+    version: "26.5.5",
     description: "iGCraftLit official Minecraft launcher",
   },
   build: {

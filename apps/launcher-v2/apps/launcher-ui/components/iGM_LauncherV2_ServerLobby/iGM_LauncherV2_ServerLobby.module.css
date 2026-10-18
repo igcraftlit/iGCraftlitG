@@ -1,12 +1,14 @@
 /**
  * 文件路径：apps/launcher-ui/components/iGM_LauncherV2_ServerLobby/iGM_LauncherV2_ServerLobby.module.css
  * 所属层：前端 / 页面组件样式层
- * 路由：G_Main·服务器大厅
+ * 路由：G_Main·方块广场·客户端同步大厅 / 开服中心
  * 模块：iGM_LauncherV2_ServerLobby
- * 作用：服务器大厅样式（工具栏、服务器卡片网格、实时状态区与添加服务器弹窗）
- * 内容：全部使用全局设计令牌（--igm-fill / --igm-glass / --igm-accent / --igm-text 等），
- *       令牌在「纯色 · 明亮浅色」主题下自动翻转，避免出现刺眼白底与低对比文字
- * 说明：不使用写死的纯白 / 纯黑底色，浅色背景下文字对比度仍可读
+ * 作用：服务器区块样式（同步大厅卡片、开服中心表单与服务器列表、运行状态徽标、
+ *       运行日志控制台与可搜索版本下拉框）
+ * 内容：全部使用全局设计令牌（--igm-fill / --igm-glass-strong / --igm-accent / --igm-text 等），
+ *       令牌在「纯色 · 明亮浅色」主题下自动翻转，避免出现刺眼白底与低对比文字；
+ *       新增同步大厅卡片、运行状态圆点、固定高度日志控制台与暗色可搜索版本浮层
+ * 说明：不使用写死的纯白 / 纯黑底色，日志控制台与版本浮层均为暗色磨砂，绝不出现系统白底
  */
 
 /* 导入依赖 */
@@ -830,5 +832,332 @@
   font-size: 11.5px;
   color: var(--igm-text-mute);
   word-break: break-all;
+}
+
+/* ---- 客户端同步大厅（自动同步记录） ---- */
+
+.syncHall {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.syncField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.syncFieldLabel {
+  font-size: 11.5px;
+  color: var(--igm-text-mute);
+}
+
+/* 清单直链：等宽文本，可点击用系统浏览器打开，不做下划线换取整洁观感 */
+.syncLink {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+  color: var(--igm-text-dim);
+  font: inherit;
+  font-family: var(--igm-font-mono);
+  font-size: 11.5px;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color var(--igm-dur) var(--igm-ease),
+    color var(--igm-dur) var(--igm-ease);
+}
+
+.syncLink:hover {
+  color: var(--igm-text);
+  border-color: var(--igm-accent);
+}
+
+/* 清单缺失提示：中性描边底衬，避免喧宾夺主 */
+.syncMissing {
+  padding: 10px 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px dashed var(--igm-border);
+  background: var(--igm-fill);
+  color: var(--igm-text-mute);
+}
+
+.syncMissingText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.syncMissingTitle {
+  font-size: 12px;
+  color: var(--igm-text-dim);
+}
+
+.syncMissingHint {
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: var(--igm-text-mute);
+}
+
+/* ---- 运行状态徽标与进程控制 ---- */
+
+.runHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.runBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.runDot {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--igm-text-mute);
+  box-shadow: 0 0 0 3px var(--igm-fill-strong);
+}
+
+.runDotStopped {
+  background: var(--igm-text-mute);
+}
+
+.runDotStarting {
+  background: #f59e0b;
+}
+
+.runDotReady {
+  background: #22c55e;
+}
+
+.runDotStopping {
+  background: #f59e0b;
+}
+
+.runDotError {
+  background: #e8848c;
+}
+
+.runLabel {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--igm-text-dim);
+  word-break: break-all;
+}
+
+.runAddress {
+  font-family: var(--igm-font-mono);
+  font-size: 11.5px;
+  color: var(--igm-text-mute);
+  white-space: nowrap;
+}
+
+.runActions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ---- 运行日志控制台（固定高度 + 内部滚动） ---- */
+
+.console {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.consoleHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.consoleTitle {
+  font-size: 12px;
+  color: var(--igm-text-dim);
+}
+
+.consoleActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.autoScroll {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--igm-text-mute);
+  cursor: pointer;
+  user-select: none;
+}
+
+.autoScroll input {
+  accent-color: var(--igm-accent);
+  cursor: pointer;
+}
+
+.consoleIcon {
+  color: var(--igm-text-mute);
+}
+
+.consoleBody {
+  height: 200px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 10px 12px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-glass-strong);
+  font-family: var(--igm-font-mono);
+  font-size: 11.5px;
+  line-height: 1.7;
+}
+
+.consoleLine {
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+}
+
+.consoleLineError .consoleText,
+.consoleLineError .consoleTime {
+  color: #e8848c;
+}
+
+.consoleTime {
+  flex: 0 0 auto;
+  color: var(--igm-text-mute);
+}
+
+.consoleStream {
+  flex: 0 0 auto;
+  color: var(--igm-text-mute);
+}
+
+.consoleText {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--igm-text-dim);
+  word-break: break-all;
+}
+
+.consoleEmpty {
+  margin: 0;
+  font-family: inherit;
+  color: var(--igm-text-mute);
+}
+
+/* ---- 可搜索版本下拉框 ---- */
+
+.picker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pickerField {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pickerField .input {
+  flex: 1 1 auto;
+}
+
+.pickerList {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  max-height: 220px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border-strong);
+  background: var(--igm-surface-strong);
+  box-shadow: var(--igm-shadow-lg);
+}
+
+.pickerHead {
+  padding: 2px 8px 6px;
+  font-size: 11px;
+  color: var(--igm-text-mute);
+}
+
+.pickerHint {
+  margin: 0;
+  padding: 6px 8px;
+  font-size: 11.5px;
+  color: var(--igm-text-mute);
+}
+
+.pickerOption {
+  width: 100%;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: var(--igm-radius-sm);
+  background: transparent;
+  color: var(--igm-text-dim);
+  font: inherit;
+  font-family: var(--igm-font-mono);
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background var(--igm-dur) var(--igm-ease),
+    color var(--igm-dur) var(--igm-ease);
+}
+
+.pickerOption:hover {
+  background: var(--igm-fill-strong);
+  color: var(--igm-text);
+}
+
+.pickerOptionOn {
+  background: var(--igm-accent-wash);
+  color: var(--igm-text);
+}
+
+/* 拉取中刷新图标旋转：仅表达加载态，属有意义动效 */
+.spin {
+  animation: iGM_LauncherV2_Spin 1s linear infinite;
+}
+
+@keyframes iGM_LauncherV2_Spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 

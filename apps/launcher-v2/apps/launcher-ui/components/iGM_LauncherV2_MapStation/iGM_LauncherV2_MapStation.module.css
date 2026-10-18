@@ -3,11 +3,12 @@
  * 所属层：前端 / 样式层
  * 路由：G_Main（地图站页签）
  * 模块：iGM_LauncherV2_MapStation
- * 作用：地图站样式：深色磨砂控制栏 + 铺满剩余空间的 iframe 展示区与三态覆盖层
- * 内容：控制栏卡片使用 rgba 深色底 + 1px 半透明描边 + 圆角，输入框 / 下拉框同样走深色；
- *       「生成地图」用主题色高亮，「在浏览器中打开」用醒目的浅色描边；
- *       展示区以 flex 铺满整页剩余空间，内部 iframe 绝对定位填满并裁圆角；
- *       加载态用简洁旋转圆环，失败提示面板叠在 iframe 之上
+ * 作用：地图站样式：深色磨砂控制卡片 + 铺满剩余空间的 MCSeedShare iframe 展示区
+ * 内容：控制卡片使用深色半透明底 + 1px 半透明描边 + 圆角与背景模糊，种子 / 版本输入框同样走深色，
+ *       并以 color-scheme 暗色避免原生 datalist 下拉出现系统白底；
+ *       「生成地图」用主题色描边与淡底衬，「在浏览器中打开」用醒目浅色描边；
+ *       展示区以 flex 铺满整页剩余空间，内部 iframe 填满并裁圆角，暗色底避免加载时纯白闪烁；
+ *       加载态为简洁旋转圆环 + 提示行，兜底提示行为浅色告警文字
  * 说明：仅保留必要的过渡与「有意义的」加载旋转动画，不使用花哨装饰
  */
 
@@ -42,7 +43,7 @@
   color: var(--igm-text-dim);
 }
 
-/* ---- 顶部深色磨砂控制栏 ---- */
+/* ---- 顶部深色磨砂控制卡片 ---- */
 
 .toolbar {
   flex: 0 0 auto;
@@ -51,6 +52,7 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .form {
@@ -67,55 +69,43 @@
   min-width: 0;
 }
 
+/* 种子输入框：占据主要横向空间 */
 .field:first-child {
-  flex: 1 1 220px;
+  flex: 1 1 240px;
 }
 
-.fieldLabel {
-  font-size: 12.5px;
-  color: var(--igm-text-mute);
+/* 版本输入框（原生可搜索下拉）：宽度自适应 */
+.field:nth-child(2) {
+  flex: 0 1 200px;
 }
 
-.input,
-.select {
+.input {
   width: 100%;
   padding: 10px 12px;
   border-radius: var(--igm-radius-sm);
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.05);
-  color: #e0e0e0;
+  color: var(--igm-text);
   font: inherit;
   font-size: 13.5px;
   outline: none;
+  /* 强制原生输入框与 datalist 下拉走暗色，避免出现系统白底下拉 */
+  color-scheme: dark;
   transition:
     border-color var(--igm-dur) var(--igm-ease),
     background var(--igm-dur) var(--igm-ease);
-}
-
-.select {
-  width: auto;
-  min-width: 132px;
-  cursor: pointer;
 }
 
 .input::placeholder {
   color: var(--igm-text-mute);
 }
 
-.input:focus,
-.select:focus {
-  border-color: rgba(91, 124, 245, 0.6);
-}
-
-.input:hover,
-.select:hover {
+.input:hover {
   border-color: rgba(255, 255, 255, 0.18);
 }
 
-/* 下拉选项面板由系统渲染，使用深色底避免白底刺眼 */
-.select option {
-  background: #0d1220;
-  color: #e0e0e0;
+.input:focus {
+  border-color: var(--igm-accent);
 }
 
 .actions {
@@ -132,8 +122,7 @@
   gap: 8px;
   padding: 11px 18px;
   border-radius: var(--igm-radius-sm);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--igm-fill);
   color: var(--igm-text);
   font: inherit;
   font-size: 14px;
@@ -145,120 +134,42 @@
     opacity var(--igm-dur) var(--igm-ease);
 }
 
-/* 生成按钮：主题色高亮 */
+/* 生成按钮：主题色描边 + 主题色淡底衬 */
 .submit {
-  border-color: rgba(91, 124, 245, 0.6);
-  background: rgba(91, 124, 245, 0.24);
+  border: 1px solid var(--igm-accent);
+  background: var(--igm-accent-wash);
 }
 
-.submit:hover:not(:disabled) {
-  background: rgba(91, 124, 245, 0.34);
-}
-
-.submit:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
+.submit:hover {
+  border-color: var(--igm-accent-soft);
 }
 
 /* 浏览器打开按钮：始终显眼（第三方站点大概率禁止内嵌） */
 .open {
-  border-color: rgba(145, 168, 255, 0.5);
-  background: rgba(145, 168, 255, 0.14);
+  border: 1px solid var(--igm-accent-soft);
 }
 
 .open:hover {
-  background: rgba(145, 168, 255, 0.24);
+  background: var(--igm-fill-strong);
 }
 
-.tip {
+/* 加载态提示行：旋转圆环 + 文案 */
+.status {
   margin: 10px 0 0;
-  font-size: 12px;
-  line-height: 1.7;
-  color: var(--igm-text-mute);
-}
-
-.error {
-  margin: 8px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 12.5px;
   line-height: 1.7;
-  color: #e8b27d;
-}
-
-/* ---- 主体展示区 ---- */
-
-.stage {
-  position: relative;
-  flex: 1 1 auto;
-  min-height: 320px;
-  overflow: hidden;
-  border-radius: var(--igm-radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.frame {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: none;
-  background: #0b0f1a;
-}
-
-/* ---- 初始占位态 ---- */
-
-.placeholder {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 32px;
-  text-align: center;
-}
-
-.placeholderIcon {
-  color: var(--igm-text-mute);
-  opacity: 0.32;
-}
-
-.placeholderTitle {
-  margin: 0;
-  font-size: 19px;
-  font-weight: 700;
-  color: var(--igm-text);
-}
-
-.placeholderBody {
-  margin: 0;
-  max-width: 520px;
-  font-size: 13.5px;
-  line-height: 1.8;
   color: var(--igm-text-dim);
 }
 
-/* ---- 加载态 ---- */
-
-.loading {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 32px;
-  text-align: center;
-  background: rgba(10, 14, 26, 0.78);
-}
-
 .spinner {
-  width: 36px;
-  height: 36px;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
   border-radius: 50%;
-  border: 3px solid rgba(255, 255, 255, 0.14);
+  border: 2px solid rgba(255, 255, 255, 0.14);
   border-top-color: var(--igm-accent);
   animation: igm-map-spin 0.9s linear infinite;
 }
@@ -269,51 +180,34 @@
   }
 }
 
-.loadingTitle {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--igm-text);
-}
-
-.loadingBody {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.7;
-  color: var(--igm-text-dim);
-}
-
-/* ---- 失败提示态（X-Frame-Options 拦截） ---- */
-
-.blocked {
-  position: absolute;
-  inset: 0;
+/* 兜底提示行：站点不支持内嵌预览时展示，配合「在浏览器中打开」入口 */
+.fallback {
+  margin: 10px 0 0;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 32px;
-  text-align: center;
-  background: rgba(10, 14, 26, 0.92);
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: #e8b27d;
 }
 
-.blockedIcon {
-  color: var(--igm-text-mute);
-  opacity: 0.6;
+/* ---- 主体展示区 ---- */
+
+.stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 360px;
+  overflow: hidden;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  /* 暗色底：iframe 加载期间不出现纯白闪烁 */
+  background: #0b0f1a;
 }
 
-.blockedTitle {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--igm-text);
-}
-
-.blockedText {
-  margin: 0;
-  max-width: 520px;
-  font-size: 13.5px;
-  line-height: 1.8;
-  color: var(--igm-text-dim);
+.frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #0b0f1a;
 }

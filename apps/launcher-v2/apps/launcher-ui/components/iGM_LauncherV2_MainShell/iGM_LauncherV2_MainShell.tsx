@@ -5,14 +5,14 @@
  * 模块：iGM_LauncherV2_MainShell
  * 作用：启动器主界面（静态渐变底 + 悬浮图标导航 + 方块广场 + 首页新闻流 + 账号中心）
  * 内容：顶部悬浮胶囊导航默认仅显示 lucide 图标，鼠标悬停时平滑横向展开文字，含
- *       首页 / 方块广场 / 资源中心 / 地图站 / 账号中心 / 设置 六个页签；
+ *       首页 / 视界管理 / 方块广场 / 资源中心 / 地图站 / 账号中心 / 设置 七个页签；
  *       导航左侧应用名使用 Orbitron 艺术字体；右上角用户区点击展开下拉菜单
  *       （社区头像与「更换头像」、社区昵称与 iGMUid、退出登录回欢迎页）；
  *       首页左上角为中文书法体欢迎词与英文用户名签名（Orbitron 艺术字体），
  *       中间为极简卡片式新闻流，右侧纵向面板自上而下依次为账号列表
  *       （正版在上、离线在下，最多 5 个）与「账号管理」入口、错误控制台
  *       （固定高度且内部可滚动）、底部尺寸收小的「启动游戏」按钮；
- *       方块广场聚合 P2P 联机房间 / 第三方服务器列表 / 视界管理三块能力；
+ *       方块广场聚合 P2P 联机房间 / 第三方服务器列表能力，视界管理为独立「视界管理」页签；
  *       账号中心包含 Java 环境管理、微软正版验证、离线账号管理三块能力，
  *       点击已绑定的正版账号进入 3D 正版档案详情页；
  *       设置页列出后续模块将接入的配置项占位；
@@ -66,6 +66,9 @@ import {
   iGM_LauncherV2_Plaza as IGM_LauncherV2_Plaza,
 } from "@/components/iGM_LauncherV2_Plaza/iGM_LauncherV2_Plaza";
 import {
+  iGM_LauncherV2_Horizon as IGM_LauncherV2_Horizon,
+} from "@/components/iGM_LauncherV2_Horizon/iGM_LauncherV2_Horizon";
+import {
   iGM_LauncherV2_SkinProfile as IGM_LauncherV2_SkinProfile,
 } from "@/components/iGM_LauncherV2_SkinProfile/iGM_LauncherV2_SkinProfile";
 import {
@@ -107,7 +110,14 @@ import styles from "./iGM_LauncherV2_MainShell.module.css";
 // 类型定义 //
 
 /** 主导航页签 */
-type iGM_LauncherV2_MainTab = "home" | "plaza" | "resources" | "map" | "account" | "settings";
+type iGM_LauncherV2_MainTab =
+  | "home"
+  | "horizon"
+  | "plaza"
+  | "resources"
+  | "map"
+  | "account"
+  | "settings";
 
 /** 页签展示信息 */
 interface iGM_LauncherV2_MainTabMeta {
@@ -121,6 +131,7 @@ interface iGM_LauncherV2_MainTabMeta {
 
 const IGM_MAIN_TABS: iGM_LauncherV2_MainTabMeta[] = [
   { id: "home", label: "nav.home", icon: Home },
+  { id: "horizon", label: "nav.horizon", icon: Layers },
   { id: "plaza", label: "nav.plaza", icon: LayoutGrid },
   { id: "resources", label: "nav.resources", icon: Boxes },
   { id: "map", label: "nav.map", icon: Map },
@@ -1324,6 +1335,12 @@ export function iGM_LauncherV2_MainShell() {
           </section>
         ) : null}
 
+        {tab === "horizon" ? (
+          <section className={`${styles.section} ${styles.sectionFull}`}>
+            <IGM_LauncherV2_Horizon />
+          </section>
+        ) : null}
+
         {tab === "plaza" ? (
           <section className={`${styles.section} ${styles.sectionFull}`}>
             <IGM_LauncherV2_Plaza />
@@ -1402,7 +1419,7 @@ export function iGM_LauncherV2_MainShell() {
           onClose={() => setLaunchOpen(false)}
           onGoHorizon={() => {
             setLaunchOpen(false);
-            setTab("plaza");
+            setTab("horizon");
           }}
           onGoAccount={() => {
             setLaunchOpen(false);

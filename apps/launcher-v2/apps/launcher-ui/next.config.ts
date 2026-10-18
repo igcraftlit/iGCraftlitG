@@ -21,7 +21,7 @@ const iGM_LauncherV2_NextConfig: NextConfig = {
   },
   // 构建期注入：界面版本号（欢迎页与状态栏使用）
   env: {
-    NEXT_PUBLIC_IGM_LAUNCHER_VERSION: "26.5.4",
+    NEXT_PUBLIC_IGM_LAUNCHER_VERSION: "26.5.5",
   },
 };
 

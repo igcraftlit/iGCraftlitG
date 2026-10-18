@@ -36,7 +36,7 @@
   "nav": {
     "home": "首页",
     "plaza": "方块广场",
-    "horizon": "视界",
+    "horizon": "视界管理",
     "map": "地图站",
     "resources": "资源中心",
     "servers": "服务器大厅",
@@ -393,6 +393,17 @@
       "horizons": "视界管理"
     }
   },
+  "syncHall": {
+    "title": "客户端同步大厅",
+    "subtitle": "由开服中心自动同步的局域网房间，点击即可拉取清单并进服",
+    "empty": "暂无同步房间，请在开服中心启动服务端后就绪",
+    "badge": "自动同步",
+    "address": "地址",
+    "manifest": "客户端清单",
+    "manifestMissing": "服主尚未生成客户端清单外部直链",
+    "launchAndSync": "启动并同步",
+    "ownerHint": "点击【生成客户端清单外部直链】即会把直链填入本条记录"
+  },
   "horizon": {
     "title": "视界管理",
     "desc": "视界即一套隔离的游戏目录，模组、材质包、光影与存档互不影响；共享的 assets / libraries / versions 由总目录统一复用。",
@@ -693,6 +704,37 @@
         "done": "服务器「{name}」已创建完成。",
         "manualInstall": "服务端核心已下载完成。未检测到可用的 Java 环境，请手动执行安装器完成服务端安装。",
         "error": "创建失败：{reason}"
+      },
+      "versions": {
+        "title": "版本列表",
+        "searchPlaceholder": "输入关键词过滤版本（如 1.21、26.1）",
+        "refresh": "刷新版本列表",
+        "loading": "正在拉取全量版本…",
+        "empty": "暂无可用版本，请点击刷新版本列表重试",
+        "refreshed": "已刷新版本列表，共 {count} 个版本",
+        "failed": "版本列表拉取失败：{message}"
+      },
+      "run": {
+        "start": "启动服务器",
+        "stop": "停止服务器",
+        "starting": "正在启动服务端进程…",
+        "ready": "服务端已就绪，局域网地址 {ip}:{port}",
+        "stopped": "服务端已停止",
+        "stopping": "正在停止服务端进程…",
+        "error": "服务端进程异常退出",
+        "console": "运行日志",
+        "consoleEmpty": "暂无日志输出",
+        "consoleClear": "清空",
+        "autoScroll": "自动滚动到底部",
+        "copyAddress": "复制局域网地址",
+        "copied": "已复制",
+        "publish": "生成客户端清单外部直链",
+        "publishing": "正在生成外部直链…",
+        "publishOk": "外部直链已生成并回填到客户端同步大厅：{url}",
+        "publishFail": "生成外部直链失败：{message}",
+        "notReady": "服务端尚未就绪，请先启动并等待输出 Done",
+        "previewDisabled": "浏览器预览模式下不支持服务端进程控制",
+        "lanUnavailable": "未检测到可用局域网地址，仅本机可访问"
       }
     }
   },
@@ -800,6 +842,7 @@
     "seedLabel": "种子",
     "seedPlaceholder": "输入种子，如 114514",
     "versionLabel": "游戏版本",
+    "versionPlaceholder": "选择游戏版本",
     "typeLabel": "地图类型",
     "type": {
       "biome": "群系地图",
@@ -813,6 +856,8 @@
     "emptyBody": "填写种子与游戏版本后点击「生成地图」，或使用右侧按钮在浏览器中打开完整地图。",
     "loadingTitle": "正在加载地图…",
     "loadingBody": "首次加载可能较慢，请稍候。",
+    "embedLoading": "正在加载地图站…",
+    "embedFallback": "站点不支持内嵌预览（可能跨域受限），请点击【在浏览器中打开】",
     "frameTitle": "第三方种子地图",
     "failureTitle": "该地图服务暂不支持内嵌",
     "failureText": "该地图服务暂不支持内嵌，请点击右上角【在浏览器中打开】查看。",

@@ -191,6 +191,31 @@ export type iGM_LauncherV2_OutboundMessage =
       loaderVersion: string;
     }
   | { type: "server:local-remove"; id: string }
+  | {
+      /**
+       * 全量版本目录：按服务端核心从上游动态拉取该核心支持的全部游戏版本，
+       * 供开服中心版本下拉展示与输入搜索过滤（界面与外壳均不做硬编码版本表）
+       */
+      type: "core:versions";
+      core: iGM_LauncherV2_ServerCore;
+    }
+  | { type: "server:start"; id: string }
+  | { type: "server:stop"; id: string }
+  | { type: "server:runtime-list" }
+  | {
+      /** 拉取指定本地服务器的日志缓冲全量（打开控制台时使用一次） */
+      type: "server:logs";
+      id: string;
+    }
+  | {
+      /**
+       * 发布客户端清单：把服务器目录内已生成的 manifest.json 与客户端 ZIP
+       * 经本机局域网静态服务暴露为外部直链，并把该直链回填到
+       * 方块广场「客户端同步大厅」中对应的自动同步记录（id 为 my:<局域网IP>:<端口>）
+       */
+      type: "server:publish";
+      id: string;
+    }
   | { type: "news:list" }
   | { type: "peer:status" }
   | { type: "peer:connect" }
@@ -320,6 +345,50 @@ export interface iGM_LauncherV2_LocalServer {
   dir: string;
   /** 创建时间（ISO 字符串） */
   createdAt: string;
+}
+
+/** 本地服务器运行状态：已停止 / 启动中 / 已就绪（日志出现 Done）/ 停止中 / 异常 */
+export type iGM_LauncherV2_ServerRunState =
+  | "stopped"
+  | "starting"
+  | "ready"
+  | "stopping"
+  | "error";
+
+/**
+ * 本地服务器运行状态快照。
+ * 就绪后由外壳解析本机局域网 IP 与监听端口，
+ * 供方块广场「客户端同步大厅」自动生成一条玩家可达的记录。
+ */
+export interface iGM_LauncherV2_ServerRuntime {
+  /** 本地服务器标识（与 servers/<id> 目录名一致） */
+  id: string;
+  /** 运行状态 */
+  state: iGM_LauncherV2_ServerRunState;
+  /** 服务端进程 pid；未运行时为 0 */
+  pid: number;
+  /** 本机局域网 IPv4；未就绪时为空串 */
+  lanIp: string;
+  /** 服务端监听端口 */
+  port: number;
+  /** 启动时间（毫秒时间戳）；未启动为 0 */
+  startedAt: number;
+  /** 提示文案键（多语言键，界面端 next-intl 解析，外壳不产生文案） */
+  messageKey: string;
+  /** 文案占位符参数 */
+  messageParams: Record<string, string>;
+}
+
+/** 本地服务器日志条目（服务端进程输出与外壳自身提示） */
+export interface iGM_LauncherV2_ServerLogEntry {
+  /** 产生时间（毫秒时间戳） */
+  time: number;
+  /** 来源：外壳自身提示 / 服务端标准输出 / 服务端标准错误 */
+  stream: "system" | "stdout" | "stderr";
+  /** 级别：stderr 与外壳自身错误为 error，其余为 info */
+  level: "info" | "error";
+  /** 单行文本 */
+  line: string;
 }
 
 /** 本地开服创建进度阶段：准备 / 下载核心 / 安装 / 完成 / 失败 */
@@ -1002,6 +1071,44 @@ export type iGM_LauncherV2_InboundMessage =
       state: iGM_LauncherV2_ServerCoreState;
     }
   | {
+      /** 全量版本目录（按核心从上游动态拉取，倒序排列） */
+      type: "core:versions";
+      core: iGM_LauncherV2_ServerCore;
+      versions: string[];
+      message: string;
+    }
+  | {
+      /** 本地服务器运行状态批量快照（启动 / 停止 / 就绪后回推） */
+      type: "server:runtimes";
+      items: iGM_LauncherV2_ServerRuntime[];
+    }
+  | {
+      /** 单台本地服务器运行状态变化 */
+      type: "server:runtime";
+      runtime: iGM_LauncherV2_ServerRuntime;
+    }
+  | {
+      /** 单行实时日志（服务端进程运行期间逐行回推） */
+      type: "server:log";
+      id: string;
+      entry: iGM_LauncherV2_ServerLogEntry;
+    }
+  | {
+      /** 日志缓冲全量（打开控制台时拉取一次） */
+      type: "server:logs";
+      id: string;
+      entries: iGM_LauncherV2_ServerLogEntry[];
+    }
+  | {
+      /** 客户端清单发布结果：外部直链已生成并回填同步大厅记录 */
+      type: "server:publish";
+      ok: boolean;
+      id: string;
+      /** 外部直链；失败为空串 */
+      url: string;
+      message: string;
+    }
+  | {
       /** 联机大厅状态（连接模式、房间码、人数与提示） */
       type: "peer:state";
       state: iGM_LauncherV2_PeerState;
@@ -1027,7 +1134,7 @@ declare global {
 export const IGM_LAUNCHERV2_APP_NAME = "iGM CraftCeon Launcher";
 
 /** 启动器版本号 */
-export const IGM_LAUNCHERV2_VERSION = "26.5.4";
+export const IGM_LAUNCHERV2_VERSION = "26.5.5";
 
 /** 界面开发服务器地址（外壳开发模式加载） */
 export const IGM_LAUNCHERV2_DEV_URL = "http://localhost:3211";
@@ -1330,50 +1437,6 @@ export const IGM_LAUNCHERV2_THEMES: {
   { id: "geek", label: "appearance.themes.geek", accent: "#8b93a7", accentSoft: "#c2c9d6" },
   { id: "amber", label: "appearance.themes.amber", accent: "#f59e0b", accentSoft: "#fbc76b" },
 ];
-
-/* ---- 地图站（内嵌第三方种子地图） ---- */
-
-/** 地图站可选地图类型（决定内嵌第三方站点的子应用路径） */
-export type iGM_LauncherV2_MapType = "biome" | "slime" | "stronghold";
-
-/** 地图站地图类型选项 */
-export const IGM_LAUNCHERV2_MAP_TYPES: {
-  id: iGM_LauncherV2_MapType;
-  label: string;
-}[] = [
-  { id: "biome", label: "mapStation.type.biome" },
-  { id: "slime", label: "mapStation.type.slime" },
-  { id: "stronghold", label: "mapStation.type.stronghold" },
-];
-
-/** 地图站可选 Java 游戏版本（仅列出第三方站点支持的常见版本） */
-export const IGM_LAUNCHERV2_MAP_VERSIONS: string[] = [
-  "1.21.4",
-  "1.21.1",
-  "1.21",
-  "1.20.6",
-  "1.20.4",
-  "1.20.1",
-  "1.20",
-  "1.19.4",
-  "1.19.2",
-  "1.18.2",
-  "1.17.1",
-  "1.16.5",
-];
-
-/** 第三方种子地图站点地址（直连外部，不经过 api.igcraftlit.com） */
-export const IGM_LAUNCHERV2_MAP_SITE = "https://www.chunkbase.com";
-
-/** 第三方站点各地图类型对应的子应用路径 */
-export const IGM_LAUNCHERV2_MAP_APP_PATHS: Record<iGM_LauncherV2_MapType, string> = {
-  biome: "/apps/seed-map",
-  slime: "/apps/slime-finder",
-  stronghold: "/apps/stronghold-finder",
-};
-
-/** 内嵌加载超时（毫秒）：超时未触发 load 即判定被 X-Frame-Options 拦截 */
-export const IGM_LAUNCHERV2_MAP_LOAD_TIMEOUT = 5000;
 
 /* ---- 启动器自动更新 ---- */
 
