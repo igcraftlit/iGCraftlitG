@@ -1,0 +1,319 @@
+/**
+ * 文件路径：apps/launcher-ui/components/iGM_LauncherV2_MapStation/iGM_LauncherV2_MapStation.module.css
+ * 所属层：前端 / 样式层
+ * 路由：G_Main（地图站页签）
+ * 模块：iGM_LauncherV2_MapStation
+ * 作用：地图站样式：深色磨砂控制栏 + 铺满剩余空间的 iframe 展示区与三态覆盖层
+ * 内容：控制栏卡片使用 rgba 深色底 + 1px 半透明描边 + 圆角，输入框 / 下拉框同样走深色；
+ *       「生成地图」用主题色高亮，「在浏览器中打开」用醒目的浅色描边；
+ *       展示区以 flex 铺满整页剩余空间，内部 iframe 绝对定位填满并裁圆角；
+ *       加载态用简洁旋转圆环，失败提示面板叠在 iframe 之上
+ * 说明：仅保留必要的过渡与「有意义的」加载旋转动画，不使用花哨装饰
+ */
+
+/* ---- 外层 ---- */
+
+.wrap {
+  width: 100%;
+  /* 铺满页签内容区：随窗口放大纵向拉伸 */
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.head {
+  flex: 0 0 auto;
+}
+
+.headTitle {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--igm-text);
+}
+
+.headDesc {
+  margin: 6px 0 0;
+  max-width: 900px;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--igm-text-dim);
+}
+
+/* ---- 顶部深色磨砂控制栏 ---- */
+
+.toolbar {
+  flex: 0 0 auto;
+  padding: 16px 18px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+}
+
+.form {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.field:first-child {
+  flex: 1 1 220px;
+}
+
+.fieldLabel {
+  font-size: 12.5px;
+  color: var(--igm-text-mute);
+}
+
+.input,
+.select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #e0e0e0;
+  font: inherit;
+  font-size: 13.5px;
+  outline: none;
+  transition:
+    border-color var(--igm-dur) var(--igm-ease),
+    background var(--igm-dur) var(--igm-ease);
+}
+
+.select {
+  width: auto;
+  min-width: 132px;
+  cursor: pointer;
+}
+
+.input::placeholder {
+  color: var(--igm-text-mute);
+}
+
+.input:focus,
+.select:focus {
+  border-color: rgba(91, 124, 245, 0.6);
+}
+
+.input:hover,
+.select:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* 下拉选项面板由系统渲染，使用深色底避免白底刺眼 */
+.select option {
+  background: #0d1220;
+  color: #e0e0e0;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.submit,
+.open {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--igm-text);
+  font: inherit;
+  font-size: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease),
+    opacity var(--igm-dur) var(--igm-ease);
+}
+
+/* 生成按钮：主题色高亮 */
+.submit {
+  border-color: rgba(91, 124, 245, 0.6);
+  background: rgba(91, 124, 245, 0.24);
+}
+
+.submit:hover:not(:disabled) {
+  background: rgba(91, 124, 245, 0.34);
+}
+
+.submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* 浏览器打开按钮：始终显眼（第三方站点大概率禁止内嵌） */
+.open {
+  border-color: rgba(145, 168, 255, 0.5);
+  background: rgba(145, 168, 255, 0.14);
+}
+
+.open:hover {
+  background: rgba(145, 168, 255, 0.24);
+}
+
+.tip {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--igm-text-mute);
+}
+
+.error {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: #e8b27d;
+}
+
+/* ---- 主体展示区 ---- */
+
+.stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 320px;
+  overflow: hidden;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #0b0f1a;
+}
+
+/* ---- 初始占位态 ---- */
+
+.placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 32px;
+  text-align: center;
+}
+
+.placeholderIcon {
+  color: var(--igm-text-mute);
+  opacity: 0.32;
+}
+
+.placeholderTitle {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.placeholderBody {
+  margin: 0;
+  max-width: 520px;
+  font-size: 13.5px;
+  line-height: 1.8;
+  color: var(--igm-text-dim);
+}
+
+/* ---- 加载态 ---- */
+
+.loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 32px;
+  text-align: center;
+  background: rgba(10, 14, 26, 0.78);
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.14);
+  border-top-color: var(--igm-accent);
+  animation: igm-map-spin 0.9s linear infinite;
+}
+
+@keyframes igm-map-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loadingTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.loadingBody {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+}
+
+/* ---- 失败提示态（X-Frame-Options 拦截） ---- */
+
+.blocked {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 32px;
+  text-align: center;
+  background: rgba(10, 14, 26, 0.92);
+}
+
+.blockedIcon {
+  color: var(--igm-text-mute);
+  opacity: 0.6;
+}
+
+.blockedTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.blockedText {
+  margin: 0;
+  max-width: 520px;
+  font-size: 13.5px;
+  line-height: 1.8;
+  color: var(--igm-text-dim);
+}

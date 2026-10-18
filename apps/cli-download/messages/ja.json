@@ -796,7 +796,8 @@
           "id": "pkce",
           "title": "PKCE",
           "paragraphs": [
-            "公開クライアント（デスクトップアプリ、モバイルアプリ、SPA）は認可コードの傍受を防ぐため PKCE（RFC 7636）を使用する必要があります。"
+            "公開クライアント（デスクトップアプリ、モバイルアプリ、SPA）は認可コードの傍受を防ぐため PKCE（RFC 7636）を使用する必要があります。",
+            "デスクトップアプリと SPA は公開クライアントであり、client_secret を安全に保存できないため、コード・インストーラー・ブラウザストレージ・トークン交換のリクエストボディに含めてはなりません。トークン交換に必要なのは client_id、code、code_verifier、redirect_uri のみです。従来の Web バックエンドアプリは機密クライアントであり、client_secret を厳重に保管し、トークン交換時に送信する必要があります。"
           ],
           "bullets": [
             "認可開始時に code_verifier（43〜128 文字のランダム文字列）を生成し、code_challenge = BASE64URL(SHA256(code_verifier)) を計算します。",
@@ -809,7 +810,8 @@
           "id": "sample",
           "title": "サンプルコード",
           "paragraphs": [
-            "認可コードをトークンに交換しユーザー情報を取得する最小例（Node.js 18 以降）。"
+            "認可コードをトークンに交換しユーザー情報を取得する最小例（Node.js 18 以降）。",
+            "注意：この例の client_secret は機密クライアント（Web バックエンド）専用です。デスクトップ、モバイル、SPA などの公開クライアントは client_secret を省略し、code_verifier による PKCE 検証を使用する必要があります。"
           ],
           "code": "// 1. トークン交換\nconst tokenRes = await fetch(\"https://api.igcraftlit.com/oauth/token\", {\n  method: \"POST\",\n  headers: { \"Content-Type\": \"application/x-www-form-urlencoded\" },\n  body: new URLSearchParams({\n    grant_type: \"authorization_code\",\n    code: AUTHORIZATION_CODE,\n    redirect_uri: \"https://example.com/oauth/callback\",\n    client_id: CLIENT_ID,\n    client_secret: CLIENT_SECRET,\n    code_verifier: CODE_VERIFIER,\n  }),\n});\nconst tokens = await tokenRes.json();\n\n// 2. ユーザー情報を取得\nconst userRes = await fetch(\"https://api.igcraftlit.com/oauth/userinfo\", {\n  headers: { Authorization: `Bearer ${tokens.access_token}` },\n});\nconst profile = await userRes.json();"
         },
@@ -847,9 +849,10 @@
           "title": "セキュリティ推奨事項",
           "bullets": [
             "すべてのエンドポイントは HTTPS でアクセスし、リダイレクト URI は登録値と厳密に一致させる必要があります。",
-            "client_secret はサーバー側にのみ保管し、フロントエンドコード・ブラウザストレージ・公開リポジトリへ書き込まないでください。",
+            "機密クライアント（Web バックエンド）の client_secret はサーバー側にのみ保管し、フロントエンドコード・ブラウザストレージ・公開リポジトリへ書き込まないでください。",
+            "公開クライアント（デスクトップ、モバイル、SPA）はトークン交換リクエストに client_secret を絶対に含めないでください。サーバーはこのパラメータを無視し、PKCE（S256）による検証を必須とします。",
             "認可リクエストにはランダムな state を含め、コールバック時に検証して CSRF を防ぎます。",
-            "公開クライアントは PKCE S256 を有効にしてください。",
+            "公開クライアントは PKCE S256 を有効にしてください（S256 のみ対応、plain は受け付けません）。",
             "refresh_token は安全に保管し、漏洩した場合は「マイ OAuth アプリ」で直ちに client_secret を再発行してください。",
             "業務に必要な最小限の scope のみを申請してください。"
           ]
@@ -876,7 +879,8 @@
             "スコープ定義：openid（必須。一意の利用者識別子 sub、すなわち iGMUid を返す）、profile（表示名とアバター）、email（メールアドレス）、org（承認済み組織認証情報）。業務に必要な最小限のスコープのみ申請してください。",
             "トークンの有効期間：認可コードは使い捨てで 5 分間有効、access_token は既定で 1 時間、refresh_token は最長 180 日です。期限後は利用者に再認可を案内し、更新はできません。",
             "エラーコード：invalid_request、invalid_client、invalid_grant、invalid_scope、unsupported_grant_type、invalid_token、access_denied。RFC 6749 に従い error と error_description を返します。",
-            "client_secret は承認後の「マイ OAuth アプリ」ページに一度だけ表示されます。サーバー側の環境変数など安全な場所に保管し、漏えいの恐れがある場合は直ちに再発行してください。",
+            "クライアント種別：デスクトップ、モバイル、シングルページアプリは公開クライアントであり、コードに client_secret を含めてはならず、PKCE（S256 のみ）を使用する必要があります。Web バックエンドアプリは機密クライアントであり、client_secret を厳重に保管し、トークン交換時に送信する必要があります。",
+            "機密クライアントの client_secret は承認後の「マイ OAuth アプリ」ページに一度だけ表示されます。サーバー側の環境変数など安全な場所に保管し、漏えいの恐れがある場合は直ちに再発行してください。",
             "利用者の同意なく認可を求めること、アクセストークンを共有すること、申請した目的を超えて userinfo を呼び出すことを禁止します。"
           ]
         },

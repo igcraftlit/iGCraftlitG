@@ -295,26 +295,30 @@ export function iGM_LauncherV2_PeerLobby() {
                 <span>{t("peer.host.launchAndHost")}</span>
               </button>
 
-              {/* 端口绑定：默认 25565，绑定后隧道开始转发 UDP 局域网广播 */}
-              <div className={styles.portRow}>
-                <input
-                  className={styles.portInput}
-                  value={portInput}
-                  inputMode="numeric"
-                  autoComplete="off"
-                  placeholder={String(IGM_PEER_PORT_DEFAULT)}
-                  aria-label={t("peer.host.portLabel")}
-                  onChange={(event) => setPortInput(iGM_NormalizePort(event.target.value))}
-                />
-                <button
-                  type="button"
-                  className={`${styles.actionButton} ${styles.actionButtonPrimary}`}
-                  disabled={!portReady || lobby.ready}
-                  onClick={() => lobby.bindPort(portValue)}
-                >
-                  <Link2 size={14} strokeWidth={2.2} />
-                  <span>{t("peer.host.bindPort")}</span>
-                </button>
+              {/* 端口绑定：默认 25565，绑定后隧道开始转发 UDP 局域网广播；仅房主可见 */}
+              <div className={styles.portField}>
+                <span className={styles.portLabel}>{t("peer.host.portLabel")}</span>
+                <div className={styles.portRow}>
+                  <input
+                    className={styles.portInput}
+                    value={portInput}
+                    inputMode="numeric"
+                    autoComplete="off"
+                    placeholder={t("peer.host.portPlaceholder")}
+                    aria-label={t("peer.host.portLabel")}
+                    onChange={(event) => setPortInput(iGM_NormalizePort(event.target.value))}
+                  />
+                  <button
+                    type="button"
+                    className={`${styles.actionButton} ${styles.actionButtonPrimary}`}
+                    disabled={!portReady || lobby.ready}
+                    onClick={() => lobby.bindPort(portValue)}
+                  >
+                    <Link2 size={14} strokeWidth={2.2} />
+                    <span>{t("peer.host.bindPort")}</span>
+                  </button>
+                </div>
+                <p className={styles.portHint}>{t("peer.host.portHint")}</p>
               </div>
 
               {lobby.ready ? (

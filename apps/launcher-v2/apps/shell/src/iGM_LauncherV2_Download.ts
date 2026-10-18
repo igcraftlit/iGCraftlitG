@@ -192,7 +192,7 @@ const IGM_DOWNLOAD_PROGRESS_THROTTLE_MS = 500;
 const IGM_DOWNLOAD_FILE_TIMEOUT_MS = 15000;
 
 /** 请求统一使用的 UA 标识 */
-const IGM_DOWNLOAD_USER_AGENT = "iGMLLauncher/26.5.1";
+const IGM_DOWNLOAD_USER_AGENT = "iGMLLauncher/26.5.4";
 
 /** 速度下限（字节/秒）：判定时长内低于此值即视为源过慢 */
 const IGM_DOWNLOAD_MIN_SPEED = 1024;

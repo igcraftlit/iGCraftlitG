@@ -7,7 +7,8 @@
  * 内容：PKCE（S256）参数生成与 state/code_verifier 进程内缓存、
  *       MuoCeon authorize 跳转 URL 拼装、回调 code 换 token、
  *       MuoCeon userinfo 拉取、iGM_Users 绑定命中或自动建号并绑定、
- *       主站本地会话签发（iGM_Sessions 表，与账号密码登录同一 Cookie）
+ *       主站本地会话签发（iGM_Sessions 表，与账号密码登录同一 Cookie）、
+ *       授权结束回跳站点源解析（白名单）与原页面回跳路径归一化
  * 约束：client_secret 仅从 Config（.env）读取，严禁落入日志或前端响应；
  *       临时缓存仅存在进程内 Map（服务重启自然清空），不走数据库；
  *       PKCE 强制 S256；令牌端点请求体为 application/x-www-form-urlencoded
@@ -73,6 +74,14 @@ interface iGM_MuoCeonFlow {
   redirectUri: string;
   /** 发起授权时前端所在语言，用于失败回跳定位页面 */
   locale: string;
+  /**
+   * 发起授权时前端的站点源（已按白名单校验）。
+   * 说明：后端为同一本机进程同时服务本地开发与隧道生产，
+   *       静态配置无法同时表示两者，故站点源必须随请求动态上报。
+   */
+  siteOrigin: string;
+  /** 登录成功后要回到的站内路径（已归一化为 /G_ 或 /G_Home） */
+  returnTo: string;
   createdAt: number;
 }
 
@@ -83,16 +92,23 @@ export interface iGM_MuoCeonLoginResult {
   sessionId: string;
   /** 发起授权时的前端语言 */
   locale: string;
+  /** 发起授权时前端的站点源，用于授权结束回跳 */
+  siteOrigin: string;
+  /** 登录成功后要回到的站内路径 */
+  returnTo: string;
 }
 
-/** MuoCeon 接入错误：路由层据此决定失败回跳 */
+/** MuoCeon 接入错误：路由层据此决定失败回跳与错误码 */
 export class iGM_MuoCeonError extends Error {
   status: number;
+  /** 机器可读错误码，随失败回跳携带，供前端区分提示文案 */
+  code: string;
 
-  constructor(message: string, status = 400) {
+  constructor(message: string, status = 400, code = "server_error") {
     super(message);
     this.name = "iGM_MuoCeonError";
     this.status = status;
+    this.code = code;
   }
 }
 
@@ -136,16 +152,60 @@ function iGM_ResolveHomeUrl(): string {
   return iGM_Config.muoceon.homeUrl.replace(/\/+$/, "");
 }
 
-/** 授权成功后回跳的主站首页（符合「登录成功重定向回首页」的要求） */
-export function iGM_BuildMuoCeonSuccessRedirect(): string {
-  return `${iGM_ResolveHomeUrl()}/`;
+/**
+ * 解析授权结束后的回跳站点源：
+ * 仅接受前端显式上报（或请求 Origin 头）且位于 CORS 白名单内的源，
+ * 否则回退配置中的主站地址。
+ * 说明：本机后端同时服务 localhost 开发与 api 隧道生产，
+ *       若固定使用配置值会把线上用户送回 localhost（ERR_CONNECTION_REFUSED）。
+ */
+export function iGM_ResolveSiteOrigin(explicit: string | undefined): string {
+  const candidate = (explicit ?? "").trim().replace(/\/+$/, "");
+  if (candidate && iGM_Config.corsOrigins.includes(candidate)) return candidate;
+  return iGM_ResolveHomeUrl();
 }
 
-/** 授权失败回跳：独立授权页携带错误标记，便于用户重试 */
-export function iGM_BuildMuoCeonFailureRedirect(
-  locale: string | undefined,
-): string {
-  return `${iGM_ResolveHomeUrl()}/${iGM_NormalizeLocale(locale)}/auth/muoceon?error=1`;
+/** 剥离站内路径开头的语言前缀；无前缀时原样返回 */
+function iGM_StripLocale(path: string): string {
+  const match = path.match(
+    new RegExp(`^/(?:${iGM_MuoCeonLocales.join("|")})(?=/|$)`),
+  );
+  return match ? path.slice(match[0].length) || "/" : path;
+}
+
+/**
+ * 归一化登录成功后的回跳路径：
+ * 仅允许站内控制台路径（剥离语言前缀后须以 /G_ 开头），
+ * 非法值与缺省一律回退 /G_Home，杜绝开放重定向
+ */
+export function iGM_NormalizeReturnTo(raw: string | undefined): string {
+  const stripped = iGM_StripLocale((raw ?? "").trim());
+  if (!stripped.startsWith("/G_") || stripped.startsWith("//")) return "/G_Home";
+  return stripped;
+}
+
+/** 授权成功后回跳：优先回到用户发起授权前所在页面，缺省回控制台首页 */
+export function iGM_BuildMuoCeonSuccessRedirect(params: {
+  siteOrigin: string;
+  locale: string;
+  returnTo: string;
+}): string {
+  // 二次归一化（幂等）：防止调用方传入带语言前缀的原值拼出 /{locale}/{locale}/...
+  const returnTo = iGM_NormalizeReturnTo(params.returnTo);
+  return `${params.siteOrigin}/${iGM_NormalizeLocale(params.locale)}${returnTo}`;
+}
+
+/** 授权失败回跳：独立授权页携带具体错误码，便于用户重试与定位原因 */
+export function iGM_BuildMuoCeonFailureRedirect(params: {
+  siteOrigin: string;
+  locale?: string;
+  errorCode?: string;
+}): string {
+  const code = params.errorCode ?? "server_error";
+  return (
+    `${params.siteOrigin}/${iGM_NormalizeLocale(params.locale)}` +
+    `/auth/muoceon?error=${encodeURIComponent(code)}`
+  );
 }
 
 /** 本次授权实际使用的 redirect_uri：本地联调可切换为 localhost 回调 */
@@ -158,14 +218,21 @@ function iGM_ResolveRedirectUri(): string {
 
 /**
  * 生成 MuoCeon authorize 跳转 URL，
- * 同时把 state + code_verifier + redirect_uri（+ 语言）存入进程内缓存。
+ * 同时把 state + code_verifier + redirect_uri（+ 语言 + 站点源 + 回跳路径）
+ * 存入进程内缓存，供回调阶段回跳使用。
  */
 export async function iGM_BuildAuthorizeRedirect(params: {
   locale?: string;
+  siteOrigin?: string;
+  returnTo?: string;
 }): Promise<string> {
   const cfg = iGM_Config.muoceon;
   if (!cfg.clientId || !cfg.clientSecret) {
-    throw new iGM_MuoCeonError("MuoCeon 客户端凭证未配置", 500);
+    throw new iGM_MuoCeonError(
+      "MuoCeon 客户端凭证未配置",
+      500,
+      "config_missing",
+    );
   }
 
   const redirectUri = iGM_ResolveRedirectUri();
@@ -177,6 +244,8 @@ export async function iGM_BuildAuthorizeRedirect(params: {
     codeVerifier,
     redirectUri,
     locale: iGM_NormalizeLocale(params.locale),
+    siteOrigin: iGM_ResolveSiteOrigin(params.siteOrigin),
+    returnTo: iGM_NormalizeReturnTo(params.returnTo),
     createdAt: Date.now(),
   });
 
@@ -225,14 +294,22 @@ async function iGM_ExchangeToken(params: {
   });
   if (!res.ok) {
     const errText = await res.text().catch(() => "");
+    console.error(
+      `[iGM_MuoCeon] 换令牌失败：HTTP ${res.status}，响应 ${errText.slice(0, 500) || "(空)"}`,
+    );
     throw new iGM_MuoCeonError(
-      `MuoCeon 令牌端点失败 (HTTP ${res.status}): ${errText.slice(0, 200)}`,
+      `MuoCeon 令牌端点失败 (HTTP ${res.status}): ${errText.slice(0, 500)}`,
       502,
+      "token_failed",
     );
   }
   const tokens = (await res.json()) as iGM_MuoCeonTokenResponse;
   if (!tokens.access_token) {
-    throw new iGM_MuoCeonError("MuoCeon 令牌响应缺少 access_token", 502);
+    throw new iGM_MuoCeonError(
+      "MuoCeon 令牌响应缺少 access_token",
+      502,
+      "token_failed",
+    );
   }
   return tokens;
 }
@@ -246,13 +323,23 @@ async function iGM_FetchUserinfo(
   });
   if (!res.ok) {
     const errText = await res.text().catch(() => "");
+    console.error(
+      `[iGM_MuoCeon] 拉取用户信息失败：HTTP ${res.status}，响应 ${errText.slice(0, 500) || "(空)"}`,
+    );
     throw new iGM_MuoCeonError(
-      `MuoCeon 用户信息端点失败 (HTTP ${res.status}): ${errText.slice(0, 200)}`,
+      `MuoCeon 用户信息端点失败 (HTTP ${res.status}): ${errText.slice(0, 500)}`,
       502,
+      "userinfo_failed",
     );
   }
   const info = (await res.json()) as iGM_MuoCeonUserinfo;
-  if (!info.sub) throw new iGM_MuoCeonError("MuoCeon 用户信息缺少 sub", 502);
+  if (!info.sub) {
+    throw new iGM_MuoCeonError(
+      "MuoCeon 用户信息缺少 sub",
+      502,
+      "userinfo_failed",
+    );
+  }
   return info;
 }
 
@@ -409,7 +496,15 @@ export async function iGM_HandleMuoCeonCallback(params: {
 }): Promise<iGM_MuoCeonLoginResult> {
   const flow = iGM_TakeFlow(params.state);
   if (!flow) {
-    throw new iGM_MuoCeonError("state 无效或已过期，请重新发起授权", 400);
+    // state 为一次性消费：重复回调、超过有效期或后端重启（进程内缓存丢失）都会落此
+    console.warn(
+      "[iGM_MuoCeon] state 未命中：可能重复回调、已超过 5 分钟有效期，或后端重启导致进程内授权流缓存丢失",
+    );
+    throw new iGM_MuoCeonError(
+      "state 无效或已过期，请重新发起授权",
+      400,
+      "state_invalid",
+    );
   }
 
   const tokens = await iGM_ExchangeToken({
@@ -421,7 +516,7 @@ export async function iGM_HandleMuoCeonCallback(params: {
   const user = await iGM_ResolveLocalUser({ userinfo, ip: params.ip });
 
   if (user.iGM_Status !== "active") {
-    throw new iGM_MuoCeonError("账号已被禁用，无法登录", 403);
+    throw new iGM_MuoCeonError("账号已被禁用，无法登录", 403, "account_disabled");
   }
 
   const sessionId = await iGM_IssueSession({
@@ -434,7 +529,13 @@ export async function iGM_HandleMuoCeonCallback(params: {
     `[iGM_MuoCeon] 登录成功 user=${user.iGM_Uid}(${user.iGM_DisplayName ?? user.iGM_Username}) sub=${userinfo.sub}`,
   );
 
-  return { user, sessionId, locale: flow.locale };
+  return {
+    user,
+    sessionId,
+    locale: flow.locale,
+    siteOrigin: flow.siteOrigin,
+    returnTo: flow.returnTo,
+  };
 }
 
 // 导出 //
@@ -444,4 +545,6 @@ export default {
   iGM_HandleMuoCeonCallback,
   iGM_BuildMuoCeonSuccessRedirect,
   iGM_BuildMuoCeonFailureRedirect,
+  iGM_ResolveSiteOrigin,
+  iGM_NormalizeReturnTo,
 };

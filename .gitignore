@@ -4,6 +4,8 @@ out
 # Electrobun / Hutch 构建缓存
 .hutch/
 .cottontail-tmp/
+# 本地构建缓存（Bun 安装缓存 / Cargo 与 Rust 目标目录）
+.cache/
 .env*
 .dev.vars*
 *.sqlite

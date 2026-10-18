@@ -1,0 +1,425 @@
+/**
+ * 文件路径：apps/launcher-ui/components/iGM_LauncherV2_ManifestStudio/iGM_LauncherV2_ManifestStudio.module.css
+ * 所属层：前端 / 组件样式层
+ * 路由：G_Main·方块广场·客户端同步大厅
+ * 模块：iGM_LauncherV2_ManifestStudio
+ * 作用：客户端清单工作室的样式（服务器下拉、信息栏、左侧操作区、右侧文件列表与生成结果卡片）
+ * 内容：全部使用全局设计令牌（--igm-fill / --igm-border / --igm-accent / --igm-text 等），
+ *       令牌在「纯色 · 明亮浅色」主题下自动翻转，避免出现刺眼白底与低对比文字
+ * 说明：不使用写死的纯白底色，浅色背景下文字对比度仍可读
+ */
+
+/* 导入依赖 */
+/* （CSS Modules，无外部导入） */
+
+/* ---------- 工作室卡片与标题区 ---------- */
+.studio {
+  width: 100%;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border-radius: var(--igm-radius-lg);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+}
+
+.studioHead {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.studioTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.studioDesc {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+}
+
+.studioHint {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-mute);
+}
+
+/* ---------- 服务器下拉与信息栏 ---------- */
+.serverRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldLabel {
+  font-size: 12.5px;
+  color: var(--igm-text-dim);
+}
+
+/* 下拉框：深色半透明底衬，color-scheme 保证原生选项弹层同样为深色 */
+.select {
+  width: 100%;
+  max-width: 360px;
+  padding: 9px 13px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+  color: var(--igm-text);
+  color-scheme: dark;
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--igm-dur) var(--igm-ease);
+}
+
+.select:focus {
+  border-color: var(--igm-border-strong);
+}
+
+.select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* 顶部信息栏：左侧服务器名称，右侧目录绝对路径 */
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill-strong);
+}
+
+.topName {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.topPath {
+  font-family: var(--igm-font-mono);
+  font-size: 11.5px;
+  color: var(--igm-text-dim);
+  word-break: break-all;
+}
+
+/* ---------- 左右分栏 ---------- */
+.columns {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+/* 左侧操作区 */
+.ops {
+  flex: 1 1 240px;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 重新扫描目录：明显高于常规按钮的大按钮 */
+.rescanButton {
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border-strong);
+  background: var(--igm-fill);
+  color: var(--igm-text);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease);
+}
+
+.rescanButton:hover:not(:disabled) {
+  background: var(--igm-fill-strong);
+}
+
+.rescanButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.rescanButtonBusy {
+  border-color: var(--igm-accent);
+  background: var(--igm-accent-wash);
+}
+
+/* 扫描中：图标缓慢旋转，简约不做花哨动画 */
+.spin {
+  animation: igm-studio-spin 1s linear infinite;
+}
+
+@keyframes igm-studio-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.lastScan {
+  font-size: 11.5px;
+  color: var(--igm-text-mute);
+}
+
+/* 生成清单：主题色高亮主按钮 */
+.generateButton {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-accent);
+  background: var(--igm-accent-wash);
+  color: var(--igm-text);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color var(--igm-dur) var(--igm-ease);
+}
+
+.generateButton:hover:not(:disabled) {
+  border-color: var(--igm-accent-soft);
+}
+
+.generateButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.selectActions {
+  display: flex;
+  gap: 8px;
+}
+
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 13px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border-strong);
+  background: var(--igm-fill);
+  color: var(--igm-text);
+  font: inherit;
+  font-size: 12.5px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--igm-dur) var(--igm-ease);
+}
+
+.actionButton:hover:not(:disabled) {
+  background: var(--igm-fill-strong);
+}
+
+/* 右侧文件列表区 */
+.filePanel {
+  flex: 2 1 360px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.summary {
+  font-size: 12.5px;
+  color: var(--igm-text-dim);
+}
+
+/* 失败提示：使用错误色强调 */
+.fileNotice {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: #e8848c;
+}
+
+/* 文件列表：固定高度 + 内部滚动 */
+.fileList {
+  height: 340px;
+  overflow: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+}
+
+.fileEmpty {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-mute);
+}
+
+.fileGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fileGroupHead {
+  font-family: var(--igm-font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--igm-text-dim);
+}
+
+.fileRows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fileRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--igm-fill-strong);
+}
+
+.fileLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  cursor: pointer;
+}
+
+/* 复选框：尺寸不小于 16px，颜色交由全局与 accent-color 统一定制 */
+.fileCheck {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--igm-accent);
+  cursor: pointer;
+}
+
+.filePath {
+  font-family: var(--igm-font-mono);
+  font-size: 11.5px;
+  color: var(--igm-text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fileSize {
+  flex: 0 0 auto;
+  font-size: 11.5px;
+  color: var(--igm-text-mute);
+}
+
+/* ---------- 生成结果卡片 ---------- */
+.resultCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-accent);
+  background: var(--igm-accent-wash);
+}
+
+.resultHead {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.resultTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.resultDesc {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+}
+
+.resultRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.resultLabel {
+  min-width: 110px;
+  font-size: 12.5px;
+  color: var(--igm-text-dim);
+}
+
+.resultPath {
+  flex: 1 1 180px;
+  min-width: 0;
+  padding: 8px 12px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+  font-family: var(--igm-font-mono);
+  font-size: 11.5px;
+  color: var(--igm-text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.guideBox {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+}
+
+.guideTitle {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.guideText {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+}

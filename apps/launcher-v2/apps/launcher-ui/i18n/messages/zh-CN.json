@@ -35,7 +35,9 @@
   },
   "nav": {
     "home": "首页",
+    "plaza": "方块广场",
     "horizon": "视界",
+    "map": "地图站",
     "resources": "资源中心",
     "servers": "服务器大厅",
     "peer": "联机大厅",
@@ -139,6 +141,15 @@
       "sakura": "樱花粉",
       "geek": "极客黑",
       "amber": "琥珀橙"
+    },
+    "nav": {
+      "default": { "label": "跟随主题", "hint": "使用默认玻璃面底色" },
+      "slate": { "label": "深灰透明", "hint": "中性深灰，低调百搭" },
+      "navy": { "label": "幽蓝透明", "hint": "深邃蓝调，沉稳冷静" },
+      "violet": { "label": "暗紫透明", "hint": "神秘紫调，个性突出" },
+      "custom": "自定义颜色",
+      "customHint": "使用系统取色器选取任意颜色，统一按约 72% 不透明度叠加，保留磨砂玻璃质感。",
+      "previewAlt": "{name} 导航栏底色预览"
     }
   },
   "shell": {
@@ -268,7 +279,18 @@
       "resourcesDesc": "多源版本清单与加载器列表，下载通道由您自行选择，启动器不会自动切换。",
       "settingsDesc": "总目录与游戏目录由启动器统一管理，下载通道由您自行选择。"
     },
-    "hero": { "greet": "欢迎回来，" }
+    "hero": { "greet": "欢迎回来，" },
+    "news": {
+      "title": "新闻流",
+      "desc": "启动器版本更新与服务器公告，保持最新动态。",
+      "loading": "正在读取新闻内容…",
+      "empty": "暂无新闻内容，可在本地 news.json 中维护。",
+      "openLink": "查看详情",
+      "localSource": "本地 news.json",
+      "defaultSource": "内置默认内容",
+      "tag": { "update": "版本更新", "notice": "服务器公告", "event": "活动" }
+    },
+    "accountManage": "账号管理"
   },
   "settings": {
     "tabs": { "general": "通用", "appearance": "外观", "about": "关于" },
@@ -329,7 +351,10 @@
       "solid": "纯色背景",
       "blur": "毛玻璃模糊度",
       "blurHint": "调节导航栏、卡片等元素的 backdrop-filter 模糊半径，实时预览。",
-      "theme": "主题色"
+      "theme": "主题色",
+      "nav": "导航栏颜色",
+      "navHint": "为导航栏选择底色，始终保留磨砂玻璃质感；可选择预设透明色或使用系统取色器自选颜色。",
+      "navCustomPlaceholder": "#1a2333"
     },
     "about": {
       "title": "关于",
@@ -357,6 +382,15 @@
         "developer": "协同开发者",
         "promotion": "首席宣传官"
       }
+    }
+  },
+  "plaza": {
+    "title": "方块广场",
+    "desc": "P2P 联机房间、第三方服务器列表与视界管理的一站式入口。",
+    "tabs": {
+      "p2p": "P2P 联机房间",
+      "servers": "第三方服务器列表",
+      "horizons": "视界管理"
     }
   },
   "horizon": {
@@ -558,7 +592,109 @@
     "sitePlaceholder": "例如：https://example.com",
     "refreshing": "刷新状态中",
     "emptyLoaded": "暂无服务器。可点击右上角「添加服务器」手动添加，或稍后刷新列表重试。",
-    "preparing": "正在准备服务器列表…"
+    "preparing": "正在准备服务器列表…",
+    "manifestField": "客户端同步清单 URL（选填）",
+    "manifestPlaceholder": "https://raw.githubusercontent.com/用户名/仓库/分支/manifest.json",
+    "manifestHint": "外部托管的直链 JSON。填写后可在卡片上「启动并同步」，本地引擎将直接拉取清单并比对补齐 mods 与 config，全程不经过主站后端。",
+    "manifestMissing": "未配置同步清单",
+    "manifestReady": "已配置同步清单",
+    "syncAction": "启动并同步",
+    "syncNeedHorizon": "请先创建并选择一个视界，同步将写入该视界目录。",
+    "syncNeedAccount": "请先在首页右侧面板选择要启动的账号。",
+    "syncPreviewDisabled": "浏览器预览模式下不提供同步进服能力，请在启动器中使用。",
+    "syncPhase": {
+      "fetch": "正在拉取外部清单…",
+      "compare": "正在比对本地 mods / config 哈希值…",
+      "download": "正在下载缺失文件（{done}/{total}）…",
+      "done": "同步完成，正在启动进服…",
+      "error": "同步失败：{reason}"
+    },
+    "centerTitle": "开服中心",
+    "centerDesc": "为你的服务器生成客户端同步清单，玩家即可一键同步进服。",
+    "manifestToolTitle": "生成客户端清单",
+    "manifestToolDesc": "扫描所选视界的 mods 与 config 目录，生成包含文件路径、大小与 SHA256 哈希值的 manifest.json。",
+    "manifestHorizonLabel": "选择要扫描的视界",
+    "manifestHorizonPlaceholder": "选择视界",
+    "manifestNoHorizon": "当前还没有任何视界，请先到「视界管理」创建。",
+    "manifestGenerate": "生成客户端清单",
+    "manifestGenerating": "正在扫描并生成…",
+    "manifestResultTitle": "客户端清单已生成",
+    "manifestResultCount": "共收录 {count} 个文件，清单已写入：{path}",
+    "manifestGuideTitle": "下一步怎么做？",
+    "manifestGuideText": "请将客户端模组打包上传至 GitHub 或网盘，并将生成的清单上传获取直链，填入玩家的服务器信息（客户端同步清单 URL）中。",
+    "manifestFailed": "生成失败：{reason}",
+    "manifestPreviewDisabled": "浏览器预览模式下无法扫描本地目录，请在启动器中使用。",
+    "manifestCopyPath": "复制清单路径",
+    "hall": {
+      "title": "客户端同步大厅",
+      "desc": "添加服务器条目并填入外部托管的清单直链。点击「启动并同步」后，本地引擎直连拉取清单、比对哈希并补齐 mods 与 config，全程不经过主站后端。"
+    },
+    "studio": {
+      "title": "客户端清单工作室",
+      "desc": "扫描服务器目录中的 mods 与 config，勾选要同步给玩家的文件，一键生成 manifest.json 与客户端 ZIP 包。",
+      "noServer": "还没有本地服务器，请先在下方「本地开服」创建服务器，再为其生成客户端清单。",
+      "serverLabel": "目标服务器",
+      "serverPlaceholder": "选择服务器",
+      "rescan": "重新扫描目录",
+      "rescanning": "正在扫描…",
+      "lastScan": "上次扫描：{time}",
+      "neverScanned": "尚未扫描目录",
+      "summary": "共 {count} 个文件 · 已选 {selected} 项（{size}）",
+      "generate": "生成清单",
+      "generating": "正在生成清单与 ZIP 包…",
+      "selectAll": "全选",
+      "clearAll": "全不选",
+      "emptyFiles": "未在该服务器的 mods 或 config 目录中找到文件。",
+      "scanHint": "点击左侧「重新扫描目录」开始扫描。",
+      "resultTitle": "清单已生成成功！",
+      "resultDesc": "共收录 {count} 个文件，合计 {size}",
+      "resultManifest": "manifest.json",
+      "resultZip": "客户端 ZIP 包",
+      "copyPath": "复制路径",
+      "guideTitle": "接下来怎么做？",
+      "guideText": "请将 ZIP 包上传至网盘 / GitHub 获取下载直链，并将直链填入 manifest.json 中，最后把 JSON 的地址发给玩家。",
+      "scanFailed": "扫描失败：{reason}",
+      "manifestFailed": "生成失败：{reason}",
+      "previewDisabled": "浏览器预览模式下无法扫描本地目录，请在启动器中使用。"
+    },
+    "local": {
+      "title": "本地开服",
+      "desc": "选择服务端核心与游戏版本，由启动器自动下载核心并创建本地服务器目录，再配合上方清单工作室把客户端同步给玩家。",
+      "listTitle": "我的服务器",
+      "create": "创建服务器",
+      "empty": "还没有本地服务器。点击「创建服务器」搭建你的第一个服务端。",
+      "coreLabel": "服务端核心",
+      "versionLabel": "游戏版本",
+      "versionPlaceholder": "选择版本",
+      "loaderLabel": "加载器版本",
+      "loaderPlaceholder": "留空使用最新版",
+      "loaderHint": "仅 Fabric / Forge / NeoForge 需要填写；Vanilla 与 Paper 无需填写。",
+      "nameLabel": "服务器名称",
+      "namePlaceholder": "例如：我的生存服",
+      "createConfirm": "开始下载并创建",
+      "creating": "正在创建…",
+      "remove": "删除该服务器",
+      "dirLabel": "目录",
+      "createdAt": "创建于 {time}",
+      "needVersion": "请先选择游戏版本。",
+      "needName": "请先填写服务器名称。",
+      "previewDisabled": "浏览器预览模式下不支持创建本地服务器，请在启动器中使用。",
+      "coreNames": {
+        "vanilla": "Vanilla 原版",
+        "paper": "Paper",
+        "fabric": "Fabric",
+        "forge": "Forge",
+        "neoforge": "NeoForge"
+      },
+      "phase": {
+        "prepare": "正在准备服务器目录…",
+        "download": "正在下载服务端核心（{percent}%）…",
+        "install": "正在安装服务端核心…",
+        "done": "服务器「{name}」已创建完成。",
+        "manualInstall": "服务端核心已下载完成。未检测到可用的 Java 环境，请手动执行安装器完成服务端安装。",
+        "error": "创建失败：{reason}"
+      }
+    }
   },
   "download": {
     "title": "下载中心",
@@ -658,6 +794,32 @@
     "minimize": "最小化",
     "maximizeRestore": "最大化或还原"
   },
+  "mapStation": {
+    "title": "地图站",
+    "subtitle": "输入种子，直接内嵌浏览第三方种子地图，全程不经过主站后端。",
+    "seedLabel": "种子",
+    "seedPlaceholder": "输入种子，如 114514",
+    "versionLabel": "游戏版本",
+    "typeLabel": "地图类型",
+    "type": {
+      "biome": "群系地图",
+      "slime": "史莱姆区块",
+      "stronghold": "要塞结构"
+    },
+    "generate": "生成地图",
+    "opening": "正在加载…",
+    "openExternal": "在浏览器中打开",
+    "emptyTitle": "输入种子，探索方块世界",
+    "emptyBody": "填写种子与游戏版本后点击「生成地图」，或使用右侧按钮在浏览器中打开完整地图。",
+    "loadingTitle": "正在加载地图…",
+    "loadingBody": "首次加载可能较慢，请稍候。",
+    "frameTitle": "第三方种子地图",
+    "failureTitle": "该地图服务暂不支持内嵌",
+    "failureText": "该地图服务暂不支持内嵌，请点击右上角【在浏览器中打开】查看。",
+    "tip": "地图由第三方站点 Chunkbase 提供，加载直接连接其服务器，不经过 api.igcraftlit.com。",
+    "tipShort": "若长时间空白，请改用右上角【在浏览器中打开】。",
+    "openFailed": "无法调用系统浏览器打开链接，请手动复制地址访问。"
+  },
   "peer": {
     "connect": "连接联机节点",
     "peers": "当前房间 {count} 人",
@@ -712,6 +874,8 @@
       "guide": "进入游戏后，按 ESC 点击【对局域网开放】，并记下聊天栏中显示的端口号。",
       "launchAndHost": "启动游戏并开服",
       "portLabel": "局域网端口",
+      "portPlaceholder": "默认 25565",
+      "portHint": "填写你在游戏内「对局域网开放」时聊天栏显示的端口，绑定后好友即可加入。",
       "bindPort": "绑定端口并等待加入",
       "bound": "已绑定端口 {port}，好友可加入。",
       "leave": "退出房间"

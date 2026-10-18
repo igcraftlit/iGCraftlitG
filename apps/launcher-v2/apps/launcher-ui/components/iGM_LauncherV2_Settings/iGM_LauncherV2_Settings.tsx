@@ -8,7 +8,8 @@
  *       通用——界面语言切换、专属总目录选择、标准结构展示、本地游戏目录自动检测与下载通道自选；
  *       外观——背景模式单选（动态云背景 / 纯色背景）、动态云配色三选（经典深紫 /
  *       梦幻冷蓝 / 极光幻粉）、纯色方案四选（深邃暗黑 / 明亮浅色 / 古典深咖 / 极光幽绿）、
- *       毛玻璃模糊度滑动条（0-30px，实时生效）、5 种预设主题色切换；
+ *       毛玻璃模糊度滑动条（0-30px，实时生效）、5 种预设主题色切换、
+ *       导航栏颜色（跟随主题 / 深灰 / 幽蓝 / 暗紫预设透明色 + 系统取色器自定义色）；
  *       关于——展示当前版本与「检查更新」按钮，发现新版本时可后台下载并「立即重启并更新」
  * 说明：全部特权操作（目录选择、递归删除、结构创建）均由 Bun 主进程执行，
  *       界面只投递指令并展示外壳回推的结果；配色只改背景色调，不改界面主题色；
@@ -52,6 +53,7 @@ import {
   IGM_LAUNCHERV2_APP_NAME,
   IGM_LAUNCHERV2_BACKGROUND_MODES,
   IGM_LAUNCHERV2_CLOUD_PALETTES,
+  IGM_LAUNCHERV2_NAV_COLORS,
   IGM_LAUNCHERV2_SOLID_PALETTES,
   IGM_LAUNCHERV2_THEMES,
   IGM_LAUNCHERV2_VERSION,
@@ -405,6 +407,12 @@ function IGM_LauncherV2_AppearancePanel() {
   );
   const cloudOn = view.background === "cloud";
   const solidOn = view.background === "solid";
+  /** 自定义导航栏色：当前值匹配 16 进制色值即视为自定义分支 */
+  const customNavActive = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(view.navColor);
+  /** 系统取色器回填值：自定义时用当前色，否则回落到占位默认色 */
+  const customNavValue = customNavActive
+    ? view.navColor
+    : t("settings.appearance.navCustomPlaceholder");
 
   return (
     <IGM_LauncherV2_Card className={styles.panel}>
@@ -533,6 +541,55 @@ function IGM_LauncherV2_AppearancePanel() {
               {view.theme === item.id ? <Check size={13} strokeWidth={2.6} /> : null}
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* 导航栏颜色：预设透明色 + 系统取色器自定义色 */}
+      <div className={styles.section}>
+        <span className={styles.sectionTitle}>{t("settings.appearance.nav")}</span>
+        <span className={styles.rowSub}>{t("settings.appearance.navHint")}</span>
+        <div className={styles.swatchRow}>
+          {IGM_LAUNCHERV2_NAV_COLORS.map((item) => {
+            const active = view.navColor === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                className={`${styles.swatch} ${active ? styles.swatchOn : ""}`}
+                aria-pressed={active}
+                onClick={() => appearance.set({ navColor: item.id })}
+              >
+                <span
+                  className={styles.swatchThumb}
+                  style={{ background: item.preview }}
+                  aria-hidden
+                />
+                <span className={styles.swatchText}>
+                  <span className={styles.rowTitle}>{t(item.label)}</span>
+                  <span className={styles.rowSub}>{t(item.hint)}</span>
+                </span>
+                {active ? <Check size={14} strokeWidth={2.6} aria-hidden /> : null}
+              </button>
+            );
+          })}
+
+          {/* 系统取色器：自定义任意色值，统一按固定透明度叠加 */}
+          <label
+            className={`${styles.swatch} ${customNavActive ? styles.swatchOn : ""}`}
+          >
+            <input
+              type="color"
+              className={styles.colorInput}
+              value={customNavValue}
+              aria-label={t("appearance.nav.custom")}
+              onChange={(event) => appearance.set({ navColor: event.target.value })}
+            />
+            <span className={styles.swatchText}>
+              <span className={styles.rowTitle}>{t("appearance.nav.custom")}</span>
+              <span className={styles.rowSub}>{t("appearance.nav.customHint")}</span>
+            </span>
+            {customNavActive ? <Check size={14} strokeWidth={2.6} aria-hidden /> : null}
+          </label>
         </div>
       </div>
     </IGM_LauncherV2_Card>

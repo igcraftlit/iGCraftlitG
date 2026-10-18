@@ -3,11 +3,12 @@
  * 所属层：前端 / 页面组件样式层
  * 路由：G_Main
  * 模块：iGM_LauncherV2_MainShell
- * 作用：主界面样式（极简静态渐变底、图标导航悬停展开、用户下拉菜单、首页布局、账号中心面板）
+ * 作用：主界面样式（极简静态渐变底、图标导航悬停展开、用户下拉菜单、首页新闻流与右侧面板、账号中心面板）
  * 内容：默认仅显示导航图标的收起态与悬停展开态过渡、用户菜单浮层、
- *       首页欢迎词 / 启动按钮 / 快捷入口 / 最近更新 / 右侧账号栏与启动视界小窗、
+ *       首页欢迎词（中文书法体 + 英文签名体）/ 新闻流卡片 / 右侧账号栏与「账号管理」入口 /
+ *       固定高度可滚动的错误控制台 / 面板底部尺寸收小的启动按钮 / 启动视界小窗、
  *       Java / 微软正版 / 离线账号三块面板的列表与操作按钮
- * 说明：不使用动态流体背景，主界面保持干净无干扰
+ * 说明：不使用动态流体背景，主界面保持干净无干扰；卡片以浅描边与静态渐变背景柔和对比
  */
 
 /* 导入依赖 */
@@ -302,7 +303,7 @@
   background: rgba(232, 132, 140, 0.1);
 }
 
-/* ---- 首页（欢迎区 + 启动中心 + 账号栏，无动态背景） ---- */
+/* ---- 首页（欢迎区 + 新闻流 + 右侧面板，无动态背景） ---- */
 
 .home {
   width: 100%;
@@ -311,8 +312,6 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  /* 右下角固定启动按钮的占位，避免遮挡末尾内容 */
-  padding-bottom: 78px;
 }
 
 .homeHead {
@@ -331,25 +330,27 @@
 
 .heroTitle {
   margin: 12px 0 0;
-  font-size: 30px;
+  font-size: 32px;
   font-weight: 800;
   line-height: 1.25;
   color: var(--igm-text);
 }
 
-/* 欢迎词中的中文部分：中文艺术字体（Ma Shan Zheng，本地自托管） */
+/* 欢迎词中的中文部分：中文书法 / 衬线字体栈，加大字号与字距营造艺术感 */
 .heroGreet {
-  font-family: var(--igm-font-greet-zh), "Ma Shan Zheng", cursive;
-  font-weight: 400;
+  font-family: "STKaiti", "KaiTi", "楷体", "Songti SC", "Noto Serif SC", serif;
+  font-size: 1.06em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
 }
 
-/* 欢迎词中的用户名部分：英文签名体（Caveat，本地自托管），字号略大以突出签名感 */
+/* 欢迎词中的用户名部分：本地 Orbitron 艺术字体，保留原大小写并加字距，突出签名感 */
 .heroSign {
-  margin-left: 6px;
-  font-family: var(--igm-font-greet-en), "Caveat", cursive;
-  font-size: 1.28em;
+  margin-left: 8px;
+  font-family: var(--igm-font-display);
+  font-size: 0.86em;
   font-weight: 700;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.14em;
   color: var(--igm-text);
 }
 
@@ -381,23 +382,13 @@
   }
 }
 
-/* 右下角启动入口：固定于页面右下角，尺寸刻意收小；
-   纵向位置略高于下载中心悬浮球，保证两者同时出现时互不遮挡 */
+/* 右侧面板底部的启动入口：静态排布（非固定定位），整体右对齐并刻意收小；
+   启动状态提示位于按钮上方，纵向排列互不遮挡 */
 .launchDock {
-  position: fixed;
-  right: 22px;
-  bottom: 22px;
-  z-index: 24;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 8px;
-  max-width: 320px;
-  pointer-events: none;
-}
-
-.launchDock > * {
-  pointer-events: auto;
 }
 
 .launchStatus {
@@ -405,26 +396,27 @@
   align-items: center;
   gap: 6px;
   max-width: 100%;
-  padding: 6px 11px;
+  padding: 5px 10px;
   border-radius: var(--igm-radius-sm);
   border: 1px solid var(--igm-border);
   background: var(--igm-glass-strong);
-  font-size: 11.5px;
+  font-size: 11px;
   line-height: 1.5;
   color: var(--igm-text-dim);
 }
 
+/* 启动按钮：尺寸相比原全宽按钮明显收小，紧凑显示 */
 .launchButton {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
+  gap: 7px;
+  padding: 8px 16px;
   border-radius: 999px;
   border: 1px solid var(--igm-border-strong);
   background: linear-gradient(135deg, rgba(77, 107, 254, 0.5), rgba(34, 211, 238, 0.3));
   color: var(--igm-text);
   font: inherit;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 700;
   letter-spacing: 0.02em;
   cursor: pointer;
@@ -439,79 +431,147 @@
   background: linear-gradient(135deg, rgba(77, 107, 254, 0.62), rgba(34, 211, 238, 0.4));
 }
 
-.tileGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 14px;
-}
+/* ---- 首页新闻流（极简卡片式列表） ---- */
 
-/* 快捷入口卡片：整体可点击，跳转到对应页签 */
-.tile {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 18px;
-  border-radius: var(--igm-radius-md);
-  border: 1px solid var(--igm-border);
-  background: rgba(255, 255, 255, 0.035);
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition:
-    border-color var(--igm-dur) var(--igm-ease),
-    background var(--igm-dur) var(--igm-ease);
-}
-
-.tile:hover {
-  border-color: var(--igm-border-strong);
-  background: rgba(255, 255, 255, 0.07);
-}
-
-.tileIcon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  margin-bottom: 10px;
-  border-radius: var(--igm-radius-sm);
-  background: linear-gradient(135deg, rgba(77, 107, 254, 0.34), rgba(34, 211, 238, 0.2));
-  color: var(--igm-brand-soft);
-}
-
-.tileTitle {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--igm-text);
-}
-
-.tileDesc {
-  margin: 7px 0 0;
-  font-size: 12.5px;
-  line-height: 1.7;
-  color: var(--igm-text-dim);
-}
-
-/* ---- 首页「最近更新」与账号栏 ---- */
-
-.recentCard {
+.newsCard {
   padding: 20px;
   display: flex;
   flex-direction: column;
 }
 
-.recentIcon {
+/* 数据来源提示：浅描边小标签 */
+.newsSource {
   flex: 0 0 auto;
-  color: var(--igm-text-mute);
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+  font-size: 11px;
+  color: var(--igm-text-dim);
+  white-space: nowrap;
 }
+
+.newsList {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 单条新闻：浅描边卡片，与静态渐变背景柔和对比 */
+.newsItem {
+  padding: 14px 16px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+  transition: border-color var(--igm-dur) var(--igm-ease);
+}
+
+.newsItem:hover {
+  border-color: var(--igm-border-strong);
+}
+
+.newsMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* 分类标签：主题色描边 */
+.newsTag {
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(77, 107, 254, 0.5);
+  background: rgba(77, 107, 254, 0.16);
+  font-size: 11px;
+  color: var(--igm-brand-soft);
+  white-space: nowrap;
+}
+
+.newsDate {
+  font-size: 11.5px;
+  color: var(--igm-text-mute);
+  white-space: nowrap;
+}
+
+.newsTitle {
+  margin: 10px 0 0;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.newsBody {
+  margin: 7px 0 0;
+  font-size: 12.5px;
+  line-height: 1.75;
+  color: var(--igm-text-dim);
+  white-space: pre-wrap;
+}
+
+.newsLink {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border-strong);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--igm-brand-soft);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    background var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease);
+}
+
+.newsLink:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(125, 146, 255, 0.72);
+}
+
+/* ---- 首页账号栏 ---- */
 
 .accountCard {
   padding: 18px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+/* 「账号管理」入口：跳转账号中心页签 */
+.accountManage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+  color: var(--igm-text-dim);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition:
+    color var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease),
+    background var(--igm-dur) var(--igm-ease);
+}
+
+.accountManage span:nth-of-type(1) {
+  flex: 1;
+  text-align: left;
+}
+
+.accountManage:hover {
+  color: var(--igm-text);
+  border-color: var(--igm-border-strong);
+  background: var(--igm-fill-strong);
 }
 
 .accountBlock {
@@ -1428,10 +1488,12 @@
   color: var(--igm-text-mute);
 }
 
+/* 错误控制台日志区：固定高度 + 内部滚动，嵌入首页右侧窄面板时不撑高整页 */
 .consoleBody {
   margin-top: 14px;
-  max-height: 220px;
+  height: 200px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 12px 14px;
   border-radius: var(--igm-radius-md);
   border: 1px solid var(--igm-border);

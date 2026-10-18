@@ -10,7 +10,9 @@
  *   3) ALL /api/auth/muoceon/*          兜底：未知子路径返回统一 JSON 失败结构
  * 约束：两个接口均为浏览器顶层跳转（非跨域 fetch），响应为 302 重定向；
  *       成功时以 Set-Cookie 写入主站会话 Cookie（与账号密码登录同一 iGM_SID）；
- *       client_secret 仅在服务层使用，绝不出现在响应体中
+ *       client_secret 仅在服务层使用，绝不出现在响应体中；
+ *       回跳站点源取自请求上报的 origin（白名单校验），不得硬编码 localhost，
+ *       否则线上（经 api 隧道调用本机后端）会被送回 localhost 导致连接被拒
  */
 
 // 导入依赖 //
@@ -22,6 +24,7 @@ import {
   iGM_BuildMuoCeonSuccessRedirect,
   iGM_HandleMuoCeonCallback,
   iGM_MuoCeonError,
+  iGM_ResolveSiteOrigin,
 } from "../iGM_Services/iGM_MuoCeonService";
 import { iGM_BuildSessionCookie } from "../iGM_Services/iGM_SecurityService";
 import { iGM_GetClientIp, type iGM_NetworkServer } from "../iGM_Middleware/iGM_AuthGuard";
@@ -48,17 +51,26 @@ function iGM_Q(query: Record<string, string | undefined>, key: string): string {
   return typeof query[key] === "string" ? (query[key] as string) : "";
 }
 
+/** 前端上报的站点源：显式 query 优先，其次请求 Origin 头（两者均按白名单校验） */
+function iGM_ReadSiteOrigin(ctx: iGM_RouteContext): string {
+  const explicit = iGM_Q(ctx.query, "origin") || ctx.request.headers.get("origin");
+  return iGM_ResolveSiteOrigin(explicit || undefined);
+}
+
 /* ---------- GET /api/auth/muoceon：发起授权 ---------- */
 
 /**
  * 发起 MuoCeon 授权：
  * 生成 code_verifier / code_challenge(S256) / state 并缓存 5 分钟，
- * 随后 302 到 MuoCeon 授权端点；locale 仅用于失败时定位回跳页面。
+ * 随后 302 到 MuoCeon 授权端点；locale 与站点源、回跳路径一并入缓存，
+ * 供授权结束后把用户送回其实际访问的站点与页面。
  */
 async function iGM_HandleAuthorize(ctx: iGM_RouteContext): Promise<Response> {
   try {
     const authorizeUrl = await iGM_BuildAuthorizeRedirect({
       locale: iGM_Q(ctx.query, "locale"),
+      siteOrigin: iGM_ReadSiteOrigin(ctx),
+      returnTo: iGM_Q(ctx.query, "returnTo"),
     });
     return iGM_Redirect(authorizeUrl);
   } catch (err) {
@@ -87,11 +99,12 @@ async function iGM_HandleAuthorize(ctx: iGM_RouteContext): Promise<Response> {
 async function iGM_HandleCallback(ctx: iGM_RouteContext): Promise<Response> {
   const code = iGM_Q(ctx.query, "code");
   const state = iGM_Q(ctx.query, "state");
+  const siteOrigin = iGM_ReadSiteOrigin(ctx);
   let locale = iGM_Q(ctx.query, "locale") || undefined;
 
   try {
     if (!code || !state) {
-      throw new iGM_MuoCeonError("回调缺少 code 或 state", 400);
+      throw new iGM_MuoCeonError("回调缺少 code 或 state", 400, "callback_invalid");
     }
     const ip = iGM_GetClientIp(ctx.request, ctx.server);
     const result = await iGM_HandleMuoCeonCallback({
@@ -102,10 +115,26 @@ async function iGM_HandleCallback(ctx: iGM_RouteContext): Promise<Response> {
     });
     locale = result.locale;
     const cookie = iGM_BuildSessionCookie(iGM_Config, result.sessionId);
-    return iGM_Redirect(iGM_BuildMuoCeonSuccessRedirect(), cookie);
+    return iGM_Redirect(
+      iGM_BuildMuoCeonSuccessRedirect({
+        siteOrigin: result.siteOrigin,
+        locale: result.locale,
+        returnTo: result.returnTo,
+      }),
+      cookie,
+    );
   } catch (err) {
-    console.error("[iGM_MuoCeon] 回调处理失败", err);
-    return iGM_Redirect(iGM_BuildMuoCeonFailureRedirect(locale));
+    // 具体错误码随回跳携带，前端据此展示对应文案；详细原因写入后端日志
+    const errorCode =
+      err instanceof iGM_MuoCeonError ? err.code : "server_error";
+    console.error(
+      `[iGM_MuoCeon] 回调失败 code=${errorCode}：${
+        err instanceof Error ? err.message : String(err)
+      }`,
+    );
+    return iGM_Redirect(
+      iGM_BuildMuoCeonFailureRedirect({ siteOrigin, locale, errorCode }),
+    );
   }
 }
 

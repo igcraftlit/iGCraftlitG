@@ -34,6 +34,13 @@
   min-width: 0;
 }
 
+.title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
 .desc {
   margin: 6px 0 0;
   font-size: 13px;
@@ -430,3 +437,398 @@
   justify-content: flex-end;
   gap: 8px;
 }
+
+/* ---- 客户端同步清单字段说明 ---- */
+
+.fieldHint {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: var(--igm-text-mute);
+}
+
+.fieldHint > svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+/* ---- 客户端同步清单标识 ---- */
+
+/* 已配置：与热门同族的主题色描边，作为高亮标记 */
+.tagManifestOn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-accent);
+  background: var(--igm-accent-wash);
+  font-size: 11px;
+  color: var(--igm-text);
+  white-space: nowrap;
+}
+
+/* 未配置：低饱和中性描边，避免喧宾夺主 */
+.tagManifestOff {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+  font-size: 11px;
+  color: var(--igm-text-mute);
+  white-space: nowrap;
+}
+
+/* ---- 同步进度区 ---- */
+
+.syncBox {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+}
+
+/* 失败：错误色描边与文字，字面量颜色仅用于状态标识 */
+.syncBoxError {
+  border-color: rgba(232, 132, 140, 0.42);
+}
+
+.syncBoxError .syncText {
+  color: #e8848c;
+}
+
+/* 完成：成功色描边与文字 */
+.syncBoxDone {
+  border-color: rgba(34, 197, 94, 0.42);
+}
+
+.syncBoxDone .syncText {
+  color: #22c55e;
+}
+
+.syncHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.syncText {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--igm-text-dim);
+  word-break: break-all;
+}
+
+.syncPercent {
+  flex: 0 0 auto;
+  font-size: 11.5px;
+  color: var(--igm-text-mute);
+}
+
+.syncTrack {
+  width: 100%;
+  height: 5px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--igm-fill-strong);
+}
+
+.syncFill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--igm-accent);
+  transition: width var(--igm-dur) var(--igm-ease);
+}
+
+.syncFillError {
+  background: #e8848c;
+}
+
+.syncFillDone {
+  background: #22c55e;
+}
+
+/* 同步前置提示：未选择视界时的引导行 */
+.syncHintNotice {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+}
+
+/* ---- 开服中心 ---- */
+
+.center {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.centerHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.centerHeadText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.centerTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.centerDesc {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+}
+
+.centerIcon {
+  flex: 0 0 auto;
+  color: var(--igm-text-dim);
+}
+
+.toolCard {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+}
+
+.toolHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--igm-text-dim);
+}
+
+.toolTitle {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.toolDesc {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+}
+
+.toolHint {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-mute);
+}
+
+.toolForm {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.toolForm .field {
+  flex: 1 1 220px;
+}
+
+/* ---- 视界下拉框 ---- */
+
+.select {
+  width: 100%;
+  padding: 9px 13px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+  color: var(--igm-text);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--igm-dur) var(--igm-ease);
+}
+
+.select:focus {
+  border-color: var(--igm-border-strong);
+}
+
+.select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ---- 结果弹窗引导区 ---- */
+
+.guideBox {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-accent-wash);
+}
+
+.guideTitle {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.guideText {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+}
+
+/* ---- 清单路径行 ---- */
+
+.pathRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pathText {
+  flex: 1 1 200px;
+  min-width: 0;
+  padding: 8px 12px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+  font-family: var(--igm-font-mono);
+  font-size: 11.5px;
+  color: var(--igm-text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- 本地开服 ---- */
+
+.local {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.localHead {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.localTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.localDesc {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+}
+
+/* 创建按钮：主题色高亮主操作 */
+.localCreateButton {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-accent);
+  background: var(--igm-accent-wash);
+  color: var(--igm-text);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color var(--igm-dur) var(--igm-ease);
+}
+
+.localCreateButton:hover:not(:disabled) {
+  border-color: var(--igm-accent-soft);
+}
+
+.localCreateButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.localList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.localListTitle {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.localItems {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.localItem {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+}
+
+.localItemRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.localDir {
+  font-family: var(--igm-font-mono);
+  font-size: 11.5px;
+  color: var(--igm-text-mute);
+  word-break: break-all;
+}
+

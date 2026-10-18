@@ -3,18 +3,20 @@
  * 所属层：前端 / 页面组件层
  * 路由：G_Main
  * 模块：iGM_LauncherV2_MainShell
- * 作用：启动器主界面（极简静态渐变底 + 悬浮图标导航 + 账号中心 + 皮肤库）
- * 内容：顶部悬浮胶囊导航默认仅显示 lucide 图标，鼠标悬停时平滑横向展开文字；
+ * 作用：启动器主界面（静态渐变底 + 悬浮图标导航 + 方块广场 + 首页新闻流 + 账号中心）
+ * 内容：顶部悬浮胶囊导航默认仅显示 lucide 图标，鼠标悬停时平滑横向展开文字，含
+ *       首页 / 方块广场 / 资源中心 / 地图站 / 账号中心 / 设置 六个页签；
  *       导航左侧应用名使用 Orbitron 艺术字体；右上角用户区点击展开下拉菜单
  *       （社区头像与「更换头像」、社区昵称与 iGMUid、退出登录回欢迎页）；
- *       首页左上角为欢迎词，右下角为「启动游戏」按钮（弹窗选择视界后启动），
- *       标题下方为快捷入口卡片与「最近更新」正式版列表，
- *       右侧独立账号栏上下展示正版账号与离线账号（离线账号最多 5 个）；
+ *       首页左上角为中文书法体欢迎词与英文用户名签名（Orbitron 艺术字体），
+ *       中间为极简卡片式新闻流，右侧纵向面板自上而下依次为账号列表
+ *       （正版在上、离线在下，最多 5 个）与「账号管理」入口、错误控制台
+ *       （固定高度且内部可滚动）、底部尺寸收小的「启动游戏」按钮；
+ *       方块广场聚合 P2P 联机房间 / 第三方服务器列表 / 视界管理三块能力；
  *       账号中心包含 Java 环境管理、微软正版验证、离线账号管理三块能力，
  *       点击已绑定的正版账号进入 3D 正版档案详情页；
- *       皮肤库页签分「皮肤库 / 在线查询 / 我的皮肤」三类，中部提供「全部 / 精选」标签，
- *       支持本地导入与离线应用；设置页列出后续模块将接入的配置项占位；
- *       已接入多语言（next-intl），全部文案走 shell 命名空间
+ *       设置页列出后续模块将接入的配置项占位；
+ *       已接入多语言（next-intl），全部文案走 nav / shell 命名空间
  * 说明：主界面不使用流体云背景（仅欢迎页保留），避免动态干扰；
  *       全部特权能力（进程扫描、文件选择、网络验证）均由 Bun 主进程执行，
  *       界面只展示状态并投递指令，不直接触碰本地文件与系统命令
@@ -27,30 +29,29 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import {
+  Boxes,
   Camera,
   Check,
   ChevronDown,
   ChevronRight,
-  Clock,
   Copy,
+  ExternalLink,
   FolderOpen,
   Gamepad2,
   Home,
   Info,
+  LayoutGrid,
   Layers,
   LogOut,
-  Package,
+  Map,
   Play,
   Plus,
   RefreshCw,
-  Server,
   Settings,
   ShieldCheck,
-  Shirt,
   Terminal,
   Trash2,
   UserRound,
-  Users,
   X,
 } from "lucide-react";
 import {
@@ -62,8 +63,8 @@ import {
   iGM_LauncherV2_AppearanceHost as IGM_LauncherV2_AppearanceHost,
 } from "@/components/iGM_LauncherV2_AppearanceHost/iGM_LauncherV2_AppearanceHost";
 import {
-  iGM_LauncherV2_SkinLibrary as IGM_LauncherV2_SkinLibrary,
-} from "@/components/iGM_LauncherV2_SkinLibrary/iGM_LauncherV2_SkinLibrary";
+  iGM_LauncherV2_Plaza as IGM_LauncherV2_Plaza,
+} from "@/components/iGM_LauncherV2_Plaza/iGM_LauncherV2_Plaza";
 import {
   iGM_LauncherV2_SkinProfile as IGM_LauncherV2_SkinProfile,
 } from "@/components/iGM_LauncherV2_SkinProfile/iGM_LauncherV2_SkinProfile";
@@ -71,17 +72,11 @@ import {
   iGM_LauncherV2_Settings as IGM_LauncherV2_Settings,
 } from "@/components/iGM_LauncherV2_Settings/iGM_LauncherV2_Settings";
 import {
-  iGM_LauncherV2_Horizon as IGM_LauncherV2_Horizon,
-} from "@/components/iGM_LauncherV2_Horizon/iGM_LauncherV2_Horizon";
-import {
   iGM_LauncherV2_ResourceCenter as IGM_LauncherV2_ResourceCenter,
 } from "@/components/iGM_LauncherV2_ResourceCenter/iGM_LauncherV2_ResourceCenter";
 import {
-  iGM_LauncherV2_ServerLobby as IGM_LauncherV2_ServerLobby,
-} from "@/components/iGM_LauncherV2_ServerLobby/iGM_LauncherV2_ServerLobby";
-import {
-  iGM_LauncherV2_PeerLobby as IGM_LauncherV2_PeerLobby,
-} from "@/components/iGM_LauncherV2_PeerLobby/iGM_LauncherV2_PeerLobby";
+  iGM_LauncherV2_MapStation as IGM_LauncherV2_MapStation,
+} from "@/components/iGM_LauncherV2_MapStation/iGM_LauncherV2_MapStation";
 import {
   iGM_LauncherV2_DownloadCenter as IGM_LauncherV2_DownloadCenter,
 } from "@/components/iGM_LauncherV2_DownloadCenter/iGM_LauncherV2_DownloadCenter";
@@ -91,6 +86,7 @@ import {
 import {
   iGM_LauncherV2_ChangeCommunityAvatar as IGM_LauncherV2_ChangeCommunityAvatar,
   iGM_LauncherV2_Navigate as IGM_LauncherV2_Navigate,
+  iGM_LauncherV2_OpenLink as IGM_LauncherV2_OpenLink,
   iGM_LauncherV2_RefreshCommunityProfile as IGM_LauncherV2_RefreshCommunityProfile,
   iGM_LauncherV2_SelectAccount as IGM_LauncherV2_SelectAccount,
   iGM_LauncherV2_UseAuth as IGM_LauncherV2_UseAuth,
@@ -101,9 +97,9 @@ import {
   iGM_LauncherV2_UseLaunchLogs as IGM_LauncherV2_UseLaunchLogs,
   iGM_LauncherV2_UseLaunchProgress as IGM_LauncherV2_UseLaunchProgress,
   iGM_LauncherV2_UseMsa as IGM_LauncherV2_UseMsa,
+  iGM_LauncherV2_UseNews as IGM_LauncherV2_UseNews,
   iGM_LauncherV2_UseOffline as IGM_LauncherV2_UseOffline,
   iGM_LauncherV2_UseSettings as IGM_LauncherV2_UseSettings,
-  iGM_LauncherV2_UseVersions as IGM_LauncherV2_UseVersions,
 } from "@/components/iGM_LauncherV2_HostBridge/iGM_LauncherV2_HostBridge";
 import { IGM_LAUNCHERV2_APP_NAME, IGM_LAUNCHERV2_VERSION } from "@/lib/iGM_LauncherV2_Constants";
 import styles from "./iGM_LauncherV2_MainShell.module.css";
@@ -111,15 +107,7 @@ import styles from "./iGM_LauncherV2_MainShell.module.css";
 // 类型定义 //
 
 /** 主导航页签 */
-type iGM_LauncherV2_MainTab =
-  | "home"
-  | "horizon"
-  | "resources"
-  | "servers"
-  | "peer"
-  | "account"
-  | "skins"
-  | "settings";
+type iGM_LauncherV2_MainTab = "home" | "plaza" | "resources" | "map" | "account" | "settings";
 
 /** 页签展示信息 */
 interface iGM_LauncherV2_MainTabMeta {
@@ -129,60 +117,26 @@ interface iGM_LauncherV2_MainTabMeta {
   icon: typeof Home;
 }
 
-/** 首页快捷入口卡片（点击跳转对应页签） */
-interface iGM_LauncherV2_MainTile {
-  id: string;
-  /** i18n 键（渲染处用 t 解析） */
-  title: string;
-  /** i18n 键（渲染处用 t 解析） */
-  desc: string;
-  icon: typeof Home;
-  /** 点击后跳转的页签 */
-  tab: iGM_LauncherV2_MainTab;
-}
-
 // 常量与文案 //
 
 const IGM_MAIN_TABS: iGM_LauncherV2_MainTabMeta[] = [
   { id: "home", label: "nav.home", icon: Home },
-  { id: "horizon", label: "nav.horizon", icon: Layers },
-  { id: "resources", label: "nav.resources", icon: Package },
-  { id: "servers", label: "nav.servers", icon: Server },
-  { id: "peer", label: "nav.peer", icon: Users },
+  { id: "plaza", label: "nav.plaza", icon: LayoutGrid },
+  { id: "resources", label: "nav.resources", icon: Boxes },
+  { id: "map", label: "nav.map", icon: Map },
   { id: "account", label: "nav.account", icon: UserRound },
-  { id: "skins", label: "nav.skins", icon: Shirt },
   { id: "settings", label: "nav.settings", icon: Settings },
-];
-
-const IGM_MAIN_TILES: iGM_LauncherV2_MainTile[] = [
-  {
-    id: "community",
-    title: "shell.tiles.community.title",
-    desc: "shell.tiles.community.desc",
-    icon: Shirt,
-    tab: "skins",
-  },
-  {
-    id: "resources",
-    title: "shell.tiles.resources.title",
-    desc: "shell.tiles.resources.desc",
-    icon: Package,
-    tab: "resources",
-  },
-  {
-    id: "settings",
-    title: "shell.tiles.settings.title",
-    desc: "shell.tiles.settings.desc",
-    icon: Settings,
-    tab: "settings",
-  },
 ];
 
 /** 离线账号数量上限（超过后不再允许新增，与外壳约束保持一致） */
 const IGM_OFFLINE_LIMIT = 5;
 
-/** 首页「最近更新」展示的正式版条数 */
-const IGM_RECENT_RELEASE_COUNT = 6;
+/** 新闻分类标签映射：命中 i18n 键的标签走翻译，其它值原样展示原始标签 */
+const IGM_NEWS_TAG_LABEL: Record<string, string> = {
+  update: "shell.news.tag.update",
+  notice: "shell.news.tag.notice",
+  event: "shell.news.tag.event",
+};
 
 /** 启动日志来源标签（错误控制台每行前缀，值为 i18n 键） */
 const IGM_LAUNCHERV2_LOG_STREAM_LABEL = {
@@ -593,7 +547,7 @@ function IGM_LauncherV2_OfflinePanel() {
   );
 }
 
-/** 将 ISO 发布时间格式化为 YYYY-MM-DD HH:mm，逐位取整规避区域差异 */
+/** 将 ISO 发布时间格式化为 YYYY-MM-DD HH:mm，逐位取整规避区域差异（新闻流复用） */
 function IGM_LauncherV2_FormatReleaseTime(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
@@ -757,45 +711,63 @@ function IGM_LauncherV2_HomeOfflineBlock() {
   );
 }
 
-/** 首页「最近更新」：取最新正式版若干条，数据行数由 UseVersions 统一收口 */
-function IGM_LauncherV2_RecentUpdates() {
+/**
+ * 首页新闻流。
+ * 按发布时间倒序渲染本地 news.json（缺失时回退外壳内置默认）的条目：
+ * 每条含分类标签、标题、正文与日期，有外链时提供「查看详情」按钮；
+ * 数据读取与默认内容由外壳完成，界面只负责渲染，文案与分类标签全部走 i18n。
+ */
+function IGM_LauncherV2_NewsFeed() {
   const t = useTranslations();
-  const versions = IGM_LauncherV2_UseVersions();
-  const releases = versions.versions
-    .filter((item) => item.type === "release")
-    .sort(
-      (left, right) =>
-        new Date(right.releaseTime).getTime() - new Date(left.releaseTime).getTime(),
-    )
-    .slice(0, IGM_RECENT_RELEASE_COUNT);
+  const news = IGM_LauncherV2_UseNews();
+  const items = [...news.items].sort(
+    (left, right) => new Date(right.date).getTime() - new Date(left.date).getTime(),
+  );
 
   return (
-    <IGM_LauncherV2_Card className={styles.recentCard}>
+    <IGM_LauncherV2_Card className={styles.newsCard}>
       <div className={styles.panelHead}>
         <div>
-          <h2 className={styles.panelTitle}>{t("shell.recent.title")}</h2>
-          <p className={styles.panelDesc}>{t("shell.recent.desc")}</p>
+          <h2 className={styles.panelTitle}>{t("shell.news.title")}</h2>
+          <p className={styles.panelDesc}>{t("shell.news.desc")}</p>
         </div>
-        <Clock size={16} strokeWidth={2.2} className={styles.recentIcon} />
+        <span className={styles.newsSource}>
+          {news.source === "local" ? t("shell.news.localSource") : t("shell.news.defaultSource")}
+        </span>
       </div>
 
-      {versions.loading ? (
-        <p className={styles.empty}>{t("shell.recent.loading")}</p>
-      ) : releases.length === 0 ? (
-        <p className={styles.empty}>{versions.message || t("shell.recent.empty")}</p>
+      {!news.loaded ? (
+        <p className={styles.empty}>{t("shell.news.loading")}</p>
+      ) : items.length === 0 ? (
+        <p className={styles.empty}>{news.message || t("shell.news.empty")}</p>
       ) : (
-        <ul className={styles.list}>
-          {releases.map((item) => (
-            <li key={item.id} className={styles.listRow}>
-              <div className={styles.rowMain}>
-                <div className={styles.rowTitleLine}>
-                  <span className={styles.rowTitle}>{item.id}</span>
-                  <span className={styles.rowTag}>{t("shell.recent.releaseTag")}</span>
+        <ul className={styles.newsList}>
+          {items.map((item) => {
+            // 分类标签：命中 i18n 键的标签走翻译，其它标签直接展示原始值
+            const tagKey = IGM_NEWS_TAG_LABEL[item.tag];
+            return (
+              <li key={item.id} className={styles.newsItem}>
+                <div className={styles.newsMeta}>
+                  <span className={styles.newsTag}>{tagKey ? t(tagKey) : item.tag}</span>
+                  <span className={styles.newsDate}>
+                    {IGM_LauncherV2_FormatReleaseTime(item.date)}
+                  </span>
                 </div>
-                <span className={styles.rowSub}>{IGM_LauncherV2_FormatReleaseTime(item.releaseTime)}</span>
-              </div>
-            </li>
-          ))}
+                <h3 className={styles.newsTitle}>{item.title}</h3>
+                <p className={styles.newsBody}>{item.body}</p>
+                {item.url ? (
+                  <button
+                    type="button"
+                    className={styles.newsLink}
+                    onClick={() => IGM_LauncherV2_OpenLink(item.url)}
+                  >
+                    <ExternalLink size={13} strokeWidth={2.2} />
+                    <span>{t("shell.news.openLink")}</span>
+                  </button>
+                ) : null}
+              </li>
+            );
+          })}
         </ul>
       )}
     </IGM_LauncherV2_Card>
@@ -805,7 +777,8 @@ function IGM_LauncherV2_RecentUpdates() {
 /**
  * 启动日志（错误控制台）。
  * 逐行展示游戏进程的 stdout / stderr 与启动器自身提示，错误级别标红；
- * 有新日志时自动滚到底部，便于直接看到最后一条报错。
+ * 有新日志时自动滚到底部，便于直接看到最后一条报错；
+ * 日志区固定高度并内部滚动，保证嵌入首页右侧窄面板时不撑高整页。
  */
 function IGM_LauncherV2_LaunchConsole() {
   const t = useTranslations();
@@ -846,7 +819,7 @@ function IGM_LauncherV2_LaunchConsole() {
         </div>
       </div>
 
-      <div className={styles.consoleBody} ref={bodyRef}>
+      <div className={`${styles.consoleBody} igm-scroll`} ref={bodyRef}>
         {logs.entries.length === 0 ? (
           <p className={styles.consoleEmpty}>{t("shell.console.empty")}</p>
         ) : (
@@ -991,7 +964,7 @@ function IGM_LauncherV2_LaunchProgressOverlay() {
 /**
  * 启动游戏小窗：列出全部视界，选中即投递启动指令并关闭；
  * 未选择当前账号时先行拦截并提示「请先选择要启动的账号」；
- * 无视界时给出引导并可直接切到「视界」页签。支持右上角关闭、点击遮罩关闭、Esc 关闭。
+ * 无视界时给出引导并可直接切到「方块广场」页签。支持右上角关闭、点击遮罩关闭、Esc 关闭。
  */
 function IGM_LauncherV2_LaunchDialog({
   onClose,
@@ -1279,7 +1252,7 @@ export function iGM_LauncherV2_MainShell() {
       <main className={styles.main}>
         {tab === "home" ? (
           <section className={styles.home}>
-            {/* 左上角欢迎词 */}
+            {/* 左上角欢迎区：中文书法体欢迎词 + 英文用户名签名 */}
             <header className={styles.homeHead}>
               <p className={styles.heroKicker}>iGCraftLit Community</p>
               <h1 className={styles.heroTitle}>
@@ -1289,74 +1262,71 @@ export function iGM_LauncherV2_MainShell() {
             </header>
 
             <div className={styles.homeBody}>
-              {/* 左侧主区：快捷入口 + 最近更新 */}
+              {/* 中间主内容区：极简卡片式新闻流 */}
               <div className={styles.homeMain}>
-                <div className={styles.tileGrid}>
-                  {IGM_MAIN_TILES.map((tile) => (
-                    <button
-                      key={tile.id}
-                      type="button"
-                      className={styles.tile}
-                      onClick={() => setTab(tile.tab)}
-                    >
-                      <span className={styles.tileIcon} aria-hidden>
-                        <tile.icon size={17} strokeWidth={2.1} />
-                      </span>
-                      <h2 className={styles.tileTitle}>{t(tile.title)}</h2>
-                      <p className={styles.tileDesc}>{t(tile.desc)}</p>
-                    </button>
-                  ))}
-                </div>
-
-                <IGM_LauncherV2_RecentUpdates />
+                <IGM_LauncherV2_NewsFeed />
               </div>
 
-              {/* 右侧账号栏：上半正版账号，下半离线账号 */}
+              {/* 右侧纵向面板：账号列表 / 错误控制台 / 底部启动按钮 */}
               <aside className={styles.homeAside}>
                 <IGM_LauncherV2_Card className={styles.accountCard}>
+                  <button
+                    type="button"
+                    className={styles.accountManage}
+                    onClick={() => setTab("account")}
+                  >
+                    <UserRound size={14} strokeWidth={2.2} />
+                    <span>{t("shell.accountManage")}</span>
+                    <ChevronRight size={14} strokeWidth={2.2} />
+                  </button>
                   <IGM_LauncherV2_HomeMsaBlock />
                   <div className={styles.accountDivider} />
                   <IGM_LauncherV2_HomeOfflineBlock />
                 </IGM_LauncherV2_Card>
+
+                {/* 错误控制台：固定高度且内部滚动，启动失败时给出具体原因 */}
+                <IGM_LauncherV2_LaunchConsole />
+
+                {/* 面板底部启动入口：尺寸收小，点击弹出选择视界小窗 */}
+                <div className={styles.launchDock}>
+                  {needAccount ? (
+                    <span className={styles.launchStatus}>
+                      <Info size={12} strokeWidth={2.2} />
+                      <span>{t("shell.launchDock.needAccount")}</span>
+                    </span>
+                  ) : null}
+                  {launch.state?.running ? (
+                    <span className={styles.launchStatus}>
+                      <Gamepad2 size={12} strokeWidth={2.2} />
+                      <span>
+                        {launch.state.pid
+                          ? t("shell.launchDock.runningPid", { pid: launch.state.pid })
+                          : t("shell.launchDock.running")}
+                      </span>
+                    </span>
+                  ) : launch.state?.message ? (
+                    <span className={styles.launchStatus}>
+                      <Info size={12} strokeWidth={2.2} />
+                      <span>{launch.state.message}</span>
+                    </span>
+                  ) : null}
+                  <button
+                    type="button"
+                    className={styles.launchButton}
+                    onClick={() => setLaunchOpen(true)}
+                  >
+                    <Play size={15} strokeWidth={2.2} />
+                    <span>{t("common.launchGame")}</span>
+                  </button>
+                </div>
               </aside>
             </div>
+          </section>
+        ) : null}
 
-            {/* 错误控制台：启动后实时展示游戏进程输出，启动失败时给出具体原因 */}
-            <IGM_LauncherV2_LaunchConsole />
-
-            {/* 右下角启动入口：尺寸收小并固定于页面右下角，点击仍弹出选择视界小窗；
-                与下载中心悬浮球纵向错开，互不遮挡 */}
-            <div className={styles.launchDock}>
-              {needAccount ? (
-                <span className={styles.launchStatus}>
-                  <Info size={12} strokeWidth={2.2} />
-                  <span>{t("shell.launchDock.needAccount")}</span>
-                </span>
-              ) : null}
-              {launch.state?.running ? (
-                <span className={styles.launchStatus}>
-                  <Gamepad2 size={12} strokeWidth={2.2} />
-                  <span>
-                    {launch.state.pid
-                      ? t("shell.launchDock.runningPid", { pid: launch.state.pid })
-                      : t("shell.launchDock.running")}
-                  </span>
-                </span>
-              ) : launch.state?.message ? (
-                <span className={styles.launchStatus}>
-                  <Info size={12} strokeWidth={2.2} />
-                  <span>{launch.state.message}</span>
-                </span>
-              ) : null}
-              <button
-                type="button"
-                className={styles.launchButton}
-                onClick={() => setLaunchOpen(true)}
-              >
-                <Play size={16} strokeWidth={2.2} />
-                <span>{t("common.launchGame")}</span>
-              </button>
-            </div>
+        {tab === "plaza" ? (
+          <section className={`${styles.section} ${styles.sectionFull}`}>
+            <IGM_LauncherV2_Plaza />
           </section>
         ) : null}
 
@@ -1398,21 +1368,6 @@ export function iGM_LauncherV2_MainShell() {
           </section>
         ) : null}
 
-        {tab === "skins" ? (
-          <section className={`${styles.section} ${styles.sectionWide}`}>
-            <IGM_LauncherV2_SkinLibrary />
-          </section>
-        ) : null}
-
-        {tab === "horizon" ? (
-          <section className={styles.section}>
-            <h1 className={styles.sectionTitle}>{t("nav.horizon")}</h1>
-            <p className={styles.sectionDesc}>{t("shell.section.horizonDesc")}</p>
-
-            <IGM_LauncherV2_Horizon />
-          </section>
-        ) : null}
-
         {tab === "resources" ? (
           <section className={`${styles.section} ${styles.sectionFull}`}>
             <h1 className={styles.sectionTitle}>{t("nav.resources")}</h1>
@@ -1422,15 +1377,9 @@ export function iGM_LauncherV2_MainShell() {
           </section>
         ) : null}
 
-        {tab === "servers" ? (
+        {tab === "map" ? (
           <section className={`${styles.section} ${styles.sectionFull}`}>
-            <IGM_LauncherV2_ServerLobby />
-          </section>
-        ) : null}
-
-        {tab === "peer" ? (
-          <section className={`${styles.section} ${styles.sectionFull}`}>
-            <IGM_LauncherV2_PeerLobby />
+            <IGM_LauncherV2_MapStation />
           </section>
         ) : null}
 
@@ -1453,7 +1402,7 @@ export function iGM_LauncherV2_MainShell() {
           onClose={() => setLaunchOpen(false)}
           onGoHorizon={() => {
             setLaunchOpen(false);
-            setTab("horizon");
+            setTab("plaza");
           }}
           onGoAccount={() => {
             setLaunchOpen(false);

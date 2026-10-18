@@ -63,6 +63,13 @@
    */
   --igm-blur: 14px;
 
+  /*
+   * 导航栏底色：由「设置 · 外观」的【导航栏颜色】实时改写。
+   * 默认回落到玻璃面令牌 --igm-glass，仍保留 backdrop-filter 磨砂质感；
+   * 预设透明色或自定义色值会覆盖该变量（透明度统一约 0.72）。
+   */
+  --igm-nav: var(--igm-glass);
+
   /* 形状与阴影 */
   --igm-radius-lg: 22px;
   --igm-radius-md: 14px;
@@ -214,6 +221,227 @@ a {
     animation-duration: 0.001ms !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+/* ---------- 全局表单控件深色覆盖（v26.5.4） ---------- */
+/*
+ * 作用：统一抹平 Chromium / Windows 原生表单控件的系统白底与默认蓝色焦点圈，
+ *       让 input / select / textarea / option / checkbox / radio 服从深色磨砂玻璃风格。
+ * 主题色：复用已有令牌 --igm-accent（由「设置 · 外观」实时改写，默认靛蓝 #5b7cf5），
+ *         焦点光晕用 --igm-accent-wash，动效沿用 --igm-dur / --igm-ease，无需另写死色值。
+ * 说明：作者样式在层叠上优先于浏览器 UA 样式，故显式设定颜色即可压下白底；
+ *       仅复选框 / 单选框必须依赖 appearance: none 才能完全自绘。
+ *       排除滑块 / 取色器 / 文件 / 图片 / 按钮型 input，避免破坏其原生功能控件。
+ */
+
+/* 文本输入类与多行文本域：底色 / 文字 / 边框 / 圆角 / 内边距 */
+input:not(:where([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"], [type="image"], [type="button"], [type="submit"], [type="reset"])),
+textarea {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #e0e0e0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: 1.4;
+  outline: none;
+  transition: background-color var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease),
+    box-shadow var(--igm-dur) var(--igm-ease);
+}
+
+/* 下拉框：保留原生箭头（不设 appearance: none），仅覆写配色与形状 */
+select {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #e0e0e0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: inherit;
+  outline: none;
+  transition: background-color var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease),
+    box-shadow var(--igm-dur) var(--igm-ease);
+}
+
+/* 悬停：底衬轻微提亮 */
+input:not(:where([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"], [type="image"], [type="button"], [type="submit"], [type="reset"])):hover,
+select:hover,
+textarea:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* 焦点：主题色描边 + 主题色淡光晕，替代浏览器默认蓝色发光圈（保留可访问的视觉反馈） */
+input:not(:where([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"], [type="image"], [type="button"], [type="submit"], [type="reset"])):focus,
+input:not(:where([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"], [type="image"], [type="button"], [type="submit"], [type="reset"])):focus-visible,
+select:focus,
+select:focus-visible,
+textarea:focus,
+textarea:focus-visible {
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: var(--igm-accent, #5b7cf5);
+  box-shadow: 0 0 0 2px var(--igm-accent-wash, rgba(91, 124, 245, 0.16));
+}
+
+/* 禁用：降低不透明度并提示不可交互 */
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 占位符：弱化但不至于不可读 */
+input::placeholder,
+textarea::placeholder {
+  color: rgba(224, 224, 224, 0.4);
+}
+
+/*
+ * 下拉选项：Windows 原生下拉列表常忽略父级颜色，故 option / optgroup 同时显式声明底色与文字色。
+ * 原生列表不参与页面背景合成，半透明色会叠在系统白底上，因此这里使用深色不透明的等价底衬。
+ */
+option,
+optgroup {
+  background-color: #131a2e;
+  color: #e0e0e0;
+}
+
+/* 复选框与单选框：完全自绘，杜绝系统默认白底黑框 */
+input[type="checkbox"],
+input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  flex: none;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  outline: none;
+  transition: background-color var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease),
+    box-shadow var(--igm-dur) var(--igm-ease);
+}
+
+input[type="checkbox"] {
+  border-radius: 4px;
+}
+
+input[type="radio"] {
+  border-radius: 50%;
+}
+
+/* 悬停：暗色框轻微提亮 */
+input[type="checkbox"]:hover,
+input[type="radio"]:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* 选中：主题色底 + 白色勾 / 白点 */
+input[type="checkbox"]:checked,
+input[type="radio"]:checked {
+  background-color: var(--igm-accent, #5b7cf5);
+  border-color: var(--igm-accent, #5b7cf5);
+}
+
+/* 勾：两条实心边旋转 45 度绘制，纯 CSS，不依赖字体与图标 */
+input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 1px;
+  width: 3px;
+  height: 7px;
+  border: solid #ffffff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* 点：居中白色圆点 */
+input[type="radio"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffffff;
+  transform: translate(-50%, -50%);
+}
+
+/* 勾选框焦点：以主题色淡光晕表达可访问焦点 */
+input[type="checkbox"]:focus-visible,
+input[type="radio"]:focus-visible {
+  box-shadow: 0 0 0 2px var(--igm-accent-wash, rgba(91, 124, 245, 0.16));
+}
+
+/* 勾选框禁用 */
+input[type="checkbox"]:disabled,
+input[type="radio"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------- 深色滚动条补充：覆盖未声明 .igm-scroll 的滚动容器（可选） ---------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+}
+
+/* ---------- 表单控件浅色模式翻转：避免深色控件落在明亮浅色底上（data-bg-theme="light"） ---------- */
+:root[data-bg-theme="light"] input:not(:where([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"], [type="image"], [type="button"], [type="submit"], [type="reset"])),
+:root[data-bg-theme="light"] select,
+:root[data-bg-theme="light"] textarea {
+  background-color: rgba(22, 28, 48, 0.05);
+  color: #16192a;
+  border-color: rgba(22, 28, 48, 0.18);
+}
+
+:root[data-bg-theme="light"] input:not(:where([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"], [type="image"], [type="button"], [type="submit"], [type="reset"])):hover,
+:root[data-bg-theme="light"] select:hover,
+:root[data-bg-theme="light"] textarea:hover {
+  background-color: rgba(22, 28, 48, 0.1);
+}
+
+:root[data-bg-theme="light"] input[type="checkbox"],
+:root[data-bg-theme="light"] input[type="radio"] {
+  background-color: rgba(22, 28, 48, 0.05);
+  border-color: rgba(22, 28, 48, 0.25);
+}
+
+:root[data-bg-theme="light"] input::placeholder,
+:root[data-bg-theme="light"] textarea::placeholder {
+  color: rgba(22, 28, 48, 0.4);
+}
+
+:root[data-bg-theme="light"] option,
+:root[data-bg-theme="light"] optgroup {
+  background-color: #f3f5f9;
+  color: #16192a;
 }
 
 /* 导出 */

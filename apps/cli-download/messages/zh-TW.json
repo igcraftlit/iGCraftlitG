@@ -796,7 +796,8 @@
           "id": "pkce",
           "title": "PKCE",
           "paragraphs": [
-            "公開客戶端（桌面應用、行動應用、單頁應用）必須使用 PKCE（RFC 7636）以防范授權碼攔截。"
+            "公開客戶端（桌面應用、行動應用、單頁應用）必須使用 PKCE（RFC 7636）以防范授權碼攔截。",
+            "桌面應用與單頁應用屬於公開客戶端（Public Client），無法安全保存 client_secret，嚴禁在程式碼、安裝包、瀏覽器儲存或換取權杖的請求體中攜帶該參數；換取權杖時只需攜帶 client_id、code、code_verifier 與 redirect_uri。傳統的 Web 後端應用屬於機密客戶端（Confidential Client），仍需妥善保管 client_secret 並在換取權杖時攜帶。"
           ],
           "bullets": [
             "發起授權時產生 code_verifier（43 至 128 位隨機字串），並計算 code_challenge = BASE64URL(SHA256(code_verifier))。",
@@ -809,7 +810,8 @@
           "id": "sample",
           "title": "範例程式碼",
           "paragraphs": [
-            "以下為授權碼換取權杖與讀取使用者資訊的最小範例（Node.js 18 以上）。"
+            "以下為授權碼換取權杖與讀取使用者資訊的最小範例（Node.js 18 以上）。",
+            "注意：範例中的 client_secret 僅適用於機密客戶端（Web 伺服器端）。桌面應用、行動應用與單頁應用等公開客戶端必須省略 client_secret，改由 code_verifier 完成 PKCE 校驗。"
           ],
           "code": "// 1. 換取權杖\nconst tokenRes = await fetch(\"https://api.igcraftlit.com/oauth/token\", {\n  method: \"POST\",\n  headers: { \"Content-Type\": \"application/x-www-form-urlencoded\" },\n  body: new URLSearchParams({\n    grant_type: \"authorization_code\",\n    code: AUTHORIZATION_CODE,\n    redirect_uri: \"https://example.com/oauth/callback\",\n    client_id: CLIENT_ID,\n    client_secret: CLIENT_SECRET,\n    code_verifier: CODE_VERIFIER,\n  }),\n});\nconst tokens = await tokenRes.json();\n\n// 2. 讀取使用者資訊\nconst userRes = await fetch(\"https://api.igcraftlit.com/oauth/userinfo\", {\n  headers: { Authorization: `Bearer ${tokens.access_token}` },\n});\nconst profile = await userRes.json();"
         },
@@ -847,9 +849,10 @@
           "title": "安全建議",
           "bullets": [
             "所有端點必須透過 HTTPS 存取，回呼位址須嚴格符合登記值。",
-            "client_secret 僅存於伺服器端，禁止寫入前端程式碼、瀏覽器儲存或公開儲存庫。",
+            "機密客戶端（Web 伺服器端）的 client_secret 僅存於伺服器端，禁止寫入前端程式碼、瀏覽器儲存或公開儲存庫。",
+            "公開客戶端（桌面應用、行動應用、單頁應用）嚴禁在換取權杖的請求中攜帶 client_secret；伺服器端會直接忽略該參數，並強制以 PKCE（S256）校驗授權碼。",
             "授權請求必須攜帶隨機 state 並在回呼時校驗，防止 CSRF。",
-            "公開客戶端必須啟用 PKCE S256。",
+            "公開客戶端必須啟用 PKCE S256（僅支援 S256，不接受 plain）。",
             "refresh_token 應妥善保管，發現洩漏時立即在「我的 OAuth 應用」中重設 client_secret。",
             "僅申請業務必需的最小 scope。"
           ]
@@ -876,7 +879,8 @@
             "Scope 定義：openid（必選，回傳使用者唯一識別碼 sub，即 iGMUid）、profile（暱稱與頭像）、email（電子郵件位址）、org（已通過審核的組織認證資訊）；僅可申請業務必需的最小權限範圍。",
             "權杖生命週期：授權碼一次性、5 分鐘內有效；access_token 預設有效期 1 小時；refresh_token 最長 180 天，到期後必須重新引導使用者完成授權，不予續期。",
             "錯誤碼：invalid_request、invalid_client、invalid_grant、invalid_scope、unsupported_grant_type、invalid_token、access_denied，統一按 RFC 6749 回傳 error 與 error_description。",
-            "client_secret 審核通過後在「我的 OAuth 應用」頁僅展示一次，必須保存在伺服器端環境變數或同等安全位置；疑似外洩時應立即重設。",
+            "客戶端類型：桌面應用、行動應用與單頁應用屬於公開客戶端，嚴禁在程式碼中攜帶 client_secret，必須使用 PKCE（僅支援 S256）；Web 後端應用屬於機密客戶端，需妥善保管 client_secret 並在換取權杖時攜帶。",
+            "機密客戶端的 client_secret 審核通過後在「我的 OAuth 應用」頁僅展示一次，必須保存在伺服器端環境變數或同等安全位置；疑似外洩時應立即重設。",
             "嚴禁在未取得使用者同意的情況下申請授權、共用存取權杖或超出申請用途呼叫 userinfo。"
           ]
         },

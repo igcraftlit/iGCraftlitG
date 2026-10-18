@@ -202,7 +202,18 @@ function iGM_LoginPanel({ onSwitchTab }: { onSwitchTab: () => void }) {
         <button
           type="button"
           className={styles.muoceonEntry}
-          onClick={() => router.push("/auth/muoceon")}
+          onClick={() => {
+            // 透传登录页回跳参数：授权成功后回到用户原本要去的站内页面
+            const raw =
+              typeof window !== "undefined"
+                ? new URLSearchParams(window.location.search).get("redirect")
+                : null;
+            router.push(
+              raw
+                ? `/auth/muoceon?returnTo=${encodeURIComponent(raw)}`
+                : "/auth/muoceon",
+            );
+          }}
           aria-label={t("auth.muoceon.pageTitle")}
         >
           <IGM_MuoCeonLogo size={34} />

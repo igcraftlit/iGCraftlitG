@@ -4,7 +4,8 @@
  * 路由：/connect/callback（MuoCeon 已登记的生产回调地址，独立于语言前缀）
  * 模块：G_MuoCeonCallback
  * 作用：MuoCeon 授权回跳中转页——把 code 与 state 转交后端换取主站会话
- * 内容：读取地址栏 code/state 后整页跳转后端 /api/auth/muoceon/callback；
+ * 内容：读取地址栏 code/state 后整页跳转后端 /api/auth/muoceon/callback
+ *       （附带 origin 站点源，供后端决定授权结束的回跳地址）；
  *       缺少参数时回退站内首页；跳转期间显示极简品牌过渡界面
  * 说明：主站前端为 Cloudflare Pages 静态站点（igcraftlit.com），
  *       后端位于 api 子域（隧道映射本机 3001），故回调须由本页转交后端；
@@ -48,9 +49,11 @@ export default function G_MuoCeonCallbackPage() {
       window.location.replace("/");
       return;
     }
+    // 上报站点源：后端据此把用户送回来源站点（localhost 开发 / igcraftlit.com 线上）
     const target =
       `${iGM_GetApiBase()}/api/auth/muoceon/callback` +
-      `?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`;
+      `?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}` +
+      `&origin=${encodeURIComponent(window.location.origin)}`;
     window.location.replace(target);
   }, []);
 

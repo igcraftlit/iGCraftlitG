@@ -197,11 +197,54 @@ export type iGM_LauncherV2_OutboundMessage =
   | { type: "update:download" }
   | { type: "update:install" }
   | { type: "server:list" }
-  | { type: "server:add"; name: string; ip: string; port: number; site: string }
+  | {
+      /** 添加自定义服务器；manifest 为「客户端同步清单 URL」（外部托管直链 JSON，可留空） */
+      type: "server:add";
+      name: string;
+      ip: string;
+      port: number;
+      site: string;
+      manifest: string;
+    }
   | { type: "server:remove"; id: string }
   | { type: "server:status"; id: string }
   | { type: "server:statuses" }
   | { type: "server:join"; id: string }
+  | {
+      /** 启动并同步：拉取该服务器外部清单，比对哈希后补齐 mods/config，再拼装参数进服 */
+      type: "server:sync";
+      id: string;
+      horizonId: string;
+    }
+  | {
+      /** 清单工作室：扫描本地服务器目录的 mods / config，回推文件树供勾选 */
+      type: "server:scan-tree";
+      serverId: string;
+    }
+  | {
+      /**
+       * 清单工作室：按勾选的文件生成 manifest.json，并把选中的 mods / config
+       * 打包成客户端 ZIP 一并落在服务器目录内，同时回推两个产物的绝对路径
+       */
+      type: "server:manifest";
+      serverId: string;
+      /** 服务器名称（用于 ZIP 包命名） */
+      name: string;
+      /** 勾选收录的相对路径列表（相对服务器目录，以 / 分隔） */
+      paths: string[];
+    }
+  | { type: "server:local-list" }
+  | {
+      /** 本地开服：选择核心与游戏版本，由外壳下载服务端核心并创建本地服务器目录 */
+      type: "server:core-create";
+      name: string;
+      core: iGM_LauncherV2_ServerCore;
+      gameVersion: string;
+      /** 加载器版本（Fabric / Forge / NeoForge 适用）；留空使用最新版 */
+      loaderVersion: string;
+    }
+  | { type: "server:local-remove"; id: string }
+  | { type: "news:list" }
   | { type: "peer:status" }
   | { type: "peer:connect" }
   | { type: "peer:create"; horizonId: string }
@@ -284,8 +327,97 @@ export interface iGM_LauncherV2_ServerEntry {
   version: string;
   /** 图标地址；无则为空串 */
   icon: string;
+  /** 客户端同步清单 URL（外部托管直链 JSON）；无则为空串 */
+  manifest: string;
   /** 是否用户自定义添加（界面优先展示） */
   custom: boolean;
+}
+
+/** 本地开服可选服务端核心 */
+export type iGM_LauncherV2_ServerCore = "vanilla" | "paper" | "fabric" | "forge" | "neoforge";
+
+/** 扫描到的服务器文件节点（path 为相对服务器目录的相对路径，以 / 分隔） */
+export interface iGM_LauncherV2_ServerFileNode {
+  /** 相对服务器目录的相对路径（如 mods/xxx.jar） */
+  path: string;
+  /** 字节大小 */
+  size: number;
+  /** SHA256（小写十六进制） */
+  sha256: string;
+}
+
+/** 本地服务器条目（由启动器下载核心并创建，位于 servers/<id>） */
+export interface iGM_LauncherV2_LocalServer {
+  /** 稳定标识（目录名） */
+  id: string;
+  /** 展示名称 */
+  name: string;
+  /** 服务端核心 */
+  core: iGM_LauncherV2_ServerCore;
+  /** 游戏版本 */
+  gameVersion: string;
+  /** 加载器版本；Vanilla / Paper 为空串 */
+  loaderVersion: string;
+  /** 服务器目录绝对路径 */
+  dir: string;
+  /** 创建时间（ISO 字符串） */
+  createdAt: string;
+}
+
+/** 本地开服创建进度阶段：准备 / 下载核心 / 安装 / 完成 / 失败 */
+export type iGM_LauncherV2_ServerCorePhase =
+  | "prepare"
+  | "download"
+  | "install"
+  | "done"
+  | "error";
+
+/** 本地开服创建进度（由外壳回推，界面仅展示） */
+export interface iGM_LauncherV2_ServerCoreState {
+  /** 目标服务器标识 */
+  id: string;
+  /** 展示名称 */
+  name: string;
+  core: iGM_LauncherV2_ServerCore;
+  gameVersion: string;
+  phase: iGM_LauncherV2_ServerCorePhase;
+  /** 进度 0-100 */
+  percent: number;
+  /** 提示文案键（多语言键，界面端 next-intl 解析，外壳不产生文案） */
+  messageKey: string;
+  /** 文案占位符参数 */
+  messageParams: Record<string, string>;
+  /** 服务器目录绝对路径 */
+  dir: string;
+}
+
+/** 客户端清单同步阶段：拉取清单 / 比对哈希 / 下载缺失 / 完成 / 失败 */
+export type iGM_LauncherV2_ServerSyncPhase = "fetch" | "compare" | "download" | "done" | "error";
+
+/** 服务器「启动并同步」进度（外壳回推，界面仅展示） */
+export interface iGM_LauncherV2_ServerSyncState {
+  /** 目标服务器 id */
+  id: string;
+  phase: iGM_LauncherV2_ServerSyncPhase;
+  /** 进度 0-100 */
+  percent: number;
+  /** 提示文案键（多语言键，界面端 next-intl 解析，外壳不产生文案） */
+  messageKey: string;
+  /** 文案占位符参数 */
+  messageParams: Record<string, string>;
+}
+
+/** 首页新闻条目（读取本地 news.json，缺失时由外壳内置默认） */
+export interface iGM_LauncherV2_NewsItem {
+  id: string;
+  title: string;
+  body: string;
+  /** 发布时间（ISO 或 YYYY-MM-DD） */
+  date: string;
+  /** 分类标签（原始短标签，如「更新」「公告」） */
+  tag: string;
+  /** 外链；无则为空串 */
+  url: string;
 }
 
 /** 单台服务器实时状态（由本地进程请求 mcsrvstat.us 得到） */
@@ -645,6 +777,66 @@ export type iGM_LauncherV2_InboundMessage =
       /** 联机大厅状态（连接模式、房间码、人数与提示） */
       type: "peer:state";
       state: iGM_LauncherV2_PeerState;
+    }
+  | {
+      /** 首页新闻流（来源：本地 news.json / 外壳内置默认），界面按时间倒序展示 */
+      type: "news:list";
+      items: iGM_LauncherV2_NewsItem[];
+      source: "local" | "default";
+      message: string;
+    }
+  | {
+      /** 服务器「启动并同步」进度（拉取清单 / 比对哈希 / 下载缺失 / 完成 / 失败） */
+      type: "server:sync";
+      state: iGM_LauncherV2_ServerSyncState;
+    }
+  | {
+      /**
+       * 清单工作室：客户端清单与 ZIP 包生成结果。
+       * path 为 manifest.json 落盘绝对路径，zipPath 为客户端 ZIP 包绝对路径
+       */
+      type: "server:manifest";
+      ok: boolean;
+      /** manifest.json 绝对路径；失败为空串 */
+      path: string;
+      /** 客户端 ZIP 包绝对路径；失败为空串 */
+      zipPath: string;
+      /** 收录文件数量 */
+      count: number;
+      /** 收录文件总字节数 */
+      totalSize: number;
+      /** 提示文案键（多语言键，界面端 next-intl 解析） */
+      messageKey: string;
+      /** 文案占位符参数 */
+      messageParams: Record<string, string>;
+    }
+  | {
+      /** 清单工作室：服务器目录扫描结果（files 为 mods / config 下的全部文件） */
+      type: "server:tree";
+      ok: boolean;
+      serverId: string;
+      /** 服务器展示名称 */
+      serverName: string;
+      /** 服务器目录绝对路径 */
+      root: string;
+      files: iGM_LauncherV2_ServerFileNode[];
+      /** 扫描完成时间（毫秒时间戳）；失败为 0 */
+      scannedAt: number;
+      /** 提示文案键（多语言键，界面端 next-intl 解析） */
+      messageKey: string;
+      /** 文案占位符参数 */
+      messageParams: Record<string, string>;
+    }
+  | {
+      /** 本地服务器列表（创建 / 删除后回推最新列表） */
+      type: "server:local-list";
+      items: iGM_LauncherV2_LocalServer[];
+      message: string;
+    }
+  | {
+      /** 本地开服创建进度（准备 / 下载核心 / 安装 / 完成 / 失败） */
+      type: "server:core";
+      state: iGM_LauncherV2_ServerCoreState;
     };
 
 // 核心逻辑 //

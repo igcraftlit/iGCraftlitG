@@ -570,7 +570,8 @@
       "pageTitle": "Sign in with your MuoCeon account",
       "authorize": "Continue to MuoCeon",
       "backToLogin": "Back to iGCraftLit sign in",
-      "failed": "MuoCeon authorization was not completed. Please try again."
+      "failed": "MuoCeon authorization was not completed. Please try again.",
+      "failedExpired": "The authorization request has expired or is no longer valid. Please start it again."
     },
     "roles": {
       "user": "User",

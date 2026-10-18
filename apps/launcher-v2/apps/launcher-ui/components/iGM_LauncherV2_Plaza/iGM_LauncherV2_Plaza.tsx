@@ -1,0 +1,103 @@
+/**
+ * 文件路径：apps/launcher-ui/components/iGM_LauncherV2_Plaza/iGM_LauncherV2_Plaza.tsx
+ * 所属层：前端 / 页面组件层
+ * 路由：G_Main·方块广场
+ * 模块：iGM_LauncherV2_Plaza
+ * 作用：方块广场页：把「P2P 联机房间 / 第三方服务器列表 / 视界管理」三块能力聚合到一个页签内
+ * 内容：顶部为标题与说明（plaza.title / plaza.desc），下方为一排带 lucide 图标的页签；
+ *       页签切换使用本地 state，分别渲染既有的 PeerLobby、ServerLobby 与 Horizon 组件；
+ *       内容区采用卡片化布局与浅描边，与静态渐变背景形成柔和对比，保持工具软件的专注感；
+ *       界面文案全部走多语言（next-intl，plaza 与 common 命名空间）
+ * 说明：组件为纯展示层，联机 / 服务器 / 视界的网络请求与本地落盘均由 Bun 主进程执行，
+ *       本组件只负责页签聚合，不直接触碰本地文件与系统命令
+ */
+
+// 导入依赖 //
+"use client";
+
+import { useState } from "react";
+import { useTranslations } from "next-intl";
+import { Layers, Server, Users } from "lucide-react";
+import {
+  iGM_LauncherV2_PeerLobby as IGM_LauncherV2_PeerLobby,
+} from "@/components/iGM_LauncherV2_PeerLobby/iGM_LauncherV2_PeerLobby";
+import {
+  iGM_LauncherV2_ServerLobby as IGM_LauncherV2_ServerLobby,
+} from "@/components/iGM_LauncherV2_ServerLobby/iGM_LauncherV2_ServerLobby";
+import {
+  iGM_LauncherV2_Horizon as IGM_LauncherV2_Horizon,
+} from "@/components/iGM_LauncherV2_Horizon/iGM_LauncherV2_Horizon";
+import styles from "./iGM_LauncherV2_Plaza.module.css";
+
+// 类型定义 //
+
+/** 方块广场页签标识 */
+type iGM_LauncherV2_PlazaTab = "p2p" | "servers" | "horizons";
+
+/** 页签展示信息（label 为 i18n 键，渲染处以 t 解析） */
+interface iGM_LauncherV2_PlazaTabMeta {
+  id: iGM_LauncherV2_PlazaTab;
+  label: string;
+  icon: typeof Users;
+}
+
+// 常量与文案 //
+
+/** 页签清单：P2P 联机房间 / 客户端同步大厅 / 视界管理 */
+const IGM_PLAZA_TABS: iGM_LauncherV2_PlazaTabMeta[] = [
+  { id: "p2p", label: "plaza.tabs.p2p", icon: Users },
+  { id: "servers", label: "server.hall.title", icon: Server },
+  { id: "horizons", label: "plaza.tabs.horizons", icon: Layers },
+];
+
+// 核心逻辑 //
+
+/**
+ * 方块广场页。
+ * 默认落在「P2P 联机房间」，页签切换仅改本地 state，不对外暴露控制能力。
+ */
+export function iGM_LauncherV2_Plaza({ className = "" }: { className?: string }) {
+  const t = useTranslations();
+  const [tab, setTab] = useState<iGM_LauncherV2_PlazaTab>("p2p");
+
+  return (
+    <section className={`${styles.plaza} ${className}`}>
+      {/* 标题区 */}
+      <header className={styles.head}>
+        <h1 className={styles.title}>{t("plaza.title")}</h1>
+        <p className={styles.desc}>{t("plaza.desc")}</p>
+      </header>
+
+      {/* 页签栏：图标 + 文字，选中态以主题色描边标记 */}
+      <div className={styles.tabBar} role="tablist" aria-label={t("plaza.title")}>
+        {IGM_PLAZA_TABS.map((item) => {
+          const Icon = item.icon;
+          const active = tab === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              className={`${styles.tab} ${active ? styles.tabOn : ""}`}
+              onClick={() => setTab(item.id)}
+            >
+              <Icon size={15} strokeWidth={2.2} />
+              <span>{t(item.label)}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 内容区：按页签渲染既有组件；未激活的页签不挂载，避免重复订阅 */}
+      <div className={styles.panel}>
+        {tab === "p2p" ? <IGM_LauncherV2_PeerLobby /> : null}
+        {tab === "servers" ? <IGM_LauncherV2_ServerLobby /> : null}
+        {tab === "horizons" ? <IGM_LauncherV2_Horizon /> : null}
+      </div>
+    </section>
+  );
+}
+
+// 导出 //
+export default iGM_LauncherV2_Plaza;

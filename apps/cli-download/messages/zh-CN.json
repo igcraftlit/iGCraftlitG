@@ -796,7 +796,8 @@
           "id": "pkce",
           "title": "PKCE",
           "paragraphs": [
-            "公开客户端（桌面应用、移动应用、单页应用）必须使用 PKCE（RFC 7636）以防范授权码拦截。"
+            "公开客户端（桌面应用、移动应用、单页应用）必须使用 PKCE（RFC 7636）以防范授权码拦截。",
+            "桌面应用与单页应用属于公开客户端（Public Client），无法安全保存 client_secret，严禁在代码、安装包、浏览器存储或换取令牌的请求体中携带该参数；换取令牌时只需携带 client_id、code、code_verifier 与 redirect_uri。传统的 Web 后端应用属于机密客户端（Confidential Client），仍需妥善保管 client_secret 并在换取令牌时携带。"
           ],
           "bullets": [
             "发起授权时生成 code_verifier（43 至 128 位随机字符串），并计算 code_challenge = BASE64URL(SHA256(code_verifier))。",
@@ -809,7 +810,8 @@
           "id": "sample",
           "title": "示例代码",
           "paragraphs": [
-            "以下为授权码换取令牌与读取用户信息的最小示例（Node.js 18 及以上）。"
+            "以下为授权码换取令牌与读取用户信息的最小示例（Node.js 18 及以上）。",
+            "注意：示例中的 client_secret 仅适用于机密客户端（Web 服务端）。桌面应用、移动应用与单页应用等公开客户端必须省略 client_secret，改由 code_verifier 完成 PKCE 校验。"
           ],
           "code": "// 1. 换取令牌\nconst tokenRes = await fetch(\"https://api.igcraftlit.com/oauth/token\", {\n  method: \"POST\",\n  headers: { \"Content-Type\": \"application/x-www-form-urlencoded\" },\n  body: new URLSearchParams({\n    grant_type: \"authorization_code\",\n    code: AUTHORIZATION_CODE,\n    redirect_uri: \"https://example.com/oauth/callback\",\n    client_id: CLIENT_ID,\n    client_secret: CLIENT_SECRET,\n    code_verifier: CODE_VERIFIER,\n  }),\n});\nconst tokens = await tokenRes.json();\n\n// 2. 读取用户信息\nconst userRes = await fetch(\"https://api.igcraftlit.com/oauth/userinfo\", {\n  headers: { Authorization: `Bearer ${tokens.access_token}` },\n});\nconst profile = await userRes.json();"
         },
@@ -847,9 +849,10 @@
           "title": "安全建议",
           "bullets": [
             "所有端点必须通过 HTTPS 访问，回调地址须严格匹配登记值。",
-            "client_secret 仅存于服务端，禁止写入前端代码、浏览器存储或公开仓库。",
+            "机密客户端（Web 服务端）的 client_secret 仅存于服务端，禁止写入前端代码、浏览器存储或公开仓库。",
+            "公开客户端（桌面应用、移动应用、单页应用）严禁在换取令牌的请求中携带 client_secret；服务端会直接忽略该参数，并强制以 PKCE（S256）校验授权码。",
             "授权请求必须携带随机 state 并在回调时校验，防止 CSRF。",
-            "公开客户端必须启用 PKCE S256。",
+            "公开客户端必须启用 PKCE S256（仅支持 S256，不接受 plain）。",
             "refresh_token 应妥善保管，发现泄露时立即在「我的 OAuth 应用」中重置 client_secret。",
             "仅申请业务必需的最小 scope。"
           ]
@@ -876,7 +879,8 @@
             "Scope 定义：openid（必选，返回用户唯一标识 sub，即 iGMUid）、profile（昵称与头像）、email（邮箱地址）、org（已通过审核的组织认证信息）；仅可申请业务必需的最小权限范围。",
             "令牌生命周期：授权码一次性、5 分钟内有效；access_token 默认有效期 1 小时；refresh_token 最长 180 天，到期后必须重新引导用户完成授权，不予续期。",
             "错误码：invalid_request、invalid_client、invalid_grant、invalid_scope、unsupported_grant_type、invalid_token、access_denied，统一按 RFC 6749 返回 error 与 error_description。",
-            "client_secret 审核通过后在「我的 OAuth 应用」页仅展示一次，必须保存在服务端环境变量或同等安全位置；疑似泄露时应立即重置。",
+            "客户端类型：桌面应用、移动应用与单页应用属于公开客户端，严禁在代码中携带 client_secret，必须使用 PKCE（仅支持 S256）；Web 后端应用属于机密客户端，需妥善保管 client_secret 并在换取令牌时携带。",
+            "机密客户端的 client_secret 审核通过后在「我的 OAuth 应用」页仅展示一次，必须保存在服务端环境变量或同等安全位置；疑似泄露时应立即重置。",
             "严禁在未取得用户同意的情况下申请授权、共享访问令牌或超出申请用途调用 userinfo。"
           ]
         },

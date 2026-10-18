@@ -5,8 +5,9 @@
  * 模块：G_MuoCeonAuth
  * 作用：MuoCeon 账号授权入口页——全屏居中卡片承载品牌图标、标题、授权按钮与返回链接
  * 内容：MuoCeon 图标、标题「使用 MuoCeon 账号登录」、
- *       主按钮「前往 MuoCeon 授权」（跳转后端 /api/auth/muoceon 发起 PKCE 授权）、
- *       辅助链接「返回 iGCraftLit 登录」、授权失败回跳提示（?error=1）
+ *       主按钮「前往 MuoCeon 授权」（跳转后端 /api/auth/muoceon 发起 PKCE 授权，
+ *       并上报站点源 origin 与来源路径 returnTo）、
+ *       辅助链接「返回 iGCraftLit 登录」、授权失败回跳提示（?error=<错误码>）
  * 说明：本页由 iGM_IsShellExemptPath 豁免，不渲染主站侧边导航/顶部栏/页脚；
  *       授权跳转使用 window.location 而非客户端路由：后端接口以 302 重定向到 MuoCeon
  */
@@ -27,17 +28,28 @@ export function iGM_MuoCeonAuthPage() {
   const t = useTranslations();
   const locale = useLocale();
   const router = iGM_UseLocaleRouter();
-  const [failed, setFailed] = useState(false);
+  /** 后端回调失败回跳携带的错误码（null 表示本次非失败回跳） */
+  const [errorCode, setErrorCode] = useState<string | null>(null);
 
-  // 后端回调失败会以 ?error=1 回跳本页，用于提示用户重新发起授权
+  // 后端回调失败会以 ?error=<错误码> 回跳本页，用于提示用户重新发起授权
   useEffect(() => {
-    setFailed(new URLSearchParams(window.location.search).has("error"));
+    setErrorCode(new URLSearchParams(window.location.search).get("error"));
   }, []);
 
-  /** 前往后端发起授权：后端生成 PKCE 参数后 302 到 MuoCeon 授权端点 */
+  /**
+   * 前往后端发起授权：后端生成 PKCE 参数后 302 到 MuoCeon 授权端点。
+   * 同时上报站点源（origin）与来源路径（returnTo），
+   * 由后端按白名单校验后决定授权结束的回跳目标，避免线上被送回 localhost。
+   */
   function iGM_GoAuthorize() {
-    const url = `${iGM_GetApiBase()}/api/auth/muoceon?locale=${encodeURIComponent(locale)}`;
-    window.location.assign(url);
+    const params = new URLSearchParams(window.location.search);
+    const query = new URLSearchParams({ locale });
+    query.set("origin", window.location.origin);
+    const returnTo = params.get("returnTo");
+    if (returnTo) query.set("returnTo", returnTo);
+    window.location.assign(
+      `${iGM_GetApiBase()}/api/auth/muoceon?${query.toString()}`,
+    );
   }
 
   return (
@@ -45,8 +57,14 @@ export function iGM_MuoCeonAuthPage() {
       <section className={styles.card}>
         <IGM_MuoCeonLogo size={72} />
         <h1 className={styles.title}>{t("auth.muoceon.pageTitle")}</h1>
-        {failed && (
-          <p className={styles.error}>{t("auth.muoceon.failed")}</p>
+        {errorCode && (
+          <p className={styles.error}>
+            {t(
+              errorCode === "state_invalid"
+                ? "auth.muoceon.failedExpired"
+                : "auth.muoceon.failed",
+            )}
+          </p>
         )}
         <button
           type="button"

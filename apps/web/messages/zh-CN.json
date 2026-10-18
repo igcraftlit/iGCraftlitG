@@ -570,7 +570,8 @@
       "pageTitle": "使用 MuoCeon 账号登录",
       "authorize": "前往 MuoCeon 授权",
       "backToLogin": "返回 iGCraftLit 登录",
-      "failed": "MuoCeon 授权未完成，请重新尝试。"
+      "failed": "MuoCeon 授权未完成，请重新尝试。",
+      "failedExpired": "授权请求已超时或失效，请重新发起授权。"
     },
     "roles": {
       "user": "普通用户",

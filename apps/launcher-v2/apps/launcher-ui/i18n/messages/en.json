@@ -35,7 +35,9 @@
   },
   "nav": {
     "home": "Home",
+    "plaza": "Block Plaza",
     "horizon": "Horizons",
+    "map": "Map Station",
     "resources": "Resources",
     "servers": "Server Lobby",
     "peer": "Peer Lobby",
@@ -139,6 +141,15 @@
       "sakura": "Sakura Pink",
       "geek": "Geek Black",
       "amber": "Amber Orange"
+    },
+    "nav": {
+      "default": { "label": "Follow Theme", "hint": "Use the default glass surface color" },
+      "slate": { "label": "Slate Tint", "hint": "Neutral dark grey, low-key and versatile" },
+      "navy": { "label": "Navy Tint", "hint": "Deep blue tone, calm and steady" },
+      "violet": { "label": "Violet Tint", "hint": "Mysterious purple tone, distinctive" },
+      "custom": "Custom Color",
+      "customHint": "Pick any color with the system color picker; it is applied at roughly 72% opacity to keep the frosted glass look.",
+      "previewAlt": "{name} nav bar color preview"
     }
   },
   "shell": {
@@ -268,7 +279,18 @@
       "resourcesDesc": "Multi-source version manifests and loader lists; you choose the download channel and the launcher never switches it automatically.",
       "settingsDesc": "The root directory and game directories are managed by the launcher; you choose the download channel."
     },
-    "hero": { "greet": "Welcome back, " }
+    "hero": { "greet": "Welcome back, " },
+    "news": {
+      "title": "News Feed",
+      "desc": "Launcher release notes and server announcements, always up to date.",
+      "loading": "Loading news…",
+      "empty": "No news yet. You can maintain it in the local news.json.",
+      "openLink": "View Detail",
+      "localSource": "Local news.json",
+      "defaultSource": "Built-in default",
+      "tag": { "update": "Release", "notice": "Announcement", "event": "Event" }
+    },
+    "accountManage": "Account Management"
   },
   "settings": {
     "tabs": { "general": "General", "appearance": "Appearance", "about": "About" },
@@ -329,7 +351,10 @@
       "solid": "Solid Color Background",
       "blur": "Frosted-Glass Blur",
       "blurHint": "Adjust the backdrop-filter blur radius for the nav bar, cards and other elements, previewed in real time.",
-      "theme": "Theme Color"
+      "theme": "Theme Color",
+      "nav": "Nav Bar Color",
+      "navHint": "Choose a base color for the nav bar while always keeping the frosted-glass look; pick a preset tint or use the system color picker.",
+      "navCustomPlaceholder": "#1a2333"
     },
     "about": {
       "title": "About",
@@ -357,6 +382,15 @@
         "developer": "Co-Developer",
         "promotion": "Chief Promotion Officer"
       }
+    }
+  },
+  "plaza": {
+    "title": "Block Plaza",
+    "desc": "One-stop entry for P2P rooms, third-party servers and horizon management.",
+    "tabs": {
+      "p2p": "P2P Rooms",
+      "servers": "Third-Party Servers",
+      "horizons": "Horizons"
     }
   },
   "horizon": {
@@ -558,7 +592,109 @@
     "sitePlaceholder": "e.g. https://example.com",
     "refreshing": "Refreshing…",
     "emptyLoaded": "No servers yet. Click \"Add Server\" in the top-right to add one manually, or refresh the list later.",
-    "preparing": "Preparing server list…"
+    "preparing": "Preparing server list…",
+    "manifestField": "Client Sync Manifest URL (optional)",
+    "manifestPlaceholder": "https://raw.githubusercontent.com/user/repo/branch/manifest.json",
+    "manifestHint": "A directly hosted JSON. Once filled in, use \"Launch & Sync\" on the card: the local engine fetches the manifest directly and reconciles mods and config, never through the main-site backend.",
+    "manifestMissing": "No sync manifest",
+    "manifestReady": "Sync manifest configured",
+    "syncAction": "Launch & Sync",
+    "syncNeedHorizon": "Create and select a horizon first; syncing writes into that horizon directory.",
+    "syncNeedAccount": "Select an account in the right panel on the Home page first.",
+    "syncPreviewDisabled": "Launch-and-sync is unavailable in browser preview; please use the desktop launcher.",
+    "syncPhase": {
+      "fetch": "Fetching the external manifest…",
+      "compare": "Comparing local mods / config hashes…",
+      "download": "Downloading missing files ({done}/{total})…",
+      "done": "Sync complete, launching the game…",
+      "error": "Sync failed: {reason}"
+    },
+    "centerTitle": "Host Center",
+    "centerDesc": "Generate a client sync manifest for your server so players can sync and join in one click.",
+    "manifestToolTitle": "Generate Client Manifest",
+    "manifestToolDesc": "Scan the mods and config folders of the selected horizon and generate a manifest.json containing file paths, sizes and SHA256 hashes.",
+    "manifestHorizonLabel": "Horizon to scan",
+    "manifestHorizonPlaceholder": "Select a horizon",
+    "manifestNoHorizon": "No horizons yet. Create one in \"Horizons\" first.",
+    "manifestGenerate": "Generate Client Manifest",
+    "manifestGenerating": "Scanning and generating…",
+    "manifestResultTitle": "Client Manifest Generated",
+    "manifestResultCount": "{count} files included, manifest written to: {path}",
+    "manifestGuideTitle": "What next?",
+    "manifestGuideText": "Package the client mods and upload them to GitHub or a cloud drive, then upload the generated manifest to get a direct link and fill it into the player's server info (Client Sync Manifest URL).",
+    "manifestFailed": "Generation failed: {reason}",
+    "manifestPreviewDisabled": "Cannot scan local directories in browser preview; please use the desktop launcher.",
+    "manifestCopyPath": "Copy manifest path",
+    "hall": {
+      "title": "Client Sync Hall",
+      "desc": "Add server entries and fill in an externally hosted manifest direct link. Clicking \"Launch & Sync\" makes the local engine fetch the manifest directly, compare hashes and fill in missing mods and config — never through the site backend."
+    },
+    "studio": {
+      "title": "Client Manifest Studio",
+      "desc": "Scans mods and config in the server directory. Tick the files to sync to players and generate manifest.json plus a client ZIP in one click.",
+      "noServer": "No local server yet. Create one under \"Local Hosting\" below, then generate a client manifest for it.",
+      "serverLabel": "Target server",
+      "serverPlaceholder": "Select a server",
+      "rescan": "Rescan directory",
+      "rescanning": "Scanning…",
+      "lastScan": "Last scan: {time}",
+      "neverScanned": "Directory not scanned yet",
+      "summary": "{count} files · {selected} selected ({size})",
+      "generate": "Generate Manifest",
+      "generating": "Generating manifest and ZIP…",
+      "selectAll": "Select all",
+      "clearAll": "Clear all",
+      "emptyFiles": "No files found under this server's mods or config directory.",
+      "scanHint": "Click \"Rescan directory\" on the left to start scanning.",
+      "resultTitle": "Manifest generated successfully!",
+      "resultDesc": "{count} files included, {size} in total",
+      "resultManifest": "manifest.json",
+      "resultZip": "Client ZIP package",
+      "copyPath": "Copy path",
+      "guideTitle": "What next?",
+      "guideText": "Upload the ZIP to a cloud drive or GitHub to get a direct download link, fill that link into manifest.json, then send the JSON address to your players.",
+      "scanFailed": "Scan failed: {reason}",
+      "manifestFailed": "Generation failed: {reason}",
+      "previewDisabled": "Cannot scan local directories in browser preview; please use the desktop launcher."
+    },
+    "local": {
+      "title": "Local Hosting",
+      "desc": "Choose a server core and game version; the launcher downloads the core and creates a local server directory, then pair it with the Manifest Studio above to sync clients to players.",
+      "listTitle": "My Servers",
+      "create": "Create Server",
+      "empty": "No local server yet. Click \"Create Server\" to set up your first one.",
+      "coreLabel": "Server core",
+      "versionLabel": "Game version",
+      "versionPlaceholder": "Select a version",
+      "loaderLabel": "Loader version",
+      "loaderPlaceholder": "Leave empty for latest",
+      "loaderHint": "Only required for Fabric / Forge / NeoForge; Vanilla and Paper need no value.",
+      "nameLabel": "Server name",
+      "namePlaceholder": "e.g. My Survival Server",
+      "createConfirm": "Download and create",
+      "creating": "Creating…",
+      "remove": "Delete this server",
+      "dirLabel": "Directory",
+      "createdAt": "Created {time}",
+      "needVersion": "Please select a game version first.",
+      "needName": "Please enter a server name first.",
+      "previewDisabled": "Creating local servers is unavailable in browser preview; please use the desktop launcher.",
+      "coreNames": {
+        "vanilla": "Vanilla",
+        "paper": "Paper",
+        "fabric": "Fabric",
+        "forge": "Forge",
+        "neoforge": "NeoForge"
+      },
+      "phase": {
+        "prepare": "Preparing server directory…",
+        "download": "Downloading server core ({percent}%)…",
+        "install": "Installing server core…",
+        "done": "Server \"{name}\" has been created.",
+        "manualInstall": "The server core has been downloaded. No usable Java runtime was detected; please run the installer manually to finish setting up the server.",
+        "error": "Creation failed: {reason}"
+      }
+    }
   },
   "download": {
     "title": "Download Center",
@@ -658,6 +794,32 @@
     "minimize": "Minimize",
     "maximizeRestore": "Maximize or restore"
   },
+  "mapStation": {
+    "title": "Map Station",
+    "subtitle": "Enter a seed to browse third-party seed maps inline — never through the site backend.",
+    "seedLabel": "Seed",
+    "seedPlaceholder": "Enter a seed, e.g. 114514",
+    "versionLabel": "Game version",
+    "typeLabel": "Map type",
+    "type": {
+      "biome": "Biome Map",
+      "slime": "Slime Chunks",
+      "stronghold": "Strongholds"
+    },
+    "generate": "Generate Map",
+    "opening": "Loading…",
+    "openExternal": "Open in Browser",
+    "emptyTitle": "Enter a seed to explore the blocky world",
+    "emptyBody": "Fill in a seed and game version and click \"Generate Map\", or open the full map in your browser using the button on the right.",
+    "loadingTitle": "Loading map…",
+    "loadingBody": "The first load may be slow, please wait.",
+    "frameTitle": "Third-party seed map",
+    "failureTitle": "This map service does not allow embedding",
+    "failureText": "This map service does not allow embedding. Please click \"Open in Browser\" at the top right to view it.",
+    "tip": "Maps are provided by the third-party site Chunkbase and load directly from its server, not through api.igcraftlit.com.",
+    "tipShort": "If it stays blank, use \"Open in Browser\" at the top right instead.",
+    "openFailed": "Unable to open the system browser. Please copy the address manually."
+  },
   "peer": {
     "connect": "Connect to relay",
     "peers": "{count} in room",
@@ -712,6 +874,8 @@
       "guide": "In-game, press ESC and click \"Open to LAN\", then note the port number shown in chat.",
       "launchAndHost": "Launch game & host",
       "portLabel": "LAN port",
+      "portPlaceholder": "Default 25565",
+      "portHint": "Enter the port shown in the chat bar when you \"Open to LAN\" in game; friends can join once bound.",
       "bindPort": "Bind port & wait for joins",
       "bound": "Port {port} bound. Friends can now join.",
       "leave": "Leave room"

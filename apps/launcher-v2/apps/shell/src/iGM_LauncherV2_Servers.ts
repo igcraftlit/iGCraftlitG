@@ -11,7 +11,8 @@
  *       列表合并时自定义项恒排在最前（custom 为 true），并按 主机:端口 去重；
  *       单台服务器实时状态统一请求 mcsrvstat.us 取得（同样携带 User-Agent）并测量延迟，
  *       另提供批量状态查询，供界面按在线人数从高到低排序；
- *       另提供按 id 反查条目能力，供「一键进服」拼装 --server / --port 参数
+ *       另提供按 id 反查条目能力，供「一键进服」拼装 --server / --port 参数；
+ *       自定义条目支持记录「客户端同步清单 URL」（manifest），供「启动并同步」直连外部清单
  * 说明：第三方接口可能限流或变更，任何网络失败都不抛异常，而是回退缓存并给出可读文案；
  *       自定义服务器为纯本地数据，不随社区账号同步
  */
@@ -37,6 +38,8 @@ interface iGM_LauncherV2_MyServerRow {
   ip: string;
   port: number;
   site: string;
+  /** 客户端同步清单 URL（外部托管直链 JSON）；无则为空串 */
+  manifest: string;
   created_at: string;
 }
 
@@ -190,8 +193,14 @@ function iGM_LauncherV2_ServersDbGet(): Database {
     ip TEXT NOT NULL,
     port INTEGER NOT NULL,
     site TEXT NOT NULL DEFAULT '',
+    manifest TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL
   );`);
+  // 旧版本库可能缺 manifest 列：按列信息检测后补齐，保证既有自定义服务器不丢数据
+  const columns = db.query("PRAGMA table_info(my_servers)").all() as { name?: unknown }[];
+  if (!columns.some((column) => column.name === "manifest")) {
+    db.exec("ALTER TABLE my_servers ADD COLUMN manifest TEXT NOT NULL DEFAULT '';");
+  }
   iGM_LauncherV2_ServersDb = db;
   return db;
 }
@@ -244,7 +253,7 @@ async function iGM_LauncherV2_ServersFetchJson(url: string): Promise<unknown> {
 /** 读取自定义服务器列表（自定义项恒为 custom: true） */
 function iGM_LauncherV2_ServersCustomList(): iGM_LauncherV2_ServerEntry[] {
   const rows = iGM_LauncherV2_ServersDbGet()
-    .query("SELECT id, name, ip, port, site, created_at FROM my_servers ORDER BY created_at DESC")
+    .query("SELECT id, name, ip, port, site, manifest, created_at FROM my_servers ORDER BY created_at DESC")
     .all() as iGM_LauncherV2_MyServerRow[];
 
   return rows.map((row) => ({
@@ -257,6 +266,7 @@ function iGM_LauncherV2_ServersCustomList(): iGM_LauncherV2_ServerEntry[] {
     maxPlayers: -1,
     version: "",
     icon: "",
+    manifest: iGM_LauncherV2_ServersText(row.manifest),
     custom: true,
   }));
 }
@@ -288,6 +298,8 @@ function iGM_LauncherV2_ServersNormalize(raw: unknown): iGM_LauncherV2_ServerEnt
       maxPlayers: iGM_LauncherV2_ServersCount(entry?.maxPlayers),
       version: iGM_LauncherV2_ServersText(entry?.version),
       icon: iGM_LauncherV2_ServersText(entry?.iconUrl),
+      // 远端公开列表条目不提供客户端同步清单，manifest 一律为空串
+      manifest: "",
       custom: false,
     });
   }
@@ -300,7 +312,10 @@ async function iGM_LauncherV2_ServersCacheRead(): Promise<iGM_LauncherV2_ServerE
     iGM_LauncherV2_ServersCachePath(),
   );
   if (!payload || !Array.isArray(payload.items)) return [];
-  return payload.items.filter((item) => Boolean(item?.id && item?.ip));
+  return payload.items
+    .filter((item) => Boolean(item?.id && item?.ip))
+    // 旧缓存可能缺 manifest 字段：统一补齐为空串，保证调用方拿到的条目结构一致
+    .map((item) => ({ ...item, manifest: typeof item.manifest === "string" ? item.manifest : "" }));
 }
 
 /** 写入本地缓存（写入失败不影响本次结果） */
@@ -339,6 +354,7 @@ function iGM_LauncherV2_ServersBuiltinList(): iGM_LauncherV2_ServerEntry[] {
     maxPlayers: -1,
     version: "",
     icon: "",
+    manifest: "",
     custom: false,
   }));
 }
@@ -421,12 +437,14 @@ export async function iGM_LauncherV2_Servers_List(): Promise<iGM_LauncherV2_Serv
   };
 }
 
-/** 添加自定义服务器（名称与地址必填，重复地址视为同一条目并覆盖名称） */
+/** 添加自定义服务器（名称与地址必填，重复地址视为同一条目并覆盖名称与清单） */
 export async function iGM_LauncherV2_Servers_Add(input: {
   name: string;
   ip: string;
   port: number;
   site: string;
+  /** 客户端同步清单 URL（外部托管直链 JSON）；可留空 */
+  manifest: string;
 }): Promise<iGM_LauncherV2_ServerMutationResult> {
   const name = input.name.trim().slice(0, IGM_LAUNCHERV2_SERVERS_NAME_MAX);
   const ip = iGM_LauncherV2_ServersHost(input.ip);
@@ -438,15 +456,21 @@ export async function iGM_LauncherV2_Servers_Add(input: {
     return { ok: false, message: "官网链接需以 http:// 或 https:// 开头" };
   }
 
+  // 客户端同步清单 URL 可留空；填写时须为 http(s) 直链
+  const manifest = input.manifest.trim();
+  if (manifest && !/^https?:\/\//i.test(manifest)) {
+    return { ok: false, message: "客户端同步清单 URL 需以 http:// 或 https:// 开头" };
+  }
+
   const id = iGM_LauncherV2_ServersId(IGM_LAUNCHERV2_SERVERS_MY_PREFIX, ip, port);
   try {
     iGM_LauncherV2_ServersDbGet()
       .query(
-        `INSERT INTO my_servers (id, name, ip, port, site, created_at)
-         VALUES (?, ?, ?, ?, ?, ?)
-         ON CONFLICT(id) DO UPDATE SET name = excluded.name, site = excluded.site`,
+        `INSERT INTO my_servers (id, name, ip, port, site, manifest, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(id) DO UPDATE SET name = excluded.name, site = excluded.site, manifest = excluded.manifest`,
       )
-      .run(id, name || ip, ip, port, site, new Date().toISOString());
+      .run(id, name || ip, ip, port, site, manifest, new Date().toISOString());
     return { ok: true, message: `已添加服务器：${name || ip}` };
   } catch (error) {
     const text = error instanceof Error ? error.message : "写入本地数据库失败";

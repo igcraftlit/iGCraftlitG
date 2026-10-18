@@ -387,13 +387,31 @@
   color: var(--igm-text-dim);
 }
 
-/* ---- 端口绑定行 ---- */
+/* ---- 端口绑定行（仅房主可见） ---- */
+
+.portField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.portLabel {
+  font-size: 12.5px;
+  color: var(--igm-text-dim);
+}
 
 .portRow {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.portHint {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: var(--igm-text-mute);
 }
 
 .portInput {

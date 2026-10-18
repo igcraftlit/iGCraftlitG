@@ -796,7 +796,8 @@
           "id": "pkce",
           "title": "PKCE",
           "paragraphs": [
-            "Public clients (desktop, mobile and single-page applications) must use PKCE (RFC 7636) to prevent authorization code interception."
+            "Public clients (desktop, mobile and single-page applications) must use PKCE (RFC 7636) to prevent authorization code interception.",
+            "Desktop and single-page applications are public clients: they cannot keep a client_secret safely, so it must never appear in code, installers, browser storage or the token exchange request body; the token exchange only needs client_id, code, code_verifier and redirect_uri. Traditional web backend applications are confidential clients and must still protect the client_secret and send it during the token exchange."
           ],
           "bullets": [
             "When starting authorization, generate a code_verifier (a 43 to 128 character random string) and compute code_challenge = BASE64URL(SHA256(code_verifier)).",
@@ -809,7 +810,8 @@
           "id": "sample",
           "title": "Sample code",
           "paragraphs": [
-            "A minimal example of exchanging the code for tokens and reading user information (Node.js 18+)."
+            "A minimal example of exchanging the code for tokens and reading user information (Node.js 18+).",
+            "Note: the client_secret in this example applies only to confidential clients (web backends). Public clients such as desktop, mobile and single-page applications must omit client_secret and rely on code_verifier for PKCE verification."
           ],
           "code": "// 1. Exchange the code for tokens\nconst tokenRes = await fetch(\"https://api.igcraftlit.com/oauth/token\", {\n  method: \"POST\",\n  headers: { \"Content-Type\": \"application/x-www-form-urlencoded\" },\n  body: new URLSearchParams({\n    grant_type: \"authorization_code\",\n    code: AUTHORIZATION_CODE,\n    redirect_uri: \"https://example.com/oauth/callback\",\n    client_id: CLIENT_ID,\n    client_secret: CLIENT_SECRET,\n    code_verifier: CODE_VERIFIER,\n  }),\n});\nconst tokens = await tokenRes.json();\n\n// 2. Read user information\nconst userRes = await fetch(\"https://api.igcraftlit.com/oauth/userinfo\", {\n  headers: { Authorization: `Bearer ${tokens.access_token}` },\n});\nconst profile = await userRes.json();"
         },
@@ -847,9 +849,10 @@
           "title": "Security recommendations",
           "bullets": [
             "All endpoints must be accessed over HTTPS and redirect URIs must exactly match the registered values.",
-            "The client_secret must stay on your server; never put it in frontend code, browser storage or public repositories.",
+            "The client_secret of a confidential client (web backend) must stay on your server; never put it in frontend code, browser storage or public repositories.",
+            "Public clients (desktop, mobile and single-page applications) must never send a client_secret in the token exchange request; the server ignores that parameter and enforces PKCE (S256) verification instead.",
             "Authorization requests must carry a random state that is verified on callback to prevent CSRF.",
-            "Public clients must enable PKCE S256.",
+            "Public clients must enable PKCE S256 (S256 only, plain is not accepted).",
             "Keep the refresh_token safe; if it leaks, reset the client_secret immediately in \"My OAuth Apps\".",
             "Request only the minimum scopes your business needs."
           ]
@@ -876,7 +879,8 @@
             "Scopes: openid (required; returns the unique user identifier sub, i.e. the iGMUid), profile (display name and avatar), email (email address), org (approved organization verification info); request only the minimum scopes your application needs.",
             "Token lifetimes: the authorization code is single-use and valid for 5 minutes; the access_token lasts 1 hour by default; the refresh_token lasts at most 180 days, after which the user must complete authorization again — renewal is refused.",
             "Error codes: invalid_request, invalid_client, invalid_grant, invalid_scope, unsupported_grant_type, invalid_token and access_denied, returned as error and error_description per RFC 6749.",
-            "The client_secret is shown exactly once on the \"My OAuth Apps\" page after approval and must be stored in a server-side environment variable or an equally secure location; reset it immediately if it may have leaked.",
+            "Client types: desktop, mobile and single-page applications are public clients and must never ship a client_secret in code — they must use PKCE (S256 only); web backend applications are confidential clients and must protect the client_secret and send it during the token exchange.",
+            "The client_secret of a confidential client is shown exactly once on the \"My OAuth Apps\" page after approval and must be stored in a server-side environment variable or an equally secure location; reset it immediately if it may have leaked.",
             "Never request authorization without the user's consent, share access tokens, or call userinfo beyond the purpose declared in the application."
           ]
         },

@@ -1,0 +1,97 @@
+/**
+ * 文件路径：apps/launcher-ui/components/iGM_LauncherV2_Plaza/iGM_LauncherV2_Plaza.module.css
+ * 所属层：前端 / 页面组件样式层
+ * 路由：G_Main·方块广场
+ * 模块：iGM_LauncherV2_Plaza
+ * 作用：方块广场样式（标题区、页签栏与内容面板）
+ * 内容：全部使用全局设计令牌（--igm-fill / --igm-border / --igm-accent / --igm-text 等），
+ *       令牌在「纯色 · 明亮浅色」主题下自动翻转，避免出现刺眼白底与低对比文字；
+ *       内容面板采用轻微描边与极淡底衬，与静态渐变背景形成柔和对比
+ * 说明：不使用写死的纯白 / 纯黑底色，浅色背景下文字对比度仍可读
+ */
+
+/* 导入依赖 */
+/* （CSS Modules，无外部导入） */
+
+/* ---- 页面骨架 ---- */
+
+.plaza {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.desc {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+}
+
+/* ---- 页签栏 ---- */
+
+.tabBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+  color: var(--igm-text-dim);
+  font: inherit;
+  font-size: 12.5px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease),
+    background var(--igm-dur) var(--igm-ease);
+}
+
+.tab:hover {
+  color: var(--igm-text);
+  border-color: var(--igm-border-strong);
+}
+
+/* 选中态：主题色描边 + 主题色淡底衬，文字用正文色保证浅色背景下可读 */
+.tabOn {
+  border-color: var(--igm-accent);
+  background: var(--igm-accent-wash);
+  color: var(--igm-text);
+}
+
+.tabOn:hover {
+  border-color: var(--igm-accent-soft);
+}
+
+/* ---- 内容面板 ---- */
+
+.panel {
+  width: 100%;
+  padding: 18px;
+  border-radius: var(--igm-radius-lg);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+}

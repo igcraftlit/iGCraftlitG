@@ -3,8 +3,8 @@
  * 所属层：前端 / 页面组件层
  * 路由：G_Main（资源中心页签）
  * 模块：iGM_LauncherV2_ResourceCenter
- * 作用：资源中心：版本浏览列表 + 资源市场 + 一卡式安装弹窗
- * 内容：顶部提供「游戏版本 / 资源市场」二级切换；
+ * 作用：资源中心：版本浏览列表 + 资源市场 + 皮肤库 + 一卡式安装弹窗
+ * 内容：顶部提供「游戏版本 / 资源市场 / 皮肤库」二级切换；
  *       游戏版本视图按四类归档（全部正式版 / 快照版 / 远古版本 / 特别版）浏览并搜索版本，
  *       点击任意版本卡片即以遮罩弹出一张「一卡式安装弹窗」，在同一张卡片内完成
  *       视界名称、加载器、加载器版本、存放路径四项配置，点击「开始安装」即调用
@@ -33,6 +33,7 @@ import {
   iGM_LauncherV2_UseVersions as IGM_LauncherV2_UseVersions,
 } from "@/components/iGM_LauncherV2_HostBridge/iGM_LauncherV2_HostBridge";
 import { iGM_LauncherV2_Market as IGM_LauncherV2_Market } from "@/components/iGM_LauncherV2_Market/iGM_LauncherV2_Market";
+import { iGM_LauncherV2_SkinLibrary as IGM_LauncherV2_SkinLibrary } from "@/components/iGM_LauncherV2_SkinLibrary/iGM_LauncherV2_SkinLibrary";
 import type { iGM_LauncherV2_LoaderEntry } from "@/lib/iGM_LauncherV2_Constants";
 import {
   iGM_LauncherV2_VersionCategoryOf,
@@ -46,7 +47,7 @@ import styles from "./iGM_LauncherV2_ResourceCenter.module.css";
 type iGM_LauncherV2_LoaderKind = iGM_LauncherV2_LoaderEntry["kind"];
 
 /** 资源中心的二级视图 */
-type iGM_LauncherV2_ResourceView = "versions" | "market";
+type iGM_LauncherV2_ResourceView = "versions" | "market" | "skin";
 
 // 常量与文案 //
 
@@ -54,6 +55,7 @@ type iGM_LauncherV2_ResourceView = "versions" | "market";
 const IGM_RESOURCE_VIEWS: { id: iGM_LauncherV2_ResourceView; label: string }[] = [
   { id: "versions", label: "resource.views.versions" },
   { id: "market", label: "resource.views.market" },
+  { id: "skin", label: "nav.skins" },
 ];
 
 /** 第一步的四类归档标签（label 为 i18n 键） */
@@ -227,6 +229,16 @@ export function iGM_LauncherV2_ResourceCenter() {
       <div className={styles.wrap}>
         {viewTabs}
         <IGM_LauncherV2_Market />
+      </div>
+    );
+  }
+
+  // 皮肤库视图：承载原独立页签的皮肤库组件，功能完整保留
+  if (view === "skin") {
+    return (
+      <div className={styles.wrap}>
+        {viewTabs}
+        <IGM_LauncherV2_SkinLibrary />
       </div>
     );
   }

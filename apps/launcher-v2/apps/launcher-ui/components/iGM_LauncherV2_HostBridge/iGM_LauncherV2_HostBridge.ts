@@ -47,7 +47,13 @@ import type {
   iGM_LauncherV2_SettingsView,
   iGM_LauncherV2_ServerEntry,
   iGM_LauncherV2_ServerListSource,
+  iGM_LauncherV2_ServerCore,
+  iGM_LauncherV2_ServerCoreState,
+  iGM_LauncherV2_ServerFileNode,
+  iGM_LauncherV2_LocalServer,
   iGM_LauncherV2_ServerStatus,
+  iGM_LauncherV2_ServerSyncState,
+  iGM_LauncherV2_NewsItem,
   iGM_LauncherV2_PeerMode,
   iGM_LauncherV2_SkinEntry,
   iGM_LauncherV2_SkinProfile,
@@ -281,6 +287,77 @@ export interface iGM_LauncherV2_ServerLobbySnapshot {
   refreshing: boolean;
 }
 
+/** 首页新闻流快照 */
+export interface iGM_LauncherV2_NewsSnapshot {
+  items: iGM_LauncherV2_NewsItem[];
+  /** 来源：本地 news.json / 外壳内置默认 */
+  source: "local" | "default";
+  message: string;
+  loaded: boolean;
+}
+
+/** 清单工作室扫描结果（服务器目录文件树） */
+export interface iGM_LauncherV2_ManifestTree {
+  ok: boolean;
+  /** 服务器标识 */
+  serverId: string;
+  /** 服务器展示名称 */
+  serverName: string;
+  /** 服务器目录绝对路径 */
+  root: string;
+  /** mods / config 下的全部文件（path 为相对服务器目录的相对路径） */
+  files: iGM_LauncherV2_ServerFileNode[];
+  /** 扫描完成时间（毫秒时间戳）；未扫描为 0 */
+  scannedAt: number;
+  /** 提示文案键（多语言键，界面端用 next-intl 解析） */
+  messageKey: string;
+  /** 文案占位符参数 */
+  messageParams: Record<string, string>;
+}
+
+/** 客户端清单与 ZIP 包生成结果（清单工作室） */
+export interface iGM_LauncherV2_ManifestResult {
+  ok: boolean;
+  /** manifest.json 落盘绝对路径 */
+  path: string;
+  /** 客户端 ZIP 包落盘绝对路径 */
+  zipPath: string;
+  /** 收录文件数量 */
+  count: number;
+  /** 收录文件总字节数 */
+  totalSize: number;
+  /** 提示文案键（多语言键，界面端用 next-intl 解析） */
+  messageKey: string;
+  /** 文案占位符参数 */
+  messageParams: Record<string, string>;
+}
+
+/** 第三方服务器同步与清单工作室快照 */
+export interface iGM_LauncherV2_ServerSyncSnapshot {
+  /** 按服务器 id 归位的同步进度；值为 null 表示该条尚未开始 */
+  states: Record<string, iGM_LauncherV2_ServerSyncState | null>;
+  /** 最近一次清单生成结果；未生成时为 null */
+  manifest: iGM_LauncherV2_ManifestResult | null;
+  /** 是否正在扫描生成清单 */
+  manifestBusy: boolean;
+  /** 清单工作室最近一次扫描结果；未扫描时为 null */
+  tree: iGM_LauncherV2_ManifestTree | null;
+  /** 是否正在扫描服务器目录 */
+  treeBusy: boolean;
+}
+
+/** 本地服务器（本地开服）快照 */
+export interface iGM_LauncherV2_LocalServerSnapshot {
+  /** 已创建的本地服务器列表 */
+  items: iGM_LauncherV2_LocalServer[];
+  /** 最近一次列表操作结论 */
+  message: string;
+  /** 是否已完成一次拉取 */
+  loaded: boolean;
+  /** 最近一次创建进度；创建结束后保留最后一次结果 */
+  coreState: iGM_LauncherV2_ServerCoreState | null;
+}
+
 /** 联机大厅（P2P）快照 */
 export interface iGM_LauncherV2_PeerLobbySnapshot {
   /** 当前连接模式：未连接 / 连接中 / 主站高速节点 / 公共联机节点 */
@@ -354,6 +431,28 @@ const IGM_SERVER_LOBBY_INITIAL: iGM_LauncherV2_ServerLobbySnapshot = {
   statuses: {},
   notice: "",
   refreshing: false,
+};
+
+const IGM_NEWS_INITIAL: iGM_LauncherV2_NewsSnapshot = {
+  items: [],
+  source: "default",
+  message: "",
+  loaded: false,
+};
+
+const IGM_SERVER_SYNC_INITIAL: iGM_LauncherV2_ServerSyncSnapshot = {
+  states: {},
+  manifest: null,
+  manifestBusy: false,
+  tree: null,
+  treeBusy: false,
+};
+
+const IGM_LOCAL_SERVER_INITIAL: iGM_LauncherV2_LocalServerSnapshot = {
+  items: [],
+  message: "",
+  loaded: false,
+  coreState: null,
 };
 
 const IGM_PEER_LOBBY_INITIAL: iGM_LauncherV2_PeerLobbySnapshot = {
@@ -445,11 +544,13 @@ const IGM_DOWNLOAD_INITIAL: iGM_LauncherV2_DownloadSnapshot = {
 
 const IGM_APPEARANCE_INITIAL: iGM_LauncherV2_AppearanceSnapshot = {
   appearance: {
-    background: "cloud",
+    // 默认静态渐变纯色背景（不再默认启用动态云），导航栏底色为「默认」玻璃面
+    background: "solid",
     cloud: "purple",
     solid: "dark",
     blur: 14,
     theme: "indigo",
+    navColor: "default",
   },
   loaded: false,
 };
@@ -519,6 +620,9 @@ let iGM_JavaSnapshot: iGM_LauncherV2_JavaSnapshot = IGM_JAVA_INITIAL;
 let iGM_MsaSnapshot: iGM_LauncherV2_MsaSnapshot = IGM_MSA_INITIAL;
 let iGM_RememberedSnapshot: iGM_LauncherV2_RememberedSnapshot = IGM_REMEMBERED_INITIAL;
 let iGM_ServerLobbySnapshot: iGM_LauncherV2_ServerLobbySnapshot = IGM_SERVER_LOBBY_INITIAL;
+let iGM_NewsSnapshot: iGM_LauncherV2_NewsSnapshot = IGM_NEWS_INITIAL;
+let iGM_ServerSyncSnapshot: iGM_LauncherV2_ServerSyncSnapshot = IGM_SERVER_SYNC_INITIAL;
+let iGM_LocalServerSnapshot: iGM_LauncherV2_LocalServerSnapshot = IGM_LOCAL_SERVER_INITIAL;
 let iGM_PeerLobbySnapshot: iGM_LauncherV2_PeerLobbySnapshot = IGM_PEER_LOBBY_INITIAL;
 let iGM_OfflineSnapshot: iGM_LauncherV2_OfflineSnapshot = IGM_OFFLINE_INITIAL;
 let iGM_SkinSnapshot: iGM_LauncherV2_SkinSnapshot = IGM_SKIN_INITIAL;
@@ -898,6 +1002,81 @@ function iGM_HandleInbound(payload: unknown): void {
     return;
   }
 
+  if (message.type === "news:list") {
+    iGM_NewsSnapshot = {
+      items: message.items,
+      source: message.source,
+      message: message.message,
+      loaded: true,
+    };
+    iGM_Emit();
+    return;
+  }
+
+  if (message.type === "server:sync") {
+    // 按服务器 id 归位进度：同一条的后续阶段覆盖前一阶段
+    iGM_ServerSyncSnapshot = {
+      ...iGM_ServerSyncSnapshot,
+      states: { ...iGM_ServerSyncSnapshot.states, [message.state.id]: message.state },
+    };
+    iGM_Emit();
+    return;
+  }
+
+  if (message.type === "server:manifest") {
+    iGM_ServerSyncSnapshot = {
+      ...iGM_ServerSyncSnapshot,
+      manifestBusy: false,
+      manifest: {
+        ok: message.ok,
+        path: message.path,
+        zipPath: message.zipPath,
+        count: message.count,
+        totalSize: message.totalSize,
+        messageKey: message.messageKey,
+        messageParams: message.messageParams,
+      },
+    };
+    iGM_Emit();
+    return;
+  }
+
+  if (message.type === "server:tree") {
+    iGM_ServerSyncSnapshot = {
+      ...iGM_ServerSyncSnapshot,
+      treeBusy: false,
+      tree: {
+        ok: message.ok,
+        serverId: message.serverId,
+        serverName: message.serverName,
+        root: message.root,
+        files: message.files,
+        scannedAt: message.scannedAt,
+        messageKey: message.messageKey,
+        messageParams: message.messageParams,
+      },
+    };
+    iGM_Emit();
+    return;
+  }
+
+  if (message.type === "server:local-list") {
+    iGM_LocalServerSnapshot = {
+      ...iGM_LocalServerSnapshot,
+      items: message.items,
+      message: message.message,
+      loaded: true,
+    };
+    iGM_Emit();
+    return;
+  }
+
+  if (message.type === "server:core") {
+    iGM_LocalServerSnapshot = { ...iGM_LocalServerSnapshot, coreState: message.state };
+    iGM_Emit();
+    return;
+  }
+
   if (message.type === "appearance:state") {
     iGM_AppearanceSnapshot = { appearance: message.appearance, loaded: true };
     iGM_Emit();
@@ -1061,6 +1240,18 @@ function iGM_GetRememberedSnapshot(): iGM_LauncherV2_RememberedSnapshot {
 
 function iGM_GetServerLobbySnapshot(): iGM_LauncherV2_ServerLobbySnapshot {
   return iGM_ServerLobbySnapshot;
+}
+
+function iGM_GetNewsSnapshot(): iGM_LauncherV2_NewsSnapshot {
+  return iGM_NewsSnapshot;
+}
+
+function iGM_GetServerSyncSnapshot(): iGM_LauncherV2_ServerSyncSnapshot {
+  return iGM_ServerSyncSnapshot;
+}
+
+function iGM_GetLocalServerSnapshot(): iGM_LauncherV2_LocalServerSnapshot {
+  return iGM_LocalServerSnapshot;
 }
 
 function iGM_GetPeerLobbySnapshot(): iGM_LauncherV2_PeerLobbySnapshot {
@@ -1300,7 +1491,14 @@ export function iGM_LauncherV2_UseRememberedAccount(): iGM_LauncherV2_Remembered
 export function iGM_LauncherV2_UseServerLobby(): iGM_LauncherV2_ServerLobbySnapshot & {
   refresh: () => void;
   refreshStatuses: () => void;
-  add: (input: { name: string; ip: string; port: number; site: string }) => void;
+  add: (input: {
+    name: string;
+    ip: string;
+    port: number;
+    site: string;
+    /** 客户端同步清单 URL（外部托管直链 JSON，可留空） */
+    manifest: string;
+  }) => void;
   remove: (id: string) => void;
   queryStatus: (id: string) => void;
   join: (id: string) => void;
@@ -1385,6 +1583,230 @@ export function iGM_LauncherV2_UseServerLobby(): iGM_LauncherV2_ServerLobbySnaps
     },
     dismissNotice: () => {
       iGM_ServerLobbySnapshot = { ...iGM_ServerLobbySnapshot, notice: "" };
+      iGM_Emit();
+    },
+  };
+}
+
+/**
+ * 首页新闻流订阅。
+ * 挂载即向外壳请求一次；外壳读取 launcher_data/news.json，
+ * 文件缺失时回推内置默认内容，界面仅负责渲染，文案全部由 i18n 键解析。
+ */
+export function iGM_LauncherV2_UseNews(): iGM_LauncherV2_NewsSnapshot {
+  const snapshot = useSyncExternalStore(
+    iGM_Subscribe,
+    iGM_GetNewsSnapshot,
+    () => IGM_NEWS_INITIAL,
+  );
+
+  useEffect(() => {
+    iGM_InstallReceiver();
+    iGM_LauncherV2_SendHost({ type: "news:list" });
+  }, []);
+
+  return snapshot;
+}
+
+/**
+ * 第三方服务器「启动并同步」与清单工作室订阅。
+ * sync 由外壳执行：直连外部清单下载缺失文件，绝不经过主站后端；
+ * scanTree 扫描所选本地服务器目录回推文件树，generateManifest 按勾选生成
+ * manifest.json 与客户端 ZIP 包并回推两个产物的绝对路径。
+ */
+export function iGM_LauncherV2_UseServerCenter(): iGM_LauncherV2_ServerSyncSnapshot & {
+  sync: (id: string, horizonId: string) => void;
+  scanTree: (serverId: string) => void;
+  generateManifest: (serverId: string, name: string, paths: string[]) => void;
+  clearTree: () => void;
+  clearManifest: () => void;
+} {
+  const snapshot = useSyncExternalStore(
+    iGM_Subscribe,
+    iGM_GetServerSyncSnapshot,
+    () => IGM_SERVER_SYNC_INITIAL,
+  );
+
+  useEffect(() => {
+    iGM_InstallReceiver();
+  }, []);
+
+  return {
+    ...snapshot,
+    sync: (id, horizonId) => {
+      if (!iGM_LauncherV2_SendHost({ type: "server:sync", id, horizonId })) {
+        iGM_ServerSyncSnapshot = {
+          ...iGM_ServerSyncSnapshot,
+          states: {
+            ...iGM_ServerSyncSnapshot.states,
+            [id]: {
+              id,
+              phase: "error",
+              percent: 0,
+              messageKey: "server.syncPreviewDisabled",
+              messageParams: {},
+            },
+          },
+        };
+        iGM_Emit();
+        return;
+      }
+      // 先本地置为拉取清单阶段，给出即时反馈
+      iGM_ServerSyncSnapshot = {
+        ...iGM_ServerSyncSnapshot,
+        states: {
+          ...iGM_ServerSyncSnapshot.states,
+          [id]: {
+            id,
+            phase: "fetch",
+            percent: 0,
+            messageKey: "server.syncPhase.fetch",
+            messageParams: {},
+          },
+        },
+      };
+      iGM_Emit();
+    },
+    scanTree: (serverId) => {
+      if (!iGM_LauncherV2_SendHost({ type: "server:scan-tree", serverId })) {
+        iGM_ServerSyncSnapshot = {
+          ...iGM_ServerSyncSnapshot,
+          treeBusy: false,
+          tree: {
+            ok: false,
+            serverId,
+            serverName: "",
+            root: "",
+            files: [],
+            scannedAt: 0,
+            messageKey: "server.studio.previewDisabled",
+            messageParams: {},
+          },
+        };
+        iGM_Emit();
+        return;
+      }
+      iGM_ServerSyncSnapshot = { ...iGM_ServerSyncSnapshot, treeBusy: true };
+      iGM_Emit();
+    },
+    generateManifest: (serverId, name, paths) => {
+      if (!iGM_LauncherV2_SendHost({ type: "server:manifest", serverId, name, paths })) {
+        iGM_ServerSyncSnapshot = {
+          ...iGM_ServerSyncSnapshot,
+          manifestBusy: false,
+          manifest: {
+            ok: false,
+            path: "",
+            zipPath: "",
+            count: 0,
+            totalSize: 0,
+            messageKey: "server.studio.previewDisabled",
+            messageParams: {},
+          },
+        };
+        iGM_Emit();
+        return;
+      }
+      iGM_ServerSyncSnapshot = { ...iGM_ServerSyncSnapshot, manifestBusy: true, manifest: null };
+      iGM_Emit();
+    },
+    clearTree: () => {
+      iGM_ServerSyncSnapshot = { ...iGM_ServerSyncSnapshot, tree: null, treeBusy: false };
+      iGM_Emit();
+    },
+    clearManifest: () => {
+      iGM_ServerSyncSnapshot = { ...iGM_ServerSyncSnapshot, manifest: null, manifestBusy: false };
+      iGM_Emit();
+    },
+  };
+}
+
+/**
+ * 本地服务器（本地开服）订阅。
+ * 挂载即向外壳请求一次列表；create 选择核心与游戏版本，由外壳下载核心并创建目录，
+ * 进度经 server:core 实时回推，完成后列表自动刷新。
+ */
+export function iGM_LauncherV2_UseLocalServers(): iGM_LauncherV2_LocalServerSnapshot & {
+  refresh: () => void;
+  create: (input: {
+    name: string;
+    core: iGM_LauncherV2_ServerCore;
+    gameVersion: string;
+    loaderVersion: string;
+  }) => void;
+  remove: (id: string) => void;
+  clearCore: () => void;
+} {
+  const snapshot = useSyncExternalStore(
+    iGM_Subscribe,
+    iGM_GetLocalServerSnapshot,
+    () => IGM_LOCAL_SERVER_INITIAL,
+  );
+
+  useEffect(() => {
+    iGM_InstallReceiver();
+    iGM_LauncherV2_SendHost({ type: "server:local-list" });
+  }, []);
+
+  return {
+    ...snapshot,
+    refresh: () => {
+      if (!iGM_LauncherV2_SendHost({ type: "server:local-list" })) {
+        iGM_LocalServerSnapshot = {
+          ...iGM_LocalServerSnapshot,
+          loaded: true,
+          message: "浏览器预览模式下不提供本地服务器数据",
+        };
+        iGM_Emit();
+      }
+    },
+    create: (input) => {
+      if (!iGM_LauncherV2_SendHost({ type: "server:core-create", ...input })) {
+        iGM_LocalServerSnapshot = {
+          ...iGM_LocalServerSnapshot,
+          coreState: {
+            id: "",
+            name: input.name,
+            core: input.core,
+            gameVersion: input.gameVersion,
+            phase: "error",
+            percent: 0,
+            messageKey: "server.local.previewDisabled",
+            messageParams: {},
+            dir: "",
+          },
+        };
+        iGM_Emit();
+        return;
+      }
+      // 先本地置为准备阶段，给出即时反馈
+      iGM_LocalServerSnapshot = {
+        ...iGM_LocalServerSnapshot,
+        coreState: {
+          id: "",
+          name: input.name,
+          core: input.core,
+          gameVersion: input.gameVersion,
+          phase: "prepare",
+          percent: 0,
+          messageKey: "server.local.phase.prepare",
+          messageParams: {},
+          dir: "",
+        },
+      };
+      iGM_Emit();
+    },
+    remove: (id) => {
+      if (!iGM_LauncherV2_SendHost({ type: "server:local-remove", id })) {
+        iGM_LocalServerSnapshot = {
+          ...iGM_LocalServerSnapshot,
+          message: "浏览器预览模式下不支持删除本地服务器",
+        };
+        iGM_Emit();
+      }
+    },
+    clearCore: () => {
+      iGM_LocalServerSnapshot = { ...iGM_LocalServerSnapshot, coreState: null };
       iGM_Emit();
     },
   };

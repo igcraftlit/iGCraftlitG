@@ -218,6 +218,32 @@
   flex: 1;
 }
 
+/* 导航栏自定义取色：系统取色器（外观与配色预览块一致） */
+.colorInput {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 9px;
+  border: 1px solid var(--igm-border-strong);
+  background: var(--igm-fill);
+  cursor: pointer;
+}
+
+.colorInput::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.colorInput::-webkit-color-swatch {
+  border: none;
+  border-radius: 8px;
+}
+
+.colorInput::-moz-color-swatch {
+  border: none;
+  border-radius: 8px;
+}
+
 /* ---- 模糊度滑动条 ---- */
 
 .sliderRow {

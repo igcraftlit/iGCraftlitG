@@ -5,10 +5,11 @@
  * 模块：iGM_LauncherV2_Appearance
  * 作用：启动器外观与主题自定义的读写
  * 内容：背景模式（动态云 / 纯色）、动态云配色（经典深紫 / 梦幻冷蓝 / 极光幻粉）、
- *       纯色背景方案（深邃暗黑 / 明亮浅色 / 古典深咖 / 极光幽绿）、
- *       毛玻璃模糊度（0-30px）与主题色预设标识；
+ *       静态渐变背景方案（深邃暗黑 / 明亮浅色 / 古典深咖 / 极光幽绿）、
+ *       毛玻璃模糊度（0-30px）、主题色预设标识与导航栏底色（预设透明色 / 自定义色值）；
  *       配置落盘于 launcher_data/appearance.json，启动时读取并应用
- * 说明：配色与主题色只落标识，具体色值由界面侧预设表决定，便于后续替换配色而不改外壳
+ * 说明：配色与主题色只落标识，具体色值由界面侧预设表决定，便于后续替换配色而不改外壳；
+ *       默认背景为静态渐变纯色，动态云须由用户在「设置 · 外观」中手动开启
  */
 
 // 导入依赖 //
@@ -24,8 +25,19 @@ export type iGM_LauncherV2_BackgroundMode = "cloud" | "solid";
 /** 动态云配色方案标识 */
 export type iGM_LauncherV2_CloudPalette = "purple" | "blue" | "pink";
 
-/** 纯色背景方案标识 */
+/** 静态渐变背景方案标识 */
 export type iGM_LauncherV2_SolidPalette = "dark" | "light" | "coffee" | "green";
+
+/**
+ * 导航栏底色标识：三个预设透明色 + 「默认」（跟随玻璃面令牌）；
+ * 也可存放自定义 16 进制色值（形如 #1a2333），由界面侧解析。
+ */
+export type iGM_LauncherV2_NavColor =
+  | "default"
+  | "slate"
+  | "navy"
+  | "violet"
+  | (string & {});
 
 /** 外观持久化配置 */
 export interface iGM_LauncherV2_Appearance {
@@ -33,12 +45,14 @@ export interface iGM_LauncherV2_Appearance {
   background: iGM_LauncherV2_BackgroundMode;
   /** 动态云配色（仅 cloud 模式生效），只改背景色调，不改 UI 主题色 */
   cloud: iGM_LauncherV2_CloudPalette;
-  /** 纯色背景方案（仅 solid 模式生效） */
+  /** 静态渐变背景方案（仅 solid 模式生效） */
   solid: iGM_LauncherV2_SolidPalette;
   /** 毛玻璃模糊度（px），取值区间 0-30 */
   blur: number;
   /** 主题色预设标识（具体色值由界面侧预设表决定） */
   theme: string;
+  /** 导航栏底色：预设标识或自定义 16 进制色值，保留磨砂玻璃质感 */
+  navColor: iGM_LauncherV2_NavColor;
 }
 
 /** 外观下发视图（与持久化结构一致） */
@@ -51,6 +65,7 @@ export interface iGM_LauncherV2_AppearancePatch {
   solid?: iGM_LauncherV2_SolidPalette;
   blur?: number;
   theme?: string;
+  navColor?: iGM_LauncherV2_NavColor;
 }
 
 // 核心逻辑 //
@@ -69,17 +84,30 @@ const IGM_LAUNCHERV2_APPEARANCE_SOLIDS: iGM_LauncherV2_SolidPalette[] = [
   "green",
 ];
 
+/** 导航栏底色预设标识白名单（自定义色值走 16 进制校验分支） */
+const IGM_LAUNCHERV2_APPEARANCE_NAV_PRESETS: iGM_LauncherV2_NavColor[] = [
+  "default",
+  "slate",
+  "navy",
+  "violet",
+];
+
 /** 模糊度上下限（px） */
 export const IGM_LAUNCHERV2_APPEARANCE_BLUR_MIN = 0;
 export const IGM_LAUNCHERV2_APPEARANCE_BLUR_MAX = 30;
 
-/** 默认外观：动态云背景 + 经典深紫配色 + 靛蓝主题色 + 中等模糊度 */
+/**
+ * 默认外观：静态渐变纯色背景 + 靛蓝主题色 + 中等模糊度 + 默认导航栏底色。
+ * 说明：默认不再启用动态云（WebGL / Canvas 粒子），改为干净专注的静态渐变，
+ *       动态云仅由用户在「设置 · 外观」中手动开启。
+ */
 const IGM_LAUNCHERV2_APPEARANCE_DEFAULT: iGM_LauncherV2_Appearance = {
-  background: "cloud",
+  background: "solid",
   cloud: "purple",
   solid: "dark",
   blur: 14,
   theme: "indigo",
+  navColor: "default",
 };
 
 /** 当前外观缓存（Appearance 首次读取后可用） */
@@ -129,6 +157,18 @@ function iGM_AppearanceNormalizeTheme(raw: unknown): string {
     : IGM_LAUNCHERV2_APPEARANCE_DEFAULT.theme;
 }
 
+/**
+ * 归一化导航栏底色：接受预设标识或 16 进制色值（#rgb / #rrggbb），
+ * 其余非法值一律回落到默认（跟随玻璃面令牌）。
+ */
+function iGM_AppearanceNormalizeNavColor(raw: unknown): iGM_LauncherV2_NavColor {
+  if (typeof raw !== "string") return IGM_LAUNCHERV2_APPEARANCE_DEFAULT.navColor;
+  const value = raw.trim();
+  if (IGM_LAUNCHERV2_APPEARANCE_NAV_PRESETS.includes(value)) return value;
+  if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(value)) return value;
+  return IGM_LAUNCHERV2_APPEARANCE_DEFAULT.navColor;
+}
+
 /** 写入外观配置文件 */
 async function iGM_AppearanceSave(): Promise<void> {
   await mkdir(iGM_LauncherV2_LauncherDataPath(), { recursive: true });
@@ -151,6 +191,7 @@ export async function iGM_LauncherV2_Appearance_Load(): Promise<iGM_LauncherV2_A
         solid: iGM_AppearanceNormalizeSolid(parsed.solid),
         blur: iGM_AppearanceNormalizeBlur(parsed.blur),
         theme: iGM_AppearanceNormalizeTheme(parsed.theme),
+        navColor: iGM_AppearanceNormalizeNavColor(parsed.navColor),
       };
     }
   } catch {
@@ -189,6 +230,10 @@ export async function iGM_LauncherV2_Appearance_Set(
       patch.theme === undefined
         ? iGM_LauncherV2_AppearanceCache.theme
         : iGM_AppearanceNormalizeTheme(patch.theme),
+    navColor:
+      patch.navColor === undefined
+        ? iGM_LauncherV2_AppearanceCache.navColor
+        : iGM_AppearanceNormalizeNavColor(patch.navColor),
   };
   await iGM_AppearanceSave();
   return { ...iGM_LauncherV2_AppearanceCache };

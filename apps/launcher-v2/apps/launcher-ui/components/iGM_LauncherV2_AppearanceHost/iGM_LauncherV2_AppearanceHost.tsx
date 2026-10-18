@@ -21,6 +21,7 @@ import { iGM_LauncherV2_UseAppearance as IGM_LauncherV2_UseAppearance } from "@/
 import {
   IGM_LAUNCHERV2_SOLID_PALETTES,
   IGM_LAUNCHERV2_THEMES,
+  iGM_LauncherV2_ResolveNavColor,
 } from "@/lib/iGM_LauncherV2_Constants";
 import styles from "./iGM_LauncherV2_AppearanceHost.module.css";
 
@@ -33,10 +34,11 @@ export interface iGM_LauncherV2_AppearanceHostProps {
 // 核心逻辑 //
 
 /**
- * 应用主题色与模糊度到 :root。
- * 说明：主题色只改 CSS 变量，按钮与高亮色均由变量驱动，因此无需逐组件传参。
+ * 应用主题色、模糊度与导航栏底色到 :root。
+ * 说明：主题色只改 CSS 变量，按钮与高亮色均由变量驱动，因此无需逐组件传参；
+ *       导航栏底色为「默认」时移除内联变量，交由 CSS 回落到 --igm-glass 玻璃面令牌。
  */
-function iGM_AppearanceApplyTokens(theme: string, blur: number): void {
+function iGM_AppearanceApplyTokens(theme: string, blur: number, navColor: string): void {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
   const preset = IGM_LAUNCHERV2_THEMES.find((item) => item.id === theme) ?? IGM_LAUNCHERV2_THEMES[0];
@@ -46,6 +48,13 @@ function iGM_AppearanceApplyTokens(theme: string, blur: number): void {
   root.style.setProperty("--igm-brand", preset.accent);
   root.style.setProperty("--igm-brand-soft", preset.accentSoft);
   root.style.setProperty("--igm-blur", `${blur}px`);
+
+  const nav = iGM_LauncherV2_ResolveNavColor(navColor);
+  if (nav) {
+    root.style.setProperty("--igm-nav", nav);
+  } else {
+    root.style.removeProperty("--igm-nav");
+  }
 }
 
 /**
@@ -65,10 +74,10 @@ export function iGM_LauncherV2_AppearanceHost({
   const solid = IGM_LAUNCHERV2_SOLID_PALETTES.find((item) => item.id === appearance.solid);
   const light = appearance.background === "solid" && Boolean(solid?.light);
 
-  // 主题色与模糊度实时写入 CSS 变量：滑动条拖动即生效，无需等待渲染
+  // 主题色、模糊度与导航栏底色实时写入 CSS 变量：改动即生效，无需等待渲染
   useEffect(() => {
-    iGM_AppearanceApplyTokens(appearance.theme, appearance.blur);
-  }, [appearance.theme, appearance.blur]);
+    iGM_AppearanceApplyTokens(appearance.theme, appearance.blur, appearance.navColor);
+  }, [appearance.theme, appearance.blur, appearance.navColor]);
 
   // 明暗令牌随背景方案切换：浅色纯色背景自动转深色文字
   useEffect(() => {

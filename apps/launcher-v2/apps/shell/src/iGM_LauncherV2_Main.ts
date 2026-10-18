@@ -3,14 +3,16 @@
  * 所属层：桌面外壳 / 主进程
  * 路由：全局
  * 模块：iGM_LauncherV2_Main
- * 作用：iGM CraftCeon Launcher 26.5.1 主进程入口（Electrobun + Bun）
+ * 作用：iGM CraftCeon Launcher 26.5.4 主进程入口（Electrobun + Bun）
  * 内容：创建无边框主窗口（界面自绘标题栏与窗口控制按钮）；
  *       开发模式加载 3211 端口 dev server，打包模式加载 views://launcher/index.html；
  *       经 host-message 承接界面指令：窗口控制、社区登录状态查询 / 发起授权 / 退出登录、
  *       Java 环境、微软正版、离线账号、皮肤库与正版档案、Rust 核心连通性探测；
  *       版本下载（含暂停 / 继续 / 取消与游戏运行限速联动）、资源市场检索与落盘模式选择、
  *       外观与主题自定义、启动器自动更新；
- *       服务器大厅（第三方公开列表 + 本地缓存 + 内置主流服 + 自定义服务器 + 一键进服）、
+ *       服务器大厅（第三方公开列表 + 本地缓存 + 内置主流服 + 自定义服务器 + 一键进服 +
+ *       「启动并同步」直连外部清单补齐 mods/config）、开服中心（扫描视界生成客户端清单）、
+ *       首页新闻流（读取本地 news.json，缺失回退内置默认）；
  *       联机大厅（主站高速节点优先、不可用时降级公共联机节点，含房间创建 / 加入 / 退出）；
  *       启动时静默恢复本地会话并静默检查更新；进程级异常兜底写入崩溃日志
  * 说明：主进程不持有任何界面渲染逻辑，也不向界面下发令牌，只下发登录状态与账号公开信息
@@ -32,6 +34,7 @@ import {
   iGM_LauncherV2_ParseHostMessage,
   iGM_LauncherV2_Pusher,
   type iGM_LauncherV2_InboundMessage,
+  type iGM_LauncherV2_LocalServer,
   type iGM_LauncherV2_OfflineAccount,
   type iGM_LauncherV2_OutboundMessage,
 } from "./iGM_LauncherV2_Ipc";
@@ -142,6 +145,17 @@ import {
   iGM_LauncherV2_Servers_StatusAll,
   iGM_LauncherV2_Servers_Target,
 } from "./iGM_LauncherV2_Servers";
+import {
+  iGM_LauncherV2_ServerManifest_Generate,
+  iGM_LauncherV2_ServerScanTree,
+  iGM_LauncherV2_ServerSync_Start,
+} from "./iGM_LauncherV2_ServerSync";
+import {
+  iGM_LauncherV2_LocalServers_Create,
+  iGM_LauncherV2_LocalServers_List,
+  iGM_LauncherV2_LocalServers_Remove,
+} from "./iGM_LauncherV2_LocalServers";
+import { iGM_LauncherV2_News_Load } from "./iGM_LauncherV2_News";
 import {
   iGM_LauncherV2_PeerSnapshotMessage,
   iGM_LauncherV2_Peer_BindPort,
@@ -336,6 +350,17 @@ function iGM_LauncherV2_PushGameState(
   state: iGM_LauncherV2_GameState,
 ): void {
   push({ type: "game:state", state });
+}
+
+/**
+ * 回推本地服务器列表（本地开服）。
+ * 列表刷新仅用于同步条目集合；用户可见提示由界面按多语言键自行组织，外壳不产生文案。
+ */
+function iGM_LauncherV2_PushLocalServers(
+  push: (message: iGM_LauncherV2_InboundMessage) => void,
+  items: iGM_LauncherV2_LocalServer[],
+): void {
+  push({ type: "server:local-list", items, message: "" });
 }
 
 /**
@@ -909,6 +934,7 @@ function iGM_LauncherV2_HandleHostMessage(
           ip: message.ip,
           port: message.port,
           site: message.site,
+          manifest: message.manifest,
         });
         push({ type: "server:result", ok: result.ok, message: result.message });
         // 写入后立即回推最新列表，界面无需额外再请求一次
@@ -998,6 +1024,83 @@ function iGM_LauncherV2_HandleHostMessage(
         const list = await iGM_LauncherV2_Servers_List();
         const result = await iGM_LauncherV2_Servers_StatusAll(list.items.map((item) => item.id));
         push({ type: "server:statuses", items: result.items, message: result.message });
+      })();
+      break;
+    case "server:sync":
+      void (async () => {
+        // 启动并同步：由本地引擎直连外部清单补齐 mods/config，完成后复用启动函数一键进服；
+        // 引擎自回推 server:sync 进度，启动阶段复用游戏启动日志与进度回推
+        iGM_LauncherV2_SetLaunchLogNotify((entry) => push({ type: "launch:log", entry }));
+        iGM_LauncherV2_SetLaunchProgressNotify((progress) =>
+          push({ type: "launch:progress", progress }),
+        );
+        const state = await iGM_LauncherV2_ServerSync_Start(message.id, message.horizonId, push);
+        if (!state) return;
+        iGM_LauncherV2_PushGameState(push, state);
+        if (state.running) {
+          // Java 进程已拉起：置全局限速并轮询状态，进程退出后解除
+          iGM_LauncherV2_Download_RateLimitSet(IGM_LAUNCHERV2_GAME_RATE_LIMIT_BPS);
+          iGM_LauncherV2_PushThrottle(push);
+          iGM_LauncherV2_PollLaunchState(push);
+        }
+      })();
+      break;
+    case "server:manifest":
+      void (async () => {
+        // 客户端清单工作室：按勾选路径收集文件，写出 manifest.json 与客户端 ZIP 包，
+        // 结果由模块自身回推（server:manifest）
+        await iGM_LauncherV2_ServerManifest_Generate(
+          message.serverId,
+          message.name,
+          message.paths,
+          push,
+        );
+      })();
+      break;
+    case "server:scan-tree":
+      void (async () => {
+        // 客户端清单工作室：递归扫描该本地服务器的 mods / config，结果由模块回推 server:tree
+        await iGM_LauncherV2_ServerScanTree(message.serverId, push);
+      })();
+      break;
+    case "server:local-list":
+      void (async () => {
+        iGM_LauncherV2_PushLocalServers(push, await iGM_LauncherV2_LocalServers_List());
+      })();
+      break;
+    case "server:core-create":
+      void (async () => {
+        // 本地开服：创建目录、下载核心并安装，进度由模块回推 server:core；完成后刷新列表
+        await iGM_LauncherV2_LocalServers_Create(
+          message.name,
+          message.core,
+          message.gameVersion,
+          message.loaderVersion,
+          push,
+        );
+        iGM_LauncherV2_PushLocalServers(push, await iGM_LauncherV2_LocalServers_List());
+      })();
+      break;
+    case "server:local-remove":
+      void (async () => {
+        try {
+          await iGM_LauncherV2_LocalServers_Remove(message.id);
+        } catch (error) {
+          console.warn("[iGM CraftCeon Launcher] 删除本地服务器失败：", error);
+        }
+        iGM_LauncherV2_PushLocalServers(push, await iGM_LauncherV2_LocalServers_List());
+      })();
+      break;
+    case "news:list":
+      void (async () => {
+        // 首页新闻流：读取本地 news.json，缺失或损坏时回退内置默认内容
+        const result = await iGM_LauncherV2_News_Load();
+        push({
+          type: "news:list",
+          items: result.items,
+          source: result.source,
+          message: result.message,
+        });
       })();
       break;
     case "peer:status":
@@ -1165,7 +1268,7 @@ async function iGM_LauncherV2_Bootstrap(): Promise<void> {
   const mode = iGM_LauncherV2_ResolveRunMode();
   iGM_LauncherV2_ActiveMode = mode;
 
-  console.log(`[iGM CraftCeon Launcher] 版本 26.5.1；启动模式：${mode}`);
+  console.log(`[iGM CraftCeon Launcher] 版本 26.5.4；启动模式：${mode}`);
 
   // 初始化路径与设置（读取根目录指针、生成 iGML_Matrix 结构、载入 settings.json）
   const paths = await iGM_LauncherV2_PathsInit().catch((error) => {

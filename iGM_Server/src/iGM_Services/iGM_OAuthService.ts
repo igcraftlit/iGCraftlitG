@@ -871,13 +871,14 @@ export async function iGM_HasFullConsent(
 /* ---------- 令牌端点 ---------- */
 
 /**
- * 公开客户端判定：桌面 / 移动应用按 RFC 8252 无法安全保存 client_secret，
- * 故不参与密钥校验，改由 PKCE（S256）保护授权码兑换。
+ * 公开客户端判定：桌面 / 移动 / 单页应用按 RFC 8252 无法安全保存 client_secret，
+ * 故不参与密钥校验（即使请求携带 client_secret 也一律忽略），
+ * 改由 PKCE（S256）强制保护授权码兑换。
  * 注意：审核通过时统一签发密钥，故不能用「密钥哈希为空」判定，必须看注册类型。
  */
 function iGM_IsPublicClient(client: iGM_OAuthClientRow): boolean {
   const type = client.iGM_Type.trim().toLowerCase();
-  return type === "desktop" || type === "mobile";
+  return type === "desktop" || type === "mobile" || type === "public" || type === "spa";
 }
 
 /** 校验客户端身份：公开客户端跳过密钥，机密客户端做 client_secret 哈希比对 */
@@ -1001,21 +1002,25 @@ export async function iGM_ExchangeAuthorizationCodeService(params: {
   if (codeRow.iGM_RedirectUri !== params.redirectUri) {
     throw new iGM_OAuthError("oauth.errors.invalidRedirectUri", 400);
   }
-  // 公开客户端必须使用 PKCE：授权码未绑定 code_challenge 时拒绝，
-  // 否则本地回调（localhost 监听）中的授权码可被同机进程窃取后直接兑换令牌
-  if (iGM_IsPublicClient(client) && !codeRow.iGM_CodeChallenge) {
+  // 公开客户端强制 PKCE（RFC 7636 / RFC 8252）：授权码未绑定 code_challenge、
+  // 或请求未携带 code_verifier，一律拒绝；否则本地回调（localhost 监听）中的
+  // 授权码可被同机进程窃取后直接兑换令牌
+  if (
+    iGM_IsPublicClient(client) &&
+    (!codeRow.iGM_CodeChallenge || !params.codeVerifier)
+  ) {
     throw new iGM_OAuthError("oauth.errors.pkceFailed", 400);
   }
-  if (codeRow.iGM_CodeChallenge) {
-    if (
-      !iGM_VerifyPkce(
-        params.codeVerifier,
-        codeRow.iGM_CodeChallenge,
-        codeRow.iGM_CodeChallengeMethod,
-      )
-    ) {
-      throw new iGM_OAuthError("oauth.errors.pkceFailed", 400);
-    }
+  // 校验 code_verifier 的 SHA256 是否与授权时提交的 code_challenge 一致
+  if (
+    codeRow.iGM_CodeChallenge &&
+    !iGM_VerifyPkce(
+      params.codeVerifier,
+      codeRow.iGM_CodeChallenge,
+      codeRow.iGM_CodeChallengeMethod,
+    )
+  ) {
+    throw new iGM_OAuthError("oauth.errors.pkceFailed", 400);
   }
   // 一次性核销：并发下只有一个请求能成功
   if (!(await iGM_MarkOAuthCodeUsed(codeRow.iGM_Id))) {
