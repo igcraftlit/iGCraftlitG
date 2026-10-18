@@ -1,11 +1,60 @@
 {
   "releases": [
     {
+      "id": "c5f2b8d1-4a7e-4c39-b6d2-8e1f0a73c9b5",
+      "version": "26.5.0",
+      "releasedAt": "2026-10-18",
+      "updateType": "minor",
+      "isLatest": true,
+      "channel": "stable",
+      "platform": "Windows x64",
+      "fileName": "iGM-CraftCeon-Launcher-Setup-26.5.0.zip",
+      "fileSize": 40979808,
+      "fileSizeLabel": "39.08 MB",
+      "sha256": "a50e21e8368c0d4f0af8c5b2043620b14de878279f1eb19ee1ddd7269c2eb4ba",
+      "downloadUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/download/v26.5.0/iGM-CraftCeon-Launcher-Setup-26.5.0.zip",
+      "releasePageUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/tag/v26.5.0",
+      "notes": {
+        "zh-CN": {
+          "added": [
+            "新增联机大厅（P2P）：支持创建房间（生成 6 位房间码，可一键复制）与加入房间，优先接入主站高速联机节点，不可用时自动降级到公共联机节点（EasyTier / 公共 STUN-TURN）",
+            "服务器大厅内置 Hypixel、2b2t 等主流服务器，卡片提供一键进服与访问官网入口",
+            "关于页面新增鸣谢区、开发团队区与版权声明区，支持中英双语切换"
+          ],
+          "improved": [
+            "服务器大厅按在线人数降序排列，大服自动置顶并标记「热门」，新增「刷新状态」按钮批量更新全部服务器状态",
+            "首页欢迎词「欢迎回来，[用户名]」采用中文艺术字体，用户名采用英文签名艺术字体",
+            "首页「启动游戏」按钮移至右下角，右侧账号面板按正版账号在上、离线账号在下排列（最多 5 个）"
+          ],
+          "fixed": [
+            "移除服务器大厅页面内重复的大标题，仅保留侧边栏导航入口",
+            "联机大厅在无主站节点可用时不再抛错，而是自动降级到公共联机节点并给出可读说明"
+          ]
+        },
+        "en": {
+          "added": [
+            "Added the Peer Lobby (P2P): create a room (6-digit room code with one-click copy) or join a room; it prefers the official high-speed relay and automatically falls back to public relays (EasyTier / public STUN-TURN) when unavailable",
+            "The server lobby now ships built-in mainstream servers such as Hypixel and 2b2t, with one-click join and website shortcuts on each card",
+            "The About page now includes a credits section, a development team section, and a copyright section with a Chinese/English toggle"
+          ],
+          "improved": [
+            "The server lobby now sorts servers by online player count in descending order, pins large servers to the top with a \"Hot\" tag, and adds a Refresh Status button for batch status updates",
+            "The home greeting \"Welcome back, [name]\" now uses an artistic Chinese font and the username uses a handwritten English signature font",
+            "The Start Game button on the home page moved to the bottom right; the account panel now lists Mojang accounts first and offline accounts below (up to 5)"
+          ],
+          "fixed": [
+            "Removed the duplicated large heading inside the server lobby page, keeping only the sidebar navigation entry",
+            "The Peer Lobby no longer throws when no official relay is reachable; it falls back to a public relay with a readable notice"
+          ]
+        }
+      }
+    },
+    {
       "id": "3b7f1c2a-9d64-4f18-8a2b-5c1e7f904a21",
       "version": "26.4.1",
       "releasedAt": "2026-10-17",
       "updateType": "patch",
-      "isLatest": true,
+      "isLatest": false,
       "channel": "stable",
       "platform": "Windows x64",
       "fileName": "",
@@ -86,8 +135,8 @@
       "fileSize": 70353660,
       "fileSizeLabel": "67.09 MB",
       "sha256": "998acc233b105974aae9f82570123ed00059967a5e869d8a55581e1be6b71fc2",
-      "downloadUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/download/v26.3.3/iGM-CraftCeon-Launcher-Setup-26.3.3.zip",
-      "releasePageUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/tag/v26.3.3",
+      "downloadUrl": "",
+      "releasePageUrl": "",
       "notes": {
         "zh-CN": {
           "added": [
@@ -138,7 +187,7 @@
       "fileSizeLabel": "67.27 MB",
       "sha256": "1b8f57eca7c8457c9980dcc0e94185663db0a852f1e0d080d4b1eeeb8aae7574",
       "downloadUrl": "",
-      "releasePageUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/tag/v26.3.2",
+      "releasePageUrl": "",
       "notes": {
         "zh-CN": {
           "added": [
@@ -193,7 +242,7 @@
       "fileSizeLabel": "67.15 MB",
       "sha256": "7037315e4430b64d380b22f3b3e51c1820b37bfb5f304e6af9a15cf792d42be6",
       "downloadUrl": "",
-      "releasePageUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/tag/v26.3.1",
+      "releasePageUrl": "",
       "notes": {
         "zh-CN": {
           "added": [
