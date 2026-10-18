@@ -1,19 +1,66 @@
 {
   "releases": [
     {
+      "id": "b6c1f7a3-9e28-4d55-8f31-2a70c6e9d4bf",
+      "version": "26.5.5",
+      "releasedAt": "2026-10-18",
+      "updateType": "minor",
+      "isLatest": true,
+      "channel": "stable",
+      "platform": "Windows x64",
+      "fileName": "iGM-CraftCeon-Launcher-Setup-26.5.5.zip",
+      "fileSize": 41008130,
+      "fileSizeLabel": "39.11 MB",
+      "sha256": "92efff20df1ff9e0b3c9d60eb9e87898d9147876039047ef9bb38eb3cdad4392",
+      "downloadUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/download/v26.5.5/iGM-CraftCeon-Launcher-Setup-26.5.5.zip",
+      "releasePageUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/tag/v26.5.5",
+      "notes": {
+        "zh-CN": {
+          "added": [
+            "新增地图站：导航栏新增顶层「地图站」页签，深色半透明磨砂卡片内含种子输入框、可输入搜索的版本下拉框（版本列表动态拉取原版全量版本）与【生成地图】【在浏览器中打开】按钮；主体以 iframe 铺满剩余屏幕内嵌 MCSeedShare 种子地图站点（https://www.mcseedshare.com/seed-finder），点击【生成地图】按 ?seed= 与可选 &version= 拼接内嵌地址；内嵌加载超时或站点拒绝内嵌时给出明确提示，并可经系统浏览器打开；全程不经过主站后端，无后端依赖",
+            "新增客户端同步大厅：服务端进程就绪（标准输出出现 Done）后自动提取本机局域网 IP 与监听端口，在方块广场「客户端同步大厅」自动生成一条记录；服主在开服中心点击【生成客户端清单外部直链】即把清单经本机局域网静态服务暴露为直链并回填到该记录；玩家点击【启动并同步】即可拉取外部清单、比对哈希补齐模组后一键进服",
+            "新增服务端运行控制台：开服中心每个本地服务器支持启动 / 停止服务端进程，实时逐行回推运行日志（环形上限 500 行），支持自动滚底、清空视图、复制局域网地址与运行状态徽标（已停止 / 启动中 / 已就绪 / 停止中 / 异常）"
+          ],
+          "improved": [
+            "导航栏结构重构：页签顺序固定为 首页 → 视界管理 → 方块广场 → 资源中心 → 地图站 → 账号中心 → 设置；新增顶层「视界管理」页签，直接渲染已有的全部视界（视界管理回归，不再内嵌于方块广场）",
+            "方块广场移除「手动添加第三方服务器 IP」入口（按钮与录入表单），大厅列表改为只渲染由开服中心自动同步写入的记录，一键进服 / 删除 / 状态刷新能力保留；区块重排为 P2P 联机房间 → 客户端同步大厅 → 开服中心（含清单工作室）",
+            "版本号由 26.5.4 更新至 26.5.5（工程包、外壳、界面、Electrobun 配置与 Rust 核心同步），新增文案全部同时接入简体中文与英文语言包"
+          ],
+          "fixed": [
+            "修复开服中心版本列表缺失最新版本的问题：彻底废除写死的版本数组，改为按服务端核心从上游动态拉取全量版本并倒序展示 —— Vanilla 取 piston-meta.mojang.com 的 version_manifest_v2.json（全部 release 与 snapshot）、Paper 取 api.papermc.io/v2/projects/paper、Fabric 取 meta.fabricmc.net/v2/versions/game 并过滤 stable: true、Forge 取 promotions_slim.json、NeoForge 取 Maven 版本元数据；版本下拉框支持用户输入搜索过滤（版本数近千），并新增【刷新版本列表】按钮，确保 26.1、26.2 等最新版本可被拉取到；带 10 分钟 TTL 内存缓存与超时降级文案"
+          ]
+        },
+        "en": {
+          "added": [
+            "Added the Map Station: a new top-level Map Station tab in the navigation bar with a dark translucent frosted card containing a seed input, a searchable version dropdown (the version list is pulled dynamically for all released versions) plus Generate Map and Open in Browser buttons; the main area embeds the MCSeedShare seed map site (https://www.mcseedshare.com/seed-finder) in a full-height iframe, and Generate Map rewrites the embedded URL with ?seed= and an optional &version=; when embedding times out or the site refuses framing, a clear notice is shown and the page can be opened in the system browser; it never goes through the site backend and has no backend dependency",
+            "Added the Client Sync Hall: once the server process is ready (Done appears in stdout) the launcher extracts the local LAN IP and listening port and automatically creates a record in the Block Plaza Client Sync Hall; the host clicks Generate Client Manifest Direct Link in the Hosting Center to expose the manifest over the local LAN and fill that direct link into the record; players click Launch & Sync to fetch the external manifest, verify hashes, fill in missing mods and join in one step",
+            "Added a server run console: every local server in the Hosting Center can start and stop the server process with live line-by-line log streaming (a 500-line ring buffer), auto-scroll, clear view, copy LAN address and a run-state badge (stopped / starting / ready / stopping / error)"
+          ],
+          "improved": [
+            "Reworked the navigation bar: the tab order is now Home -> Horizons -> Block Plaza -> Resource Center -> Map Station -> Account Center -> Settings; Horizons is a new top-level tab that renders all existing horizons directly (Horizons is back, no longer nested inside the Block Plaza)",
+            "The Block Plaza dropped the manual add-third-party-server entry (button and form) and its list now renders only the records written automatically by the Hosting Center, while one-click join, delete and status refresh are kept; sections are reordered as Peer Lobby -> Client Sync Hall -> Hosting Center (with the Manifest Studio)",
+            "Version bumped from 26.5.4 to 26.5.5 (workspace, shell, UI, Electrobun config and Rust core kept in sync), and every new string ships in both Simplified Chinese and English"
+          ],
+          "fixed": [
+            "Fixed the Hosting Center version list missing the newest versions: all hardcoded version arrays were removed and the list is now pulled dynamically from upstream per server core and shown in reverse order - Vanilla from piston-meta.mojang.com version_manifest_v2.json (all releases and snapshots), Paper from api.papermc.io/v2/projects/paper, Fabric from meta.fabricmc.net/v2/versions/game filtered by stable: true, Forge from promotions_slim.json, and NeoForge from its Maven version metadata; the dropdown now supports typed search filtering (nearly a thousand versions) and a Refresh Version List button guarantees the newest versions such as 26.1 and 26.2 can be fetched; a 10-minute TTL in-memory cache and timeout fallback messages are included"
+          ]
+        }
+      }
+    },
+    {
       "id": "e7d3a9f2-5c41-4b8e-9d27-6a1f03c8b4e6",
       "version": "26.5.4",
       "releasedAt": "2026-10-18",
       "updateType": "minor",
-      "isLatest": true,
+      "isLatest": false,
       "channel": "stable",
       "platform": "Windows x64",
       "fileName": "iGM-CraftCeon-Launcher-Setup-26.5.4.zip",
       "fileSize": 40995057,
       "fileSizeLabel": "39.10 MB",
       "sha256": "8b6bc00329078167b930324854db4a2dd7b13f7091dc340f67bbc3fe88e4177b",
-      "downloadUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/download/v26.5.4/iGM-CraftCeon-Launcher-Setup-26.5.4.zip",
-      "releasePageUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/tag/v26.5.4",
+      "downloadUrl": "",
+      "releasePageUrl": "",
       "notes": {
         "zh-CN": {
           "added": [
