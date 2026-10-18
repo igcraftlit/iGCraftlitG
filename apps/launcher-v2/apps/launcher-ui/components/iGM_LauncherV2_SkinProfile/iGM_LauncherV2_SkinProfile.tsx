@@ -7,7 +7,8 @@
  * 内容：由账号中心点击已绑定的正版账号进入；纹理经外壳向 Mojang 会话服务取回
  *       （base64 textures 属性解析出皮肤与披风地址及 Slim / Classic 模型），
  *       转 data URL 后交由 skinview3d 渲染 3D 模型，支持鼠标拖拽旋转与滚轮缩放；
- *       展示正版 ID、UUID（可复制）与模型类型；提供前往官网更换皮肤与重新载入
+ *       展示正版 ID、UUID（可复制）与模型类型；提供前往官网更换皮肤与重新载入；
+ *       文案已接入多语言（skin 命名空间）
  * 说明：正版皮肤由官方账号体系管理，本页不提供本地一键应用，仅展示与跳转官网
  */
 
@@ -15,6 +16,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { ArrowLeft, Check, Copy, ExternalLink, RefreshCw } from "lucide-react";
 import {
   iGM_LauncherV2_UseMsa as IGM_LauncherV2_UseMsa,
@@ -63,6 +65,7 @@ async function iGM_LauncherV2_SkinProfileCopy(text: string): Promise<boolean> {
 
 /** 正版档案详情页：3D 角色展示与账号纹理信息 */
 export function iGM_LauncherV2_SkinProfile({ onBack }: iGM_LauncherV2_SkinProfileProps) {
+  const t = useTranslations();
   const msa = IGM_LauncherV2_UseMsa();
   const profile = IGM_LauncherV2_UseSkinProfile();
   const [copied, setCopied] = useState(false);
@@ -82,7 +85,7 @@ export function iGM_LauncherV2_SkinProfile({ onBack }: iGM_LauncherV2_SkinProfil
       <header className={styles.head}>
         <button type="button" className={styles.backButton} onClick={onBack}>
           <ArrowLeft size={15} strokeWidth={2.2} />
-          <span>返回账号中心</span>
+          <span>{t("skin.profile.back")}</span>
         </button>
         <div className={styles.headActions}>
           <button
@@ -91,24 +94,24 @@ export function iGM_LauncherV2_SkinProfile({ onBack }: iGM_LauncherV2_SkinProfil
             onClick={() => profile.refresh()}
           >
             <RefreshCw size={14} strokeWidth={2.2} />
-            <span>重新载入</span>
+            <span>{t("common.refresh")}</span>
           </button>
           <button type="button" className={styles.actionButton} onClick={() => profile.openOfficial()}>
             <ExternalLink size={14} strokeWidth={2.2} />
-            <span>前往官网更换</span>
+            <span>{t("skin.apply.openOfficial")}</span>
           </button>
         </div>
       </header>
 
-      <h1 className={styles.title}>正版账号档案</h1>
+      <h1 className={styles.title}>{t("skin.profile.title")}</h1>
       <p className={styles.desc}>
-        纹理来自 Mojang 会话服务的 profile 接口，仅用于本地 3D 展示。
+        {t("skin.profile.desc")}
       </p>
 
       {/* 未绑定正版账号：本页仅在账号中心点击已绑定账号时进入 */}
       {!account ? (
         <IGM_LauncherV2_Card className={styles.emptyCard}>
-          <p className={styles.emptyText}>尚未绑定微软正版账号，请先在账号中心完成验证。</p>
+          <p className={styles.emptyText}>{t("skin.profile.emptyNoAccount")}</p>
         </IGM_LauncherV2_Card>
       ) : (
         <div className={styles.layout}>
@@ -119,32 +122,32 @@ export function iGM_LauncherV2_SkinProfile({ onBack }: iGM_LauncherV2_SkinProfil
                 capeUrl={profile.capeDataUrl}
                 model={detail?.model ?? "classic"}
                 autoRotate
-                emptyHint={profile.loaded ? profile.message || "未取回皮肤纹理" : "正在载入正版档案…"}
+                emptyHint={profile.loaded ? profile.message || t("skin.profile.textureNotLoaded") : t("skin.profile.loadingProfile")}
               />
             </div>
           </IGM_LauncherV2_Card>
 
           <IGM_LauncherV2_Card className={styles.infoCard}>
             <div className={styles.field}>
-              <span className={styles.fieldLabel}>正版 ID</span>
+              <span className={styles.fieldLabel}>{t("skin.profile.field.name")}</span>
               <span className={styles.fieldValue}>{detail?.name ?? account.name}</span>
             </div>
 
             <div className={styles.field}>
-              <span className={styles.fieldLabel}>模型类型</span>
+              <span className={styles.fieldLabel}>{t("skin.profile.field.model")}</span>
               <span className={styles.fieldValue}>
-                {detail ? (detail.model === "slim" ? "Slim（细手臂）" : "Classic（粗手臂）") : "-"}
+                {detail ? t(detail.model === "slim" ? "skin.model.slim" : "skin.model.classic") : "-"}
               </span>
             </div>
 
             <div className={styles.field}>
-              <span className={styles.fieldLabel}>UUID</span>
+              <span className={styles.fieldLabel}>{t("skin.profile.field.uuid")}</span>
               <span className={styles.fieldValueMono}>{detail?.uuid ?? account.uuid}</span>
             </div>
 
             <div className={styles.field}>
-              <span className={styles.fieldLabel}>披风</span>
-              <span className={styles.fieldValue}>{detail?.capeUrl ? "已佩戴" : "未佩戴"}</span>
+              <span className={styles.fieldLabel}>{t("skin.profile.field.cape")}</span>
+              <span className={styles.fieldValue}>{t(detail?.capeUrl ? "skin.profile.cape.worn" : "skin.profile.cape.notWorn")}</span>
             </div>
 
             <div className={styles.infoActions}>
@@ -165,7 +168,7 @@ export function iGM_LauncherV2_SkinProfile({ onBack }: iGM_LauncherV2_SkinProfil
                 ) : (
                   <Copy size={14} strokeWidth={2.2} />
                 )}
-                <span>{copied ? "已复制 UUID" : "复制 UUID"}</span>
+                <span>{t(copied ? "skin.profile.uuidCopied" : "skin.profile.uuidCopy")}</span>
               </button>
             </div>
 

@@ -8,7 +8,8 @@
  *       本地存在历史社区账号记录时，额外展示该账号头像与昵称，并提供
  *       【一键登录社区账号】按钮，直接复用长效令牌恢复登录态而无需重新授权；
  *       另提供【游客登录（跳过社区账号）】入口，点击后先弹出二次确认，
- *       明确告知游客数据仅存本机、无法云同步，用户确认后才进入主界面
+ *       明确告知游客数据仅存本机、无法云同步，用户确认后才进入主界面；
+ *       已接入多语言（next-intl，命名空间 login）
  * 说明：桌面端为公开客户端，全程不传输 client_secret，仅使用 PKCE（S256）；
  *       本页不提供账号密码表单与注册入口
  */
@@ -16,6 +17,7 @@
 // 导入依赖 //
 "use client";
 
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -59,6 +61,7 @@ function IGM_LauncherV2_RememberedAvatar({ src, alt }: { src: string; alt: strin
 }
 
 export function iGM_LauncherV2_Login() {
+  const t = useTranslations();
   const auth = IGM_LauncherV2_UseAuth();
   const remembered = IGM_LauncherV2_UseRememberedAccount();
   const [guestPrompt, setGuestPrompt] = useState(false);
@@ -73,7 +76,7 @@ export function iGM_LauncherV2_Login() {
   return (
     <div className={`igm-screen igm-page ${styles.screen}`}>
       <IGM_LauncherV2_AppearanceHost />
-      <IGM_LauncherV2_WindowChrome label={IGM_LAUNCHERV2_APP_NAME} version="社区授权" />
+      <IGM_LauncherV2_WindowChrome label={IGM_LAUNCHERV2_APP_NAME} version={t("login.windowVersion")} />
 
       <main className={styles.main}>
         <IGM_LauncherV2_Card className={styles.panel}>
@@ -81,7 +84,7 @@ export function iGM_LauncherV2_Login() {
           <button
             type="button"
             className={styles.entry}
-            aria-label="使用 iGCraftLit 社区账号登录"
+            aria-label={t("login.signIn")}
             disabled={pending}
             onClick={() => auth.login()}
           >
@@ -96,7 +99,7 @@ export function iGM_LauncherV2_Login() {
           </button>
 
           <h1 className={styles.label}>
-            {pending ? "等待浏览器授权…" : "使用 iGCraftLit 社区账号登录"}
+            {pending ? t("login.pending") : t("login.signIn")}
           </h1>
 
           {/* 历史社区账号：本地存在长效令牌记录时展示头像与昵称，支持一键恢复登录态 */}
@@ -104,11 +107,11 @@ export function iGM_LauncherV2_Login() {
             <div className={styles.remembered}>
               <IGM_LauncherV2_RememberedAvatar
                 src={remembered.user.avatar}
-                alt={`${remembered.user.nickname} 的社区头像`}
+                alt={t("login.avatarAlt", { name: remembered.user.nickname })}
               />
               <div className={styles.rememberedText}>
                 <span className={styles.rememberedName}>{remembered.user.nickname}</span>
-                <span className={styles.rememberedId}>上次登录的社区账号</span>
+                <span className={styles.rememberedId}>{t("login.rememberedLast")}</span>
               </div>
               <button
                 type="button"
@@ -116,7 +119,7 @@ export function iGM_LauncherV2_Login() {
                 disabled={pending}
                 onClick={() => remembered.quickLogin()}
               >
-                一键登录社区账号
+                {t("login.quickLogin")}
               </button>
             </div>
           ) : null}
@@ -128,14 +131,14 @@ export function iGM_LauncherV2_Login() {
             disabled={pending}
             onClick={() => setGuestPrompt(true)}
           >
-            游客登录（跳过社区账号）
+            {t("login.guest")}
           </button>
 
           {auth.state === "logged-out" && auth.message ? (
             <p className={styles.error}>{auth.message}</p>
           ) : null}
           {!auth.isShell ? (
-            <p className={styles.hint}>当前为浏览器预览模式，授权流程需在桌面启动器内进行。</p>
+            <p className={styles.hint}>{t("login.browserPreviewHint")}</p>
           ) : null}
         </IGM_LauncherV2_Card>
       </main>
@@ -147,20 +150,18 @@ export function iGM_LauncherV2_Login() {
             className={styles.modal}
             role="dialog"
             aria-modal="true"
-            aria-label="游客登录确认"
+            aria-label={t("login.guestModal.aria")}
             onClick={(event) => event.stopPropagation()}
           >
-            <p className={styles.modalTitle}>注意</p>
-            <p className={styles.modalText}>
-              游客登录产生的数据（如游玩记录、本地视界）将仅保存在当前设备，无法云同步或与社区生态互通，是否继续？
-            </p>
+            <p className={styles.modalTitle}>{t("login.guestModal.title")}</p>
+            <p className={styles.modalText}>{t("login.guestModal.text")}</p>
             <div className={styles.modalActions}>
               <button
                 type="button"
                 className={styles.modalCancel}
                 onClick={() => setGuestPrompt(false)}
               >
-                取消
+                {t("common.cancel")}
               </button>
               <button
                 type="button"
@@ -170,7 +171,7 @@ export function iGM_LauncherV2_Login() {
                   iGM_LauncherV2_Navigate("/G_Main");
                 }}
               >
-                继续
+                {t("login.continue")}
               </button>
             </div>
           </div>

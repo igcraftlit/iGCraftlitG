@@ -13,7 +13,8 @@
  *       账号中心包含 Java 环境管理、微软正版验证、离线账号管理三块能力，
  *       点击已绑定的正版账号进入 3D 正版档案详情页；
  *       皮肤库页签分「皮肤库 / 在线查询 / 我的皮肤」三类，中部提供「全部 / 精选」标签，
- *       支持本地导入与离线应用；设置页列出后续模块将接入的配置项占位
+ *       支持本地导入与离线应用；设置页列出后续模块将接入的配置项占位；
+ *       已接入多语言（next-intl），全部文案走 shell 命名空间
  * 说明：主界面不使用流体云背景（仅欢迎页保留），避免动态干扰；
  *       全部特权能力（进程扫描、文件选择、网络验证）均由 Bun 主进程执行，
  *       界面只展示状态并投递指令，不直接触碰本地文件与系统命令
@@ -23,6 +24,7 @@
 "use client";
 
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import {
   Camera,
@@ -122,6 +124,7 @@ type iGM_LauncherV2_MainTab =
 /** 页签展示信息 */
 interface iGM_LauncherV2_MainTabMeta {
   id: iGM_LauncherV2_MainTab;
+  /** i18n 键（渲染处用 t 解析） */
   label: string;
   icon: typeof Home;
 }
@@ -129,7 +132,9 @@ interface iGM_LauncherV2_MainTabMeta {
 /** 首页快捷入口卡片（点击跳转对应页签） */
 interface iGM_LauncherV2_MainTile {
   id: string;
+  /** i18n 键（渲染处用 t 解析） */
   title: string;
+  /** i18n 键（渲染处用 t 解析） */
   desc: string;
   icon: typeof Home;
   /** 点击后跳转的页签 */
@@ -139,20 +144,38 @@ interface iGM_LauncherV2_MainTile {
 // 常量与文案 //
 
 const IGM_MAIN_TABS: iGM_LauncherV2_MainTabMeta[] = [
-  { id: "home", label: "首页", icon: Home },
-  { id: "horizon", label: "视界", icon: Layers },
-  { id: "resources", label: "资源中心", icon: Package },
-  { id: "servers", label: "服务器大厅", icon: Server },
-  { id: "peer", label: "联机大厅", icon: Users },
-  { id: "account", label: "账号中心", icon: UserRound },
-  { id: "skins", label: "皮肤库", icon: Shirt },
-  { id: "settings", label: "设置", icon: Settings },
+  { id: "home", label: "nav.home", icon: Home },
+  { id: "horizon", label: "nav.horizon", icon: Layers },
+  { id: "resources", label: "nav.resources", icon: Package },
+  { id: "servers", label: "nav.servers", icon: Server },
+  { id: "peer", label: "nav.peer", icon: Users },
+  { id: "account", label: "nav.account", icon: UserRound },
+  { id: "skins", label: "nav.skins", icon: Shirt },
+  { id: "settings", label: "nav.settings", icon: Settings },
 ];
 
 const IGM_MAIN_TILES: iGM_LauncherV2_MainTile[] = [
-  { id: "community", title: "社区", desc: "浏览皮肤库与社区外观，挑选并应用专属皮肤。", icon: Shirt, tab: "skins" },
-  { id: "resources", title: "资源库", desc: "多源版本清单与加载器列表，自由选择下载通道。", icon: Package, tab: "resources" },
-  { id: "settings", title: "设置", desc: "管理总目录、游戏目录与下载源等启动器配置。", icon: Settings, tab: "settings" },
+  {
+    id: "community",
+    title: "shell.tiles.community.title",
+    desc: "shell.tiles.community.desc",
+    icon: Shirt,
+    tab: "skins",
+  },
+  {
+    id: "resources",
+    title: "shell.tiles.resources.title",
+    desc: "shell.tiles.resources.desc",
+    icon: Package,
+    tab: "resources",
+  },
+  {
+    id: "settings",
+    title: "shell.tiles.settings.title",
+    desc: "shell.tiles.settings.desc",
+    icon: Settings,
+    tab: "settings",
+  },
 ];
 
 /** 离线账号数量上限（超过后不再允许新增，与外壳约束保持一致） */
@@ -161,24 +184,24 @@ const IGM_OFFLINE_LIMIT = 5;
 /** 首页「最近更新」展示的正式版条数 */
 const IGM_RECENT_RELEASE_COUNT = 6;
 
-/** 启动日志来源标签（错误控制台每行前缀） */
+/** 启动日志来源标签（错误控制台每行前缀，值为 i18n 键） */
 const IGM_LAUNCHERV2_LOG_STREAM_LABEL = {
-  system: "启动器",
-  stdout: "输出",
-  stderr: "错误",
+  system: "shell.logStream.system",
+  stdout: "shell.logStream.stdout",
+  stderr: "shell.logStream.stderr",
 } as const;
 
 /**
  * 启动进度阶段清单。
  * 与外壳 iGM_LauncherV2_Launch 中的推进节点一一对应，
- * 用于遮罩内直观呈现各阶段是否已达成。
+ * 用于遮罩内直观呈现各阶段是否已达成（label 为 i18n 键）。
  */
 const IGM_LAUNCHERV2_LAUNCH_STEPS: { percent: number; label: string }[] = [
-  { percent: 10, label: "验证 Java 与依赖库" },
-  { percent: 30, label: "构建 JVM 参数" },
-  { percent: 50, label: "拉起 Java 进程" },
-  { percent: 70, label: "捕获游戏初始化标记" },
-  { percent: 100, label: "启动成功" },
+  { percent: 10, label: "shell.launchSteps.verify" },
+  { percent: 30, label: "shell.launchSteps.jvm" },
+  { percent: 50, label: "shell.launchSteps.spawn" },
+  { percent: 70, label: "shell.launchSteps.initMark" },
+  { percent: 100, label: "shell.launchSteps.success" },
 ];
 
 /** 启动日志时间格式化（时:分:秒） */
@@ -237,6 +260,7 @@ function IGM_LauncherV2_NavItem({
   active: boolean;
   onSelect: () => void;
 }) {
+  const t = useTranslations();
   const Icon = item.icon;
   return (
     <button
@@ -246,13 +270,14 @@ function IGM_LauncherV2_NavItem({
       onClick={onSelect}
     >
       <Icon size={17} strokeWidth={2.1} />
-      <span className={styles.navItemLabel}>{item.label}</span>
+      <span className={styles.navItemLabel}>{t(item.label)}</span>
     </button>
   );
 }
 
 /** Java 环境管理面板：进入账号中心自动扫描一次，支持手动选择与设默认 */
 function IGM_LauncherV2_JavaPanel() {
+  const t = useTranslations();
   const java = IGM_LauncherV2_UseJava();
   const requested = useRef(false);
 
@@ -267,10 +292,8 @@ function IGM_LauncherV2_JavaPanel() {
     <IGM_LauncherV2_Card className={styles.panel}>
       <div className={styles.panelHead}>
         <div>
-          <h2 className={styles.panelTitle}>Java 环境</h2>
-          <p className={styles.panelDesc}>
-            自动扫描系统常见 JDK 目录与 .minecraft 自带运行时，也可手动选择 javaw.exe。
-          </p>
+          <h2 className={styles.panelTitle}>{t("shell.java.title")}</h2>
+          <p className={styles.panelDesc}>{t("shell.java.desc")}</p>
         </div>
         <div className={styles.panelActions}>
           <button
@@ -280,11 +303,11 @@ function IGM_LauncherV2_JavaPanel() {
             onClick={() => java.scan()}
           >
             <RefreshCw size={14} strokeWidth={2.2} />
-            <span>{java.scanning ? "扫描中" : "重新扫描"}</span>
+            <span>{java.scanning ? t("common.scanning") : t("shell.java.rescan")}</span>
           </button>
           <button type="button" className={styles.actionButton} onClick={() => java.browse()}>
             <Plus size={14} strokeWidth={2.2} />
-            <span>手动添加 Java 路径</span>
+            <span>{t("shell.java.addPath")}</span>
           </button>
         </div>
       </div>
@@ -293,7 +316,7 @@ function IGM_LauncherV2_JavaPanel() {
       {java.scanning ? (
         <p className={styles.notice}>
           <RefreshCw size={13} strokeWidth={2.2} />
-          <span>正在扫描系统 Java 环境…</span>
+          <span>{t("shell.java.scanningNotice")}</span>
         </p>
       ) : java.message ? (
         <p className={styles.notice}>
@@ -304,13 +327,10 @@ function IGM_LauncherV2_JavaPanel() {
 
       {java.items.length === 0 ? (
         <div className={styles.emptyAction}>
-          <p className={styles.empty}>
-            暂未发现 Java 环境。可点击下方按钮手动指定 javaw.exe（通常位于 Java 安装目录的 bin
-            文件夹内），选好后会立即解析版本并加入列表。
-          </p>
+          <p className={styles.empty}>{t("shell.java.empty")}</p>
           <button type="button" className={styles.actionButton} onClick={() => java.browse()}>
             <FolderOpen size={14} strokeWidth={2.2} />
-            <span>手动添加 Java 路径</span>
+            <span>{t("shell.java.addPath")}</span>
           </button>
         </div>
       ) : (
@@ -322,10 +342,14 @@ function IGM_LauncherV2_JavaPanel() {
                 <div className={styles.rowMain}>
                   <div className={styles.rowTitleLine}>
                     <span className={styles.rowTitle}>
-                      {item.version ? `Java ${item.version}` : "Java（版本未识别）"}
+                      {item.version
+                        ? t("shell.java.versionLabel", { version: item.version })
+                        : t("shell.java.versionUnknown")}
                     </span>
                     <span className={styles.rowTag}>{item.vendor}</span>
-                    {isDefault ? <span className={styles.rowTagOn}>全局默认</span> : null}
+                    {isDefault ? (
+                      <span className={styles.rowTagOn}>{t("shell.java.globalDefault")}</span>
+                    ) : null}
                   </div>
                   <span className={styles.rowSub}>{item.path}</span>
                 </div>
@@ -334,7 +358,7 @@ function IGM_LauncherV2_JavaPanel() {
                     type="button"
                     className={styles.iconButton}
                     disabled={isDefault}
-                    aria-label="设为全局默认"
+                    aria-label={t("shell.java.setDefaultAria")}
                     onClick={() => java.setDefault(item.id)}
                   >
                     <Check size={15} strokeWidth={2.2} />
@@ -342,7 +366,7 @@ function IGM_LauncherV2_JavaPanel() {
                   <button
                     type="button"
                     className={`${styles.iconButton} ${styles.iconButtonDanger}`}
-                    aria-label="移除该 Java 环境"
+                    aria-label={t("shell.java.removeAria")}
                     onClick={() => java.remove(item.id)}
                   >
                     <Trash2 size={15} strokeWidth={2.2} />
@@ -359,6 +383,7 @@ function IGM_LauncherV2_JavaPanel() {
 
 /** 微软正版验证面板：与社区账号解绑，游客（未登录社区账号）同样可发起设备代码流授权 */
 function IGM_LauncherV2_MsaPanel({ onOpenProfile }: { onOpenProfile: () => void }) {
+  const t = useTranslations();
   const msa = IGM_LauncherV2_UseMsa();
   const device = msa.device;
   const [copied, setCopied] = useState(false);
@@ -390,11 +415,8 @@ function IGM_LauncherV2_MsaPanel({ onOpenProfile }: { onOpenProfile: () => void 
     <IGM_LauncherV2_Card className={styles.panel}>
       <div className={styles.panelHead}>
         <div>
-          <h2 className={styles.panelTitle}>微软正版验证</h2>
-          <p className={styles.panelDesc}>
-            经微软设备代码流授权，依次完成 Xbox Live、XSTS 与 Minecraft 认证，
-            获取正版 UUID、游戏名与皮肤头像。
-          </p>
+          <h2 className={styles.panelTitle}>{t("shell.msa.title")}</h2>
+          <p className={styles.panelDesc}>{t("shell.msa.desc")}</p>
         </div>
         {msa.state === "logged-in" && msa.account ? (
           <button
@@ -403,7 +425,7 @@ function IGM_LauncherV2_MsaPanel({ onOpenProfile }: { onOpenProfile: () => void 
             onClick={() => msa.logout()}
           >
             <LogOut size={14} strokeWidth={2.2} />
-            <span>解除绑定</span>
+            <span>{t("shell.msa.unbind")}</span>
           </button>
         ) : (
           <button
@@ -413,7 +435,7 @@ function IGM_LauncherV2_MsaPanel({ onOpenProfile }: { onOpenProfile: () => void 
             onClick={() => msa.login()}
           >
             <ShieldCheck size={14} strokeWidth={2.2} />
-            <span>{msa.state === "pending" ? "等待授权中" : "绑定正版账号"}</span>
+            <span>{msa.state === "pending" ? t("shell.msa.pending") : t("shell.msa.bind")}</span>
           </button>
         )}
       </div>
@@ -428,7 +450,7 @@ function IGM_LauncherV2_MsaPanel({ onOpenProfile }: { onOpenProfile: () => void 
           >
             <IGM_LauncherV2_AvatarImage
               src={msa.account.avatar}
-              alt={`${msa.account.name} 的正版皮肤头像`}
+              alt={t("shell.msa.avatarAlt", { name: msa.account.name })}
               size={56}
               iconSize={22}
               className={styles.identityAvatar}
@@ -438,7 +460,7 @@ function IGM_LauncherV2_MsaPanel({ onOpenProfile }: { onOpenProfile: () => void 
               <span className={styles.rowSub}>{msa.account.uuid}</span>
             </div>
             <span className={styles.identityHint}>
-              <span>查看正版档案</span>
+              <span>{t("shell.msa.viewProfile")}</span>
               <ChevronRight size={14} strokeWidth={2.2} />
             </span>
           </button>
@@ -446,9 +468,7 @@ function IGM_LauncherV2_MsaPanel({ onOpenProfile }: { onOpenProfile: () => void 
         </>
       ) : device ? (
         <div className={styles.deviceBox}>
-          <p className={styles.deviceHint}>
-            请在浏览器中打开验证页，输入下方用户代码完成微软账号授权。
-          </p>
+          <p className={styles.deviceHint}>{t("shell.msa.deviceHint")}</p>
           <div className={styles.deviceCodeRow}>
             <code className={styles.deviceCode}>{device.userCode}</code>
             <span className={styles.deviceUri}>{device.verificationUri}</span>
@@ -460,7 +480,7 @@ function IGM_LauncherV2_MsaPanel({ onOpenProfile }: { onOpenProfile: () => void 
               onClick={() => void handleDeviceAuth()}
             >
               <Copy size={14} strokeWidth={2.2} />
-              <span>{copied ? "已复制，请在浏览器粘贴" : "复制代码并打开浏览器"}</span>
+              <span>{copied ? t("shell.msa.copiedPaste") : t("shell.msa.copyAndOpen")}</span>
             </button>
             <button
               type="button"
@@ -468,20 +488,17 @@ function IGM_LauncherV2_MsaPanel({ onOpenProfile }: { onOpenProfile: () => void 
               onClick={() => msa.cancel()}
             >
               <X size={14} strokeWidth={2.2} />
-              <span>取消验证</span>
+              <span>{t("shell.msa.cancelVerify")}</span>
             </button>
           </div>
           <p className={styles.deviceMeta}>
-            代码有效期约 {Math.max(1, Math.round(device.expiresIn / 60))} 分钟，
-            授权成功后本页将自动更新。
+            {t("shell.msa.deviceMeta", { minutes: Math.max(1, Math.round(device.expiresIn / 60)) })}
           </p>
         </div>
       ) : (
         <p className={styles.empty}>
           {msa.message ||
-            (msa.state === "pending"
-              ? "正在向微软申请设备代码…"
-              : "尚未绑定微软正版账号，点击右上角按钮开始验证。")}
+            (msa.state === "pending" ? t("shell.msa.requesting") : t("shell.msa.notBound"))}
         </p>
       )}
     </IGM_LauncherV2_Card>
@@ -490,6 +507,7 @@ function IGM_LauncherV2_MsaPanel({ onOpenProfile }: { onOpenProfile: () => void 
 
 /** 离线账号面板：昵称推导标准 UUID，多账号可一键切换 */
 function IGM_LauncherV2_OfflinePanel() {
+  const t = useTranslations();
   const offline = IGM_LauncherV2_UseOffline();
   const [name, setName] = useState("");
 
@@ -508,10 +526,8 @@ function IGM_LauncherV2_OfflinePanel() {
     <IGM_LauncherV2_Card className={styles.panel}>
       <div className={styles.panelHead}>
         <div>
-          <h2 className={styles.panelTitle}>离线账号</h2>
-          <p className={styles.panelDesc}>
-            UUID 由 OfflinePlayer:昵称 的 MD5 推导为标准格式，仅用于单机与离线登录。
-          </p>
+          <h2 className={styles.panelTitle}>{t("shell.offline.title")}</h2>
+          <p className={styles.panelDesc}>{t("shell.offline.desc")}</p>
         </div>
       </div>
 
@@ -520,7 +536,7 @@ function IGM_LauncherV2_OfflinePanel() {
           className={styles.input}
           value={name}
           maxLength={16}
-          placeholder="输入账号昵称，最多 16 个字符"
+          placeholder={t("shell.offline.placeholder")}
           onChange={(event) => setName(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === "Enter") submit();
@@ -528,12 +544,12 @@ function IGM_LauncherV2_OfflinePanel() {
         />
         <button type="button" className={styles.actionButton} onClick={submit}>
           <Plus size={14} strokeWidth={2.2} />
-          <span>添加</span>
+          <span>{t("common.add")}</span>
         </button>
       </div>
 
       {offline.items.length === 0 ? (
-        <p className={styles.empty}>暂无离线账号，添加后可在列表中切换当前账号。</p>
+        <p className={styles.empty}>{t("shell.offline.empty")}</p>
       ) : (
         <ul className={styles.list}>
           {offline.items.map((item) => {
@@ -543,7 +559,9 @@ function IGM_LauncherV2_OfflinePanel() {
                 <div className={styles.rowMain}>
                   <div className={styles.rowTitleLine}>
                     <span className={styles.rowTitle}>{item.name}</span>
-                    {current ? <span className={styles.rowTagOn}>当前账号</span> : null}
+                    {current ? (
+                      <span className={styles.rowTagOn}>{t("shell.offline.current")}</span>
+                    ) : null}
                   </div>
                   <span className={styles.rowSub}>{item.uuid}</span>
                 </div>
@@ -555,12 +573,12 @@ function IGM_LauncherV2_OfflinePanel() {
                     onClick={() => offline.select(item.id)}
                   >
                     <Check size={14} strokeWidth={2.2} />
-                    <span>切换</span>
+                    <span>{t("shell.offline.switch")}</span>
                   </button>
                   <button
                     type="button"
                     className={`${styles.iconButton} ${styles.iconButtonDanger}`}
-                    aria-label="删除该离线账号"
+                    aria-label={t("shell.offline.removeAria")}
                     onClick={() => offline.remove(item.id)}
                   >
                     <Trash2 size={15} strokeWidth={2.2} />
@@ -587,6 +605,7 @@ function IGM_LauncherV2_FormatReleaseTime(value: string): string {
 
 /** 首页账号栏·正版账号：展示已绑定账号，点击卡片即设为当前启动账号 */
 function IGM_LauncherV2_HomeMsaBlock() {
+  const t = useTranslations();
   const msa = IGM_LauncherV2_UseMsa();
   const settings = IGM_LauncherV2_UseSettings();
   const account = msa.account;
@@ -598,8 +617,10 @@ function IGM_LauncherV2_HomeMsaBlock() {
     <div className={styles.accountBlock}>
       <div className={styles.accountHead}>
         <ShieldCheck size={15} strokeWidth={2.2} />
-        <span className={styles.accountTitle}>正版账号</span>
-        {active ? <span className={styles.accountActiveTag}>当前启动账号</span> : null}
+        <span className={styles.accountTitle}>{t("shell.home.msaTitle")}</span>
+        {active ? (
+          <span className={styles.accountActiveTag}>{t("shell.home.currentAccountTag")}</span>
+        ) : null}
       </div>
 
       {account ? (
@@ -613,7 +634,7 @@ function IGM_LauncherV2_HomeMsaBlock() {
         >
           <IGM_LauncherV2_AvatarImage
             src={account.avatar}
-            alt={`${account.name} 的正版皮肤头像`}
+            alt={t("shell.msa.avatarAlt", { name: account.name })}
             size={52}
             iconSize={20}
             className={styles.identityAvatar}
@@ -627,7 +648,7 @@ function IGM_LauncherV2_HomeMsaBlock() {
           </span>
         </button>
       ) : (
-        <p className={styles.accountEmpty}>未绑定微软正版账号</p>
+        <p className={styles.accountEmpty}>{t("shell.home.msaEmpty")}</p>
       )}
     </div>
   );
@@ -635,6 +656,7 @@ function IGM_LauncherV2_HomeMsaBlock() {
 
 /** 首页账号栏·离线账号：每位用户最多 5 个，点击卡片即设为当前启动账号 */
 function IGM_LauncherV2_HomeOfflineBlock() {
+  const t = useTranslations();
   const offline = IGM_LauncherV2_UseOffline();
   const settings = IGM_LauncherV2_UseSettings();
   const current = settings.settings?.currentAccount;
@@ -655,7 +677,7 @@ function IGM_LauncherV2_HomeOfflineBlock() {
     <div className={styles.accountBlock}>
       <div className={styles.accountHead}>
         <UserRound size={15} strokeWidth={2.2} />
-        <span className={styles.accountTitle}>离线账号</span>
+        <span className={styles.accountTitle}>{t("shell.offline.title")}</span>
         <span className={styles.accountCount}>
           {offline.items.length}/{IGM_OFFLINE_LIMIT}
         </span>
@@ -666,7 +688,7 @@ function IGM_LauncherV2_HomeOfflineBlock() {
           className={styles.input}
           value={name}
           maxLength={16}
-          placeholder="输入账号昵称"
+          placeholder={t("shell.home.offlinePlaceholder")}
           disabled={reached}
           onChange={(event) => setName(event.target.value)}
           onKeyDown={(event) => {
@@ -675,13 +697,17 @@ function IGM_LauncherV2_HomeOfflineBlock() {
         />
         <button type="button" className={styles.actionButton} disabled={reached} onClick={submit}>
           <Plus size={14} strokeWidth={2.2} />
-          <span>添加</span>
+          <span>{t("common.add")}</span>
         </button>
       </div>
-      {reached ? <p className={styles.accountHint}>最多只能创建 5 个离线账号</p> : null}
+      {reached ? (
+        <p className={styles.accountHint}>
+          {t("shell.home.offlineLimitHint", { limit: IGM_OFFLINE_LIMIT })}
+        </p>
+      ) : null}
 
       {offline.items.length === 0 ? (
-        <p className={styles.accountEmpty}>暂无离线账号，添加后点击卡片即可选为当前启动账号。</p>
+        <p className={styles.accountEmpty}>{t("shell.home.offlineEmpty")}</p>
       ) : (
         <ul className={styles.list}>
           {offline.items.map((item) => {
@@ -700,7 +726,11 @@ function IGM_LauncherV2_HomeOfflineBlock() {
                   <div className={styles.rowMain}>
                     <div className={styles.rowTitleLine}>
                       <span className={styles.rowTitle}>{item.name}</span>
-                      {active ? <span className={styles.rowTagOn}>当前启动账号</span> : null}
+                      {active ? (
+                        <span className={styles.rowTagOn}>
+                          {t("shell.home.currentAccountTag")}
+                        </span>
+                      ) : null}
                     </div>
                     <span className={styles.rowSub}>{item.uuid}</span>
                   </div>
@@ -712,7 +742,7 @@ function IGM_LauncherV2_HomeOfflineBlock() {
                   <button
                     type="button"
                     className={`${styles.iconButton} ${styles.iconButtonDanger}`}
-                    aria-label="删除该离线账号"
+                    aria-label={t("shell.offline.removeAria")}
                     onClick={() => offline.remove(item.id)}
                   >
                     <Trash2 size={15} strokeWidth={2.2} />
@@ -729,6 +759,7 @@ function IGM_LauncherV2_HomeOfflineBlock() {
 
 /** 首页「最近更新」：取最新正式版若干条，数据行数由 UseVersions 统一收口 */
 function IGM_LauncherV2_RecentUpdates() {
+  const t = useTranslations();
   const versions = IGM_LauncherV2_UseVersions();
   const releases = versions.versions
     .filter((item) => item.type === "release")
@@ -742,16 +773,16 @@ function IGM_LauncherV2_RecentUpdates() {
     <IGM_LauncherV2_Card className={styles.recentCard}>
       <div className={styles.panelHead}>
         <div>
-          <h2 className={styles.panelTitle}>最近更新</h2>
-          <p className={styles.panelDesc}>Minecraft 正式版发布记录，完整清单见「资源中心」。</p>
+          <h2 className={styles.panelTitle}>{t("shell.recent.title")}</h2>
+          <p className={styles.panelDesc}>{t("shell.recent.desc")}</p>
         </div>
         <Clock size={16} strokeWidth={2.2} className={styles.recentIcon} />
       </div>
 
       {versions.loading ? (
-        <p className={styles.empty}>正在获取版本列表…</p>
+        <p className={styles.empty}>{t("shell.recent.loading")}</p>
       ) : releases.length === 0 ? (
-        <p className={styles.empty}>{versions.message || "暂未获取到版本列表，请稍后在「资源中心」重试。"}</p>
+        <p className={styles.empty}>{versions.message || t("shell.recent.empty")}</p>
       ) : (
         <ul className={styles.list}>
           {releases.map((item) => (
@@ -759,7 +790,7 @@ function IGM_LauncherV2_RecentUpdates() {
               <div className={styles.rowMain}>
                 <div className={styles.rowTitleLine}>
                   <span className={styles.rowTitle}>{item.id}</span>
-                  <span className={styles.rowTag}>正式版</span>
+                  <span className={styles.rowTag}>{t("shell.recent.releaseTag")}</span>
                 </div>
                 <span className={styles.rowSub}>{IGM_LauncherV2_FormatReleaseTime(item.releaseTime)}</span>
               </div>
@@ -777,6 +808,7 @@ function IGM_LauncherV2_RecentUpdates() {
  * 有新日志时自动滚到底部，便于直接看到最后一条报错。
  */
 function IGM_LauncherV2_LaunchConsole() {
+  const t = useTranslations();
   const logs = IGM_LauncherV2_UseLaunchLogs();
   const bodyRef = useRef<HTMLDivElement | null>(null);
 
@@ -790,17 +822,14 @@ function IGM_LauncherV2_LaunchConsole() {
     <IGM_LauncherV2_Card className={styles.consoleCard}>
       <div className={styles.panelHead}>
         <div>
-          <h2 className={styles.panelTitle}>错误控制台</h2>
-          <p className={styles.panelDesc}>
-            游戏进程的标准输出与标准错误逐行输出，启动失败时会指出具体原因；完整日志写入
-            logs/launch.log。
-          </p>
+          <h2 className={styles.panelTitle}>{t("shell.console.title")}</h2>
+          <p className={styles.panelDesc}>{t("shell.console.desc")}</p>
         </div>
         <div className={styles.consoleActions}>
           <button
             type="button"
             className={styles.iconButton}
-            aria-label="重新载入启动日志"
+            aria-label={t("shell.console.reloadAria")}
             onClick={() => logs.reload()}
           >
             <RefreshCw size={15} strokeWidth={2.2} />
@@ -808,7 +837,7 @@ function IGM_LauncherV2_LaunchConsole() {
           <button
             type="button"
             className={styles.iconButton}
-            aria-label="清空启动日志显示"
+            aria-label={t("shell.console.clearAria")}
             onClick={() => logs.clear()}
           >
             <Trash2 size={15} strokeWidth={2.2} />
@@ -819,7 +848,7 @@ function IGM_LauncherV2_LaunchConsole() {
 
       <div className={styles.consoleBody} ref={bodyRef}>
         {logs.entries.length === 0 ? (
-          <p className={styles.consoleEmpty}>暂无启动日志，启动游戏后此处会实时显示进程输出。</p>
+          <p className={styles.consoleEmpty}>{t("shell.console.empty")}</p>
         ) : (
           logs.entries.map((entry, index) => (
             <p
@@ -830,7 +859,7 @@ function IGM_LauncherV2_LaunchConsole() {
             >
               <span className={styles.consoleTime}>{iGM_LauncherV2_FormatLogTime(entry.time)}</span>
               <span className={styles.consoleStream}>
-                {IGM_LAUNCHERV2_LOG_STREAM_LABEL[entry.stream]}
+                {t(IGM_LAUNCHERV2_LOG_STREAM_LABEL[entry.stream])}
               </span>
               <span className={styles.consoleText}>{entry.line}</span>
             </p>
@@ -851,6 +880,7 @@ function IGM_LauncherV2_LaunchConsole() {
  * 说明：进度与日志均来自外壳回推（launch:progress / launch:log），界面不做任何本地推断
  */
 function IGM_LauncherV2_LaunchProgressOverlay() {
+  const t = useTranslations();
   const progress = IGM_LauncherV2_UseLaunchProgress();
   const logs = IGM_LauncherV2_UseLaunchLogs();
   /** 遮罩可见性：进度推进期间自动显示，100% 后自动隐藏，失败时保持显示直至用户确认 */
@@ -889,10 +919,14 @@ function IGM_LauncherV2_LaunchProgressOverlay() {
     <div className={styles.progressOverlay} role="dialog" aria-modal="true">
       <div className={`${styles.progressCard} ${progress.failed ? styles.progressCardFailed : ""}`}>
         <h2 className={styles.progressTitle}>
-          {progress.failed ? "启动失败" : progress.percent >= 100 ? "启动成功" : "正在启动游戏"}
+          {progress.failed
+            ? t("shell.progress.failed")
+            : progress.percent >= 100
+              ? t("shell.launchSteps.success")
+              : t("shell.progress.starting")}
         </h2>
         <p className={styles.progressStage}>
-          {progress.stage || (progress.failed ? "已中止启动" : "正在准备…")}
+          {progress.stage || (progress.failed ? t("shell.progress.aborted") : t("shell.progress.preparing"))}
         </p>
 
         <div className={styles.progressTrack}>
@@ -916,7 +950,7 @@ function IGM_LauncherV2_LaunchProgressOverlay() {
             >
               <span className={styles.progressStepDot} />
               <span>
-                {step.percent}% · {step.label}
+                {step.percent}% · {t(step.label)}
               </span>
             </li>
           ))}
@@ -925,9 +959,11 @@ function IGM_LauncherV2_LaunchProgressOverlay() {
         {/* 失败态：直接列出最近错误日志，说明具体崩溃位置 */}
         {progress.failed ? (
           <div className={styles.progressErrors}>
-            <p className={styles.progressErrorsHead}>错误日志（最近 {errorLines.length} 条）</p>
+            <p className={styles.progressErrorsHead}>
+              {t("shell.progress.errorHead", { count: errorLines.length })}
+            </p>
             {errorLines.length === 0 ? (
-              <p className={styles.progressErrorLine}>未捕获到标准错误输出，请查看 logs/launch.log</p>
+              <p className={styles.progressErrorLine}>{t("shell.progress.noErrors")}</p>
             ) : (
               errorLines.map((entry, index) => (
                 <p key={`${entry.time}-${index}`} className={styles.progressErrorLine}>
@@ -941,10 +977,10 @@ function IGM_LauncherV2_LaunchProgressOverlay() {
         <div className={styles.progressFoot}>
           {progress.failed || progress.percent >= 100 ? (
             <button type="button" className={styles.actionButton} onClick={close}>
-              <span>关闭</span>
+              <span>{t("common.close")}</span>
             </button>
           ) : (
-            <p className={styles.progressHint}>启动完成后遮罩会自动关闭</p>
+            <p className={styles.progressHint}>{t("shell.progress.hint")}</p>
           )}
         </div>
       </div>
@@ -966,6 +1002,7 @@ function IGM_LauncherV2_LaunchDialog({
   onGoHorizon: () => void;
   onGoAccount: () => void;
 }) {
+  const t = useTranslations();
   const horizons = IGM_LauncherV2_UseHorizons();
   const launch = IGM_LauncherV2_UseLaunch();
   const settings = IGM_LauncherV2_UseSettings();
@@ -996,17 +1033,20 @@ function IGM_LauncherV2_LaunchDialog({
         className={styles.modal}
         role="dialog"
         aria-modal="true"
-        aria-label="选择要启动的视界"
+        aria-label={t("shell.launchDialog.title")}
         onClick={(event) => event.stopPropagation()}
       >
         <div className={styles.modalHead}>
           <div>
-            <h2 className={styles.modalTitle}>选择要启动的视界</h2>
-            <p className={styles.modalDesc}>
-              每个视界是独立的游戏目录，选择后将按该视界的配置启动游戏。
-            </p>
+            <h2 className={styles.modalTitle}>{t("shell.launchDialog.title")}</h2>
+            <p className={styles.modalDesc}>{t("shell.launchDialog.desc")}</p>
           </div>
-          <button type="button" className={styles.iconButton} aria-label="关闭小窗" onClick={onClose}>
+          <button
+            type="button"
+            className={styles.iconButton}
+            aria-label={t("shell.launchDialog.closeAria")}
+            onClick={onClose}
+          >
             <X size={16} strokeWidth={2.2} />
           </button>
         </div>
@@ -1015,13 +1055,11 @@ function IGM_LauncherV2_LaunchDialog({
           <div className={styles.modalWarn}>
             <Info size={16} strokeWidth={2.2} />
             <div className={styles.modalWarnBody}>
-              <p className={styles.modalWarnTitle}>请先选择要启动的账号</p>
-              <p className={styles.modalWarnDesc}>
-                在首页右侧账号栏点击正版或离线账号卡片，把它设为当前启动账号后再启动游戏。
-              </p>
+              <p className={styles.modalWarnTitle}>{t("shell.launchDialog.needAccountTitle")}</p>
+              <p className={styles.modalWarnDesc}>{t("shell.launchDialog.needAccountDesc")}</p>
               <button type="button" className={styles.actionButton} onClick={onGoAccount}>
                 <UserRound size={14} strokeWidth={2.2} />
-                <span>前往账号中心</span>
+                <span>{t("shell.launchDialog.goAccount")}</span>
               </button>
             </div>
           </div>
@@ -1029,12 +1067,10 @@ function IGM_LauncherV2_LaunchDialog({
 
         {horizons.items.length === 0 ? (
           <div className={styles.modalEmpty}>
-            <p className={styles.empty}>
-              暂无视界，请先到「资源中心」下载或到「视界」页签创建。
-            </p>
+            <p className={styles.empty}>{t("shell.launchDialog.empty")}</p>
             <button type="button" className={styles.actionButton} onClick={onGoHorizon}>
               <Layers size={14} strokeWidth={2.2} />
-              <span>前往视界页签</span>
+              <span>{t("shell.launchDialog.goHorizon")}</span>
             </button>
           </div>
         ) : (
@@ -1050,8 +1086,14 @@ function IGM_LauncherV2_LaunchDialog({
                   <div className={styles.rowMain}>
                     <div className={styles.rowTitleLine}>
                       <span className={styles.rowTitle}>{item.name}</span>
-                      {item.current ? <span className={styles.rowTagOn}>当前视界</span> : null}
-                      <span className={styles.rowTag}>模组 {item.modCount}</span>
+                      {item.current ? (
+                        <span className={styles.rowTagOn}>
+                          {t("shell.launchDialog.currentHorizon")}
+                        </span>
+                      ) : null}
+                      <span className={styles.rowTag}>
+                        {t("shell.launchDialog.modCount", { count: item.modCount })}
+                      </span>
                     </div>
                     <span className={styles.rowSub}>{item.path}</span>
                   </div>
@@ -1071,6 +1113,7 @@ function IGM_LauncherV2_LaunchDialog({
 }
 
 export function iGM_LauncherV2_MainShell() {
+  const t = useTranslations();
   const auth = IGM_LauncherV2_UseAuth();
   const core = IGM_LauncherV2_UseCoreStatus();
   const launch = IGM_LauncherV2_UseLaunch();
@@ -1088,14 +1131,18 @@ export function iGM_LauncherV2_MainShell() {
   const coreTone = core.state === "ok" ? "ok" : core.state === "unavailable" ? "warn" : "idle";
   const coreLabel =
     core.state === "ok"
-      ? `Rust 核心已连通${core.version ? `（v${core.version}）` : ""}`
+      ? core.version
+        ? t("shell.core.okVersion", { version: core.version })
+        : t("shell.core.okPlain")
       : core.state === "unavailable"
-        ? `Rust 核心未就绪：${core.detail || "未找到 igm_core 可执行文件"}`
-        : "正在探测 Rust 核心…";
+        ? t("shell.core.unavailable", { detail: core.detail || t("shell.core.missingCore") })
+        : t("shell.core.probing");
 
   const isLoggedIn = auth.state === "logged-in" && Boolean(auth.user);
   // 未登录（游客）时右上角展示「游客」，点击引导前往登录页
-  const userLabel = isLoggedIn ? auth.user?.nickname || auth.user?.uid || "未登录" : "游客";
+  const userLabel = isLoggedIn
+    ? auth.user?.nickname || auth.user?.uid || t("shell.user.loggedOut")
+    : t("shell.user.guest");
   const avatar = auth.user?.avatar ?? "";
 
   // 菜单展开时重新同步社区资料（社区侧更换头像后回到启动器即可生效）
@@ -1132,7 +1179,7 @@ export function iGM_LauncherV2_MainShell() {
         <div className={styles.navBrand}>
           <Image
             src="/igml.jpg"
-            alt="iGM CraftCeon Launcher 标志"
+            alt={t("shell.brandLogoAlt")}
             width={26}
             height={26}
             className={styles.navLogo}
@@ -1174,7 +1221,7 @@ export function iGM_LauncherV2_MainShell() {
             <span className={styles.userAvatar}>
               <IGM_LauncherV2_AvatarImage
                 src={avatar}
-                alt="社区头像"
+                alt={t("shell.communityAvatarAlt")}
                 size={26}
                 iconSize={15}
                 className={styles.userAvatarImage}
@@ -1190,7 +1237,7 @@ export function iGM_LauncherV2_MainShell() {
                 <span className={styles.menuAvatar}>
                   <IGM_LauncherV2_AvatarImage
                     src={avatar}
-                    alt="社区头像"
+                    alt={t("shell.communityAvatarAlt")}
                     size={52}
                     iconSize={22}
                     className={styles.userAvatarImage}
@@ -1199,7 +1246,9 @@ export function iGM_LauncherV2_MainShell() {
                 <div className={styles.menuIdentityText}>
                   <span className={styles.menuName}>{userLabel}</span>
                   <span className={styles.menuUid}>
-                    {auth.user?.uid ? `iGMUid：${auth.user.uid}` : "未登录 iGCraftLit 社区账号"}
+                    {auth.user?.uid
+                      ? t("shell.user.uidLabel", { uid: auth.user.uid })
+                      : t("shell.user.notBoundCommunity")}
                   </span>
                 </div>
               </div>
@@ -1211,7 +1260,7 @@ export function iGM_LauncherV2_MainShell() {
                 onClick={() => IGM_LauncherV2_ChangeCommunityAvatar()}
               >
                 <Camera size={15} strokeWidth={2.2} />
-                <span>更换头像</span>
+                <span>{t("shell.user.changeAvatar")}</span>
               </button>
 
               <button
@@ -1220,7 +1269,7 @@ export function iGM_LauncherV2_MainShell() {
                 onClick={handleLogout}
               >
                 <LogOut size={15} strokeWidth={2.2} />
-                <span>退出登录</span>
+                <span>{t("shell.user.logout")}</span>
               </button>
             </div>
           ) : null}
@@ -1234,7 +1283,7 @@ export function iGM_LauncherV2_MainShell() {
             <header className={styles.homeHead}>
               <p className={styles.heroKicker}>iGCraftLit Community</p>
               <h1 className={styles.heroTitle}>
-                <span className={styles.heroGreet}>欢迎回来，</span>
+                <span className={styles.heroGreet}>{t("shell.hero.greet")}</span>
                 <span className={styles.heroSign}>{userLabel}</span>
               </h1>
             </header>
@@ -1253,8 +1302,8 @@ export function iGM_LauncherV2_MainShell() {
                       <span className={styles.tileIcon} aria-hidden>
                         <tile.icon size={17} strokeWidth={2.1} />
                       </span>
-                      <h2 className={styles.tileTitle}>{tile.title}</h2>
-                      <p className={styles.tileDesc}>{tile.desc}</p>
+                      <h2 className={styles.tileTitle}>{t(tile.title)}</h2>
+                      <p className={styles.tileDesc}>{t(tile.desc)}</p>
                     </button>
                   ))}
                 </div>
@@ -1281,14 +1330,16 @@ export function iGM_LauncherV2_MainShell() {
               {needAccount ? (
                 <span className={styles.launchStatus}>
                   <Info size={12} strokeWidth={2.2} />
-                  <span>请先在右侧账号栏选择要启动的账号</span>
+                  <span>{t("shell.launchDock.needAccount")}</span>
                 </span>
               ) : null}
               {launch.state?.running ? (
                 <span className={styles.launchStatus}>
                   <Gamepad2 size={12} strokeWidth={2.2} />
                   <span>
-                    游戏运行中{launch.state.pid ? `（pid ${launch.state.pid}）` : ""}
+                    {launch.state.pid
+                      ? t("shell.launchDock.runningPid", { pid: launch.state.pid })
+                      : t("shell.launchDock.running")}
                   </span>
                 </span>
               ) : launch.state?.message ? (
@@ -1303,7 +1354,7 @@ export function iGM_LauncherV2_MainShell() {
                 onClick={() => setLaunchOpen(true)}
               >
                 <Play size={16} strokeWidth={2.2} />
-                <span>启动游戏</span>
+                <span>{t("common.launchGame")}</span>
               </button>
             </div>
           </section>
@@ -1315,23 +1366,25 @@ export function iGM_LauncherV2_MainShell() {
               <IGM_LauncherV2_SkinProfile onBack={() => setProfileOpen(false)} />
             ) : (
               <>
-                <h1 className={styles.sectionTitle}>账号中心</h1>
-                <p className={styles.sectionDesc}>
-                  社区账号、微软正版与运行环境的统一管理入口。
-                </p>
+                <h1 className={styles.sectionTitle}>{t("nav.account")}</h1>
+                <p className={styles.sectionDesc}>{t("shell.section.accountDesc")}</p>
 
                 <IGM_LauncherV2_Card className={styles.summaryCard}>
                   <div className={styles.field}>
-                    <span className={styles.fieldLabel}>社区昵称</span>
-                    <span className={styles.fieldValue}>{isLoggedIn ? userLabel : "未登录"}</span>
+                    <span className={styles.fieldLabel}>{t("shell.section.communityNickname")}</span>
+                    <span className={styles.fieldValue}>
+                      {isLoggedIn ? userLabel : t("shell.user.loggedOut")}
+                    </span>
                   </div>
                   <div className={styles.field}>
-                    <span className={styles.fieldLabel}>iGMUid</span>
+                    <span className={styles.fieldLabel}>{t("shell.section.uidLabel")}</span>
                     <span className={styles.fieldValue}>{auth.user?.uid || "-"}</span>
                   </div>
                   <div className={styles.statusList}>
                     <IGM_LauncherV2_StatusDot tone={isLoggedIn ? "ok" : "idle"}>
-                      {isLoggedIn ? "社区账号已登录" : "社区账号未登录"}
+                      {isLoggedIn
+                        ? t("shell.section.communityLoggedIn")
+                        : t("shell.section.communityLoggedOut")}
                     </IGM_LauncherV2_StatusDot>
                     <IGM_LauncherV2_StatusDot tone={coreTone}>{coreLabel}</IGM_LauncherV2_StatusDot>
                   </div>
@@ -1353,10 +1406,8 @@ export function iGM_LauncherV2_MainShell() {
 
         {tab === "horizon" ? (
           <section className={styles.section}>
-            <h1 className={styles.sectionTitle}>视界</h1>
-            <p className={styles.sectionDesc}>
-              每个视界是一套独立的游戏目录，模组、材质包、光影与存档互不影响。
-            </p>
+            <h1 className={styles.sectionTitle}>{t("nav.horizon")}</h1>
+            <p className={styles.sectionDesc}>{t("shell.section.horizonDesc")}</p>
 
             <IGM_LauncherV2_Horizon />
           </section>
@@ -1364,10 +1415,8 @@ export function iGM_LauncherV2_MainShell() {
 
         {tab === "resources" ? (
           <section className={`${styles.section} ${styles.sectionFull}`}>
-            <h1 className={styles.sectionTitle}>资源中心</h1>
-            <p className={styles.sectionDesc}>
-              多源版本清单与加载器列表，下载通道由您自行选择，启动器不会自动切换。
-            </p>
+            <h1 className={styles.sectionTitle}>{t("nav.resources")}</h1>
+            <p className={styles.sectionDesc}>{t("shell.section.resourcesDesc")}</p>
 
             <IGM_LauncherV2_ResourceCenter />
           </section>
@@ -1387,10 +1436,8 @@ export function iGM_LauncherV2_MainShell() {
 
         {tab === "settings" ? (
           <section className={styles.section}>
-            <h1 className={styles.sectionTitle}>设置</h1>
-            <p className={styles.sectionDesc}>
-              总目录与游戏目录由启动器统一管理，下载通道由您自行选择。
-            </p>
+            <h1 className={styles.sectionTitle}>{t("nav.settings")}</h1>
+            <p className={styles.sectionDesc}>{t("shell.section.settingsDesc")}</p>
 
             <IGM_LauncherV2_Settings />
           </section>

@@ -3,7 +3,7 @@
  * 所属层：桌面外壳 / 主进程
  * 路由：全局
  * 模块：iGM_LauncherV2_Main
- * 作用：iGM CraftCeon Launcher 26.5.0 主进程入口（Electrobun + Bun）
+ * 作用：iGM CraftCeon Launcher 26.5.1 主进程入口（Electrobun + Bun）
  * 内容：创建无边框主窗口（界面自绘标题栏与窗口控制按钮）；
  *       开发模式加载 3211 端口 dev server，打包模式加载 views://launcher/index.html；
  *       经 host-message 承接界面指令：窗口控制、社区登录状态查询 / 发起授权 / 退出登录、
@@ -144,6 +144,7 @@ import {
 } from "./iGM_LauncherV2_Servers";
 import {
   iGM_LauncherV2_PeerSnapshotMessage,
+  iGM_LauncherV2_Peer_BindPort,
   iGM_LauncherV2_Peer_Connect,
   iGM_LauncherV2_Peer_Create,
   iGM_LauncherV2_Peer_Join,
@@ -1006,7 +1007,10 @@ function iGM_LauncherV2_HandleHostMessage(
       void iGM_LauncherV2_Peer_Connect(push);
       break;
     case "peer:create":
-      void iGM_LauncherV2_Peer_Create(push);
+      void iGM_LauncherV2_Peer_Create(message.horizonId, push);
+      break;
+    case "peer:bind-port":
+      iGM_LauncherV2_Peer_BindPort(message.port, push);
       break;
     case "peer:join":
       void iGM_LauncherV2_Peer_Join(message.code, push);
@@ -1161,7 +1165,7 @@ async function iGM_LauncherV2_Bootstrap(): Promise<void> {
   const mode = iGM_LauncherV2_ResolveRunMode();
   iGM_LauncherV2_ActiveMode = mode;
 
-  console.log(`[iGM CraftCeon Launcher] 版本 26.5.0；启动模式：${mode}`);
+  console.log(`[iGM CraftCeon Launcher] 版本 26.5.1；启动模式：${mode}`);
 
   // 初始化路径与设置（读取根目录指针、生成 iGML_Matrix 结构、载入 settings.json）
   const paths = await iGM_LauncherV2_PathsInit().catch((error) => {

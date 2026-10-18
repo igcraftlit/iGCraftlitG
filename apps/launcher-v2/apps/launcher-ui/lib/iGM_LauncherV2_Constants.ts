@@ -151,7 +151,8 @@ export type iGM_LauncherV2_OutboundMessage =
   | { type: "server:join"; id: string }
   | { type: "peer:status" }
   | { type: "peer:connect" }
-  | { type: "peer:create" }
+  | { type: "peer:create"; horizonId: string }
+  | { type: "peer:bind-port"; port: number }
   | { type: "peer:join"; code: string }
   | { type: "peer:leave" };
 
@@ -252,16 +253,26 @@ export type iGM_LauncherV2_PeerMode = "idle" | "connecting" | "community" | "pub
 export interface iGM_LauncherV2_PeerState {
   /** 当前连接模式 */
   mode: iGM_LauncherV2_PeerMode;
-  /** 状态文案（直接用于界面展示） */
-  status: string;
+  /** 状态文案键（多语言键，界面端用 next-intl 解析） */
+  statusKey: string;
   /** 当前所在房间的 6 位房间码；不在房间时为空串 */
   roomCode: string;
   /** 当前用户是否为房主 */
   host: boolean;
   /** 房间内当前人数；未知为 0 */
   peers: number;
-  /** 附加提示（错误原因或操作说明） */
-  message: string;
+  /** 附加提示文案键；无提示为空串 */
+  messageKey: string;
+  /** 附加提示文案中的占位符参数 */
+  messageParams: Record<string, string>;
+  /** 房间绑定的视界标识；未绑定时为空串 */
+  horizonId: string;
+  /** 房主已绑定的局域网端口；未绑定为 0 */
+  boundPort: number;
+  /** 房主是否已完成端口绑定 / 好友是否已加入房间 */
+  ready: boolean;
+  /** 隧道是否已开启 UDP 局域网广播转发 */
+  udp: boolean;
 }
 
 /** 皮肤库条目（本地导入并经 Mineskin 换取永久地址） */
@@ -378,6 +389,10 @@ export interface iGM_LauncherV2_Horizon {
   current: boolean;
   modCount: number;
   createdAt: string;
+  /** 绑定的已下载版本 id；未绑定时为空串 */
+  versionId?: string;
+  /** 加载器展示名（如 Fabric / Vanilla）；未记录时为空串 */
+  loaderLabel?: string;
 }
 
 /** 视界内单个文件/目录节点（path 为相对视界根目录的相对路径） */
@@ -820,7 +835,7 @@ declare global {
 export const IGM_LAUNCHERV2_APP_NAME = "iGM CraftCeon Launcher";
 
 /** 启动器版本号 */
-export const IGM_LAUNCHERV2_VERSION = "26.5.0";
+export const IGM_LAUNCHERV2_VERSION = "26.5.1";
 
 /** 界面开发服务器地址（外壳开发模式加载） */
 export const IGM_LAUNCHERV2_DEV_URL = "http://localhost:3211";
@@ -876,36 +891,36 @@ export const IGM_LAUNCHERV2_WIKI_VERSION_URL = "https://zh.minecraft.wiki/w/Java
 
 /* ---- 资源市场（分类 / 加载器 / 数据源筛选） ---- */
 
-/** 市场分类筛选项（id 与外壳契约一致） */
+/** 市场分类筛选项（label 为 i18n 键，界面侧以 useTranslations 解析） */
 export const IGM_LAUNCHERV2_MARKET_CATEGORIES: {
   id: iGM_LauncherV2_MarketCategory;
   label: string;
 }[] = [
-  { id: "mods", label: "模组" },
-  { id: "shaders", label: "光影" },
-  { id: "resourcepacks", label: "材质包" },
-  { id: "modpacks", label: "整合包" },
-  { id: "worlds", label: "地图" },
+  { id: "mods", label: "market.categories.mods" },
+  { id: "shaders", label: "market.categories.shaders" },
+  { id: "resourcepacks", label: "market.categories.resourcepacks" },
+  { id: "modpacks", label: "market.categories.modpacks" },
+  { id: "worlds", label: "market.categories.worlds" },
 ];
 
-/** 加载器筛选项：默认「全部加载器」不做过滤 */
+/** 加载器筛选项：默认「全部加载器」不做过滤（label 为 i18n 键） */
 export const IGM_LAUNCHERV2_MARKET_LOADERS: {
   id: iGM_LauncherV2_MarketLoader;
   label: string;
 }[] = [
-  { id: "all", label: "全部加载器" },
-  { id: "fabric", label: "Fabric" },
-  { id: "forge", label: "Forge" },
-  { id: "neoforge", label: "NeoForge" },
+  { id: "all", label: "market.loaders.all" },
+  { id: "fabric", label: "market.loaders.fabric" },
+  { id: "forge", label: "market.loaders.forge" },
+  { id: "neoforge", label: "market.loaders.neoforge" },
 ];
 
-/** 数据源筛选项 */
+/** 数据源筛选项（label 为 i18n 键） */
 export const IGM_LAUNCHERV2_MARKET_SOURCES: {
   id: iGM_LauncherV2_MarketSource;
   label: string;
 }[] = [
-  { id: "modrinth", label: "Modrinth" },
-  { id: "curseforge", label: "CurseForge" },
+  { id: "modrinth", label: "market.sources.modrinth" },
+  { id: "curseforge", label: "market.sources.curseforge" },
 ];
 
 /** 市场列表每页条数（与外壳一致） */
@@ -946,17 +961,17 @@ export interface iGM_LauncherV2_AppearancePatch {
   theme?: string;
 }
 
-/** 背景模式选项（仅两项：动态云 / 纯色） */
+/** 背景模式选项（仅两项：动态云 / 纯色；label / hint 为 i18n 键） */
 export const IGM_LAUNCHERV2_BACKGROUND_MODES: {
   id: iGM_LauncherV2_BackgroundMode;
   label: string;
   hint: string;
 }[] = [
-  { id: "cloud", label: "动态云背景", hint: "流体云缓慢流动，可切换配色" },
-  { id: "solid", label: "纯色背景", hint: "极简静态底色，最省性能" },
+  { id: "cloud", label: "appearance.modes.cloud.label", hint: "appearance.modes.cloud.hint" },
+  { id: "solid", label: "appearance.modes.solid.label", hint: "appearance.modes.solid.hint" },
 ];
 
-/** 动态云配色方案选项（预览渐变与流体云配色保持一致） */
+/** 动态云配色方案选项（预览渐变与流体云配色保持一致；label / hint 为 i18n 键） */
 export const IGM_LAUNCHERV2_CLOUD_PALETTES: {
   id: iGM_LauncherV2_CloudPalette;
   label: string;
@@ -965,25 +980,25 @@ export const IGM_LAUNCHERV2_CLOUD_PALETTES: {
 }[] = [
   {
     id: "purple",
-    label: "经典深紫",
-    hint: "深蓝与紫色交融",
+    label: "appearance.cloud.purple.label",
+    hint: "appearance.cloud.purple.hint",
     preview: "linear-gradient(135deg, #4d6bfe, #7e4dfe 55%, #0d1465)",
   },
   {
     id: "blue",
-    label: "梦幻冷蓝",
-    hint: "冷蓝与青色交融",
+    label: "appearance.cloud.blue.label",
+    hint: "appearance.cloud.blue.hint",
     preview: "linear-gradient(135deg, #3c8cff, #22d3ee 60%, #0a1f4d)",
   },
   {
     id: "pink",
-    label: "极光幻粉",
-    hint: "深紫与粉色交融",
+    label: "appearance.cloud.pink.label",
+    hint: "appearance.cloud.pink.hint",
     preview: "linear-gradient(135deg, #8c47eb, #fa73b8 60%, #2a0f57)",
   },
 ];
 
-/** 纯色背景方案选项（light 为真时界面文字与面板自动转为深色） */
+/** 纯色背景方案选项（light 为真时界面文字与面板自动转为深色；label / hint 为 i18n 键） */
 export const IGM_LAUNCHERV2_SOLID_PALETTES: {
   id: iGM_LauncherV2_SolidPalette;
   label: string;
@@ -991,16 +1006,34 @@ export const IGM_LAUNCHERV2_SOLID_PALETTES: {
   preview: string;
   light: boolean;
 }[] = [
-  { id: "dark", label: "深邃暗黑", hint: "极暗深灰，低调护眼", preview: "#05070f", light: false },
+  {
+    id: "dark",
+    label: "appearance.solid.dark.label",
+    hint: "appearance.solid.dark.hint",
+    preview: "#05070f",
+    light: false,
+  },
   {
     id: "light",
-    label: "明亮浅色",
-    hint: "干净浅灰白，界面自动转为深色文字",
+    label: "appearance.solid.light.label",
+    hint: "appearance.solid.light.hint",
     preview: "#eef1f6",
     light: true,
   },
-  { id: "coffee", label: "古典深咖", hint: "复古优雅的深咖啡色", preview: "#241a14", light: false },
-  { id: "green", label: "极光幽绿", hint: "低饱和度的深墨绿色", preview: "#0c1f1a", light: false },
+  {
+    id: "coffee",
+    label: "appearance.solid.coffee.label",
+    hint: "appearance.solid.coffee.hint",
+    preview: "#241a14",
+    light: false,
+  },
+  {
+    id: "green",
+    label: "appearance.solid.green.label",
+    hint: "appearance.solid.green.hint",
+    preview: "#0c1f1a",
+    light: false,
+  },
 ];
 
 /** 模糊度上下限（px，与外壳一致） */
@@ -1010,6 +1043,7 @@ export const IGM_LAUNCHERV2_APPEARANCE_BLUR_MAX = 30;
 /**
  * 主题色预设。
  * accent 为主题色；accentSoft 为低饱和辅助色（用于渐变与悬浮态）。
+ * label 为 i18n 键，界面侧以 useTranslations 解析。
  */
 export const IGM_LAUNCHERV2_THEMES: {
   id: iGM_LauncherV2_ThemeId;
@@ -1017,11 +1051,11 @@ export const IGM_LAUNCHERV2_THEMES: {
   accent: string;
   accentSoft: string;
 }[] = [
-  { id: "indigo", label: "靛蓝", accent: "#5b7cf5", accentSoft: "#8aa2ff" },
-  { id: "aurora", label: "极光绿", accent: "#2fd58d", accentSoft: "#7cf0b8" },
-  { id: "sakura", label: "樱花粉", accent: "#f472b6", accentSoft: "#fba7cd" },
-  { id: "geek", label: "极客黑", accent: "#8b93a7", accentSoft: "#c2c9d6" },
-  { id: "amber", label: "琥珀橙", accent: "#f59e0b", accentSoft: "#fbc76b" },
+  { id: "indigo", label: "appearance.themes.indigo", accent: "#5b7cf5", accentSoft: "#8aa2ff" },
+  { id: "aurora", label: "appearance.themes.aurora", accent: "#2fd58d", accentSoft: "#7cf0b8" },
+  { id: "sakura", label: "appearance.themes.sakura", accent: "#f472b6", accentSoft: "#fba7cd" },
+  { id: "geek", label: "appearance.themes.geek", accent: "#8b93a7", accentSoft: "#c2c9d6" },
+  { id: "amber", label: "appearance.themes.amber", accent: "#f59e0b", accentSoft: "#fbc76b" },
 ];
 
 /* ---- 启动器自动更新 ---- */

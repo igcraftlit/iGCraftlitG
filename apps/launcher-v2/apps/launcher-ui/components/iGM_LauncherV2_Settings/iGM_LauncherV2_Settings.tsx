@@ -4,13 +4,15 @@
  * 路由：G_Main（设置页签）
  * 模块：iGM_LauncherV2_Settings
  * 作用：设置页：分「通用 / 外观 / 关于」三个独立页签
- * 内容：通用——专属总目录选择、标准结构展示、本地游戏目录自动检测与下载通道自选；
+ * 内容：已接入多语言，通用页签新增界面语言切换；
+ *       通用——界面语言切换、专属总目录选择、标准结构展示、本地游戏目录自动检测与下载通道自选；
  *       外观——背景模式单选（动态云背景 / 纯色背景）、动态云配色三选（经典深紫 /
  *       梦幻冷蓝 / 极光幻粉）、纯色方案四选（深邃暗黑 / 明亮浅色 / 古典深咖 / 极光幽绿）、
  *       毛玻璃模糊度滑动条（0-30px，实时生效）、5 种预设主题色切换；
  *       关于——展示当前版本与「检查更新」按钮，发现新版本时可后台下载并「立即重启并更新」
  * 说明：全部特权操作（目录选择、递归删除、结构创建）均由 Bun 主进程执行，
- *       界面只投递指令并展示外壳回推的结果；配色只改背景色调，不改界面主题色
+ *       界面只投递指令并展示外壳回推的结果；配色只改背景色调，不改界面主题色；
+ *       界面文案统一经 next-intl 的 useTranslations 以 "settings" 命名空间解析
  */
 
 // 导入依赖 //
@@ -18,6 +20,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   AlertTriangle,
   Check,
@@ -57,6 +60,11 @@ import type {
   iGM_LauncherV2_GameCandidate,
   iGM_LauncherV2_UpdateStatus,
 } from "@/lib/iGM_LauncherV2_Constants";
+import { iGM_LauncherV2_UseLocale } from "@/components/iGM_LauncherV2_Providers/iGM_LauncherV2_LocaleProvider";
+import {
+  IGM_LAUNCHERV2_LOCALE_LABELS,
+  type iGM_LauncherV2_Locale,
+} from "@/i18n/iGM_LauncherV2_Locales";
 import styles from "./iGM_LauncherV2_Settings.module.css";
 
 // 类型定义 //
@@ -64,89 +72,88 @@ import styles from "./iGM_LauncherV2_Settings.module.css";
 /** 设置页独立页签 */
 type iGM_LauncherV2_SettingsTab = "general" | "appearance" | "about";
 
-/** 候选目录来源展示文案 */
+/** 候选目录来源展示文案（值为 i18n 键，渲染处以 useTranslations 解析） */
 const IGM_SOURCE_LABEL: Record<iGM_LauncherV2_GameCandidate["source"], string> = {
-  matrix: "启动器总目录",
-  system: "系统常见位置",
-  custom: "用户自定义",
+  matrix: "settings.source.matrix",
+  system: "settings.source.system",
+  custom: "settings.source.custom",
 };
 
-/** 设置页签清单 */
+/** 设置页签清单（label 为 i18n 键） */
 const IGM_SETTINGS_TABS: {
   id: iGM_LauncherV2_SettingsTab;
   label: string;
   icon: typeof Info;
 }[] = [
-  { id: "general", label: "通用", icon: SlidersHorizontal },
-  { id: "appearance", label: "外观", icon: Palette },
-  { id: "about", label: "关于", icon: Info },
+  { id: "general", label: "settings.tabs.general", icon: SlidersHorizontal },
+  { id: "appearance", label: "settings.tabs.appearance", icon: Palette },
+  { id: "about", label: "settings.tabs.about", icon: Info },
 ];
 
-/** 更新状态展示文案 */
+/** 更新状态展示文案（值为 i18n 键） */
 const IGM_UPDATE_STATUS_LABEL: Record<iGM_LauncherV2_UpdateStatus, string> = {
-  idle: "尚未检查",
-  checking: "正在检查",
-  available: "发现新版本",
-  downloading: "正在下载",
-  downloaded: "已就绪，待重启",
-  latest: "已是最新版本",
-  error: "检查失败",
+  idle: "settings.update.idle",
+  checking: "settings.update.checking",
+  available: "settings.update.available",
+  downloading: "settings.update.downloading",
+  downloaded: "settings.update.downloaded",
+  latest: "settings.update.latest",
+  error: "settings.update.error",
 };
 
-/** 关于面板语言（无 i18n 框架，采用本地中 / 英双语文案） */
-type iGM_LauncherV2_AboutLang = "zh" | "en";
-
-/** 鸣谢成员：头像、姓名（中 / 英一致）与角色称谓（中 / 英） */
+/** 鸣谢成员：头像、姓名与角色称谓（role 为 i18n 键） */
 const IGM_ABOUT_CREDITS: {
   key: string;
   avatar: string;
   name: string;
-  roleZh: string;
-  roleEn: string;
+  role: string;
 }[] = [
-  { key: "founder", avatar: "/image/1.jpg", name: "ᝰ𝒪𝓇𝒷𝒾𝓉 ℳℯᝰ", roleZh: "创始人 & 首席执行官", roleEn: "Founder & CEO" },
-  { key: "developer", avatar: "/image/2.jpg", name: "CaYiHuo", roleZh: "协同开发者", roleEn: "Co-Developer" },
-  { key: "promotion", avatar: "/image/3.jpg", name: "南風", roleZh: "首席宣传官", roleEn: "Chief Promotion Officer" },
+  { key: "founder", avatar: "/image/1.jpg", name: "ᝰ𝒪𝓇𝒷𝒾𝓉 ℳℯᝰ", role: "settings.about.roles.founder" },
+  { key: "developer", avatar: "/image/2.jpg", name: "CaYiHuo", role: "settings.about.roles.developer" },
+  { key: "promotion", avatar: "/image/3.jpg", name: "南風", role: "settings.about.roles.promotion" },
 ];
 
 /** 版权声明固定文案：版权句恒为英文全文，不随语言切换 */
 const IGM_ABOUT_COPYRIGHT =
   "© 2026 iGCraftLit Team. All Rights Reserved. Including but not limited to: launcher core architecture (code), UI design and art assets, iGC&M original question banks, and community management regulations.";
 
-/** 关于面板分区标题与许可协议标签（中 / 英） */
-const IGM_ABOUT_TEXT: Record<
-  iGM_LauncherV2_AboutLang,
-  {
-    toggleZh: string;
-    toggleEn: string;
-    acknowledgements: string;
-    teams: string;
-    copyright: string;
-    licenseLabel: string;
-  }
-> = {
-  zh: {
-    toggleZh: "中文",
-    toggleEn: "English",
-    acknowledgements: "鸣谢",
-    teams: "开发团队",
-    copyright: "版权声明",
-    licenseLabel: "许可协议",
-  },
-  en: {
-    toggleZh: "中文",
-    toggleEn: "English",
-    acknowledgements: "Acknowledgements",
-    teams: "Development Teams",
-    copyright: "Copyright",
-    licenseLabel: "License",
-  },
-};
-
 // 核心逻辑 //
+
+/** 界面语言面板：实时无刷新切换，由 LocaleProvider 持久化到本地配置 */
+function IGM_LauncherV2_LanguagePanel() {
+  const t = useTranslations();
+  const { locale, setLocale } = iGM_LauncherV2_UseLocale();
+
+  return (
+    <IGM_LauncherV2_Card className={styles.panel}>
+      <div className={styles.panelHead}>
+        <div>
+          <h2 className={styles.panelTitle}>{t("language.title")}</h2>
+          <p className={styles.panelDesc}>{t("language.desc")}</p>
+        </div>
+      </div>
+
+      <div className={styles.langOptions}>
+        {(["zh-CN", "en"] as iGM_LauncherV2_Locale[]).map((id) => (
+          <button
+            key={id}
+            type="button"
+            className={`${styles.langOption} ${locale === id ? styles.langOptionOn : ""}`}
+            aria-pressed={locale === id}
+            onClick={() => setLocale(id)}
+          >
+            <span className={styles.rowTitle}>{IGM_LAUNCHERV2_LOCALE_LABELS[id]}</span>
+            {locale === id ? <Check size={15} strokeWidth={2.6} aria-hidden /> : null}
+          </button>
+        ))}
+      </div>
+    </IGM_LauncherV2_Card>
+  );
+}
 
 /** 专属总目录与结构面板 */
 function IGM_LauncherV2_PathsPanel() {
+  const t = useTranslations();
   const settings = IGM_LauncherV2_UseSettings();
   const paths = settings.paths;
 
@@ -154,11 +161,8 @@ function IGM_LauncherV2_PathsPanel() {
     <IGM_LauncherV2_Card className={styles.panel}>
       <div className={styles.panelHead}>
         <div>
-          <h2 className={styles.panelTitle}>专属总目录</h2>
-          <p className={styles.panelDesc}>
-            启动器按运行系统自动生成总目录名，并在您选择的根目录下建立完整的 launcher_data 与
-            .minecraft 结构。
-          </p>
+          <h2 className={styles.panelTitle}>{t("settings.paths.title")}</h2>
+          <p className={styles.panelDesc}>{t("settings.paths.desc")}</p>
         </div>
         <button
           type="button"
@@ -166,40 +170,50 @@ function IGM_LauncherV2_PathsPanel() {
           onClick={() => settings.browseRoot()}
         >
           <FolderOpen size={14} strokeWidth={2.2} />
-          <span>选择根目录</span>
+          <span>{t("settings.paths.browseRoot")}</span>
         </button>
       </div>
 
       <div className={styles.treeBox}>
-        <span className={styles.treeLine}>{paths?.userRoot ?? "（尚未取回）"}/</span>
         <span className={styles.treeLine}>
-          └── {paths?.matrixDirName ?? "iGML_Matrix"}/　# 专属总目录
+          {`${paths?.userRoot ?? t("common.notFetched")}/`}
         </span>
-        <span className={styles.treeLine}>　　├── launcher_data/　# 账号、设置、日志</span>
-        <span className={styles.treeLine}>　　└── .minecraft/　# 游戏核心目录</span>
-        <span className={styles.treeLine}>　　　　├── assets/ libraries/ versions/　# 共享</span>
-        <span className={styles.treeLine}>　　　　└── horizons/　# 视界（隔离存放区）</span>
+        <span className={styles.treeLine}>
+          {`└── ${paths?.matrixDirName ?? "iGML_Matrix"}/　# ${t("settings.paths.treeMatrix")}`}
+        </span>
+        <span className={styles.treeLine}>
+          {`　　├── launcher_data/　# ${t("settings.paths.treeLauncherData")}`}
+        </span>
+        <span className={styles.treeLine}>
+          {`　　└── .minecraft/　# ${t("settings.paths.treeMinecraft")}`}
+        </span>
+        <span className={styles.treeLine}>
+          {`　　　　├── assets/ libraries/ versions/　# ${t("settings.paths.treeShared")}`}
+        </span>
+        <span className={styles.treeLine}>
+          {`　　　　└── horizons/　# ${t("settings.paths.treeHorizons")}`}
+        </span>
       </div>
 
       <div className={styles.pathGrid}>
         <div className={styles.pathRow}>
-          <span className={styles.pathLabel}>运行平台</span>
+          <span className={styles.pathLabel}>{t("settings.paths.platform")}</span>
           <span className={styles.pathValue}>{paths?.platform ?? "-"}</span>
         </div>
         <div className={styles.pathRow}>
-          <span className={styles.pathLabel}>总目录</span>
+          <span className={styles.pathLabel}>{t("settings.paths.matrixRoot")}</span>
           <span className={styles.pathValue}>{paths?.matrixRoot ?? "-"}</span>
         </div>
         <div className={styles.pathRow}>
-          <span className={styles.pathLabel}>游戏根目录</span>
+          <span className={styles.pathLabel}>{t("settings.paths.gameRoot")}</span>
           <span className={styles.pathValue}>{paths?.gameRoot ?? "-"}</span>
         </div>
         <div className={styles.pathRow}>
-          <span className={styles.pathLabel}>启动器数据</span>
+          <span className={styles.pathLabel}>{t("settings.paths.launcherData")}</span>
           <span className={styles.pathValue}>{paths?.launcherData ?? "-"}</span>
         </div>
         <div className={styles.pathRow}>
-          <span className={styles.pathLabel}>视界目录</span>
+          <span className={styles.pathLabel}>{t("settings.paths.horizons")}</span>
           <span className={styles.pathValue}>{paths?.horizons ?? "-"}</span>
         </div>
       </div>
@@ -209,6 +223,7 @@ function IGM_LauncherV2_PathsPanel() {
 
 /** 自动检测游戏目录面板 */
 function IGM_LauncherV2_GameDetectPanel() {
+  const t = useTranslations();
   const scan = IGM_LauncherV2_UseGameScan();
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
 
@@ -216,24 +231,21 @@ function IGM_LauncherV2_GameDetectPanel() {
     <IGM_LauncherV2_Card className={styles.panel}>
       <div className={styles.panelHead}>
         <div>
-          <h2 className={styles.panelTitle}>自动检测游戏目录</h2>
-          <p className={styles.panelDesc}>
-            自动扫描系统常见位置与您保存的自定义路径；同时存在 assets / libraries / versions
-            判定为完整。
-          </p>
+          <h2 className={styles.panelTitle}>{t("settings.detect.title")}</h2>
+          <p className={styles.panelDesc}>{t("settings.detect.desc")}</p>
         </div>
         <div className={styles.panelActions}>
           <button type="button" className={styles.actionButton} onClick={() => scan.scan()}>
             <RefreshCw size={14} strokeWidth={2.2} />
-            <span>重新扫描</span>
+            <span>{t("settings.detect.rescan")}</span>
           </button>
           <button type="button" className={styles.actionButton} onClick={() => scan.browse()}>
             <FolderSearch size={14} strokeWidth={2.2} />
-            <span>添加扫描目录</span>
+            <span>{t("settings.detect.addScanDir")}</span>
           </button>
           <button type="button" className={styles.actionButton} onClick={() => scan.generate()}>
             <Plus size={14} strokeWidth={2.2} />
-            <span>生成标准结构</span>
+            <span>{t("settings.detect.generate")}</span>
           </button>
         </div>
       </div>
@@ -241,12 +253,9 @@ function IGM_LauncherV2_GameDetectPanel() {
       {scan.message ? <p className={styles.notice}>{scan.message}</p> : null}
 
       {!scan.loaded ? (
-        <p className={styles.empty}>正在扫描本地游戏目录…</p>
+        <p className={styles.empty}>{t("settings.detect.scanning")}</p>
       ) : scan.candidates.length === 0 ? (
-        <p className={styles.empty}>
-          未检测到 .minecraft 目录。可点击【添加扫描目录】手动选择，或点击【生成标准结构】在总目录下
-          一键创建完整结构。
-        </p>
+        <p className={styles.empty}>{t("settings.detect.empty")}</p>
       ) : (
         <ul className={styles.list}>
           {scan.candidates.map((item) => {
@@ -261,15 +270,18 @@ function IGM_LauncherV2_GameDetectPanel() {
                       <AlertTriangle size={15} strokeWidth={2.2} className={styles.iconWarn} />
                     )}
                     <span className={styles.rowTitle}>
-                      {complete ? "检测到完整游戏目录" : "检测到残缺的 .minecraft 文件夹"}
+                      {complete
+                        ? t("settings.detect.complete")
+                        : t("settings.detect.incomplete")}
                     </span>
-                    <span className={styles.rowTag}>{IGM_SOURCE_LABEL[item.source]}</span>
-                    {item.current ? <span className={styles.rowTagOn}>当前使用</span> : null}
+                    <span className={styles.rowTag}>{t(IGM_SOURCE_LABEL[item.source])}</span>
+                    {item.current ? (
+                      <span className={styles.rowTagOn}>{t("common.currentUse")}</span>
+                    ) : null}
                   </div>
                   <span className={styles.rowSub}>{item.path}</span>
                   <span className={styles.rowMeta}>
-                    assets {item.shared.assets ? "有" : "无"}　libraries {item.shared.libraries ? "有" : "无"}　
-                    versions {item.shared.versions ? "有" : "无"}　视界 {item.horizonCount}
+                    {`assets ${item.shared.assets ? t("common.yes") : t("common.no")}　libraries ${item.shared.libraries ? t("common.yes") : t("common.no")}　versions ${item.shared.versions ? t("common.yes") : t("common.no")}　${t("nav.horizon")} ${item.horizonCount}`}
                   </span>
                 </div>
 
@@ -284,14 +296,14 @@ function IGM_LauncherV2_GameDetectPanel() {
                           setPendingDelete(null);
                         }}
                       >
-                        <span>确认删除</span>
+                        <span>{t("common.confirm")}</span>
                       </button>
                       <button
                         type="button"
                         className={styles.actionButton}
                         onClick={() => setPendingDelete(null)}
                       >
-                        <span>取消</span>
+                        <span>{t("common.cancel")}</span>
                       </button>
                     </>
                   ) : (
@@ -302,12 +314,16 @@ function IGM_LauncherV2_GameDetectPanel() {
                         disabled={item.current}
                         onClick={() => scan.use(item.path)}
                       >
-                        <span>{complete ? "选择使用此目录" : "使用此目录"}</span>
+                        <span>
+                          {complete
+                            ? t("settings.detect.useComplete")
+                            : t("settings.detect.use")}
+                        </span>
                       </button>
                       <button
                         type="button"
                         className={`${styles.iconButton} ${styles.iconButtonDanger}`}
-                        aria-label="删除此文件夹"
+                        aria-label={t("settings.detect.deleteFolder")}
                         disabled={item.current}
                         onClick={() => setPendingDelete(item.path)}
                       >
@@ -327,6 +343,7 @@ function IGM_LauncherV2_GameDetectPanel() {
 
 /** 下载通道自选面板：完全由用户决定，不做优先级与降级 */
 function IGM_LauncherV2_ChannelPanel() {
+  const t = useTranslations();
   const settings = IGM_LauncherV2_UseSettings();
   const channel = settings.settings?.downloadChannel ?? "direct";
 
@@ -334,10 +351,8 @@ function IGM_LauncherV2_ChannelPanel() {
     <IGM_LauncherV2_Card className={styles.panel}>
       <div className={styles.panelHead}>
         <div>
-          <h2 className={styles.panelTitle}>下载通道</h2>
-          <p className={styles.panelDesc}>
-            通道由您自行选择，启动器不会自动切换或降级；所选通道不可用时仅提示，等待您手动切换。
-          </p>
+          <h2 className={styles.panelTitle}>{t("settings.channel.title")}</h2>
+          <p className={styles.panelDesc}>{t("settings.channel.desc")}</p>
         </div>
       </div>
 
@@ -345,13 +360,13 @@ function IGM_LauncherV2_ChannelPanel() {
         {[
           {
             id: "sdk" as const,
-            title: "通道 A：iGCraftLit SDK 下载",
-            desc: "经主站后端分发，支持账号鉴权与加速；需主站后端在线（隧道开启时可用）。",
+            title: t("settings.channel.sdkTitle"),
+            desc: t("settings.channel.sdkDesc"),
           },
           {
             id: "direct" as const,
-            title: "通道 B：启动器直连下载",
-            desc: "由启动器本地引擎直连官方源与镜像源，不经过主站后端，可离线独立工作。",
+            title: t("settings.channel.directTitle"),
+            desc: t("settings.channel.directDesc"),
           },
         ].map((item) => (
           <button
@@ -367,7 +382,11 @@ function IGM_LauncherV2_ChannelPanel() {
               <span className={styles.rowTitle}>{item.title}</span>
               <span className={styles.rowSub}>{item.desc}</span>
             </span>
-            <span className={styles.channelMark}>{channel === item.id ? "已选" : "选择"}</span>
+            <span className={styles.channelMark}>
+              {channel === item.id
+                ? t("settings.channel.selected")
+                : t("settings.channel.select")}
+            </span>
           </button>
         ))}
       </div>
@@ -377,6 +396,7 @@ function IGM_LauncherV2_ChannelPanel() {
 
 /** 外观面板：背景模式、配色方案、毛玻璃模糊度与主题色，改动即时生效 */
 function IGM_LauncherV2_AppearancePanel() {
+  const t = useTranslations();
   const appearance = IGM_LauncherV2_UseAppearance();
   const view = appearance.appearance;
   const blur = Math.min(
@@ -390,16 +410,14 @@ function IGM_LauncherV2_AppearancePanel() {
     <IGM_LauncherV2_Card className={styles.panel}>
       <div className={styles.panelHead}>
         <div>
-          <h2 className={styles.panelTitle}>外观</h2>
-          <p className={styles.panelDesc}>
-            背景模式、配色方案、毛玻璃模糊度与主题色，改动将立即应用到整个启动器。
-          </p>
+          <h2 className={styles.panelTitle}>{t("settings.appearance.title")}</h2>
+          <p className={styles.panelDesc}>{t("settings.appearance.desc")}</p>
         </div>
       </div>
 
       {/* 背景模式：动态云 / 纯色 二选一 */}
       <div className={styles.section}>
-        <span className={styles.sectionTitle}>背景模式</span>
+        <span className={styles.sectionTitle}>{t("settings.appearance.modes")}</span>
         <div className={styles.optionRow}>
           {IGM_LAUNCHERV2_BACKGROUND_MODES.map((item) => (
             <button
@@ -410,8 +428,8 @@ function IGM_LauncherV2_AppearancePanel() {
               }`}
               onClick={() => appearance.set({ background: item.id })}
             >
-              <span className={styles.rowTitle}>{item.label}</span>
-              <span className={styles.rowSub}>{item.hint}</span>
+              <span className={styles.rowTitle}>{t(item.label)}</span>
+              <span className={styles.rowSub}>{t(item.hint)}</span>
             </button>
           ))}
         </div>
@@ -419,7 +437,7 @@ function IGM_LauncherV2_AppearancePanel() {
 
       {/* 动态云配色：只改背景色调，不改 UI 主题色 */}
       <div className={styles.section}>
-        <span className={styles.sectionTitle}>动态云配色</span>
+        <span className={styles.sectionTitle}>{t("settings.appearance.cloud")}</span>
         <div className={styles.swatchRow}>
           {IGM_LAUNCHERV2_CLOUD_PALETTES.map((item) => {
             const active = cloudOn && view.cloud === item.id;
@@ -438,8 +456,8 @@ function IGM_LauncherV2_AppearancePanel() {
                   aria-hidden
                 />
                 <span className={styles.swatchText}>
-                  <span className={styles.rowTitle}>{item.label}</span>
-                  <span className={styles.rowSub}>{item.hint}</span>
+                  <span className={styles.rowTitle}>{t(item.label)}</span>
+                  <span className={styles.rowSub}>{t(item.hint)}</span>
                 </span>
                 {active ? <Check size={14} strokeWidth={2.6} aria-hidden /> : null}
               </button>
@@ -450,7 +468,7 @@ function IGM_LauncherV2_AppearancePanel() {
 
       {/* 纯色背景方案：浅色方案会自动把界面文字切换为深色 */}
       <div className={styles.section}>
-        <span className={styles.sectionTitle}>纯色背景</span>
+        <span className={styles.sectionTitle}>{t("settings.appearance.solid")}</span>
         <div className={styles.swatchRow}>
           {IGM_LAUNCHERV2_SOLID_PALETTES.map((item) => {
             const active = solidOn && view.solid === item.id;
@@ -468,8 +486,8 @@ function IGM_LauncherV2_AppearancePanel() {
                   aria-hidden
                 />
                 <span className={styles.swatchText}>
-                  <span className={styles.rowTitle}>{item.label}</span>
-                  <span className={styles.rowSub}>{item.hint}</span>
+                  <span className={styles.rowTitle}>{t(item.label)}</span>
+                  <span className={styles.rowSub}>{t(item.hint)}</span>
                 </span>
                 {active ? <Check size={14} strokeWidth={2.6} aria-hidden /> : null}
               </button>
@@ -479,7 +497,7 @@ function IGM_LauncherV2_AppearancePanel() {
       </div>
 
       <div className={styles.section}>
-        <span className={styles.sectionTitle}>毛玻璃模糊度</span>
+        <span className={styles.sectionTitle}>{t("settings.appearance.blur")}</span>
         <div className={styles.sliderRow}>
           <input
             type="range"
@@ -488,18 +506,16 @@ function IGM_LauncherV2_AppearancePanel() {
             max={IGM_LAUNCHERV2_APPEARANCE_BLUR_MAX}
             step={1}
             value={blur}
-            aria-label="毛玻璃模糊度"
+            aria-label={t("settings.appearance.blur")}
             onChange={(event) => appearance.set({ blur: Number(event.target.value) })}
           />
           <span className={styles.sliderValue}>{blur}px</span>
         </div>
-        <span className={styles.rowSub}>
-          调节导航栏、卡片等元素的 backdrop-filter 模糊半径，实时预览。
-        </span>
+        <span className={styles.rowSub}>{t("settings.appearance.blurHint")}</span>
       </div>
 
       <div className={styles.section}>
-        <span className={styles.sectionTitle}>主题色</span>
+        <span className={styles.sectionTitle}>{t("settings.appearance.theme")}</span>
         <div className={styles.themeRow}>
           {IGM_LAUNCHERV2_THEMES.map((item) => (
             <button
@@ -513,7 +529,7 @@ function IGM_LauncherV2_AppearancePanel() {
                 style={{ background: `linear-gradient(135deg, ${item.accent}, ${item.accentSoft})` }}
                 aria-hidden
               />
-              <span className={styles.themeLabel}>{item.label}</span>
+              <span className={styles.themeLabel}>{t(item.label)}</span>
               {view.theme === item.id ? <Check size={13} strokeWidth={2.6} /> : null}
             </button>
           ))}
@@ -599,41 +615,41 @@ function IGM_LauncherV2_MuoCeonLogo() {
   );
 }
 
-/** 关于面板：版本与更新 + 鸣谢 / 开发团队 / 版权声明，支持中英双语切换 */
+/** 关于面板：版本与更新 + 鸣谢 / 开发团队 / 版权声明，语言随全局界面语言切换 */
 function IGM_LauncherV2_AboutPanel() {
+  const t = useTranslations();
+  const { locale, setLocale } = iGM_LauncherV2_UseLocale();
   const update = IGM_LauncherV2_UseUpdate();
   const state = update.state;
   const busy = state.status === "checking" || state.status === "downloading";
-  const [lang, setLang] = useState<iGM_LauncherV2_AboutLang>("zh");
-  const text = IGM_ABOUT_TEXT[lang];
 
   return (
     <IGM_LauncherV2_Card className={styles.panel}>
       <div className={styles.panelHead}>
         <div>
-          <h2 className={styles.panelTitle}>关于</h2>
+          <h2 className={styles.panelTitle}>{t("settings.about.title")}</h2>
           <p className={styles.panelDesc}>
             {IGM_LAUNCHERV2_APP_NAME} v{IGM_LAUNCHERV2_VERSION}
           </p>
         </div>
         <div className={styles.panelActions}>
-          {/* 语言切换：本地 useState，两枚小按钮 */}
-          <div className={styles.langToggle} role="group" aria-label="语言切换">
+          {/* 语言切换：直接写入全局语言（即时切换并本地持久化） */}
+          <div className={styles.langToggle} role="group" aria-label={t("settings.about.langToggle")}>
             <button
               type="button"
-              className={`${styles.langButton} ${lang === "zh" ? styles.langButtonOn : ""}`}
-              aria-pressed={lang === "zh"}
-              onClick={() => setLang("zh")}
+              className={`${styles.langButton} ${locale === "zh-CN" ? styles.langButtonOn : ""}`}
+              aria-pressed={locale === "zh-CN"}
+              onClick={() => setLocale("zh-CN")}
             >
-              {text.toggleZh}
+              {t("settings.about.toggleZh")}
             </button>
             <button
               type="button"
-              className={`${styles.langButton} ${lang === "en" ? styles.langButtonOn : ""}`}
-              aria-pressed={lang === "en"}
-              onClick={() => setLang("en")}
+              className={`${styles.langButton} ${locale === "en" ? styles.langButtonOn : ""}`}
+              aria-pressed={locale === "en"}
+              onClick={() => setLocale("en")}
             >
-              {text.toggleEn}
+              {t("settings.about.toggleEn")}
             </button>
           </div>
           <button
@@ -643,25 +659,31 @@ function IGM_LauncherV2_AboutPanel() {
             onClick={() => update.check()}
           >
             <RefreshCw size={14} strokeWidth={2.2} />
-            <span>{state.status === "checking" ? "检查中" : "检查更新"}</span>
+            <span>
+              {state.status === "checking"
+                ? t("settings.about.checking")
+                : t("settings.about.checkUpdate")}
+            </span>
           </button>
         </div>
       </div>
 
       <div className={styles.pathGrid}>
         <div className={styles.pathRow}>
-          <span className={styles.pathLabel}>当前版本</span>
+          <span className={styles.pathLabel}>{t("settings.about.currentVersion")}</span>
           <span className={styles.pathValue}>V{IGM_LAUNCHERV2_VERSION}</span>
         </div>
         <div className={styles.pathRow}>
-          <span className={styles.pathLabel}>最新版本</span>
+          <span className={styles.pathLabel}>{t("settings.about.latestVersion")}</span>
           <span className={styles.pathValue}>
             {state.latestVersion ? `V${state.latestVersion}` : "—"}
           </span>
         </div>
         <div className={styles.pathRow}>
-          <span className={styles.pathLabel}>更新状态</span>
-          <span className={styles.pathValue}>{IGM_UPDATE_STATUS_LABEL[state.status]}</span>
+          <span className={styles.pathLabel}>{t("settings.about.updateStatus")}</span>
+          <span className={styles.pathValue}>
+            {t(IGM_UPDATE_STATUS_LABEL[state.status])}
+          </span>
         </div>
       </div>
 
@@ -675,7 +697,7 @@ function IGM_LauncherV2_AboutPanel() {
           {state.status === "downloaded" ? (
             <button type="button" className={styles.actionButton} onClick={() => update.install()}>
               <Power size={14} strokeWidth={2.2} />
-              <span>立即重启并更新</span>
+              <span>{t("settings.about.installNow")}</span>
             </button>
           ) : (
             <button
@@ -687,8 +709,8 @@ function IGM_LauncherV2_AboutPanel() {
               <Download size={14} strokeWidth={2.2} />
               <span>
                 {state.status === "downloading"
-                  ? `下载中 ${state.progress.toFixed(0)}%`
-                  : "下载更新包"}
+                  ? t("settings.about.downloading", { percent: state.progress.toFixed(0) })
+                  : t("settings.about.downloadUpdate")}
               </span>
             </button>
           )}
@@ -697,14 +719,17 @@ function IGM_LauncherV2_AboutPanel() {
 
       {/* 一、鸣谢：头像 + 姓名 + 角色 */}
       <section className={styles.aboutSection}>
-        <h3 className={styles.aboutSectionTitle}>{text.acknowledgements}</h3>
+        <h3 className={styles.aboutSectionTitle}>{t("settings.about.acknowledgements")}</h3>
         <ul className={styles.creditList}>
           {IGM_ABOUT_CREDITS.map((item) => (
             <li key={item.key} className={styles.creditRow}>
-              <IGM_LauncherV2_AboutAvatar src={item.avatar} alt={`${item.name} 的头像`} />
+              <IGM_LauncherV2_AboutAvatar
+                src={item.avatar}
+                alt={t("settings.about.avatarAlt", { name: item.name })}
+              />
               <div className={styles.creditText}>
                 <span className={styles.creditName}>{item.name}</span>
-                <span className={styles.creditRole}>{lang === "zh" ? item.roleZh : item.roleEn}</span>
+                <span className={styles.creditRole}>{t(item.role)}</span>
               </div>
             </li>
           ))}
@@ -713,34 +738,34 @@ function IGM_LauncherV2_AboutPanel() {
 
       {/* 二、开发团队：方形徽标卡片 */}
       <section className={styles.aboutSection}>
-        <h3 className={styles.aboutSectionTitle}>{text.teams}</h3>
+        <h3 className={styles.aboutSectionTitle}>{t("settings.about.teams")}</h3>
         <div className={styles.teamRow}>
           <div className={styles.teamCard}>
             <span className={styles.teamLogo}>
               <Image
                 src="/image/ig.png"
-                alt="iGCraftLit 团队标识"
+                alt={t("settings.about.igcTeamAlt")}
                 width={56}
                 height={56}
                 unoptimized
                 className={styles.teamLogoImage}
               />
             </span>
-            <span className={styles.teamName}>iGCraftLit 团队</span>
+            <span className={styles.teamName}>{t("settings.about.igcTeam")}</span>
           </div>
           <div className={styles.teamCard}>
             <IGM_LauncherV2_MuoCeonLogo />
-            <span className={styles.teamName}>MuoCeon 团队</span>
+            <span className={styles.teamName}>{t("settings.about.muoTeam")}</span>
           </div>
         </div>
       </section>
 
       {/* 三、版权声明：许可协议标签随语言，版权句恒为英文全文 */}
       <section className={styles.aboutSection}>
-        <h3 className={styles.aboutSectionTitle}>{text.copyright}</h3>
+        <h3 className={styles.aboutSectionTitle}>{t("settings.about.copyright")}</h3>
         <div className={styles.copyrightBox}>
           <p className={styles.copyrightLine}>
-            <span className={styles.copyrightLabel}>{text.licenseLabel}：</span>
+            <span className={styles.copyrightLabel}>{t("settings.about.licenseLabel")}：</span>
             <span className={styles.copyrightValue}>iGM Limited Distribution License</span>
           </p>
           <p className={styles.copyrightText}>{IGM_ABOUT_COPYRIGHT}</p>
@@ -751,6 +776,7 @@ function IGM_LauncherV2_AboutPanel() {
 }
 
 export function iGM_LauncherV2_Settings() {
+  const t = useTranslations();
   const [tab, setTab] = useState<iGM_LauncherV2_SettingsTab>("general");
 
   return (
@@ -766,7 +792,7 @@ export function iGM_LauncherV2_Settings() {
               onClick={() => setTab(item.id)}
             >
               <Icon size={15} strokeWidth={2.2} />
-              <span>{item.label}</span>
+              <span>{t(item.label)}</span>
             </button>
           );
         })}
@@ -774,6 +800,7 @@ export function iGM_LauncherV2_Settings() {
 
       {tab === "general" ? (
         <>
+          <IGM_LauncherV2_LanguagePanel />
           <IGM_LauncherV2_PathsPanel />
           <IGM_LauncherV2_GameDetectPanel />
           <IGM_LauncherV2_ChannelPanel />

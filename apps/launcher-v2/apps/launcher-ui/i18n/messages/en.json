@@ -1,0 +1,738 @@
+{
+  "common": {
+    "appName": "iGM CraftCeon Launcher",
+    "launch": "Launch",
+    "launchGame": "Launch Game",
+    "browse": "Browse",
+    "language": "Language",
+    "add": "New",
+    "save": "Save",
+    "search": "Search",
+    "edit": "Edit",
+    "delete": "Delete",
+    "copy": "Copy",
+    "copied": "Copied",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "back": "Back",
+    "refresh": "Refresh",
+    "refreshState": "Refresh Status",
+    "remove": "Remove",
+    "none": "None",
+    "loading": "Loading",
+    "loadingEllipsis": "Loading…",
+    "unknown": "Unknown",
+    "download": "Download",
+    "close": "Close",
+    "open": "Open",
+    "yes": "Yes",
+    "no": "No",
+    "apply": "Apply",
+    "retry": "Retry",
+    "scanning": "Scanning",
+    "currentUse": "In Use",
+    "notFetched": "(Not retrieved yet)"
+  },
+  "nav": {
+    "home": "Home",
+    "horizon": "Horizons",
+    "resources": "Resources",
+    "servers": "Server Lobby",
+    "peer": "Peer Lobby",
+    "account": "Account",
+    "skins": "Skin Library",
+    "settings": "Settings"
+  },
+  "language": {
+    "title": "Interface Language",
+    "desc": "Switch the launcher interface language. It takes effect immediately and is saved locally.",
+    "zhCN": "简体中文",
+    "en": "English",
+    "label": "Language"
+  },
+  "market": {
+    "categories": {
+      "mods": "Mods",
+      "shaders": "Shaders",
+      "resourcepacks": "Resource Packs",
+      "modpacks": "Modpacks",
+      "worlds": "Worlds"
+    },
+    "loaders": {
+      "all": "All Loaders",
+      "fabric": "Fabric",
+      "forge": "Forge",
+      "neoforge": "NeoForge"
+    },
+    "sources": {
+      "modrinth": "Modrinth",
+      "curseforge": "CurseForge"
+    },
+    "ui": {
+      "title": "Resource Market",
+      "desc": "Connects to Modrinth and CurseForge as dual data sources; the selected loader is appended as a filter to search requests, while the default \"All Loaders\" applies no filtering.",
+      "categoryLabel": "Category",
+      "loaderLabel": "Loader",
+      "searchPlaceholder": "Search resource name or keyword; press Enter to search",
+      "searching": "Searching…",
+      "totalSuffix": "({count} total)",
+      "empty": "No results under the current filters. Try another category, loader, or keyword.",
+      "noDescription": "No description",
+      "downloadCount": "{count} downloads",
+      "unlabeled": "Unlabeled",
+      "loadMore": "Load more (showing {shown} / {total})",
+      "downloadsHundredMillion": "{value} hundred million",
+      "downloadsTenThousand": "{value} ten thousand",
+      "sizeUnknown": "Size unknown",
+      "openHomepage": "Open resource homepage",
+      "channelDirect": "Channel B · Direct download",
+      "channelSdk": "Channel A · SDK download",
+      "sdkGuestHint": "Sign in to the community account to use SDK channel downloads",
+      "closeDownloadDialog": "Close download dialog",
+      "gameVersions": "Supported MC versions",
+      "noGameVersions": "This resource lists no supported versions",
+      "supportedLoaders": "Supported loaders",
+      "summary": "Summary",
+      "loadingDetail": "Loading details…",
+      "downloadFile": "Download file",
+      "adaptVersion": " (for {version})",
+      "noFile": "No directly downloadable file for this resource; get it from the resource homepage.",
+      "chooseInstallMode": "Choose installation method",
+      "closeInstallDialog": "Close install confirmation dialog",
+      "installToHorizon": "Install to horizon",
+      "installToHorizonDesc": "Automatically placed into the {subdir} folder of the selected horizon",
+      "downloadOnly": "Download file only",
+      "downloadOnlyDesc": "Choose a save folder yourself; nothing is written to any horizon",
+      "noHorizons": "There are no horizons yet. Create one in the Resource Center first, or switch to \"Download file only\".",
+      "useCurrentHorizon": "Use current horizon ({name})",
+      "notSet": "Not set",
+      "currentSuffix": " (current)",
+      "saveFolderLabel": "Save folder",
+      "folderPlaceholder": "No save folder selected yet",
+      "browseFolder": "Browse folder",
+      "folderHint": "The file will be saved directly to this folder without any category placement.",
+      "folderCancelled": "No folder selected (the folder picker is unavailable in browser preview)",
+      "folderRequired": "Select a save folder first",
+      "confirmInstall": "Confirm install",
+      "confirmDownload": "Confirm download"
+    }
+  },
+  "appearance": {
+    "modes": {
+      "cloud": { "label": "Dynamic Cloud Background", "hint": "Slowly drifting fluid clouds; palette switchable" },
+      "solid": { "label": "Solid Color Background", "hint": "Minimal static backdrop, most efficient" }
+    },
+    "cloud": {
+      "purple": { "label": "Classic Deep Purple", "hint": "Deep blue blended with purple" },
+      "blue": { "label": "Dreamy Cool Blue", "hint": "Cool blue blended with cyan" },
+      "pink": { "label": "Aurora Pink", "hint": "Deep purple blended with pink" }
+    },
+    "solid": {
+      "dark": { "label": "Deep Dark", "hint": "Very dark gray, easy on the eyes" },
+      "light": { "label": "Bright Light", "hint": "Clean light gray-white; text flips to dark automatically" },
+      "coffee": { "label": "Classic Coffee", "hint": "Retro elegant deep coffee tone" },
+      "green": { "label": "Aurora Green", "hint": "Low-saturation deep ink green" }
+    },
+    "themes": {
+      "indigo": "Indigo",
+      "aurora": "Aurora Green",
+      "sakura": "Sakura Pink",
+      "geek": "Geek Black",
+      "amber": "Amber Orange"
+    }
+  },
+  "shell": {
+    "tiles": {
+      "community": { "title": "Community", "desc": "Browse the skin library and community appearances, then apply your own skin." },
+      "resources": { "title": "Resource Library", "desc": "Multi-source version manifests and loader lists; choose any download channel." },
+      "settings": { "title": "Settings", "desc": "Manage the root directory, game directories and download sources." }
+    },
+    "java": {
+      "title": "Java Environment",
+      "desc": "Automatically scans common JDK directories and the .minecraft bundled runtime; you can also pick javaw.exe manually.",
+      "rescan": "Rescan",
+      "addPath": "Add Java Path Manually",
+      "scanningNotice": "Scanning system Java environments…",
+      "empty": "No Java environment found. Use the button below to select javaw.exe manually (usually inside the bin folder of a Java installation); its version is parsed and added to the list immediately.",
+      "versionLabel": "Java {version}",
+      "versionUnknown": "Java (version not recognized)",
+      "globalDefault": "Global Default",
+      "setDefaultAria": "Set as global default",
+      "removeAria": "Remove this Java environment"
+    },
+    "msa": {
+      "title": "Microsoft Account Verification",
+      "desc": "Authorize via the Microsoft device code flow to complete Xbox Live, XSTS and Minecraft authentication, retrieving the official UUID, game name and skin avatar.",
+      "unbind": "Unbind",
+      "pending": "Waiting for Authorization",
+      "bind": "Bind Official Account",
+      "avatarAlt": "{name}'s official skin avatar",
+      "viewProfile": "View Official Profile",
+      "deviceHint": "Open the verification page in your browser and enter the user code below to authorize your Microsoft account.",
+      "copiedPaste": "Copied, paste it in the browser",
+      "copyAndOpen": "Copy Code and Open Browser",
+      "cancelVerify": "Cancel Verification",
+      "deviceMeta": "The code is valid for about {minutes} minutes; this page updates automatically once authorization succeeds.",
+      "requesting": "Requesting a device code from Microsoft…",
+      "notBound": "No Microsoft official account bound yet. Click the button at the top right to start verification."
+    },
+    "offline": {
+      "title": "Offline Accounts",
+      "desc": "The UUID is derived to the standard format via the MD5 of OfflinePlayer:nickname, used only for singleplayer and offline login.",
+      "placeholder": "Enter an account nickname, up to 16 characters",
+      "empty": "No offline account yet. After adding one you can switch the current account in the list.",
+      "current": "Current Account",
+      "switch": "Switch",
+      "removeAria": "Delete this offline account"
+    },
+    "home": {
+      "msaTitle": "Official Account",
+      "currentAccountTag": "Current Launch Account",
+      "msaEmpty": "No Microsoft official account bound",
+      "offlinePlaceholder": "Enter account nickname",
+      "offlineLimitHint": "You can create at most {limit} offline accounts",
+      "offlineEmpty": "No offline account yet. After adding one, click the card to set it as the current launch account."
+    },
+    "recent": {
+      "title": "Recent Updates",
+      "desc": "Minecraft release records; see the full list in Resource Center.",
+      "loading": "Fetching version list…",
+      "empty": "Version list not available yet. Please retry later in Resource Center.",
+      "releaseTag": "Release"
+    },
+    "console": {
+      "title": "Error Console",
+      "desc": "Streams the game process's stdout and stderr line by line and points out the cause when launch fails; the full log is written to logs/launch.log.",
+      "reloadAria": "Reload launch logs",
+      "clearAria": "Clear launch log display",
+      "empty": "No launch logs yet; process output will appear here in real time after launching the game."
+    },
+    "logStream": { "system": "Launcher", "stdout": "Output", "stderr": "Error" },
+    "launchSteps": {
+      "verify": "Verify Java and dependencies",
+      "jvm": "Build JVM arguments",
+      "spawn": "Spawn Java process",
+      "initMark": "Capture game initialization marker",
+      "success": "Launch succeeded"
+    },
+    "progress": {
+      "failed": "Launch failed",
+      "starting": "Launching game",
+      "aborted": "Launch aborted",
+      "preparing": "Preparing…",
+      "errorHead": "Error logs (last {count})",
+      "noErrors": "No stderr captured; check logs/launch.log",
+      "hint": "The overlay closes automatically after launch completes"
+    },
+    "launchDialog": {
+      "title": "Select a Horizon to Launch",
+      "desc": "Each horizon is an independent game directory; the game launches with that horizon's configuration.",
+      "closeAria": "Close dialog",
+      "needAccountTitle": "Please select an account to launch first",
+      "needAccountDesc": "Click an official or offline account card in the account panel on the right of the home page, set it as the current launch account, then start the game.",
+      "goAccount": "Go to Account Center",
+      "empty": "No horizon yet. Download one in Resource Center or create one on the Horizons tab.",
+      "goHorizon": "Go to Horizons Tab",
+      "currentHorizon": "Current Horizon",
+      "modCount": "Mods {count}"
+    },
+    "core": {
+      "okPlain": "Rust core connected",
+      "okVersion": "Rust core connected (v{version})",
+      "unavailable": "Rust core not ready: {detail}",
+      "missingCore": "igm_core executable not found",
+      "probing": "Probing Rust core…"
+    },
+    "user": {
+      "loggedOut": "Not logged in",
+      "guest": "Guest",
+      "uidLabel": "iGMUid: {uid}",
+      "notBoundCommunity": "Not logged in to iGCraftLit Community account",
+      "changeAvatar": "Change Avatar",
+      "logout": "Log Out"
+    },
+    "brandLogoAlt": "iGM CraftCeon Launcher logo",
+    "communityAvatarAlt": "Community avatar",
+    "launchDock": {
+      "needAccount": "Please select an account to launch in the account panel on the right",
+      "running": "Game running",
+      "runningPid": "Game running (pid {pid})"
+    },
+    "section": {
+      "accountDesc": "Unified entry for managing the community account, Microsoft official account and runtime environment.",
+      "communityNickname": "Community Nickname",
+      "uidLabel": "iGMUid",
+      "communityLoggedIn": "Community account logged in",
+      "communityLoggedOut": "Community account not logged in",
+      "horizonDesc": "Each horizon is an independent game directory; mods, resource packs, shaders and saves do not affect one another.",
+      "resourcesDesc": "Multi-source version manifests and loader lists; you choose the download channel and the launcher never switches it automatically.",
+      "settingsDesc": "The root directory and game directories are managed by the launcher; you choose the download channel."
+    },
+    "hero": { "greet": "Welcome back, " }
+  },
+  "settings": {
+    "tabs": { "general": "General", "appearance": "Appearance", "about": "About" },
+    "source": { "matrix": "Launcher Root", "system": "Common System Locations", "custom": "User Custom" },
+    "update": {
+      "idle": "Not Checked",
+      "checking": "Checking",
+      "available": "Update Available",
+      "downloading": "Downloading",
+      "downloaded": "Ready to Restart",
+      "latest": "Up to Date",
+      "error": "Check Failed"
+    },
+    "paths": {
+      "title": "Launcher Root Directory",
+      "desc": "The launcher generates the root directory name from your OS and builds the full launcher_data and .minecraft structure under the root you choose.",
+      "browseRoot": "Choose Root",
+      "treeMatrix": "Launcher root",
+      "treeLauncherData": "Accounts, settings, logs",
+      "treeMinecraft": "Game core directory",
+      "treeShared": "Shared",
+      "treeHorizons": "Horizons (isolated area)",
+      "platform": "Platform",
+      "matrixRoot": "Root Directory",
+      "gameRoot": "Game Root",
+      "launcherData": "Launcher Data",
+      "horizons": "Horizons Directory"
+    },
+    "detect": {
+      "title": "Auto-detect Game Directory",
+      "desc": "Scans common system locations and your saved custom paths; a directory is complete when assets / libraries / versions all exist.",
+      "rescan": "Rescan",
+      "addScanDir": "Add Scan Directory",
+      "generate": "Generate Standard Structure",
+      "scanning": "Scanning local game directories…",
+      "empty": "No .minecraft directory detected. Click [Add Scan Directory] to pick one manually, or click [Generate Standard Structure] to create the full structure under the root directory.",
+      "complete": "Complete game directory detected",
+      "incomplete": "Incomplete .minecraft folder detected",
+      "use": "Use This Directory",
+      "useComplete": "Choose and Use This Directory",
+      "deleteFolder": "Delete this folder"
+    },
+    "channel": {
+      "title": "Download Channel",
+      "desc": "The channel is chosen by you; the launcher never switches or downgrades automatically. When the selected channel is unavailable it only notifies you and waits for a manual switch.",
+      "sdkTitle": "Channel A: iGCraftLit SDK Download",
+      "sdkDesc": "Distributed via the main site backend, with account authentication and acceleration; requires the backend online (available when the tunnel is up).",
+      "directTitle": "Channel B: Launcher Direct Download",
+      "directDesc": "The launcher's local engine connects directly to official and mirror sources without the main site backend, and works offline independently.",
+      "selected": "Selected",
+      "select": "Select"
+    },
+    "appearance": {
+      "title": "Appearance",
+      "desc": "Background mode, color scheme, frosted-glass blur and theme color; changes take effect across the whole launcher immediately.",
+      "modes": "Background Mode",
+      "cloud": "Dynamic Cloud Colors",
+      "solid": "Solid Color Background",
+      "blur": "Frosted-Glass Blur",
+      "blurHint": "Adjust the backdrop-filter blur radius for the nav bar, cards and other elements, previewed in real time.",
+      "theme": "Theme Color"
+    },
+    "about": {
+      "title": "About",
+      "langToggle": "Language Switch",
+      "toggleZh": "中文",
+      "toggleEn": "English",
+      "checking": "Checking",
+      "checkUpdate": "Check for Updates",
+      "currentVersion": "Current Version",
+      "latestVersion": "Latest Version",
+      "updateStatus": "Update Status",
+      "installNow": "Restart and Update Now",
+      "downloading": "Downloading {percent}%",
+      "downloadUpdate": "Download Update",
+      "acknowledgements": "Acknowledgements",
+      "teams": "Development Teams",
+      "copyright": "Copyright",
+      "licenseLabel": "License",
+      "avatarAlt": "{name}'s avatar",
+      "igcTeamAlt": "iGCraftLit team logo",
+      "igcTeam": "iGCraftLit Team",
+      "muoTeam": "MuoCeon Team",
+      "roles": {
+        "founder": "Founder & CEO",
+        "developer": "Co-Developer",
+        "promotion": "Chief Promotion Officer"
+      }
+    }
+  },
+  "horizon": {
+    "title": "Horizon Management",
+    "desc": "A horizon is an isolated game directory: mods, resource packs, shaders and saves stay independent of each other, while shared assets / libraries / versions are reused from the root directory.",
+    "create": "New Horizon",
+    "backToList": "Back to horizon list",
+    "currentTag": "Current Horizon",
+    "modCount": "{count} mods",
+    "confirmDelete": "Confirm Delete",
+    "switchTo": "Switch to this horizon",
+    "deleteThis": "Delete this horizon",
+    "guestLimit": "Guests can create at most {limit} horizons. Sign in with a community account to remove the limit.",
+    "tab": { "tree": "Files", "worlds": "Worlds" },
+    "tree": {
+      "loading": "Reading directory tree…",
+      "empty": "This horizon's directory is empty",
+      "expand": "Expand folder {name}",
+      "collapse": "Collapse folder {name}"
+    },
+    "worlds": {
+      "loading": "Reading save list…",
+      "empty": "No saves in this horizon (the saves folder is empty)"
+    },
+    "list": {
+      "title": "Horizon List",
+      "current": "Current horizon: {value}",
+      "notChosen": "Not selected",
+      "loading": "Reading horizon list…",
+      "empty": "There are no horizons yet. Enter a name above and click [New Horizon] to generate an isolated directory.",
+      "viewDetail": "View horizon details",
+      "viewDetailOf": "View details of horizon {name}"
+    },
+    "modal": {
+      "close": "Close new horizon dialog",
+      "nameLabel": "Horizon Name",
+      "namePlaceholder": "e.g. 1.20.1-Fabric",
+      "nameRequired": "Please enter a horizon name first, e.g. 1.20.1-Fabric",
+      "versionLabel": "Game Version",
+      "versionRequired": "Please choose the downloaded version to bind to this horizon",
+      "versionsLoading": "Reading downloaded versions…",
+      "versionsEmpty": "No downloaded versions locally",
+      "versionsEmptyHint": "No downloaded versions locally. You can create the directory now and download the version later from the Resource Center.",
+      "loaderLabel": "Loader",
+      "creating": "Creating…",
+      "confirmCreate": "Create"
+    },
+    "loader": { "vanilla": "Vanilla" }
+  },
+  "skin": {
+    "library": {
+      "title": "Skin Library",
+      "desc": "A curated collection of 100 built-in skins, browsable by All and Featured; also look up any player's skin online and manage your own local skins.",
+      "pickLocalImage": "Choose Local Image"
+    },
+    "category": {
+      "library": { "label": "Skin Library", "desc": "100 built-in collection plus Mineskin hosting" },
+      "online": { "label": "Online Lookup", "desc": "Enter a player name to look up any skin" },
+      "mine": { "label": "My Skins", "desc": "List of locally imported skins" }
+    },
+    "tab": { "all": "All", "featured": "Featured" },
+    "model": { "classic": "Classic (Wide Arms)", "slim": "Slim (Narrow Arms)" },
+    "source": {
+      "local": "Local",
+      "mineskin": "Mineskin Permanent URL",
+      "localImport": "Local Import",
+      "minotarBuiltin": "Minotar Built-in Skin Library",
+      "minotarOnline": "Minotar Online Skin",
+      "localPreviewUploading": "Local Preview (Uploading to Mineskin)"
+    },
+    "notice": {
+      "datumTextureFailed": "Failed to load this skin's texture. Please try again later.",
+      "entryTextureFailed": "Failed to load this skin's texture. Please re-import it.",
+      "probeFailed": "Couldn't retrieve this account's skin. Please verify the premium username and try again.",
+      "fileReadFailed": "Failed to read the image. Please choose a PNG file again."
+    },
+    "localSkinName": "Local Skin",
+    "gridCount": {
+      "online": "Look up by premium username",
+      "pages": "{count} skins · Page {page} / {totalPages}"
+    },
+    "empty": {
+      "mine": "No local skins imported yet. Click \"Choose Local Image\" in the top-right to import a 64x64 or 64x32 PNG skin."
+    },
+    "aria": {
+      "localOnlySkin": "Skin with local file only",
+      "previewUnavailable": "Skin preview unavailable",
+      "cardPreview": "Skin preview of {name}",
+      "removeSkin": "Remove {name} from skin library"
+    },
+    "pager": { "prev": "Previous", "next": "Next" },
+    "probe": {
+      "placeholder": "Enter a premium username, e.g. Notch",
+      "loading": "Searching",
+      "action": "Search",
+      "hint": "Minotar fetches skins by premium username (no API key). Enter a name to preview the 3D skin on the right; once confirmed, you can apply it to the current offline account."
+    },
+    "viewerEmpty": {
+      "online": "Enter an account and search to preview the 3D skin",
+      "library": "Select a skin on the left to preview the 3D result"
+    },
+    "detail": {
+      "name": "Name",
+      "model": "Model",
+      "source": "Source",
+      "author": "Author",
+      "downloads": "Downloads"
+    },
+    "apply": {
+      "premiumHint": "Currently bound to premium account \"{name}\". Premium skins are managed by the official account system and cannot be applied locally; please change it on the official website.",
+      "openOfficial": "Change on Official Website",
+      "offlineHint": "After applying, the skin is written to the local skin directory and recorded for offline account \"{name}\". A skin mod such as CustomSkinLoader is required for it to take effect in game.",
+      "noOfflineHint": "Please add an offline account in Account Center first; the target is the current offline account.",
+      "action": "Apply to Offline Account"
+    },
+    "profile": {
+      "back": "Back to Account Center",
+      "title": "Premium Account Profile",
+      "desc": "Textures come from the Mojang session service profile API and are used only for local 3D display.",
+      "emptyNoAccount": "No Microsoft premium account is bound yet. Please complete verification in Account Center first.",
+      "textureNotLoaded": "Skin texture not retrieved",
+      "loadingProfile": "Loading premium profile…",
+      "field": { "name": "Premium ID", "model": "Model Type", "uuid": "UUID", "cape": "Cape" },
+      "cape": { "worn": "Equipped", "notWorn": "Not equipped" },
+      "uuidCopy": "Copy UUID",
+      "uuidCopied": "UUID Copied"
+    },
+    "viewer": { "loading": "Preparing 3D view…", "empty": "No skin texture available for preview" },
+    "canvas": { "ariaPreview": "Minecraft character 3D preview", "hint": "Drag to rotate · Scroll to zoom" }
+  },
+  "resource": {
+    "title": "Game Versions",
+    "desc": "{total} versions in total; {shown} shown in the current category. Click a card to open the install dialog.",
+    "views": {
+      "versions": "Game Versions",
+      "market": "Resource Market"
+    },
+    "tabs": {
+      "release": "All Releases",
+      "snapshot": "Snapshots",
+      "old": "Old Versions",
+      "special": "Special Editions"
+    },
+    "loaderOptions": {
+      "vanilla": "Vanilla (Original)",
+      "fabric": "Fabric",
+      "forge": "Forge",
+      "neoforge": "NeoForge"
+    },
+    "searchPlaceholder": "Search by version, e.g. 1.20.1",
+    "loadingVersions": "Loading version list…",
+    "empty": "No matching versions in this category. Adjust the category or keyword.",
+    "releaseUnknown": "Release date unknown",
+    "limitHint": "This category has many versions; only the first {limit} are shown. Use a keyword to narrow down.",
+    "installTitle": "Install {version}",
+    "closeDialog": "Close install dialog",
+    "horizonName": "Horizon name",
+    "loaderLabel": "Choose loader",
+    "loaderVersion": "Loader version",
+    "vanillaNoLoader": "Vanilla needs no loader version",
+    "noLoaderVersions": "No versions available",
+    "loadingLoaders": "Loading available versions for this loader on this game version…",
+    "rootPath": "Storage path",
+    "browseFolder": "Browse folder",
+    "rootHint": "A standard iGML_Matrix directory structure (.minecraft / horizons, etc.) will be created under this path before downloading.",
+    "startInstall": "Start install"
+  },
+  "server": {
+    "source": {
+      "remote": "Public server list fetched from a third-party API; you can query live status and join with one click.",
+      "cache": "Currently offline; showing the locally cached server list.",
+      "empty": "No server list retrieved yet."
+    },
+    "loadingList": "Fetching server list…",
+    "playersUnknown": "Player count unknown",
+    "players": "Online {online} / {max}",
+    "iconAlt": "Server icon for {name}",
+    "mine": "My Server",
+    "hot": "Hot",
+    "online": "Online",
+    "offline": "Offline",
+    "versionUnknown": "Version unknown",
+    "latency": "Latency {ms} ms",
+    "versionLabel": "Version {version}",
+    "join": "Join Now",
+    "queryStatus": "Query Status",
+    "visitSite": "Visit Website",
+    "deleteServer": "Delete this server",
+    "addServer": "Add Server",
+    "addDesc": "Fill in the server name and address to add it to the list. Port defaults to 25565; the website link is optional.",
+    "closeDialog": "Close dialog",
+    "fieldName": "Name (required)",
+    "namePlaceholder": "e.g. iGCraftLit Survival",
+    "fieldIp": "IP / Hostname (required)",
+    "ipPlaceholder": "e.g. play.example.com or 127.0.0.1",
+    "fieldPort": "Port",
+    "portPlaceholder": "Default 25565",
+    "fieldSite": "Website link (optional)",
+    "sitePlaceholder": "e.g. https://example.com",
+    "refreshing": "Refreshing…",
+    "emptyLoaded": "No servers yet. Click \"Add Server\" in the top-right to add one manually, or refresh the list later.",
+    "preparing": "Preparing server list…"
+  },
+  "download": {
+    "title": "Download Center",
+    "expand": "Expand download center",
+    "collapse": "Collapse download center",
+    "dismissNotice": "Dismiss notice",
+    "emptyRunning": "No downloads in progress.",
+    "emptyDone": "No completed downloads.",
+    "emptyHistory": "No history yet.",
+    "resume": "Resume",
+    "pause": "Pause",
+    "resumeDownload": "Resume download",
+    "pauseDownload": "Pause download",
+    "cancelDownload": "Cancel download",
+    "clearTask": "Clear task",
+    "clear": "Clear",
+    "finishedAt": "Finished at {time}",
+    "speed": "{value}",
+    "files": "{remaining} files remaining",
+    "state": {
+      "running": "Downloading",
+      "paused": "Paused",
+      "done": "Completed",
+      "failed": "Failed",
+      "canceled": "Canceled"
+    },
+    "tabs": {
+      "running": "In Progress",
+      "done": "Completed",
+      "history": "History"
+    }
+  },
+  "installer": {
+    "steps": {
+      "path": "Choose Path",
+      "license": "Accept License",
+      "progress": "Installing",
+      "done": "Finish"
+    },
+    "subtitle": "Setup Wizard · Windows Edition · v{version}",
+    "pathLabel": "Install Location",
+    "requiredSpace": "Approx. 180 MB",
+    "pathMeta": "Requires {space} · The resource directory can be changed anytime in launcher settings after installation",
+    "pathNotice": "This build only provides the Windows setup wizard.",
+    "license": {
+      "text": "iGM CraftCeon Launcher End User License Agreement (Windows Edition)\n\n1. This software is developed by the iGCraftLit Community team and provided free of charge to the community, for launching and managing Minecraft games and Horizons.\n2. Use of this software is subject to the iGCraftLit community user management rules. Do not use this software for any purpose that violates local laws or regulations.\n3. This software is provided \"as is\", without warranty of any kind, express or implied. The team shall not be liable for any loss of game saves or resource files caused by the use of this software.\n4. This software reads the local game directory and log files for Horizon management and troubleshooting; all data is kept locally only and is never uploaded to servers automatically.\n5. Community account authorization uses the OAuth 2.0 + PKCE public client flow; the launcher never stores your community account password.\n6. The team reserves the right to update this agreement and software features without prior notice. Continued use constitutes acceptance of the updated terms.\n\nIf you have any questions, please contact: igcraftlit@outlook.com",
+      "agree": "I have read and agree to the license agreement above",
+      "scrollHint": "Please scroll to the end of the agreement before checking this box"
+    },
+    "progressWriting": "Writing launcher files…",
+    "doneTitle": "Installation Complete",
+    "doneMeta": "iGM CraftCeon Launcher has been installed to {path}; launch it from the desktop shortcut.",
+    "footerNote": "iGCraftLit Community Team",
+    "nextStep": "Next",
+    "prevStep": "Previous",
+    "startInstall": "Start Installation",
+    "installing": "Installing…",
+    "finishAndLaunch": "Finish and Open Launcher"
+  },
+  "login": {
+    "windowVersion": "Community Auth",
+    "signIn": "Sign in with iGCraftLit Community account",
+    "pending": "Waiting for browser authorization…",
+    "avatarAlt": "{name}'s community avatar",
+    "rememberedLast": "Last signed-in community account",
+    "quickLogin": "Quick sign-in with community account",
+    "guest": "Guest sign-in (skip community account)",
+    "browserPreviewHint": "You are in browser preview mode; authorization must be completed inside the desktop launcher.",
+    "continue": "Continue",
+    "guestModal": {
+      "aria": "Guest sign-in confirmation",
+      "title": "Notice",
+      "text": "Guest sign-in data (such as play records and local Horizons) will be stored only on this device and cannot be cloud-synced or shared with the community ecosystem. Continue?"
+    }
+  },
+  "welcome": {
+    "logoAlt": "iGM CraftCeon Launcher logo",
+    "subtitle": "A lightweight, minimal Minecraft launcher built for the iGCraftLit community.",
+    "startButton": "Start the Journey",
+    "authLoggedIn": "Signed in",
+    "authPending": "Awaiting authorization",
+    "authLoggedOut": "Not signed in to community account",
+    "teamFooter": "iGCraftLit Community Team"
+  },
+  "update": {
+    "availableTitle": "New version v{version} available",
+    "downloadingTitle": "Downloading update package",
+    "readyTitle": "Update ready, waiting to restart",
+    "availableDesc": "Click download to fetch the update in the background",
+    "downloadingDesc": "Downloaded {progress}%",
+    "readyDesc": "Click the button below to finish updating",
+    "restartNow": "Restart and update now",
+    "dismissAria": "Dismiss this update notification",
+    "dismiss": "Dismiss"
+  },
+  "primitive": {
+    "minimize": "Minimize",
+    "maximizeRestore": "Maximize or restore"
+  },
+  "peer": {
+    "connect": "Connect to relay",
+    "peers": "{count} in room",
+    "peersUnknown": "Player count unknown",
+    "status": {
+      "idle": "Not connected to a relay",
+      "connectingNode": "Connecting to relay…",
+      "connectingP2P": "Establishing P2P network…",
+      "connectingRoom": "Connecting to the host's LAN…",
+      "community": "Connected to fast community relay",
+      "public": "Connected to public relay",
+      "waitingPort": "Room created, waiting for the host to bind a port",
+      "waitingJoin": "Hosting and bound, waiting for friends to join",
+      "joined": "Joined the host's LAN successfully"
+    },
+    "line": {
+      "community": "Fast community relay",
+      "public": "Public relay"
+    },
+    "notice": {
+      "degraded": "Community relay unavailable; downgraded to a public relay ({relay}) with hole punching via {stun}. Latency may be higher.",
+      "roomCreated": "Room created. Room code {code} — share it with your friends.",
+      "roomCreatedPublic": "Room created on a public relay, code {code}; it will switch to the fast relay once the community site is back.",
+      "joinedRoom": "Joined room {code} via the fast community relay.",
+      "joinedRoomPublic": "Joined room {code} via a public relay ({relay}); latency may be higher.",
+      "portBound": "Port {port} bound with UDP LAN-broadcast forwarding; waiting for friends to join.",
+      "portInvalid": "Invalid port. Enter an integer between 1 and 65535.",
+      "codeInvalid": "The room code must be {length} digits.",
+      "previewNoLobby": "Multiplayer is unavailable in browser preview; use the desktop launcher.",
+      "previewNoConnect": "Cannot connect to a relay in browser preview.",
+      "previewNoCreate": "Cannot create a room in browser preview.",
+      "previewNoBind": "Cannot bind a port in browser preview.",
+      "previewNoJoin": "Cannot join a room in browser preview.",
+      "previewNoLeave": "Cannot leave a room in browser preview."
+    },
+    "horizon": {
+      "label": "Multiplayer Horizon",
+      "placeholder": "Select a Horizon for multiplayer",
+      "empty": "No Horizons yet. Create one in the Horizons tab, or download a version from the Resource Center.",
+      "meta": "Bound version {version} · Loader {loader}",
+      "none": "Select a Horizon first, then create or join a room."
+    },
+    "host": {
+      "title": "Host mode",
+      "desc": "Create a multiplayer room after selecting a Horizon, share the 6-digit room code, then open the game to LAN.",
+      "badge": "Host",
+      "create": "Create multiplayer room",
+      "inRoomDesc": "Room is ready. Share the room code below, then follow the guide to host.",
+      "codeLabel": "Room code",
+      "copy": "Copy",
+      "guideTitle": "Hosting guide",
+      "guide": "In-game, press ESC and click \"Open to LAN\", then note the port number shown in chat.",
+      "launchAndHost": "Launch game & host",
+      "portLabel": "LAN port",
+      "bindPort": "Bind port & wait for joins",
+      "bound": "Port {port} bound. Friends can now join.",
+      "leave": "Leave room"
+    },
+    "guest": {
+      "title": "Friend mode",
+      "desc": "Enter the 6-digit room code from the host; after joining, launch the game and the world appears under Multiplayer.",
+      "placeholder": "Enter 6-digit room code",
+      "action": "Join room",
+      "hint": "The room code is 6 digits.",
+      "joined": "Joined the host's LAN successfully",
+      "guide": "In-game, click Multiplayer and double-click the LAN world that appears.",
+      "codeTag": "Room {code}",
+      "launch": "Launch game",
+      "leave": "Leave room"
+    },
+    "info": {
+      "title": "Dual-transport multiplayer",
+      "community": "Fast community relay: while the community site is online, the launcher registers the room over its WebSocket and exchanges signaling for the lowest latency.",
+      "public": "Public relay fallback: when the community site is offline, it switches to EasyTier public relays and punches through via public STUN/TURN.",
+      "udp": "UDP broadcast forwarding: the tunnel forwards the game's UDP LAN-broadcast packets so friends can discover the room directly in the multiplayer list."
+    }
+  }
+}

@@ -3,35 +3,49 @@
  * 所属层：前端 / 页面组件层
  * 路由：G_Main·联机大厅（P2P）
  * 模块：iGM_LauncherV2_PeerLobby
- * 作用：联机大厅页：展示联机节点连接状态，并支持创建 / 加入 / 退出房间
- * 内容：顶部为连接状态区（按 mode 展示绿 / 黄 / 中性 / 灰状态点与主状态文案），
- *       mode 为 idle 时提供「连接联机节点」按钮，另提供「刷新状态」；
- *       中部为房间操作区：创建房间（进入房间后展示房间码、复制房间码、房主标记、当前人数与退出房间）
- *       与加入房间（6 位数字房间码输入 + 加入按钮，非 6 位时禁用并给出提示）；
- *       底部为必需可见的「双方案说明」区块；
- *       外壳提示 message 以次级提示行常驻展示
- * 说明：组件为纯展示层，所有联机能力均由 Bun 主进程执行，
- *       界面只通过 iGM_LauncherV2_UsePeerLobby 投递指令并展示回推快照
+ * 作用：联机大厅页：与「视界」深度绑定，打通「开服 -> 邀请 -> 进服」的完整闭环
+ * 内容：顶部为连接状态区（按 mode 展示绿 / 黄 / 中性 / 灰状态点、主状态文案与当前线路标记，
+ *       mode 为 idle 时提供「连接联机节点」按钮，另提供「刷新状态」）；
+ *       视界选择：下拉框读取本地全部视界并显示绑定版本与加载器，作为联机房间的游戏目录；
+ *       房主模式：选定视界后点击「创建联机房间」，先进入「正在建立 P2P 网络…」，
+ *       成功后展示 6 位房间码与复制按钮，并提供「启动游戏并开服」与图文引导
+ *       （进入游戏按 ESC 点【对局域网开放】并记下端口），房主填写端口（默认 25565）后
+ *       「绑定端口并等待加入」，绑定完成后展示等待状态与当前人数；
+ *       好友模式：输入 6 位房间码后「加入房间」，先展示「正在连接…」，成功后展示
+ *       「已成功加入房主的局域网」与「启动游戏」按钮，并引导进入游戏点击【多人游戏】
+ *       双击刷新出的局域网世界；
+ *       底部为必需可见的「双方案说明」区块（含 UDP 局域网广播转发说明）；
+ *       外壳提示以文案键 + 占位符参数回推，界面用 next-intl 解析并常驻展示
+ * 说明：组件为纯展示层，所有联机能力与游戏拉起均由 Bun 主进程执行，
+ *       界面只通过 iGM_LauncherV2_UsePeerLobby 与 iGM_LauncherV2_UseLaunch 投递指令并展示回推快照
  */
 
 // 导入依赖 //
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Check,
+  CheckCircle2,
   Copy,
   Info,
   Link2,
   LogIn,
   LogOut,
+  Play,
   Plus,
   RefreshCw,
+  Server,
   Users,
   Wifi,
 } from "lucide-react";
 import { iGM_LauncherV2_Card as IGM_LauncherV2_Card } from "@/components/iGM_LauncherV2_Primitives/iGM_LauncherV2_Primitives";
-import { iGM_LauncherV2_UsePeerLobby as IGM_LauncherV2_UsePeerLobby } from "@/components/iGM_LauncherV2_HostBridge/iGM_LauncherV2_HostBridge";
+import {
+  iGM_LauncherV2_UseHorizons as IGM_LauncherV2_UseHorizons,
+  iGM_LauncherV2_UseLaunch as IGM_LauncherV2_UseLaunch,
+  iGM_LauncherV2_UsePeerLobby as IGM_LauncherV2_UsePeerLobby,
+} from "@/components/iGM_LauncherV2_HostBridge/iGM_LauncherV2_HostBridge";
 import type { iGM_LauncherV2_PeerMode } from "@/lib/iGM_LauncherV2_Constants";
 import styles from "./iGM_LauncherV2_PeerLobby.module.css";
 
@@ -40,21 +54,20 @@ import styles from "./iGM_LauncherV2_PeerLobby.module.css";
 /** 房间码输入：仅承载数字字符，最长 6 位 */
 type iGM_LauncherV2_PeerJoinInput = string;
 
+/** 端口输入：仅承载数字字符，最长 5 位 */
+type iGM_LauncherV2_PeerPortInput = string;
+
 // 常量与文案 //
 
 /** 房间码固定长度 */
 const IGM_PEER_ROOM_CODE_LENGTH = 6;
 
+/** 局域网端口默认值与上限位数 */
+const IGM_PEER_PORT_DEFAULT = 25565;
+const IGM_PEER_PORT_MAX_DIGITS = 5;
+
 /** 复制房间码后的反馈停留时长（毫秒） */
 const IGM_PEER_COPIED_DURATION = 1600;
-
-/** 主状态文案：按连接模式给出确定性文案，避免依赖外壳回推顺序 */
-const IGM_PEER_STATUS_TEXT: Record<iGM_LauncherV2_PeerMode, string> = {
-  community: "已连接主站高速联机节点",
-  public: "已连接公共联机节点（可能稍有延迟）",
-  connecting: "正在连接联机节点…",
-  idle: "尚未连接联机节点",
-};
 
 /** 状态点样式：按连接模式映射到对应的圆点类名 */
 const IGM_PEER_DOT_CLASS: Record<iGM_LauncherV2_PeerMode, string> = {
@@ -64,6 +77,14 @@ const IGM_PEER_DOT_CLASS: Record<iGM_LauncherV2_PeerMode, string> = {
   idle: styles.dotIdle,
 };
 
+/** 当前线路标记的文案键：未连接时不展示 */
+const IGM_PEER_LINE_KEY: Record<iGM_LauncherV2_PeerMode, string> = {
+  community: "peer.line.community",
+  public: "peer.line.public",
+  connecting: "",
+  idle: "",
+};
+
 // 核心逻辑 //
 
 /** 房间码过滤：剔除所有非数字字符并截断到 6 位 */
@@ -71,9 +92,34 @@ function iGM_NormalizeRoomCode(raw: string): iGM_LauncherV2_PeerJoinInput {
   return raw.replace(/\D/g, "").slice(0, IGM_PEER_ROOM_CODE_LENGTH);
 }
 
+/** 端口过滤：剔除所有非数字字符并截断到 5 位 */
+function iGM_NormalizePort(raw: string): iGM_LauncherV2_PeerPortInput {
+  return raw.replace(/\D/g, "").slice(0, IGM_PEER_PORT_MAX_DIGITS);
+}
+
+/** 视界下拉项展示文案：名称 + 绑定版本 + 加载器 */
+function iGM_HorizonOptionLabel(
+  name: string,
+  versionId: string | undefined,
+  loaderLabel: string | undefined,
+): string {
+  const parts = [name];
+  if (versionId) parts.push(versionId);
+  if (loaderLabel) parts.push(loaderLabel);
+  return parts.join(" · ");
+}
+
 export function iGM_LauncherV2_PeerLobby() {
+  const t = useTranslations();
   const lobby = IGM_LauncherV2_UsePeerLobby();
+  const horizons = IGM_LauncherV2_UseHorizons();
+  const launch = IGM_LauncherV2_UseLaunch();
+
+  const [horizonId, setHorizonId] = useState("");
   const [joinInput, setJoinInput] = useState<iGM_LauncherV2_PeerJoinInput>("");
+  const [portInput, setPortInput] = useState<iGM_LauncherV2_PeerPortInput>(
+    String(IGM_PEER_PORT_DEFAULT),
+  );
   const [copied, setCopied] = useState(false);
   const copyTimer = useRef<number | null>(null);
 
@@ -85,16 +131,30 @@ export function iGM_LauncherV2_PeerLobby() {
     [],
   );
 
+  const items = horizons.items;
+  // 默认选中：外壳记录的当前视界，其次列表首项
+  const effectiveHorizonId = horizonId || horizons.currentId || items[0]?.id || "";
+  const selectedHorizon = useMemo(
+    () => items.find((item) => item.id === effectiveHorizonId) ?? null,
+    [items, effectiveHorizonId],
+  );
+
   const roomCode = lobby.roomCode.trim();
   const inRoom = roomCode.length > 0;
+  const hostMode = inRoom && lobby.host;
+  const guestJoined = inRoom && !lobby.host && lobby.ready;
   const joinReady = joinInput.length === IGM_PEER_ROOM_CODE_LENGTH;
+  const portValue = Math.trunc(Number(portInput || "0"));
+  const portReady =
+    portInput.length > 0 && portValue > 0 && portValue <= 65535;
 
-  const primaryStatus = IGM_PEER_STATUS_TEXT[lobby.mode];
-  const shellStatus = lobby.status.trim();
-  // 主状态文案已确定，仅在外壳给出不同的补充文案时展示为次级信息
-  const extraStatus = shellStatus.length > 0 && shellStatus !== primaryStatus ? shellStatus : "";
+  const lineKey = IGM_PEER_LINE_KEY[lobby.mode];
+  const notice = lobby.messageKey ? t(lobby.messageKey, lobby.messageParams) : "";
+  const peersText =
+    lobby.peers > 0 ? t("peer.peers", { count: lobby.peers }) : t("peer.peersUnknown");
 
-  const peersText = lobby.peers > 0 ? `当前人数：${lobby.peers}` : "当前人数：未知";
+  // 进服方启动游戏使用当前视界，缺省回落到列表首项
+  const guestLaunchId = horizons.currentId || items[0]?.id || "";
 
   /** 复制房间码：失败时静默处理，成功后展示短时「已复制」反馈 */
   const copyRoomCode = async () => {
@@ -114,8 +174,8 @@ export function iGM_LauncherV2_PeerLobby() {
       <IGM_LauncherV2_Card className={styles.statusCard}>
         <div className={styles.statusLine}>
           <span className={`${styles.dot} ${IGM_PEER_DOT_CLASS[lobby.mode]}`} aria-hidden />
-          <span className={styles.statusText}>{primaryStatus}</span>
-          {extraStatus ? <span className={styles.statusExtra}>{extraStatus}</span> : null}
+          <span className={styles.statusText}>{t(lobby.statusKey)}</span>
+          {lineKey ? <span className={styles.lineChip}>{t(lineKey)}</span> : null}
         </div>
         <div className={styles.statusActions}>
           {lobby.mode === "idle" ? (
@@ -125,122 +185,237 @@ export function iGM_LauncherV2_PeerLobby() {
               onClick={() => lobby.connect()}
             >
               <Wifi size={14} strokeWidth={2.2} />
-              <span>连接联机节点</span>
+              <span>{t("peer.connect")}</span>
             </button>
           ) : null}
           <button type="button" className={styles.actionButton} onClick={() => lobby.refresh()}>
             <RefreshCw size={14} strokeWidth={2.2} />
-            <span>刷新状态</span>
+            <span>{t("common.refreshState")}</span>
           </button>
         </div>
       </IGM_LauncherV2_Card>
 
       {/* 外壳提示：非空时常驻展示为次级提示行 */}
-      {lobby.message.trim() ? (
+      {notice ? (
         <p className={styles.notice}>
           <Info size={13} strokeWidth={2.2} />
-          <span>{lobby.message}</span>
+          <span>{notice}</span>
         </p>
       ) : null}
 
+      {/* 视界绑定：联机房间必须以某个视界作为游戏目录 */}
+      <IGM_LauncherV2_Card className={styles.horizonCard}>
+        <div className={styles.panelHead}>
+          <Server size={15} strokeWidth={2.2} />
+          <span className={styles.sectionLabel}>{t("peer.horizon.label")}</span>
+        </div>
+        {items.length === 0 ? (
+          <p className={styles.panelDesc}>{t("peer.horizon.empty")}</p>
+        ) : (
+          <>
+            <select
+              className={styles.select}
+              value={effectiveHorizonId}
+              aria-label={t("peer.horizon.label")}
+              disabled={inRoom}
+              onChange={(event) => setHorizonId(event.target.value)}
+            >
+              {items.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {iGM_HorizonOptionLabel(item.name, item.versionId, item.loaderLabel)}
+                </option>
+              ))}
+            </select>
+            <p className={styles.panelDesc}>
+              {selectedHorizon
+                ? t("peer.horizon.meta", {
+                    version: selectedHorizon.versionId || t("common.unknown"),
+                    loader: selectedHorizon.loaderLabel || t("common.unknown"),
+                  })
+                : t("peer.horizon.none")}
+            </p>
+          </>
+        )}
+      </IGM_LauncherV2_Card>
+
       {/* 房间操作区 */}
       <div className={styles.panels}>
-        {/* 创建房间 / 房间信息 */}
+        {/* 房主模式 */}
         <IGM_LauncherV2_Card className={styles.panel}>
           <div className={styles.panelHead}>
-            <span className={styles.sectionLabel}>创建房间</span>
-            {inRoom && lobby.host ? <span className={styles.hostBadge}>房主</span> : null}
+            <span className={styles.sectionLabel}>{t("peer.host.title")}</span>
+            {hostMode ? <span className={styles.hostBadge}>{t("peer.host.badge")}</span> : null}
           </div>
 
-          {inRoom ? (
+          {!inRoom ? (
             <>
-              <p className={styles.panelDesc}>把房间码发给好友，即可加入同一房间。</p>
+              <p className={styles.panelDesc}>{t("peer.host.desc")}</p>
+              <button
+                type="button"
+                className={`${styles.actionButton} ${styles.actionButtonPrimary}`}
+                disabled={!effectiveHorizonId}
+                onClick={() => lobby.create(effectiveHorizonId)}
+              >
+                <Plus size={14} strokeWidth={2.2} />
+                <span>{t("peer.host.create")}</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <p className={styles.panelDesc}>{t("peer.host.inRoomDesc")}</p>
+
+              {/* 房间码 + 复制 */}
               <div className={styles.codeRow}>
-                <span className={styles.codeBlock}>{roomCode}</span>
+                <span className={styles.codeBlock} aria-label={t("peer.host.codeLabel")}>
+                  {roomCode}
+                </span>
                 <button type="button" className={styles.actionButton} onClick={copyRoomCode}>
                   {copied ? (
                     <Check size={14} strokeWidth={2.2} />
                   ) : (
                     <Copy size={14} strokeWidth={2.2} />
                   )}
-                  <span>{copied ? "已复制" : "复制房间码"}</span>
+                  <span>{copied ? t("common.copied") : t("peer.host.copy")}</span>
                 </button>
               </div>
+
+              {/* 开服引导：先启动游戏，再对局域网开放并记下端口 */}
+              <div className={styles.guideBox}>
+                <span className={styles.guideTitle}>{t("peer.host.guideTitle")}</span>
+                <p className={styles.guideText}>{t("peer.host.guide")}</p>
+              </div>
+
+              <button
+                type="button"
+                className={styles.actionButton}
+                disabled={!lobby.horizonId}
+                onClick={() => lobby.horizonId && launch.launch(lobby.horizonId)}
+              >
+                <Play size={14} strokeWidth={2.2} />
+                <span>{t("peer.host.launchAndHost")}</span>
+              </button>
+
+              {/* 端口绑定：默认 25565，绑定后隧道开始转发 UDP 局域网广播 */}
+              <div className={styles.portRow}>
+                <input
+                  className={styles.portInput}
+                  value={portInput}
+                  inputMode="numeric"
+                  autoComplete="off"
+                  placeholder={String(IGM_PEER_PORT_DEFAULT)}
+                  aria-label={t("peer.host.portLabel")}
+                  onChange={(event) => setPortInput(iGM_NormalizePort(event.target.value))}
+                />
+                <button
+                  type="button"
+                  className={`${styles.actionButton} ${styles.actionButtonPrimary}`}
+                  disabled={!portReady || lobby.ready}
+                  onClick={() => lobby.bindPort(portValue)}
+                >
+                  <Link2 size={14} strokeWidth={2.2} />
+                  <span>{t("peer.host.bindPort")}</span>
+                </button>
+              </div>
+
+              {lobby.ready ? (
+                <p className={styles.successLine}>
+                  <CheckCircle2 size={14} strokeWidth={2.2} className={styles.iconOk} />
+                  <span>{t("peer.host.bound", { port: lobby.boundPort || portValue })}</span>
+                </p>
+              ) : null}
+
               <div className={styles.roomMeta}>
                 <span className={styles.roomPeers}>
                   <Users size={13} strokeWidth={2.2} />
                   <span>{peersText}</span>
                 </span>
               </div>
+
               <button type="button" className={styles.actionButton} onClick={() => lobby.leave()}>
                 <LogOut size={14} strokeWidth={2.2} />
-                <span>退出房间</span>
-              </button>
-            </>
-          ) : (
-            <>
-              <p className={styles.panelDesc}>创建一个房间并生成 6 位房间码，等待好友加入。</p>
-              <button
-                type="button"
-                className={`${styles.actionButton} ${styles.actionButtonPrimary}`}
-                onClick={() => lobby.create()}
-              >
-                <Plus size={14} strokeWidth={2.2} />
-                <span>创建房间</span>
+                <span>{t("peer.host.leave")}</span>
               </button>
             </>
           )}
         </IGM_LauncherV2_Card>
 
-        {/* 加入房间 */}
+        {/* 好友模式 */}
         <IGM_LauncherV2_Card className={styles.panel}>
-          <span className={styles.sectionLabel}>加入房间</span>
-          <p className={styles.panelDesc}>输入好友提供的 6 位房间码即可加入房间。</p>
-          <form
-            className={styles.joinRow}
-            onSubmit={(event) => {
-              event.preventDefault();
-              if (joinReady) lobby.join(joinInput);
-            }}
-          >
-            <input
-              className={styles.input}
-              value={joinInput}
-              maxLength={IGM_PEER_ROOM_CODE_LENGTH}
-              inputMode="numeric"
-              autoComplete="off"
-              placeholder="输入 6 位房间码"
-              aria-label="房间码"
-              onChange={(event) => setJoinInput(iGM_NormalizeRoomCode(event.target.value))}
-            />
-            <button
-              type="submit"
-              className={`${styles.actionButton} ${styles.actionButtonPrimary}`}
-              disabled={!joinReady}
-            >
-              <LogIn size={14} strokeWidth={2.2} />
-              <span>加入房间</span>
-            </button>
-          </form>
-          {joinInput.length > 0 && !joinReady ? (
-            <p className={styles.joinHint}>房间码需为 6 位数字。</p>
-          ) : null}
+          <span className={styles.sectionLabel}>{t("peer.guest.title")}</span>
+
+          {guestJoined ? (
+            <>
+              <p className={styles.successLine}>
+                <CheckCircle2 size={14} strokeWidth={2.2} className={styles.iconOk} />
+                <span>{t("peer.guest.joined")}</span>
+              </p>
+              <p className={styles.panelDesc}>{t("peer.guest.guide")}</p>
+              <div className={styles.roomMeta}>
+                <span className={styles.roomPeers}>
+                  <Users size={13} strokeWidth={2.2} />
+                  <span>{t("peer.guest.codeTag", { code: roomCode })}</span>
+                </span>
+              </div>
+              <button
+                type="button"
+                className={`${styles.actionButton} ${styles.actionButtonPrimary}`}
+                disabled={!guestLaunchId}
+                onClick={() => guestLaunchId && launch.launch(guestLaunchId)}
+              >
+                <Play size={14} strokeWidth={2.2} />
+                <span>{t("peer.guest.launch")}</span>
+              </button>
+              <button type="button" className={styles.actionButton} onClick={() => lobby.leave()}>
+                <LogOut size={14} strokeWidth={2.2} />
+                <span>{t("peer.guest.leave")}</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <p className={styles.panelDesc}>{t("peer.guest.desc")}</p>
+              <form
+                className={styles.joinRow}
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  if (joinReady) lobby.join(joinInput);
+                }}
+              >
+                <input
+                  className={styles.input}
+                  value={joinInput}
+                  maxLength={IGM_PEER_ROOM_CODE_LENGTH}
+                  inputMode="numeric"
+                  autoComplete="off"
+                  placeholder={t("peer.guest.placeholder")}
+                  aria-label={t("peer.guest.placeholder")}
+                  onChange={(event) => setJoinInput(iGM_NormalizeRoomCode(event.target.value))}
+                />
+                <button
+                  type="submit"
+                  className={`${styles.actionButton} ${styles.actionButtonPrimary}`}
+                  disabled={!joinReady}
+                >
+                  <LogIn size={14} strokeWidth={2.2} />
+                  <span>{t("peer.guest.action")}</span>
+                </button>
+              </form>
+              {joinInput.length > 0 && !joinReady ? (
+                <p className={styles.joinHint}>{t("peer.guest.hint")}</p>
+              ) : null}
+            </>
+          )}
         </IGM_LauncherV2_Card>
       </div>
 
-      {/* 双方案说明：主站高速节点优先，不可用时自动降级到公共节点 */}
+      {/* 双方案说明：主站高速节点优先，不可用时降级到公共节点；隧道转发 UDP 局域网广播 */}
       <IGM_LauncherV2_Card className={styles.infoCard}>
         <div className={styles.infoHead}>
           <Link2 size={15} strokeWidth={2.2} />
-          <span className={styles.infoTitle}>双方案说明</span>
+          <span className={styles.infoTitle}>{t("peer.info.title")}</span>
         </div>
-        <p className={styles.infoText}>
-          联机优先使用主站高速联机节点（api.igcraftlit.com WebSocket），延迟更低、连接更稳定。
-        </p>
-        <p className={styles.infoText}>
-          当主站高速联机节点不可用时，启动器会自动回退到公共联机节点（EasyTier
-          社区公共节点 + 公共 STUN/TURN，延迟可能略高）。
-        </p>
+        <p className={styles.infoText}>{t("peer.info.community")}</p>
+        <p className={styles.infoText}>{t("peer.info.public")}</p>
+        <p className={styles.infoText}>{t("peer.info.udp")}</p>
       </IGM_LauncherV2_Card>
     </section>
   );

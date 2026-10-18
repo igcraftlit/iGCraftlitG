@@ -11,7 +11,8 @@
  *       两个明确按钮；
  *       选定通道后进入「安装确认对话框」：可选「安装到视界」（下拉列出全部已有视界，
  *       自动写入该视界的 mods / shaderpacks 等分类子目录）或「仅下载文件」
- *       （调用原生目录选择器让用户自选保存目录）；确认后才提交下载任务并进入右下角任务管理器
+ *       （调用原生目录选择器让用户自选保存目录）；确认后才提交下载任务并进入右下角任务管理器；
+ *       界面文案已接入多语言（next-intl，键为 market.ui 与 common）
  * 说明：加载器筛选「全部加载器」时不追加任何过滤条件；Modrinth 不提供地图分类，
  *       选择地图时自动切换数据源为 CurseForge
  */
@@ -20,6 +21,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Download,
   ExternalLink,
@@ -68,18 +70,21 @@ const IGM_MARKET_SUBDIR_LABELS: Record<iGM_LauncherV2_MarketCategory, string> = 
   worlds: "saves",
 };
 
+/** 模块级辅助函数所需的翻译函数签名（t 由组件显式传入，避免在组件外调用 Hook） */
+type iGM_LauncherV2_MarketTranslate = ReturnType<typeof useTranslations>;
+
 // 常量与文案 //
 
-/** 下载量缩写：以万 / 亿为单位，保留一位小数 */
-function iGM_MarketFormatDownloads(value: number): string {
-  if (value >= 100000000) return `${(value / 100000000).toFixed(1)} 亿`;
-  if (value >= 10000) return `${(value / 10000).toFixed(1)} 万`;
+/** 下载量缩写：以万 / 亿为单位，保留一位小数（t 由组件传入，避免在组件外调用 Hook） */
+function iGM_MarketFormatDownloads(value: number, t: iGM_LauncherV2_MarketTranslate): string {
+  if (value >= 100000000) return t("market.ui.downloadsHundredMillion", { value: (value / 100000000).toFixed(1) });
+  if (value >= 10000) return t("market.ui.downloadsTenThousand", { value: (value / 10000).toFixed(1) });
   return String(value);
 }
 
-/** 文件体积缩写 */
-function iGM_MarketFormatSize(bytes: number): string {
-  if (bytes <= 0) return "大小未知";
+/** 文件体积缩写（t 由组件传入，避免在组件外调用 Hook） */
+function iGM_MarketFormatSize(bytes: number, t: iGM_LauncherV2_MarketTranslate): string {
+  if (bytes <= 0) return t("market.ui.sizeUnknown");
   if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
   if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${bytes} B`;
@@ -97,6 +102,7 @@ function iGM_MarketLoaderTone(label: string): string {
 // 核心逻辑 //
 
 export function iGM_LauncherV2_Market() {
+  const t = useTranslations();
   const market = IGM_LauncherV2_UseMarket();
   const detail = IGM_LauncherV2_UseMarketDetail();
   const horizons = IGM_LauncherV2_UseHorizons();
@@ -200,7 +206,7 @@ export function iGM_LauncherV2_Market() {
       setTargetFolder(chosen);
       setFolderHint("");
     } else {
-      setFolderHint("未选择目录（浏览器预览下不提供目录选择器）");
+      setFolderHint(t("market.ui.folderCancelled"));
     }
   };
 
@@ -208,7 +214,7 @@ export function iGM_LauncherV2_Market() {
   const confirmDownload = () => {
     if (!picked || !detail.detail?.file || !channel) return;
     if (installMode === "folder" && !targetFolder) {
-      setFolderHint("请先选择保存目录");
+      setFolderHint(t("market.ui.folderRequired"));
       return;
     }
     const file = detail.detail.file;
@@ -246,11 +252,8 @@ export function iGM_LauncherV2_Market() {
       <IGM_LauncherV2_Card className={styles.panel}>
         <div className={styles.panelHead}>
           <div>
-            <h2 className={styles.panelTitle}>资源市场</h2>
-            <p className={styles.panelDesc}>
-              接入 Modrinth 与 CurseForge 双数据源；选择加载器后检索请求会带上该过滤条件，
-              默认「全部加载器」不做过滤。
-            </p>
+            <h2 className={styles.panelTitle}>{t("market.ui.title")}</h2>
+            <p className={styles.panelDesc}>{t("market.ui.desc")}</p>
           </div>
           <div className={styles.sourceRow}>
             {IGM_LAUNCHERV2_MARKET_SOURCES.map((item) => (
@@ -260,7 +263,7 @@ export function iGM_LauncherV2_Market() {
                 className={`${styles.chip} ${source === item.id ? styles.chipOn : ""}`}
                 onClick={() => changeSource(item.id)}
               >
-                {item.label}
+                {t(item.label)}
               </button>
             ))}
           </div>
@@ -268,7 +271,7 @@ export function iGM_LauncherV2_Market() {
 
         {/* 分类筛选 */}
         <div className={styles.filterRow}>
-          <span className={styles.filterLabel}>分类</span>
+          <span className={styles.filterLabel}>{t("market.ui.categoryLabel")}</span>
           {IGM_LAUNCHERV2_MARKET_CATEGORIES.map((item) => (
             <button
               key={item.id}
@@ -276,14 +279,14 @@ export function iGM_LauncherV2_Market() {
               className={`${styles.chip} ${category === item.id ? styles.chipOn : ""}`}
               onClick={() => changeCategory(item.id)}
             >
-              {item.label}
+              {t(item.label)}
             </button>
           ))}
         </div>
 
         {/* 加载器筛选：核心筛选项 */}
         <div className={styles.filterRow}>
-          <span className={styles.filterLabel}>加载器</span>
+          <span className={styles.filterLabel}>{t("market.ui.loaderLabel")}</span>
           {IGM_LAUNCHERV2_MARKET_LOADERS.map((item) => (
             <button
               key={item.id}
@@ -291,7 +294,7 @@ export function iGM_LauncherV2_Market() {
               className={`${styles.chip} ${loader === item.id ? styles.chipOn : ""}`}
               onClick={() => changeLoader(item.id)}
             >
-              {item.label}
+              {t(item.label)}
             </button>
           ))}
         </div>
@@ -301,7 +304,7 @@ export function iGM_LauncherV2_Market() {
           <input
             className={styles.input}
             value={keyword}
-            placeholder="搜索资源名称或关键词，回车检索"
+            placeholder={t("market.ui.searchPlaceholder")}
             onChange={(event) => setKeyword(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === "Enter") submitSearch();
@@ -309,7 +312,7 @@ export function iGM_LauncherV2_Market() {
           />
           <button type="button" className={styles.actionButton} onClick={submitSearch}>
             <Search size={14} strokeWidth={2.2} />
-            <span>搜索</span>
+            <span>{t("common.search")}</span>
           </button>
         </div>
 
@@ -317,18 +320,18 @@ export function iGM_LauncherV2_Market() {
           {market.loading ? (
             <>
               <Loader2 size={13} strokeWidth={2.4} className={styles.spin} />
-              <span>正在检索…</span>
+              <span>{t("market.ui.searching")}</span>
             </>
           ) : (
             <span>
               {market.message}
-              {market.loaded ? `（共 ${market.total} 项）` : ""}
+              {market.loaded ? t("market.ui.totalSuffix", { count: market.total }) : ""}
             </span>
           )}
         </p>
 
         {market.items.length === 0 && !market.loading ? (
-          <p className={styles.empty}>当前条件下没有结果，可更换分类、加载器或关键词后重试。</p>
+          <p className={styles.empty}>{t("market.ui.empty")}</p>
         ) : (
           <ul className={styles.grid}>
             {market.items.map((item) => (
@@ -345,12 +348,14 @@ export function iGM_LauncherV2_Market() {
                       <span className={styles.cardAuthor}>{item.author}</span>
                     </span>
                   </span>
-                  <span className={styles.cardDesc}>{item.description || "暂无简介"}</span>
+                  <span className={styles.cardDesc}>{item.description || t("market.ui.noDescription")}</span>
                   <span className={styles.cardFoot}>
-                    <span className={styles.downloads}>{iGM_MarketFormatDownloads(item.downloads)} 次下载</span>
+                    <span className={styles.downloads}>
+                      {t("market.ui.downloadCount", { count: iGM_MarketFormatDownloads(item.downloads, t) })}
+                    </span>
                     <span className={styles.tagRow}>
                       {item.loaders.length === 0 ? (
-                        <span className={`${styles.tag} ${styles.tagPlain}`}>未标注</span>
+                        <span className={`${styles.tag} ${styles.tagPlain}`}>{t("market.ui.unlabeled")}</span>
                       ) : (
                         item.loaders.slice(0, 3).map((label) => (
                           <span key={label} className={`${styles.tag} ${iGM_MarketLoaderTone(label)}`}>
@@ -374,7 +379,7 @@ export function iGM_LauncherV2_Market() {
               disabled={market.loading}
               onClick={() => runSearch(source, category, loader, committed, market.offset + IGM_LAUNCHERV2_MARKET_PAGE_SIZE)}
             >
-              <span>加载更多（已显示 {market.items.length} / {market.total}）</span>
+              <span>{t("market.ui.loadMore", { shown: market.items.length, total: market.total })}</span>
             </button>
           </div>
         ) : null}
@@ -392,14 +397,15 @@ export function iGM_LauncherV2_Market() {
                 <div>
                   <h3 className={styles.modalTitle}>{detail.detail?.item.name ?? picked.name}</h3>
                   <p className={styles.modalSub}>
-                    {picked.categoryTitle} · {picked.author} · {iGM_MarketFormatDownloads(picked.downloads)} 次下载
+                    {picked.categoryTitle} · {picked.author} ·{" "}
+                    {t("market.ui.downloadCount", { count: iGM_MarketFormatDownloads(picked.downloads, t) })}
                   </p>
                 </div>
               </div>
               <button
                 type="button"
                 className={styles.iconButton}
-                aria-label="关闭下载弹窗"
+                aria-label={t("market.ui.closeDownloadDialog")}
                 onClick={closeDetail}
               >
                 <X size={15} strokeWidth={2.4} />
@@ -409,10 +415,10 @@ export function iGM_LauncherV2_Market() {
             <div className={styles.modalBody}>
               {/* 适用 MC 版本 */}
               <div className={styles.modalField}>
-                <span className={styles.modalLabel}>适用的 MC 版本</span>
+                <span className={styles.modalLabel}>{t("market.ui.gameVersions")}</span>
                 <div className={styles.versionRow}>
                   {(detail.detail?.item.gameVersions ?? picked.gameVersions).length === 0 ? (
-                    <span className={styles.tagPlain}>该资源未标注适用版本</span>
+                    <span className={styles.tagPlain}>{t("market.ui.noGameVersions")}</span>
                   ) : (
                     (detail.detail?.item.gameVersions ?? picked.gameVersions).map((version) => (
                       <span key={version} className={styles.versionChip}>
@@ -425,10 +431,10 @@ export function iGM_LauncherV2_Market() {
 
               {/* 支持的加载器 */}
               <div className={styles.modalField}>
-                <span className={styles.modalLabel}>支持的加载器</span>
+                <span className={styles.modalLabel}>{t("market.ui.supportedLoaders")}</span>
                 <div className={styles.tagRow}>
                   {(detail.detail?.item.loaders ?? picked.loaders).length === 0 ? (
-                    <span className={`${styles.tag} ${styles.tagPlain}`}>未标注</span>
+                    <span className={`${styles.tag} ${styles.tagPlain}`}>{t("market.ui.unlabeled")}</span>
                   ) : (
                     (detail.detail?.item.loaders ?? picked.loaders).map((label) => (
                       <span key={label} className={`${styles.tag} ${iGM_MarketLoaderTone(label)}`}>
@@ -441,27 +447,27 @@ export function iGM_LauncherV2_Market() {
 
               {/* 简介 */}
               <div className={styles.modalField}>
-                <span className={styles.modalLabel}>简介</span>
+                <span className={styles.modalLabel}>{t("market.ui.summary")}</span>
                 {detail.loading ? (
-                  <p className={styles.modalHint}>正在拉取详情…</p>
+                  <p className={styles.modalHint}>{t("market.ui.loadingDetail")}</p>
                 ) : (
                   <p className={styles.modalBodyText}>
-                    {detail.detail?.body || detail.message || "暂无简介"}
+                    {detail.detail?.body || detail.message || t("market.ui.noDescription")}
                   </p>
                 )}
               </div>
 
               {/* 下载文件信息 */}
               <div className={styles.modalField}>
-                <span className={styles.modalLabel}>下载文件</span>
+                <span className={styles.modalLabel}>{t("market.ui.downloadFile")}</span>
                 {detail.detail?.file ? (
                   <p className={styles.modalHint}>
                     {detail.detail.file.fileName}
-                    {detail.detail.file.version ? `（适配 ${detail.detail.file.version}）` : ""} ·{" "}
-                    {iGM_MarketFormatSize(detail.detail.file.size)}
+                    {detail.detail.file.version ? t("market.ui.adaptVersion", { version: detail.detail.file.version }) : ""} ·{" "}
+                    {iGM_MarketFormatSize(detail.detail.file.size, t)}
                   </p>
                 ) : (
-                  <p className={styles.modalHint}>该资源暂无可直接下载的文件，可前往资源主页获取。</p>
+                  <p className={styles.modalHint}>{t("market.ui.noFile")}</p>
                 )}
               </div>
             </div>
@@ -476,7 +482,7 @@ export function iGM_LauncherV2_Market() {
                 }}
               >
                 <ExternalLink size={14} strokeWidth={2.2} />
-                <span>打开资源主页</span>
+                <span>{t("market.ui.openHomepage")}</span>
               </button>
               <button
                 type="button"
@@ -485,11 +491,11 @@ export function iGM_LauncherV2_Market() {
                 onClick={() => openConfirm("direct")}
               >
                 <Download size={14} strokeWidth={2.2} />
-                <span>通道 B · 直接下载</span>
+                <span>{t("market.ui.channelDirect")}</span>
               </button>
               {/* 游客仅开放直连下载：SDK 通道需登录社区账号后开放 */}
               {isGuest ? (
-                <span className={styles.channelHint}>登录社区账号后可使用 SDK 通道下载</span>
+                <span className={styles.channelHint}>{t("market.ui.sdkGuestHint")}</span>
               ) : (
                 <button
                   type="button"
@@ -498,7 +504,7 @@ export function iGM_LauncherV2_Market() {
                   onClick={() => openConfirm("sdk")}
                 >
                   <Download size={14} strokeWidth={2.2} />
-                  <span>通道 A · SDK 下载</span>
+                  <span>{t("market.ui.channelSdk")}</span>
                 </button>
               )}
             </div>
@@ -513,7 +519,7 @@ export function iGM_LauncherV2_Market() {
             <div className={styles.modalHead}>
               <div className={styles.modalTitleBox}>
                 <div>
-                  <h3 className={styles.modalTitle}>选择安装方式</h3>
+                  <h3 className={styles.modalTitle}>{t("market.ui.chooseInstallMode")}</h3>
                   <p className={styles.modalSub}>
                     {detail.detail?.item.name ?? picked.name}
                     {detail.detail?.file ? ` · ${detail.detail.file.fileName}` : ""}
@@ -523,7 +529,7 @@ export function iGM_LauncherV2_Market() {
               <button
                 type="button"
                 className={styles.iconButton}
-                aria-label="关闭安装确认对话框"
+                aria-label={t("market.ui.closeInstallDialog")}
                 onClick={() => setChannel(null)}
               >
                 <X size={15} strokeWidth={2.4} />
@@ -539,9 +545,9 @@ export function iGM_LauncherV2_Market() {
                   onClick={() => setInstallMode("horizon")}
                 >
                   <Layers size={15} strokeWidth={2.2} />
-                  <span className={styles.modeTitle}>安装到视界</span>
+                  <span className={styles.modeTitle}>{t("market.ui.installToHorizon")}</span>
                   <span className={styles.modeDesc}>
-                    自动放入所选视界的 {IGM_MARKET_SUBDIR_LABELS[pickedCategory]} 文件夹
+                    {t("market.ui.installToHorizonDesc", { subdir: IGM_MARKET_SUBDIR_LABELS[pickedCategory] })}
                   </span>
                 </button>
                 <button
@@ -550,17 +556,17 @@ export function iGM_LauncherV2_Market() {
                   onClick={() => setInstallMode("folder")}
                 >
                   <FolderOpen size={15} strokeWidth={2.2} />
-                  <span className={styles.modeTitle}>仅下载文件</span>
-                  <span className={styles.modeDesc}>自行选择保存目录，不写入任何视界</span>
+                  <span className={styles.modeTitle}>{t("market.ui.downloadOnly")}</span>
+                  <span className={styles.modeDesc}>{t("market.ui.downloadOnlyDesc")}</span>
                 </button>
               </div>
 
               {installMode === "horizon" ? (
                 <div className={styles.modalField}>
-                  <span className={styles.modalLabel}>安装到视界</span>
+                  <span className={styles.modalLabel}>{t("market.ui.installToHorizon")}</span>
                   {horizons.items.length === 0 ? (
                     <p className={styles.modalHint}>
-                      当前还没有任何视界，请先在资源中心创建视界，或改选「仅下载文件」。
+                      {t("market.ui.noHorizons")}
                     </p>
                   ) : (
                     <select
@@ -568,11 +574,11 @@ export function iGM_LauncherV2_Market() {
                       value={targetHorizonId}
                       onChange={(event) => setTargetHorizonId(event.target.value)}
                     >
-                      <option value="">使用当前视界（{horizons.currentId || "未设置"}）</option>
+                      <option value="">{t("market.ui.useCurrentHorizon", { name: horizons.currentId || t("market.ui.notSet") })}</option>
                       {horizons.items.map((item) => (
                         <option key={item.id} value={item.id}>
                           {item.name}
-                          {item.current ? "（当前）" : ""}
+                          {item.current ? t("market.ui.currentSuffix") : ""}
                         </option>
                       ))}
                     </select>
@@ -580,27 +586,27 @@ export function iGM_LauncherV2_Market() {
                 </div>
               ) : (
                 <div className={styles.modalField}>
-                  <span className={styles.modalLabel}>保存目录</span>
+                  <span className={styles.modalLabel}>{t("market.ui.saveFolderLabel")}</span>
                   <div className={styles.folderRow}>
                     <input
                       className={styles.input}
                       value={targetFolder}
-                      placeholder="尚未选择保存目录"
+                      placeholder={t("market.ui.folderPlaceholder")}
                       readOnly
                     />
                     <button type="button" className={styles.actionButton} onClick={() => void chooseFolder()}>
                       <FolderOpen size={14} strokeWidth={2.2} />
-                      <span>浏览目录</span>
+                      <span>{t("market.ui.browseFolder")}</span>
                     </button>
                   </div>
-                  <p className={styles.modalHint}>{folderHint || "文件将直接保存到该目录，不做任何分类归位。"}</p>
+                  <p className={styles.modalHint}>{folderHint || t("market.ui.folderHint")}</p>
                 </div>
               )}
             </div>
 
             <div className={styles.modalFoot}>
               <button type="button" className={styles.actionButton} onClick={() => setChannel(null)}>
-                <span>返回</span>
+                <span>{t("common.back")}</span>
               </button>
               <button
                 type="button"
@@ -608,7 +614,7 @@ export function iGM_LauncherV2_Market() {
                 onClick={confirmDownload}
               >
                 <Download size={14} strokeWidth={2.2} />
-                <span>{installMode === "horizon" ? "确认安装" : "确认下载"}</span>
+                <span>{installMode === "horizon" ? t("market.ui.confirmInstall") : t("market.ui.confirmDownload")}</span>
               </button>
             </div>
           </IGM_LauncherV2_Card>

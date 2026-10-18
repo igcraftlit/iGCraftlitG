@@ -6,7 +6,8 @@
  * 作用：3D 角色查看器的动态加载外壳（隔离 skinview3d 与静态导出）
  * 内容：以 dynamic(..., { ssr: false }) 引入 iGM_LauncherV2_SkinCanvas，
  *       静态导出阶段不加载 skinview3d，避免引用了浏览器专属 API 而构建失败；
- *       加载期间显示占位文案，纹理缺失时显示空态提示
+ *       加载期间显示占位文案，纹理缺失时显示空态提示；
+ *       文案已接入多语言（skin 命名空间，含动态加载占位与默认空态）
  * 说明：任何页面都必须经本组件使用 3D 渲染，禁止直接静态引入 Canvas 组件
  */
 
@@ -14,6 +15,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 import styles from "./iGM_LauncherV2_SkinViewer.module.css";
 
 // 类型定义 //
@@ -34,12 +36,18 @@ export interface iGM_LauncherV2_SkinViewerProps {
 
 // 核心逻辑 //
 
+/** 动态画布加载期间的占位组件（组件内部解析多语言文案） */
+function IGM_LauncherV2_SkinViewerLoading() {
+  const t = useTranslations();
+  return <span className={styles.viewportLoading}>{t("skin.viewer.loading")}</span>;
+}
+
 /** 动态引入的 3D 画布：禁止服务端渲染，静态导出阶段不触碰浏览器专属 API */
 const IGM_LauncherV2_SkinCanvasLazy = dynamic(
   () => import("./iGM_LauncherV2_SkinCanvas").then((mod) => mod.iGM_LauncherV2_SkinCanvas),
   {
     ssr: false,
-    loading: () => <span className={styles.viewportLoading}>正在准备 3D 视图…</span>,
+    loading: () => <IGM_LauncherV2_SkinViewerLoading />,
   },
 );
 
@@ -49,12 +57,13 @@ export function iGM_LauncherV2_SkinViewer({
   capeUrl = "",
   model = "classic",
   autoRotate = false,
-  emptyHint = "暂无可预览的皮肤纹理",
+  emptyHint,
 }: iGM_LauncherV2_SkinViewerProps) {
+  const t = useTranslations();
   if (!skinUrl) {
     return (
       <div className={styles.viewportEmpty}>
-        <span className={styles.viewportLoading}>{emptyHint}</span>
+        <span className={styles.viewportLoading}>{emptyHint ?? t("skin.viewer.empty")}</span>
       </div>
     );
   }

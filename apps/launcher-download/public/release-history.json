@@ -1,19 +1,62 @@
 {
   "releases": [
     {
+      "id": "f8a2d4c7-1b6e-4d93-a0f2-7c3e5b91d08a",
+      "version": "26.5.1",
+      "releasedAt": "2026-10-18",
+      "updateType": "minor",
+      "isLatest": true,
+      "channel": "stable",
+      "platform": "Windows x64",
+      "fileName": "iGM-CraftCeon-Launcher-Setup-26.5.1.zip",
+      "fileSize": 41004371,
+      "fileSizeLabel": "39.10 MB",
+      "sha256": "e20e111649e1ae4822ac684b29f09375b5d8e9d66545699e5cdef2d9bac7912f",
+      "downloadUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/download/v26.5.1/iGM-CraftCeon-Launcher-Setup-26.5.1.zip",
+      "releasePageUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/tag/v26.5.1",
+      "notes": {
+        "zh-CN": {
+          "added": [
+            "全局中英双语国际化：启动器全面接入 next-intl，界面文案不再有硬编码中文或英文残留",
+            "设置 → 通用 新增【语言切换】（简体中文 / English），切换后整个界面实时无刷新切换，语言选择本地持久化",
+            "联机大厅重构为完整开服闭环：与「视界」深度绑定，打通「开服 → 邀请 → 进服」",
+            "房主模式：选定视界后创建联机房间，生成 6 位房间码并支持一键复制，提供【启动游戏并开服】与图文引导，填写端口（默认 25565）后绑定等待加入",
+            "好友模式：输入 6 位房间码加入房间，成功后可一键启动游戏，并在多人游戏中刷新出房主的局域网世界"
+          ],
+          "improved": [
+            "联机大厅所有文字支持中英双语，保持极简磨砂玻璃质感",
+            "底层联机：主站在线时经主站 WebSocket 注册房间，主站离线时降级到 EasyTier 公共节点打洞，并转发 UDP 局域网广播包"
+          ]
+        },
+        "en": {
+          "added": [
+            "Full Chinese/English internationalization: the launcher now uses next-intl throughout, with no hardcoded Chinese or English text left in the UI",
+            "A new Language switch (Simplified Chinese / English) in Settings > General switches the entire UI instantly with no reload, and the choice is persisted locally",
+            "The Peer Lobby was rebuilt into a complete hosting loop bound to Horizons, covering host -> invite -> join",
+            "Host mode: create a room after selecting a Horizon, get a 6-digit room code with one-click copy, use Launch game & host with an illustrated guide, then bind the port (default 25565) and wait for friends",
+            "Friend mode: join with a 6-digit room code, then launch the game with one click and the host's LAN world appears under Multiplayer"
+          ],
+          "improved": [
+            "All Peer Lobby text is now bilingual, keeping the minimal frosted-glass look",
+            "Underlying transport: rooms register over the community WebSocket while it is online and fall back to EasyTier public relays with hole punching, forwarding UDP LAN broadcast packets"
+          ]
+        }
+      }
+    },
+    {
       "id": "c5f2b8d1-4a7e-4c39-b6d2-8e1f0a73c9b5",
       "version": "26.5.0",
       "releasedAt": "2026-10-18",
       "updateType": "minor",
-      "isLatest": true,
+      "isLatest": false,
       "channel": "stable",
       "platform": "Windows x64",
       "fileName": "iGM-CraftCeon-Launcher-Setup-26.5.0.zip",
       "fileSize": 40979808,
       "fileSizeLabel": "39.08 MB",
       "sha256": "a50e21e8368c0d4f0af8c5b2043620b14de878279f1eb19ee1ddd7269c2eb4ba",
-      "downloadUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/download/v26.5.0/iGM-CraftCeon-Launcher-Setup-26.5.0.zip",
-      "releasePageUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/tag/v26.5.0",
+      "downloadUrl": "",
+      "releasePageUrl": "",
       "notes": {
         "zh-CN": {
           "added": [

@@ -6,7 +6,8 @@
  * 作用：基于 skinview3d 的 Minecraft 角色 3D 查看器（唯一直接依赖 skinview3d 的组件）
  * 内容：挂载时创建 SkinViewer 与 canvas，播放待机动画，启用 OrbitControls
  *       （鼠标拖拽旋转、滚轮缩放）；纹理变更时重新装载皮肤与披风；
- *       容器尺寸变化经 ResizeObserver 同步画布；卸载时释放渲染资源
+ *       容器尺寸变化经 ResizeObserver 同步画布；卸载时释放渲染资源；
+ *       画布 aria 标签与操作提示已接入多语言（skin 命名空间）
  * 说明：本组件不得被静态引入到任何页面组件中，必须经 iGM_LauncherV2_SkinViewer
  *       以 dynamic(..., { ssr: false }) 动态加载，避免 Next.js 静态导出阶段报错；
  *       皮肤纹理以 data URL 传入，规避 WebView 内跨域取图限制
@@ -16,6 +17,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { IdleAnimation, SkinViewer } from "skinview3d";
 import styles from "./iGM_LauncherV2_SkinViewer.module.css";
 
@@ -51,6 +53,7 @@ export function iGM_LauncherV2_SkinCanvas({
   model = "classic",
   autoRotate = false,
 }: iGM_LauncherV2_SkinCanvasProps) {
+  const t = useTranslations();
   const hostRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const viewerRef = useRef<SkinViewer | null>(null);
@@ -129,8 +132,8 @@ export function iGM_LauncherV2_SkinCanvas({
 
   return (
     <div className={styles.viewport} ref={hostRef}>
-      <canvas ref={canvasRef} className={styles.canvas} aria-label="Minecraft 角色 3D 预览" />
-      <span className={styles.viewportHint}>拖拽旋转 · 滚轮缩放</span>
+      <canvas ref={canvasRef} className={styles.canvas} aria-label={t("skin.canvas.ariaPreview")} />
+      <span className={styles.viewportHint}>{t("skin.canvas.hint")}</span>
     </div>
   );
 }

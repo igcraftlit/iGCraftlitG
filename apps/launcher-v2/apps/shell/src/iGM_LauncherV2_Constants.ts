@@ -4,7 +4,7 @@
  * 路由：全局
  * 模块：iGM_LauncherV2_Constants
  * 作用：外壳侧常量：应用元信息、窗口与资源目录、iGCraftLit 社区 OAuth 端点
- * 内容：版本号 26.5.0；界面开发地址 3211（避开旧启动器 3210 与主站 3000）；
+ * 内容：版本号 26.5.1；界面开发地址 3211（避开旧启动器 3210 与主站 3000）；
  *       社区 OAuth 端点默认取 api.igcraftlit.com，可用
  *       IGM_LAUNCHER_V2_COMMUNITY_ISSUER 覆盖以便本地联调
  * 说明：桌面端为公开客户端，本文件与 .env 均不得出现 client_secret
@@ -22,7 +22,7 @@ import { iGM_LauncherV2_EnvGet } from "./iGM_LauncherV2_Env";
 export const IGM_LAUNCHERV2_APP_NAME = "iGM CraftCeon Launcher";
 
 /** 应用版本号 */
-export const IGM_LAUNCHERV2_VERSION = "26.5.0";
+export const IGM_LAUNCHERV2_VERSION = "26.5.1";
 
 /** 应用反向域名标识 */
 export const IGM_LAUNCHERV2_IDENTIFIER = "com.igcraftlit.launcher.v2";

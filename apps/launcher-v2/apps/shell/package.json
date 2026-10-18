@@ -1,6 +1,6 @@
 {
   "name": "igm-launcher-v2-shell",
-  "version": "26.5.0",
+  "version": "26.5.1",
   "private": true,
   "module": "src/iGM_LauncherV2_Main.ts",
   "scripts": {

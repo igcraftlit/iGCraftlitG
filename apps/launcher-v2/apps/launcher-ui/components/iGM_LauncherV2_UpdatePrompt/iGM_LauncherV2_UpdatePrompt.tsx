@@ -6,7 +6,8 @@
  * 作用：右下角极简自动更新提示：发现新版本 → 后台下载 → 立即重启并更新
  * 内容：外壳启动时静默检查并回推 update:state；检测到新版本时于右下角弹出提示，
  *       点击「下载」由外壳后台静默下载并实时回推进度；下载完成后提示「立即重启并更新」；
- *       用户可忽略当前版本（出现更高版本号时自动恢复提示）
+ *       用户可忽略当前版本（出现更高版本号时自动恢复提示）；
+ *       提示文案已接入多语言（next-intl，键为 update 与 common）
  * 说明：不使用花哨动画；仅在 available / downloading / downloaded 三态下可见
  */
 
@@ -14,6 +15,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { ArrowUpCircle, X } from "lucide-react";
 import {
   iGM_LauncherV2_UseUpdate as IGM_LauncherV2_UseUpdate,
@@ -23,6 +25,7 @@ import styles from "./iGM_LauncherV2_UpdatePrompt.module.css";
 // 核心逻辑 //
 
 export function iGM_LauncherV2_UpdatePrompt() {
+  const t = useTranslations();
   const update = IGM_LauncherV2_UseUpdate();
   const state = update.state;
   /** 被用户忽略的版本号；出现更新的版本时自动恢复提示 */
@@ -43,15 +46,15 @@ export function iGM_LauncherV2_UpdatePrompt() {
   const available = state.status === "available";
   const downloading = state.status === "downloading";
   const title = available
-    ? `发现新版本 v${state.latestVersion}`
+    ? t("update.availableTitle", { version: state.latestVersion })
     : downloading
-      ? "正在下载更新包"
-      : "更新已就绪，等待重启";
+      ? t("update.downloadingTitle")
+      : t("update.readyTitle");
   const desc = available
-    ? "点击下载将在后台静默获取更新包"
+    ? t("update.availableDesc")
     : downloading
-      ? `已完成 ${state.progress.toFixed(0)}%`
-      : "点击下方按钮即可完成更新";
+      ? t("update.downloadingDesc", { progress: state.progress.toFixed(0) })
+      : t("update.readyDesc");
 
   return (
     <div className={styles.prompt} role="status">
@@ -73,19 +76,19 @@ export function iGM_LauncherV2_UpdatePrompt() {
       <div className={styles.actions}>
         {available ? (
           <button type="button" className={styles.primary} onClick={() => update.download()}>
-            <span>下载</span>
+            <span>{t("common.download")}</span>
           </button>
         ) : null}
         {state.status === "downloaded" ? (
           <button type="button" className={styles.primary} onClick={() => update.install()}>
-            <span>立即重启并更新</span>
+            <span>{t("update.restartNow")}</span>
           </button>
         ) : null}
         <button
           type="button"
           className={styles.dismiss}
-          aria-label="忽略本次更新提示"
-          title="忽略"
+          aria-label={t("update.dismissAria")}
+          title={t("update.dismiss")}
           onClick={() => setIgnored(state.latestVersion)}
         >
           <X size={13} strokeWidth={2.4} />

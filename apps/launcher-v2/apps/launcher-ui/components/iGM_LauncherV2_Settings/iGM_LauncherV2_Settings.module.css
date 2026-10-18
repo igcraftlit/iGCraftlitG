@@ -626,6 +626,47 @@
   color: var(--igm-text-mute);
 }
 
+/* ---- 通用页 · 界面语言切换 ---- */
+
+.langOptions {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.langOption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 13px 15px;
+  border-radius: var(--igm-radius-md);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease);
+}
+
+.langOption:hover {
+  border-color: var(--igm-border-strong);
+  background: var(--igm-fill-strong);
+}
+
+.langOptionOn {
+  border-color: var(--igm-accent-soft);
+  background: var(--igm-accent-wash);
+}
+
+.langOptionOn:hover {
+  background: var(--igm-accent-wash);
+}
+
 /* ---- 关于页 · 语言切换 ---- */
 
 .langToggle {
@@ -840,6 +881,10 @@
   }
 
   .swatchRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .langOptions {
     grid-template-columns: minmax(0, 1fr);
   }
 

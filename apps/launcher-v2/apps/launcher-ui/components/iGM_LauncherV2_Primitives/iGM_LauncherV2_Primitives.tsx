@@ -5,13 +5,15 @@
  * 模块：iGM_LauncherV2_Primitives
  * 作用：启动器界面的最小基础组件集合（无边框窗口标题栏、按钮、卡片、状态标记）
  * 内容：WindowChrome 提供拖动区与原生窗口控制；Button / Card / StatusDot 为
- *       各页面复用的简约组件；全部使用 lucide-react 图标，不使用 emoji 与装饰符号
+ *       各页面复用的简约组件；全部使用 lucide-react 图标，不使用 emoji 与装饰符号；
+ *       窗口控制按钮的 aria-label 已接入多语言（next-intl，键为 primitive 与 common）
  */
 
 // 导入依赖 //
 "use client";
 
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import { Minus, Square, X } from "lucide-react";
 import { iGM_LauncherV2_WindowControls } from "@/components/iGM_LauncherV2_HostBridge/iGM_LauncherV2_HostBridge";
 import styles from "./iGM_LauncherV2_Primitives.module.css";
@@ -44,6 +46,8 @@ export function iGM_LauncherV2_WindowChrome({
   label,
   version,
 }: iGM_LauncherV2_WindowChromeProps) {
+  const t = useTranslations();
+
   return (
     <header className={`${styles.chrome} igm-drag`}>
       <div className={styles.chromeLeft}>
@@ -54,7 +58,7 @@ export function iGM_LauncherV2_WindowChrome({
         <button
           type="button"
           className={styles.controlButton}
-          aria-label="最小化"
+          aria-label={t("primitive.minimize")}
           onClick={() => iGM_LauncherV2_WindowControls.minimize()}
         >
           <Minus size={14} strokeWidth={2} />
@@ -62,7 +66,7 @@ export function iGM_LauncherV2_WindowChrome({
         <button
           type="button"
           className={styles.controlButton}
-          aria-label="最大化或还原"
+          aria-label={t("primitive.maximizeRestore")}
           onClick={() => iGM_LauncherV2_WindowControls.toggleMaximize()}
         >
           <Square size={12} strokeWidth={2} />
@@ -70,7 +74,7 @@ export function iGM_LauncherV2_WindowChrome({
         <button
           type="button"
           className={`${styles.controlButton} ${styles.controlClose}`}
-          aria-label="关闭"
+          aria-label={t("common.close")}
           onClick={() => iGM_LauncherV2_WindowControls.close()}
         >
           <X size={14} strokeWidth={2} />

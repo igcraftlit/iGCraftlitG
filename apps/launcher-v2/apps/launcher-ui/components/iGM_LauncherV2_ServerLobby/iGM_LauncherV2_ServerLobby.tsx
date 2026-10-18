@@ -10,7 +10,8 @@
  *       并提供一键进服、查询状态、访问官网与删除自定义服务器等操作；
  *       卡片内展示查询到的实时状态（在线 / 离线、人数、延迟与 MOTD）；
  *       添加服务器弹窗支持名称、地址、端口与官网链接，提交后由外壳落盘；
- *       弹窗支持 Esc 与点击遮罩关闭
+ *       弹窗支持 Esc 与点击遮罩关闭；
+ *       界面文案已接入多语言（next-intl，键为 server 与 common）
  * 说明：组件为纯展示层，所有网络请求与本地落盘均由 Bun 主进程执行，
  *       界面只通过 iGM_LauncherV2_UseServerLobby 投递指令并展示回推状态
  */
@@ -20,6 +21,7 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Activity,
   ExternalLink,
@@ -52,6 +54,9 @@ import styles from "./iGM_LauncherV2_ServerLobby.module.css";
 /** 列表来源：远端接口 / 本地缓存 / 空 */
 type iGM_LauncherV2_ServerSource = "remote" | "cache" | "empty";
 
+/** 模块级辅助函数所需的翻译函数签名（t 由组件显式传入，避免在组件外调用 Hook） */
+type iGM_LauncherV2_ServerLobbyTranslate = ReturnType<typeof useTranslations>;
+
 /** 添加服务器表单字段（端口以字符串承载，便于输入过程中编辑） */
 interface iGM_LauncherV2_ServerForm {
   name: string;
@@ -68,15 +73,15 @@ const IGM_SERVER_LOBBY_DEFAULT_PORT = 25565;
 /** 热门阈值：状态在线且在线人数达到该值时标记为「热门」 */
 const IGM_SERVER_LOBBY_HOT_THRESHOLD = 1000;
 
-/** 列表来源说明文案 */
+/** 列表来源说明文案（值为 i18n 键，界面侧以 useTranslations 解析） */
 const IGM_SERVER_LOBBY_SOURCE_TEXT: Record<iGM_LauncherV2_ServerSource, string> = {
-  remote: "已从第三方接口获取公开服务器列表，可查询实时状态并一键进服。",
-  cache: "当前离线，展示本地缓存的服务器列表。",
-  empty: "暂未获取到服务器列表。",
+  remote: "server.source.remote",
+  cache: "server.source.cache",
+  empty: "server.source.empty",
 };
 
-/** 拉取中的说明文案 */
-const IGM_SERVER_LOBBY_LOADING_TEXT = "正在拉取服务器列表…";
+/** 拉取中的说明文案（值为 i18n 键） */
+const IGM_SERVER_LOBBY_LOADING_TEXT = "server.loadingList";
 
 /** 添加服务器表单初值 */
 const IGM_SERVER_LOBBY_EMPTY_FORM: iGM_LauncherV2_ServerForm = {
@@ -109,10 +114,14 @@ function IGM_LauncherV2_ServerIcon({ src, alt }: { src: string; alt: string }) {
   );
 }
 
-/** 在线人数文案：任一未知（-1）即显示「人数未知」，否则给出「在线 X / Y」 */
-function IGM_LauncherV2_FormatPlayers(players: number, maxPlayers: number): string {
-  if (players < 0 || maxPlayers < 0) return "人数未知";
-  return `在线 ${players} / ${maxPlayers}`;
+/** 在线人数文案：任一未知（-1）即显示「人数未知」，否则给出「在线 X / Y」（t 由组件传入，避免在组件外调用 Hook） */
+function IGM_LauncherV2_FormatPlayers(
+  players: number,
+  maxPlayers: number,
+  t: iGM_LauncherV2_ServerLobbyTranslate,
+): string {
+  if (players < 0 || maxPlayers < 0) return t("server.playersUnknown");
+  return t("server.players", { online: players, max: maxPlayers });
 }
 
 /** 单张服务器卡片：展示基本信息、实时状态与操作按钮 */
@@ -129,6 +138,7 @@ function IGM_LauncherV2_ServerCard({
   onJoin: (id: string) => void;
   onRemove: (id: string) => void;
 }) {
+  const t = useTranslations();
   // 生效人数：已查询且在线时取实时值，否则回退到列表自带人数（未知为 -1）
   const effectivePlayers = status && status.online ? status.players : entry.players;
   const effectiveMaxPlayers = status && status.online ? status.maxPlayers : entry.maxPlayers;
@@ -139,21 +149,24 @@ function IGM_LauncherV2_ServerCard({
     <IGM_LauncherV2_Card className={styles.card}>
       <div className={styles.cardHead}>
         <span className={styles.iconBox}>
-          <IGM_LauncherV2_ServerIcon src={entry.icon} alt={`${entry.name} 的服务器图标`} />
+          <IGM_LauncherV2_ServerIcon
+            src={entry.icon}
+            alt={t("server.iconAlt", { name: entry.name })}
+          />
         </span>
         <div className={styles.cardText}>
           <div className={styles.cardTitleLine}>
             <span className={styles.cardTitle}>{entry.name}</span>
-            {entry.custom ? <span className={styles.tagMine}>我的服务器</span> : null}
+            {entry.custom ? <span className={styles.tagMine}>{t("server.mine")}</span> : null}
             {isHot ? (
               <span className={styles.tagHot}>
                 <Flame size={12} strokeWidth={2.2} />
-                <span>热门</span>
+                <span>{t("server.hot")}</span>
               </span>
             ) : null}
             {status ? (
               <IGM_LauncherV2_StatusDot tone={status.online ? "ok" : "warn"}>
-                {status.online ? "在线" : "离线"}
+                {status.online ? t("server.online") : t("server.offline")}
               </IGM_LauncherV2_StatusDot>
             ) : null}
           </div>
@@ -164,9 +177,9 @@ function IGM_LauncherV2_ServerCard({
       </div>
 
       <div className={styles.meta}>
-        <span className={styles.metaItem}>{entry.version || "版本未知"}</span>
+        <span className={styles.metaItem}>{entry.version || t("server.versionUnknown")}</span>
         <span className={styles.metaItem}>
-          {IGM_LauncherV2_FormatPlayers(effectivePlayers, effectiveMaxPlayers)}
+          {IGM_LauncherV2_FormatPlayers(effectivePlayers, effectiveMaxPlayers, t)}
         </span>
       </div>
 
@@ -175,10 +188,12 @@ function IGM_LauncherV2_ServerCard({
         <div className={styles.statusBox}>
           <div className={styles.statusHead}>
             {status.latency >= 0 ? (
-              <span className={styles.statusMetric}>延迟 {status.latency} ms</span>
+              <span className={styles.statusMetric}>{t("server.latency", { ms: status.latency })}</span>
             ) : null}
             {status.version ? (
-              <span className={styles.statusMetric}>版本 {status.version}</span>
+              <span className={styles.statusMetric}>
+                {t("server.versionLabel", { version: status.version })}
+              </span>
             ) : null}
           </div>
           {status.motd ? <p className={styles.statusMotd}>{status.motd}</p> : null}
@@ -192,11 +207,11 @@ function IGM_LauncherV2_ServerCard({
           onClick={() => onJoin(entry.id)}
         >
           <Play size={14} strokeWidth={2.2} />
-          <span>一键进服</span>
+          <span>{t("server.join")}</span>
         </button>
         <button type="button" className={styles.actionButton} onClick={() => onQuery(entry.id)}>
           <Activity size={14} strokeWidth={2.2} />
-          <span>查询状态</span>
+          <span>{t("server.queryStatus")}</span>
         </button>
         {entry.site ? (
           <button
@@ -205,14 +220,14 @@ function IGM_LauncherV2_ServerCard({
             onClick={() => IGM_LauncherV2_OpenLink(entry.site)}
           >
             <ExternalLink size={14} strokeWidth={2.2} />
-            <span>访问官网</span>
+            <span>{t("server.visitSite")}</span>
           </button>
         ) : null}
         {entry.custom ? (
           <button
             type="button"
             className={`${styles.iconButton} ${styles.iconButtonDanger}`}
-            aria-label="删除该服务器"
+            aria-label={t("server.deleteServer")}
             onClick={() => onRemove(entry.id)}
           >
             <Trash2 size={15} strokeWidth={2.2} />
@@ -231,6 +246,7 @@ function IGM_LauncherV2_AddServerDialog({
   onClose: () => void;
   onSubmit: (input: { name: string; ip: string; port: number; site: string }) => void;
 }) {
+  const t = useTranslations();
   const [form, setForm] = useState<iGM_LauncherV2_ServerForm>(IGM_SERVER_LOBBY_EMPTY_FORM);
 
   // Esc 关闭弹窗
@@ -263,17 +279,20 @@ function IGM_LauncherV2_AddServerDialog({
         className={styles.modal}
         role="dialog"
         aria-modal="true"
-        aria-label="添加服务器"
+        aria-label={t("server.addServer")}
         onClick={(event) => event.stopPropagation()}
       >
         <div className={styles.modalHead}>
           <div>
-            <h2 className={styles.modalTitle}>添加服务器</h2>
-            <p className={styles.modalDesc}>
-              填写服务器名称与地址即可加入列表，端口默认 25565，官网链接可选填。
-            </p>
+            <h2 className={styles.modalTitle}>{t("server.addServer")}</h2>
+            <p className={styles.modalDesc}>{t("server.addDesc")}</p>
           </div>
-          <button type="button" className={styles.iconButton} aria-label="关闭弹窗" onClick={onClose}>
+          <button
+            type="button"
+            className={styles.iconButton}
+            aria-label={t("server.closeDialog")}
+            onClick={onClose}
+          >
             <X size={16} strokeWidth={2.2} />
           </button>
         </div>
@@ -286,49 +305,49 @@ function IGM_LauncherV2_AddServerDialog({
           }}
         >
           <label className={styles.field}>
-            <span className={styles.fieldLabel}>名称（必填）</span>
+            <span className={styles.fieldLabel}>{t("server.fieldName")}</span>
             <input
               className={styles.input}
               value={form.name}
               maxLength={48}
-              placeholder="例如：iGCraftLit 生存服"
+              placeholder={t("server.namePlaceholder")}
               onChange={(event) => setForm({ ...form, name: event.target.value })}
             />
           </label>
           <label className={styles.field}>
-            <span className={styles.fieldLabel}>IP / 主机名（必填）</span>
+            <span className={styles.fieldLabel}>{t("server.fieldIp")}</span>
             <input
               className={styles.input}
               value={form.ip}
-              placeholder="例如：play.example.com 或 127.0.0.1"
+              placeholder={t("server.ipPlaceholder")}
               onChange={(event) => setForm({ ...form, ip: event.target.value })}
             />
           </label>
           <label className={styles.field}>
-            <span className={styles.fieldLabel}>端口</span>
+            <span className={styles.fieldLabel}>{t("server.fieldPort")}</span>
             <input
               className={styles.input}
               type="number"
               min={1}
               max={65535}
               value={form.port}
-              placeholder="默认 25565"
+              placeholder={t("server.portPlaceholder")}
               onChange={(event) => setForm({ ...form, port: event.target.value })}
             />
           </label>
           <label className={styles.field}>
-            <span className={styles.fieldLabel}>官网链接（选填）</span>
+            <span className={styles.fieldLabel}>{t("server.fieldSite")}</span>
             <input
               className={styles.input}
               value={form.site}
-              placeholder="例如：https://example.com"
+              placeholder={t("server.sitePlaceholder")}
               onChange={(event) => setForm({ ...form, site: event.target.value })}
             />
           </label>
 
           <div className={styles.modalFoot}>
             <button type="button" className={styles.actionButton} onClick={onClose}>
-              <span>取消</span>
+              <span>{t("common.cancel")}</span>
             </button>
             <button
               type="submit"
@@ -336,7 +355,7 @@ function IGM_LauncherV2_AddServerDialog({
               disabled={!valid}
             >
               <Plus size={14} strokeWidth={2.2} />
-              <span>添加</span>
+              <span>{t("common.add")}</span>
             </button>
           </div>
         </form>
@@ -346,6 +365,7 @@ function IGM_LauncherV2_AddServerDialog({
 }
 
 export function iGM_LauncherV2_ServerLobby() {
+  const t = useTranslations();
   const lobby = IGM_LauncherV2_UseServerLobby();
   const [addOpen, setAddOpen] = useState(false);
 
@@ -369,8 +389,8 @@ export function iGM_LauncherV2_ServerLobby() {
   }, [lobby.items, lobby.statuses]);
 
   const summary = lobby.loading
-    ? IGM_SERVER_LOBBY_LOADING_TEXT
-    : IGM_SERVER_LOBBY_SOURCE_TEXT[lobby.source];
+    ? t(IGM_SERVER_LOBBY_LOADING_TEXT)
+    : t(IGM_SERVER_LOBBY_SOURCE_TEXT[lobby.source]);
 
   return (
     <section className={styles.lobby}>
@@ -386,7 +406,7 @@ export function iGM_LauncherV2_ServerLobby() {
             onClick={() => lobby.refresh()}
           >
             <RefreshCw size={14} strokeWidth={2.2} />
-            <span>刷新列表</span>
+            <span>{t("common.refresh")}</span>
           </button>
           <button
             type="button"
@@ -395,7 +415,7 @@ export function iGM_LauncherV2_ServerLobby() {
             onClick={() => lobby.refreshStatuses()}
           >
             <Gauge size={14} strokeWidth={2.2} />
-            <span>{lobby.refreshing ? "刷新状态中" : "刷新状态"}</span>
+            <span>{lobby.refreshing ? t("server.refreshing") : t("common.refreshState")}</span>
           </button>
           <button
             type="button"
@@ -403,7 +423,7 @@ export function iGM_LauncherV2_ServerLobby() {
             onClick={() => setAddOpen(true)}
           >
             <Plus size={14} strokeWidth={2.2} />
-            <span>添加服务器</span>
+            <span>{t("server.addServer")}</span>
           </button>
         </div>
       </header>
@@ -421,8 +441,8 @@ export function iGM_LauncherV2_ServerLobby() {
           <Server size={26} strokeWidth={1.8} className={styles.emptyIcon} />
           <p className={styles.emptyText}>
             {lobby.loaded
-              ? "暂无服务器。可点击右上角「添加服务器」手动添加，或稍后刷新列表重试。"
-              : "正在准备服务器列表…"}
+              ? t("server.emptyLoaded")
+              : t("server.preparing")}
           </p>
         </div>
       ) : (

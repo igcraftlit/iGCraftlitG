@@ -11,7 +11,8 @@
  *       downloads.start 把版本 / 加载器展示名 / 视界名称 / 存放根目录交给下载中心，
  *       外壳按该根目录生成标准 iGML_Matrix 结构后再下载；
  *       资源市场视图由 iGM_LauncherV2_Market 子组件承载（Modrinth / CurseForge 双源检索、
- *       分类与三加载器筛选、一卡式双通道下载弹窗）
+ *       分类与三加载器筛选、一卡式双通道下载弹窗）；
+ *       界面文案已接入多语言（next-intl，键为 resource 与 common）
  * 说明：版本总量可达数百条，列表按过滤结果渲染并限制最大条数，避免 DOM 过大
  */
 
@@ -19,6 +20,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Download, FolderOpen, Search, X } from "lucide-react";
 import {
   iGM_LauncherV2_Card as IGM_LauncherV2_Card,
@@ -48,26 +50,26 @@ type iGM_LauncherV2_ResourceView = "versions" | "market";
 
 // 常量与文案 //
 
-/** 二级视图切换标签 */
+/** 二级视图切换标签（label 为 i18n 键，界面侧以 useTranslations 解析） */
 const IGM_RESOURCE_VIEWS: { id: iGM_LauncherV2_ResourceView; label: string }[] = [
-  { id: "versions", label: "游戏版本" },
-  { id: "market", label: "资源市场" },
+  { id: "versions", label: "resource.views.versions" },
+  { id: "market", label: "resource.views.market" },
 ];
 
-/** 第一步的四类归档标签 */
+/** 第一步的四类归档标签（label 为 i18n 键） */
 const IGM_RESOURCE_TABS: { id: iGM_LauncherV2_VersionCategory; label: string }[] = [
-  { id: "release", label: "全部正式版" },
-  { id: "snapshot", label: "快照版" },
-  { id: "old", label: "远古版本" },
-  { id: "special", label: "特别版" },
+  { id: "release", label: "resource.tabs.release" },
+  { id: "snapshot", label: "resource.tabs.snapshot" },
+  { id: "old", label: "resource.tabs.old" },
+  { id: "special", label: "resource.tabs.special" },
 ];
 
-/** 安装弹窗中「选择加载器」下拉框的选项 */
+/** 安装弹窗中「选择加载器」下拉框的选项（label 为 i18n 键） */
 const IGM_RESOURCE_LOADER_OPTIONS: { id: iGM_LauncherV2_LoaderKind; label: string }[] = [
-  { id: "vanilla", label: "Vanilla（原版）" },
-  { id: "fabric", label: "Fabric" },
-  { id: "forge", label: "Forge" },
-  { id: "neoforge", label: "NeoForge" },
+  { id: "vanilla", label: "resource.loaderOptions.vanilla" },
+  { id: "fabric", label: "resource.loaderOptions.fabric" },
+  { id: "forge", label: "resource.loaderOptions.forge" },
+  { id: "neoforge", label: "resource.loaderOptions.neoforge" },
 ];
 
 /** 加载器类别名：用于拼接视界名称默认值与 loaderLabel 兜底 */
@@ -84,6 +86,7 @@ const IGM_VERSION_RENDER_LIMIT = 400;
 // 核心逻辑 //
 
 export function iGM_LauncherV2_ResourceCenter() {
+  const t = useTranslations();
   const versions = IGM_LauncherV2_UseVersions();
   const loaders = IGM_LauncherV2_UseLoaders();
   const downloads = IGM_LauncherV2_UseDownloads();
@@ -212,7 +215,7 @@ export function iGM_LauncherV2_ResourceCenter() {
           className={`${styles.viewTab} ${view === item.id ? styles.viewTabOn : ""}`}
           onClick={() => setView(item.id)}
         >
-          {item.label}
+          {t(item.label)}
         </button>
       ))}
     </div>
@@ -234,9 +237,9 @@ export function iGM_LauncherV2_ResourceCenter() {
       <IGM_LauncherV2_Card className={styles.panel}>
         <div className={styles.panelHead}>
           <div>
-            <h2 className={styles.panelTitle}>游戏版本</h2>
+            <h2 className={styles.panelTitle}>{t("resource.title")}</h2>
             <p className={styles.panelDesc}>
-              共 {versions.versions.length} 个版本；当前分类显示 {visibleVersions.length} 条。点击卡片打开安装弹窗。
+              {t("resource.desc", { total: versions.versions.length, shown: visibleVersions.length })}
             </p>
           </div>
           <div className={styles.filterRow}>
@@ -247,7 +250,7 @@ export function iGM_LauncherV2_ResourceCenter() {
                 className={`${styles.chip} ${category === item.id ? styles.chipOn : ""}`}
                 onClick={() => setCategory(item.id)}
               >
-                {item.label}
+                {t(item.label)}
               </button>
             ))}
           </div>
@@ -258,15 +261,15 @@ export function iGM_LauncherV2_ResourceCenter() {
           <input
             className={styles.input}
             value={keyword}
-            placeholder="按版本号搜索，例如 1.20.1"
+            placeholder={t("resource.searchPlaceholder")}
             onChange={(event) => setKeyword(event.target.value)}
           />
         </div>
 
         {versions.loading ? (
-          <p className={styles.empty}>正在获取版本列表…</p>
+          <p className={styles.empty}>{t("resource.loadingVersions")}</p>
         ) : visibleVersions.length === 0 ? (
-          <p className={styles.empty}>该分类下没有匹配的版本，请调整分类或关键词。</p>
+          <p className={styles.empty}>{t("resource.empty")}</p>
         ) : (
           <ul className={styles.versionGrid}>
             {visibleVersions.map((item) => (
@@ -278,7 +281,7 @@ export function iGM_LauncherV2_ResourceCenter() {
                 >
                   <span className={styles.versionCardId}>{item.id}</span>
                   <span className={styles.versionCardMeta}>
-                    {item.releaseTime ? item.releaseTime.slice(0, 10) : "发布时间未知"}
+                    {item.releaseTime ? item.releaseTime.slice(0, 10) : t("resource.releaseUnknown")}
                   </span>
                 </button>
               </li>
@@ -288,7 +291,7 @@ export function iGM_LauncherV2_ResourceCenter() {
 
         {visibleVersions.length >= IGM_VERSION_RENDER_LIMIT ? (
           <p className={styles.dialogHint}>
-            该分类版本数量较多，已显示前 {IGM_VERSION_RENDER_LIMIT} 条，可用关键词进一步筛选。
+            {t("resource.limitHint", { limit: IGM_VERSION_RENDER_LIMIT })}
           </p>
         ) : null}
       </IGM_LauncherV2_Card>
@@ -298,11 +301,11 @@ export function iGM_LauncherV2_ResourceCenter() {
         <div className={styles.modalOverlay} role="dialog" aria-modal="true">
           <IGM_LauncherV2_Card className={styles.modalCard}>
             <div className={styles.modalHead}>
-              <h3 className={styles.modalTitle}>安装 {installId}</h3>
+              <h3 className={styles.modalTitle}>{t("resource.installTitle", { version: installId })}</h3>
               <button
                 type="button"
                 className={styles.iconButton}
-                aria-label="关闭安装弹窗"
+                aria-label={t("resource.closeDialog")}
                 onClick={closeInstall}
               >
                 <X size={15} strokeWidth={2.4} />
@@ -312,7 +315,7 @@ export function iGM_LauncherV2_ResourceCenter() {
             <div className={styles.modalBody}>
               {/* 配置项一：视界名称 */}
               <div className={styles.modalField}>
-                <span className={styles.modalLabel}>视界名称</span>
+                <span className={styles.modalLabel}>{t("resource.horizonName")}</span>
                 <input
                   className={styles.modalInput}
                   value={horizonName}
@@ -326,7 +329,7 @@ export function iGM_LauncherV2_ResourceCenter() {
 
               {/* 配置项二：选择加载器 */}
               <div className={styles.modalField}>
-                <span className={styles.modalLabel}>选择加载器</span>
+                <span className={styles.modalLabel}>{t("resource.loaderLabel")}</span>
                 <select
                   className={styles.select}
                   value={loaderKind}
@@ -334,7 +337,7 @@ export function iGM_LauncherV2_ResourceCenter() {
                 >
                   {IGM_RESOURCE_LOADER_OPTIONS.map((item) => (
                     <option key={item.id} value={item.id}>
-                      {item.label}
+                      {t(item.label)}
                     </option>
                   ))}
                 </select>
@@ -342,10 +345,10 @@ export function iGM_LauncherV2_ResourceCenter() {
 
               {/* 配置项三：加载器版本 */}
               <div className={styles.modalField}>
-                <span className={styles.modalLabel}>加载器版本</span>
+                <span className={styles.modalLabel}>{t("resource.loaderVersion")}</span>
                 {loaderKind === "vanilla" ? (
                   <select className={styles.select} value="" disabled>
-                    <option value="">原版无需加载器版本</option>
+                    <option value="">{t("resource.vanillaNoLoader")}</option>
                   </select>
                 ) : (
                   <select
@@ -357,7 +360,7 @@ export function iGM_LauncherV2_ResourceCenter() {
                     }
                   >
                     {loaderCandidates.length === 0 ? (
-                      <option value="">暂无可用版本</option>
+                      <option value="">{t("resource.noLoaderVersions")}</option>
                     ) : (
                       loaderCandidates.map((item) => (
                         <option key={item.id} value={item.id}>
@@ -368,13 +371,13 @@ export function iGM_LauncherV2_ResourceCenter() {
                   </select>
                 )}
                 {loaderKind !== "vanilla" && loaders.loading ? (
-                  <p className={styles.modalHint}>正在获取该加载器在该版本下的可用列表…</p>
+                  <p className={styles.modalHint}>{t("resource.loadingLoaders")}</p>
                 ) : null}
               </div>
 
               {/* 配置项四：存放路径（默认路径 + 浏览文件夹） */}
               <div className={styles.modalField}>
-                <span className={styles.modalLabel}>存放路径</span>
+                <span className={styles.modalLabel}>{t("resource.rootPath")}</span>
                 <div className={styles.pathRow}>
                   <input
                     className={styles.modalInput}
@@ -391,18 +394,18 @@ export function iGM_LauncherV2_ResourceCenter() {
                     onClick={() => void browseRoot()}
                   >
                     <FolderOpen size={14} strokeWidth={2.2} />
-                    <span>浏览文件夹</span>
+                    <span>{t("resource.browseFolder")}</span>
                   </button>
                 </div>
                 <p className={styles.modalHint}>
-                  将在此路径下生成标准 iGML_Matrix 目录结构（.minecraft / horizons 等）并完成下载。
+                  {t("resource.rootHint")}
                 </p>
               </div>
             </div>
 
             <div className={styles.modalFoot}>
               <button type="button" className={styles.actionButton} onClick={closeInstall}>
-                取消
+                {t("common.cancel")}
               </button>
               <button
                 type="button"
@@ -410,7 +413,7 @@ export function iGM_LauncherV2_ResourceCenter() {
                 onClick={startInstall}
               >
                 <Download size={15} strokeWidth={2.2} />
-                <span>开始安装</span>
+                <span>{t("resource.startInstall")}</span>
               </button>
             </div>
           </IGM_LauncherV2_Card>

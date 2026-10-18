@@ -5,13 +5,15 @@
  * 模块：iGM_LauncherV2_Welcome
  * 作用：启动器欢迎首页：全屏流体云背景 + 草方块 Logo + 艺术字体标题 + 进入按钮
  * 内容：点击「开始探索之旅」后按登录状态分流——已登录进入主界面，
- *       未登录先进入社区授权登录页（社区登录为后续所有功能的前置条件）
+ *       未登录先进入社区授权登录页（社区登录为后续所有功能的前置条件）；
+ *       界面文案已接入多语言（next-intl，键为 welcome 与 common）
  */
 
 // 导入依赖 //
 "use client";
 
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { ArrowRight } from "lucide-react";
 import { iGM_LauncherV2_AppearanceHost as IGM_LauncherV2_AppearanceHost } from "@/components/iGM_LauncherV2_AppearanceHost/iGM_LauncherV2_AppearanceHost";
 import {
@@ -34,6 +36,7 @@ import styles from "./iGM_LauncherV2_Welcome.module.css";
 
 // 核心逻辑 //
 export function iGM_LauncherV2_Welcome() {
+  const t = useTranslations();
   const auth = IGM_LauncherV2_UseAuth();
 
   /** 开始探索：未登录先完成社区授权，已登录直接进入主界面 */
@@ -44,10 +47,10 @@ export function iGM_LauncherV2_Welcome() {
   const authTone = auth.state === "logged-in" ? "ok" : "idle";
   const authLabel =
     auth.state === "logged-in"
-      ? auth.user?.nickname || "已登录"
+      ? auth.user?.nickname || t("welcome.authLoggedIn")
       : auth.state === "pending"
-        ? "等待授权"
-        : "未登录社区账号";
+        ? t("welcome.authPending")
+        : t("welcome.authLoggedOut");
 
   return (
     <div className={`igm-screen igm-page ${styles.screen}`}>
@@ -58,7 +61,7 @@ export function iGM_LauncherV2_Welcome() {
         <div className={styles.logoWrap}>
           <Image
             src="/igml.jpg"
-            alt="iGM CraftCeon Launcher 标志"
+            alt={t("welcome.logoAlt")}
             width={104}
             height={104}
             className={styles.logo}
@@ -66,8 +69,8 @@ export function iGM_LauncherV2_Welcome() {
           />
         </div>
 
-        <h1 className={styles.title}>iGM CraftCeon Launcher</h1>
-        <p className={styles.subtitle}>为 iGCraftLit 社区打造的轻量、简约 Minecraft 启动器</p>
+        <h1 className={styles.title}>{t("common.appName")}</h1>
+        <p className={styles.subtitle}>{t("welcome.subtitle")}</p>
 
         <div className={styles.actions}>
           <IGM_LauncherV2_Button
@@ -75,14 +78,14 @@ export function iGM_LauncherV2_Welcome() {
             icon={<ArrowRight size={16} strokeWidth={2.2} />}
             onClick={handleStart}
           >
-            开始探索之旅
+            {t("welcome.startButton")}
           </IGM_LauncherV2_Button>
         </div>
       </main>
 
       <footer className={styles.foot}>
         <IGM_LauncherV2_StatusDot tone={authTone}>{authLabel}</IGM_LauncherV2_StatusDot>
-        <span className={styles.footNote}>iGCraftLit Community 团队</span>
+        <span className={styles.footNote}>{t("welcome.teamFooter")}</span>
       </footer>
     </div>
   );

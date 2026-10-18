@@ -11,7 +11,8 @@
  *       行内错误，提交中显示进行中文案，结果由外壳 horizon:result 回推，绝无静默失败；
  *       删除需二次确认，且删除当前视界后自动清空当前选择；
  *       点击列表行主信息区进入「视界详情」，详情内含「文件目录 / 世界列表」两个标签页，
- *       分别展示该视界目录树（递归可折叠）与 saves 目录下的存档列表
+ *       分别展示该视界目录树（递归可折叠）与 saves 目录下的存档列表；
+ *       已接入多语言（简体中文 / English，next-intl，命名空间 horizon）
  * 说明：所有目录操作由 Bun 主进程执行，界面只投递指令并展示回推结果；
  *       目录树与存档列表分别由 iGM_LauncherV2_UseHorizonTree / UseHorizonWorlds 订阅，
  *       已下载版本列表由 iGM_LauncherV2_UseInstalledVersions 订阅
@@ -21,6 +22,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   AlertCircle,
   ArrowLeft,
@@ -65,9 +67,9 @@ type iGM_LauncherV2_HorizonSubmitState = "idle" | "pending";
 
 // 常量与文案 //
 
-/** 新建视界可选的加载器（仅作为展示名记录，具体加载器版本由资源中心的安装流程决定） */
+/** 新建视界可选的加载器（仅作为展示名记录，具体加载器版本由资源中心的安装流程决定；label 为 i18n 键） */
 const IGM_HORIZON_LOADER_OPTIONS: { value: string; label: string }[] = [
-  { value: "", label: "Vanilla（原版）" },
+  { value: "", label: "horizon.loader.vanilla" },
   { value: "Fabric", label: "Fabric" },
   { value: "Forge", label: "Forge" },
   { value: "NeoForge", label: "NeoForge" },
@@ -114,6 +116,8 @@ function IGM_LauncherV2_HorizonTreeRows({
   collapsed: Set<string>;
   onToggle: (path: string) => void;
 }) {
+  const t = useTranslations();
+
   return (
     <>
       {nodes.map((node) => {
@@ -127,7 +131,10 @@ function IGM_LauncherV2_HorizonTreeRows({
                 <button
                   type="button"
                   className={styles.treeToggle}
-                  aria-label={`${isCollapsed ? "展开" : "折叠"}目录 ${node.name}`}
+                  aria-label={t(
+                    isCollapsed ? "horizon.tree.collapse" : "horizon.tree.expand",
+                    { name: node.name },
+                  )}
                   aria-expanded={!isCollapsed}
                   onClick={() => onToggle(node.path)}
                 >
@@ -185,6 +192,7 @@ function IGM_LauncherV2_HorizonDetail({
   onSelect: (id: string) => void;
   onRemove: (id: string) => void;
 }) {
+  const t = useTranslations();
   const [tab, setTab] = useState<iGM_LauncherV2_HorizonDetailTab>("tree");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [pendingDelete, setPendingDelete] = useState(false);
@@ -206,7 +214,7 @@ function IGM_LauncherV2_HorizonDetail({
         <button
           type="button"
           className={styles.iconButton}
-          aria-label="返回视界列表"
+          aria-label={t("horizon.backToList")}
           onClick={onBack}
         >
           <ArrowLeft size={16} strokeWidth={2.2} />
@@ -219,14 +227,14 @@ function IGM_LauncherV2_HorizonDetail({
             {item.current ? (
               <span className={styles.rowTagOn}>
                 <CheckCircle2 size={12} strokeWidth={2.4} />
-                当前视界
+                {t("horizon.currentTag")}
               </span>
             ) : null}
           </div>
           <span className={styles.rowSub}>{item.path}</span>
           <span className={styles.rowMeta}>
             <Boxes size={12} strokeWidth={2.2} />
-            模组 {item.modCount}
+            {t("horizon.modCount", { count: item.modCount })}
           </span>
         </div>
 
@@ -238,14 +246,14 @@ function IGM_LauncherV2_HorizonDetail({
                 className={`${styles.actionButton} ${styles.actionButtonDanger}`}
                 onClick={() => onRemove(item.id)}
               >
-                <span>确认删除</span>
+                <span>{t("horizon.confirmDelete")}</span>
               </button>
               <button
                 type="button"
                 className={styles.actionButton}
                 onClick={() => setPendingDelete(false)}
               >
-                <span>取消</span>
+                <span>{t("common.cancel")}</span>
               </button>
             </>
           ) : (
@@ -256,12 +264,12 @@ function IGM_LauncherV2_HorizonDetail({
                 disabled={item.current}
                 onClick={() => onSelect(item.id)}
               >
-                <span>{item.current ? "使用中" : "切换到该视界"}</span>
+                <span>{item.current ? t("common.currentUse") : t("horizon.switchTo")}</span>
               </button>
               <button
                 type="button"
                 className={`${styles.iconButton} ${styles.iconButtonDanger}`}
-                aria-label="删除该视界"
+                aria-label={t("horizon.deleteThis")}
                 onClick={() => setPendingDelete(true)}
               >
                 <Trash2 size={15} strokeWidth={2.2} />
@@ -278,14 +286,14 @@ function IGM_LauncherV2_HorizonDetail({
             className={`${styles.tab} ${tab === "tree" ? styles.tabOn : ""}`}
             onClick={() => setTab("tree")}
           >
-            <span>文件目录</span>
+            <span>{t("horizon.tab.tree")}</span>
           </button>
           <button
             type="button"
             className={`${styles.tab} ${tab === "worlds" ? styles.tabOn : ""}`}
             onClick={() => setTab("worlds")}
           >
-            <span>世界列表</span>
+            <span>{t("horizon.tab.worlds")}</span>
           </button>
         </div>
         <button
@@ -294,15 +302,15 @@ function IGM_LauncherV2_HorizonDetail({
           onClick={() => (tab === "tree" ? tree.reload() : worldData.reload())}
         >
           <RefreshCw size={14} strokeWidth={2.2} />
-          <span>刷新</span>
+          <span>{t("common.refresh")}</span>
         </button>
       </div>
 
       {tab === "tree" ? (
         tree.loading ? (
-          <p className={styles.empty}>正在读取目录树…</p>
+          <p className={styles.empty}>{t("horizon.tree.loading")}</p>
         ) : tree.nodes.length === 0 ? (
-          <p className={styles.empty}>该视界目录为空</p>
+          <p className={styles.empty}>{t("horizon.tree.empty")}</p>
         ) : (
           <div className={styles.treeScroll}>
             <ul className={styles.treeRoot}>
@@ -316,9 +324,9 @@ function IGM_LauncherV2_HorizonDetail({
           </div>
         )
       ) : worldData.loading ? (
-        <p className={styles.empty}>正在读取存档列表…</p>
+        <p className={styles.empty}>{t("horizon.worlds.loading")}</p>
       ) : worldData.worlds.length === 0 ? (
-        <p className={styles.empty}>该视界暂无存档（saves 目录为空）</p>
+        <p className={styles.empty}>{t("horizon.worlds.empty")}</p>
       ) : (
         <div className={styles.worldScroll}>
           <ul className={styles.worldList}>
@@ -345,6 +353,7 @@ function IGM_LauncherV2_HorizonDetail({
 /* ---- 主组件：视界页 tab ---- */
 
 export function iGM_LauncherV2_Horizon() {
+  const t = useTranslations();
   const horizons = IGM_LauncherV2_UseHorizons();
   const installed = IGM_LauncherV2_UseInstalledVersions();
   const auth = IGM_LauncherV2_UseAuth();
@@ -432,12 +441,12 @@ export function iGM_LauncherV2_Horizon() {
     if (submitState === "pending") return;
     const trimmed = formName.trim();
     if (!trimmed) {
-      setFormError("请先填写视界名称，例如 1.20.1-Fabric");
+      setFormError(t("horizon.modal.nameRequired"));
       return;
     }
     // 本地存在已下载版本时必须选一个绑定；一个都没有时允许先建目录、启动前再补下载
     if (installed.versions.length > 0 && !formVersion) {
-      setFormError("请选择该视界要绑定的已下载版本");
+      setFormError(t("horizon.modal.versionRequired"));
       return;
     }
     setFormError("");
@@ -471,16 +480,13 @@ export function iGM_LauncherV2_Horizon() {
       <IGM_LauncherV2_Card className={styles.panel}>
         <div className={styles.panelHead}>
           <div>
-            <h2 className={styles.panelTitle}>视界管理</h2>
-            <p className={styles.panelDesc}>
-              视界即一套隔离的游戏目录，模组、材质包、光影与存档互不影响；共享的
-              assets / libraries / versions 由总目录统一复用。
-            </p>
+            <h2 className={styles.panelTitle}>{t("horizon.title")}</h2>
+            <p className={styles.panelDesc}>{t("horizon.desc")}</p>
           </div>
           <div className={styles.headActions}>
             <button type="button" className={styles.actionButton} onClick={() => horizons.refresh()}>
               <RefreshCw size={14} strokeWidth={2.2} />
-              <span>刷新</span>
+              <span>{t("common.refresh")}</span>
             </button>
             <button
               type="button"
@@ -488,7 +494,7 @@ export function iGM_LauncherV2_Horizon() {
               onClick={openCreate}
             >
               <Plus size={14} strokeWidth={2.2} />
-              <span>新建视界</span>
+              <span>{t("horizon.create")}</span>
             </button>
           </div>
         </div>
@@ -496,7 +502,7 @@ export function iGM_LauncherV2_Horizon() {
         {resultMessage ? <p className={styles.notice}>{resultMessage}</p> : null}
         {isGuest ? (
           <p className={styles.notice}>
-            游客模式最多创建 {IGM_LAUNCHERV2_GUEST_HORIZON_LIMIT} 个视界，请登录社区账号解除限制
+            {t("horizon.guestLimit", { limit: IGM_LAUNCHERV2_GUEST_HORIZON_LIMIT })}
           </p>
         ) : null}
       </IGM_LauncherV2_Card>
@@ -504,20 +510,20 @@ export function iGM_LauncherV2_Horizon() {
       <IGM_LauncherV2_Card className={styles.panel}>
         <div className={styles.panelHead}>
           <div>
-            <h2 className={styles.panelTitle}>视界列表</h2>
+            <h2 className={styles.panelTitle}>{t("horizon.list.title")}</h2>
             <p className={styles.panelDesc}>
-              当前视界：{horizons.currentId || "尚未选择"}
+              {t("horizon.list.current", {
+                value: horizons.currentId || t("horizon.list.notChosen"),
+              })}
             </p>
           </div>
           <span className={styles.rootHint}>{horizons.horizonsRoot || "-"}</span>
         </div>
 
         {!horizons.loaded ? (
-          <p className={styles.empty}>正在读取视界列表…</p>
+          <p className={styles.empty}>{t("horizon.list.loading")}</p>
         ) : horizons.items.length === 0 ? (
-          <p className={styles.empty}>
-            当前还没有任何视界。在上方输入名称并点击【创建视界】即可生成独立目录。
-          </p>
+          <p className={styles.empty}>{t("horizon.list.empty")}</p>
         ) : (
           <ul className={styles.list}>
             {horizons.items.map((item) => (
@@ -525,8 +531,8 @@ export function iGM_LauncherV2_Horizon() {
                 <button
                   type="button"
                   className={styles.rowMain}
-                  title="查看视界详情"
-                  aria-label={`查看视界 ${item.name} 的详情`}
+                  title={t("horizon.list.viewDetail")}
+                  aria-label={t("horizon.list.viewDetailOf", { name: item.name })}
                   onClick={() => setDetailId(item.id)}
                 >
                   <div className={styles.rowTitleLine}>
@@ -535,14 +541,14 @@ export function iGM_LauncherV2_Horizon() {
                     {item.current ? (
                       <span className={styles.rowTagOn}>
                         <CheckCircle2 size={12} strokeWidth={2.4} />
-                        当前视界
+                        {t("horizon.currentTag")}
                       </span>
                     ) : null}
                   </div>
                   <span className={styles.rowSub}>{item.path}</span>
                   <span className={styles.rowMeta}>
                     <Boxes size={12} strokeWidth={2.2} />
-                    模组 {item.modCount}
+                    {t("horizon.modCount", { count: item.modCount })}
                   </span>
                 </button>
 
@@ -557,14 +563,14 @@ export function iGM_LauncherV2_Horizon() {
                           setPendingDelete(null);
                         }}
                       >
-                        <span>确认删除</span>
+                        <span>{t("horizon.confirmDelete")}</span>
                       </button>
                       <button
                         type="button"
                         className={styles.actionButton}
                         onClick={() => setPendingDelete(null)}
                       >
-                        <span>取消</span>
+                        <span>{t("common.cancel")}</span>
                       </button>
                     </>
                   ) : (
@@ -575,12 +581,12 @@ export function iGM_LauncherV2_Horizon() {
                         disabled={item.current}
                         onClick={() => horizons.select(item.id)}
                       >
-                        <span>{item.current ? "使用中" : "切换到该视界"}</span>
+                        <span>{item.current ? t("common.currentUse") : t("horizon.switchTo")}</span>
                       </button>
                       <button
                         type="button"
                         className={`${styles.iconButton} ${styles.iconButtonDanger}`}
-                        aria-label="删除该视界"
+                        aria-label={t("horizon.deleteThis")}
                         onClick={() => setPendingDelete(item.id)}
                       >
                         <Trash2 size={15} strokeWidth={2.2} />
@@ -599,11 +605,11 @@ export function iGM_LauncherV2_Horizon() {
         <div className={styles.modalOverlay} role="dialog" aria-modal="true">
           <IGM_LauncherV2_Card className={styles.modalCard}>
             <div className={styles.modalHead}>
-              <h3 className={styles.modalTitle}>新建视界</h3>
+              <h3 className={styles.modalTitle}>{t("horizon.create")}</h3>
               <button
                 type="button"
                 className={styles.iconButton}
-                aria-label="关闭新建视界弹窗"
+                aria-label={t("horizon.modal.close")}
                 disabled={submitState === "pending"}
                 onClick={() => setCreateOpen(false)}
               >
@@ -614,11 +620,11 @@ export function iGM_LauncherV2_Horizon() {
             <div className={styles.modalBody}>
               {/* 配置项一：视界名称 */}
               <div className={styles.modalField}>
-                <span className={styles.modalLabel}>视界名称</span>
+                <span className={styles.modalLabel}>{t("horizon.modal.nameLabel")}</span>
                 <input
                   className={styles.modalInput}
                   value={formName}
-                  placeholder="例如 1.20.1-Fabric"
+                  placeholder={t("horizon.modal.namePlaceholder")}
                   autoFocus
                   onChange={(event) => {
                     setNameTouched(true);
@@ -632,11 +638,13 @@ export function iGM_LauncherV2_Horizon() {
 
               {/* 配置项二：绑定已下载版本 */}
               <div className={styles.modalField}>
-                <span className={styles.modalLabel}>游戏版本</span>
+                <span className={styles.modalLabel}>{t("horizon.modal.versionLabel")}</span>
                 {installed.versions.length === 0 ? (
                   <select className={styles.select} value="" disabled>
                     <option value="">
-                      {installed.loading ? "正在读取已下载版本…" : "本地暂无已下载版本"}
+                      {installed.loading
+                        ? t("horizon.modal.versionsLoading")
+                        : t("horizon.modal.versionsEmpty")}
                     </option>
                   </select>
                 ) : (
@@ -655,14 +663,14 @@ export function iGM_LauncherV2_Horizon() {
                 {installed.versions.length === 0 ? (
                   <p className={styles.modalHintWarn}>
                     <AlertCircle size={12} strokeWidth={2.2} />
-                    <span>本地暂无已下载版本，可先直接创建目录，之后到资源中心下载对应版本。</span>
+                    <span>{t("horizon.modal.versionsEmptyHint")}</span>
                   </p>
                 ) : null}
               </div>
 
               {/* 配置项三：加载器 */}
               <div className={styles.modalField}>
-                <span className={styles.modalLabel}>加载器</span>
+                <span className={styles.modalLabel}>{t("horizon.modal.loaderLabel")}</span>
                 <select
                   className={styles.select}
                   value={formLoader}
@@ -670,7 +678,7 @@ export function iGM_LauncherV2_Horizon() {
                 >
                   {IGM_HORIZON_LOADER_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>
-                      {option.label}
+                      {t(option.label)}
                     </option>
                   ))}
                 </select>
@@ -691,7 +699,7 @@ export function iGM_LauncherV2_Horizon() {
                 disabled={submitState === "pending"}
                 onClick={() => setCreateOpen(false)}
               >
-                取消
+                {t("common.cancel")}
               </button>
               <button
                 type="button"
@@ -704,7 +712,11 @@ export function iGM_LauncherV2_Horizon() {
                 ) : (
                   <Layers size={14} strokeWidth={2.2} />
                 )}
-                <span>{submitState === "pending" ? "正在创建…" : "确认创建"}</span>
+                <span>
+                  {submitState === "pending"
+                    ? t("horizon.modal.creating")
+                    : t("horizon.modal.confirmCreate")}
+                </span>
               </button>
             </div>
           </IGM_LauncherV2_Card>

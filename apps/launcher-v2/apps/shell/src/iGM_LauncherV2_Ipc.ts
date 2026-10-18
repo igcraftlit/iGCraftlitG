@@ -204,7 +204,8 @@ export type iGM_LauncherV2_OutboundMessage =
   | { type: "server:join"; id: string }
   | { type: "peer:status" }
   | { type: "peer:connect" }
-  | { type: "peer:create" }
+  | { type: "peer:create"; horizonId: string }
+  | { type: "peer:bind-port"; port: number }
   | { type: "peer:join"; code: string }
   | { type: "peer:leave" };
 
@@ -310,16 +311,26 @@ export type iGM_LauncherV2_PeerMode = "idle" | "connecting" | "community" | "pub
 export interface iGM_LauncherV2_PeerState {
   /** 当前连接模式 */
   mode: iGM_LauncherV2_PeerMode;
-  /** 状态文案（直接用于界面展示，例如「已连接主站高速联机节点」） */
-  status: string;
+  /** 状态文案键（多语言键，界面端用 next-intl 解析，外壳不产生文案） */
+  statusKey: string;
   /** 当前所在房间的 6 位房间码；不在房间时为空串 */
   roomCode: string;
   /** 当前用户是否为房主 */
   host: boolean;
   /** 房间内当前人数；未知为 0 */
   peers: number;
-  /** 附加提示（错误原因或操作说明） */
-  message: string;
+  /** 附加提示文案键；无提示为空串 */
+  messageKey: string;
+  /** 附加提示文案中的占位符参数 */
+  messageParams: Record<string, string>;
+  /** 房间绑定的视界标识；未绑定时为空串 */
+  horizonId: string;
+  /** 房主已绑定的局域网端口；未绑定为 0 */
+  boundPort: number;
+  /** 房主是否已完成端口绑定 / 好友是否已加入房间 */
+  ready: boolean;
+  /** 隧道是否已开启 UDP 局域网广播转发 */
+  udp: boolean;
 }
 
 /** 皮肤库条目（本地导入并经 Mineskin 换取永久地址） */

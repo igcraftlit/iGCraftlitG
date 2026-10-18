@@ -14,6 +14,7 @@
  *       生命周期规则：任务全部到达终态（完成 / 失败 / 主动取消）后立即清理任务与临时缓存
  *       并收起悬浮图标；图标仅在下一次真正开始下载时重新出现；
  *       通道不可用等提示以独立提示条呈现，等待用户手动处理
+ * 内容：已接入多语言（next-intl，download 命名空间）
  * 说明：组件挂在界面根节点，任何页签下都可见；不使用导航栏入口
  */
 
@@ -21,6 +22,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Download, Gauge, Pause, Play, X } from "lucide-react";
 import {
   iGM_LauncherV2_UseDownloads as IGM_LauncherV2_UseDownloads,
@@ -38,20 +40,20 @@ type iGM_LauncherV2_DownloadTab = "running" | "done" | "history";
 
 // 常量与文案 //
 
-/** 任务状态展示文案 */
+/** 任务状态展示文案（值为 i18n 键，界面侧以 useTranslations 解析） */
 const IGM_DOWNLOAD_STATE_LABEL: Record<iGM_LauncherV2_DownloadState, string> = {
-  running: "下载中",
-  paused: "已暂停",
-  done: "已完成",
-  failed: "已失败",
-  canceled: "已取消",
+  running: "download.state.running",
+  paused: "download.state.paused",
+  done: "download.state.done",
+  failed: "download.state.failed",
+  canceled: "download.state.canceled",
 };
 
-/** 左侧导航三项 */
+/** 左侧导航三项（label 为 i18n 键，界面侧以 useTranslations 解析） */
 const IGM_DOWNLOAD_TABS: { id: iGM_LauncherV2_DownloadTab; label: string }[] = [
-  { id: "running", label: "进行中" },
-  { id: "done", label: "已完成" },
-  { id: "history", label: "历史记录" },
+  { id: "running", label: "download.tabs.running" },
+  { id: "done", label: "download.tabs.done" },
+  { id: "history", label: "download.tabs.history" },
 ];
 
 /** 历史记录保留上限 */
@@ -96,6 +98,7 @@ function IGM_LauncherV2_TaskRow({
   onCancel: (id: string) => void;
   onClear: (id: string) => void;
 }) {
+  const t = useTranslations();
   const percent = iGM_LauncherV2_Percent(task);
   const active = task.state === "running" || task.state === "paused";
   const paused = task.state === "paused";
@@ -112,14 +115,14 @@ function IGM_LauncherV2_TaskRow({
           }}
         />
         <span className={styles.taskName}>{task.name}</span>
-        <span className={styles.taskState}>{IGM_DOWNLOAD_STATE_LABEL[task.state]}</span>
+        <span className={styles.taskState}>{t(IGM_DOWNLOAD_STATE_LABEL[task.state])}</span>
         <span className={styles.taskActions}>
           {active ? (
             <button
               type="button"
               className={styles.iconButton}
-              aria-label={paused ? "继续下载" : "暂停下载"}
-              title={paused ? "继续" : "暂停"}
+              aria-label={paused ? t("download.resumeDownload") : t("download.pauseDownload")}
+              title={paused ? t("download.resume") : t("download.pause")}
               onClick={() => (paused ? onResume(task.id) : onPause(task.id))}
             >
               {paused ? <Play size={13} strokeWidth={2.4} /> : <Pause size={13} strokeWidth={2.4} />}
@@ -128,8 +131,8 @@ function IGM_LauncherV2_TaskRow({
           <button
             type="button"
             className={styles.iconButton}
-            aria-label={active ? "取消下载" : "清除任务"}
-            title={active ? "取消" : "清除"}
+            aria-label={active ? t("download.cancelDownload") : t("download.clearTask")}
+            title={active ? t("common.cancel") : t("download.clear")}
             onClick={() => (active ? onCancel(task.id) : onClear(task.id))}
           >
             <X size={13} strokeWidth={2.4} />
@@ -140,7 +143,9 @@ function IGM_LauncherV2_TaskRow({
       <div className={styles.taskMeta}>
         <span className={styles.taskHorizon}>{task.horizonName}</span>
         {task.state === "done" ? (
-          <span className={styles.taskTime}>完成于 {iGM_LauncherV2_FormatTime(task.finishedAt)}</span>
+          <span className={styles.taskTime}>
+            {t("download.finishedAt", { time: iGM_LauncherV2_FormatTime(task.finishedAt) })}
+          </span>
         ) : null}
       </div>
 
@@ -154,8 +159,12 @@ function IGM_LauncherV2_TaskRow({
 
       <div className={styles.metrics}>
         <span>{percent.toFixed(1)}%</span>
-        <span>{paused ? "已暂停" : `${iGM_LauncherV2_ToMB(task.speed)} MB/s`}</span>
-        <span>剩余 {remaining} 文件</span>
+        <span>
+          {paused
+            ? t("download.state.paused")
+            : t("download.speed", { value: `${iGM_LauncherV2_ToMB(task.speed)} MB/s` })}
+        </span>
+        <span>{t("download.files", { remaining })}</span>
       </div>
 
       {!active && task.message ? <p className={styles.taskMessage}>{task.message}</p> : null}
@@ -164,6 +173,7 @@ function IGM_LauncherV2_TaskRow({
 }
 
 export function iGM_LauncherV2_DownloadCenter() {
+  const t = useTranslations();
   const downloads = IGM_LauncherV2_UseDownloads();
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<iGM_LauncherV2_DownloadTab>("running");
@@ -254,10 +264,10 @@ export function iGM_LauncherV2_DownloadCenter() {
     tab === "running" ? runningTasks : tab === "done" ? doneTasks : historyItems;
   const emptyText =
     tab === "running"
-      ? "暂无进行中的任务。"
+      ? t("download.emptyRunning")
       : tab === "done"
-        ? "暂无已完成的任务。"
-        : "暂无历史记录。";
+        ? t("download.emptyDone")
+        : t("download.emptyHistory");
 
   return (
     <>
@@ -267,7 +277,7 @@ export function iGM_LauncherV2_DownloadCenter() {
           <button
             type="button"
             className={styles.iconButton}
-            aria-label="关闭提示"
+            aria-label={t("download.dismissNotice")}
             onClick={() => downloads.dismissNotice()}
           >
             <X size={13} strokeWidth={2.4} />
@@ -280,11 +290,11 @@ export function iGM_LauncherV2_DownloadCenter() {
           {open ? (
             <div className={styles.panel}>
               <div className={styles.panelHead}>
-                <span className={styles.panelTitle}>下载中心</span>
+                <span className={styles.panelTitle}>{t("download.title")}</span>
                 <button
                   type="button"
                   className={styles.iconButton}
-                  aria-label="收起下载中心"
+                  aria-label={t("download.collapse")}
                   onClick={() => setOpen(false)}
                 >
                   <X size={13} strokeWidth={2.4} />
@@ -315,7 +325,7 @@ export function iGM_LauncherV2_DownloadCenter() {
                         className={`${styles.tab} ${tab === item.id ? styles.tabOn : ""}`}
                         onClick={() => setTab(item.id)}
                       >
-                        <span>{item.label}</span>
+                        <span>{t(item.label)}</span>
                         <span className={styles.tabCount}>{count}</span>
                       </button>
                     );
@@ -345,7 +355,7 @@ export function iGM_LauncherV2_DownloadCenter() {
           <button
             type="button"
             className={styles.fab}
-            aria-label="展开下载中心"
+            aria-label={t("download.expand")}
             onClick={() => setOpen((value) => !value)}
           >
             <Download size={20} strokeWidth={2.2} />

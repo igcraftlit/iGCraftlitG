@@ -285,16 +285,26 @@ export interface iGM_LauncherV2_ServerLobbySnapshot {
 export interface iGM_LauncherV2_PeerLobbySnapshot {
   /** 当前连接模式：未连接 / 连接中 / 主站高速节点 / 公共联机节点 */
   mode: iGM_LauncherV2_PeerMode;
-  /** 状态文案（由外壳给出，界面直接展示） */
-  status: string;
+  /** 状态文案键（多语言键，界面端用 next-intl 解析） */
+  statusKey: string;
   /** 当前房间码；不在房间时为空串 */
   roomCode: string;
   /** 是否为房主 */
   host: boolean;
   /** 房间内人数 */
   peers: number;
-  /** 附加提示 */
-  message: string;
+  /** 附加提示文案键；无提示为空串 */
+  messageKey: string;
+  /** 附加提示文案中的占位符参数 */
+  messageParams: Record<string, string>;
+  /** 房间绑定的视界标识；未绑定时为空串 */
+  horizonId: string;
+  /** 房主已绑定的局域网端口；未绑定为 0 */
+  boundPort: number;
+  /** 房主是否已完成端口绑定 / 好友是否已加入房间 */
+  ready: boolean;
+  /** 隧道是否已开启 UDP 局域网广播转发 */
+  udp: boolean;
   /** 是否已完成一次状态同步 */
   loaded: boolean;
 }
@@ -348,11 +358,16 @@ const IGM_SERVER_LOBBY_INITIAL: iGM_LauncherV2_ServerLobbySnapshot = {
 
 const IGM_PEER_LOBBY_INITIAL: iGM_LauncherV2_PeerLobbySnapshot = {
   mode: "idle",
-  status: "尚未连接联机节点",
+  statusKey: "peer.status.idle",
   roomCode: "",
   host: false,
   peers: 0,
-  message: "",
+  messageKey: "",
+  messageParams: {},
+  horizonId: "",
+  boundPort: 0,
+  ready: false,
+  udp: false,
   loaded: false,
 };
 
@@ -708,13 +723,19 @@ function iGM_HandleInbound(payload: unknown): void {
   }
 
   if (message.type === "peer:state") {
+    const state = message.state;
     iGM_PeerLobbySnapshot = {
-      mode: message.state.mode,
-      status: message.state.status,
-      roomCode: message.state.roomCode,
-      host: message.state.host,
-      peers: message.state.peers,
-      message: message.state.message,
+      mode: state.mode,
+      statusKey: state.statusKey,
+      roomCode: state.roomCode,
+      host: state.host,
+      peers: state.peers,
+      messageKey: state.messageKey,
+      messageParams: state.messageParams,
+      horizonId: state.horizonId,
+      boundPort: state.boundPort,
+      ready: state.ready,
+      udp: state.udp,
       loaded: true,
     };
     iGM_Emit();
@@ -1377,7 +1398,8 @@ export function iGM_LauncherV2_UseServerLobby(): iGM_LauncherV2_ServerLobbySnaps
 export function iGM_LauncherV2_UsePeerLobby(): iGM_LauncherV2_PeerLobbySnapshot & {
   refresh: () => void;
   connect: () => void;
-  create: () => void;
+  create: (horizonId: string) => void;
+  bindPort: (port: number) => void;
   join: (code: string) => void;
   leave: () => void;
 } {
@@ -1399,7 +1421,8 @@ export function iGM_LauncherV2_UsePeerLobby(): iGM_LauncherV2_PeerLobbySnapshot 
         iGM_PeerLobbySnapshot = {
           ...iGM_PeerLobbySnapshot,
           loaded: true,
-          message: "浏览器预览下不提供联机大厅数据",
+          messageKey: "peer.notice.previewNoLobby",
+          messageParams: {},
         };
         iGM_Emit();
       }
@@ -1409,7 +1432,8 @@ export function iGM_LauncherV2_UsePeerLobby(): iGM_LauncherV2_PeerLobbySnapshot 
         iGM_PeerLobbySnapshot = {
           ...iGM_PeerLobbySnapshot,
           loaded: true,
-          message: "浏览器预览下无法连接联机节点",
+          messageKey: "peer.notice.previewNoConnect",
+          messageParams: {},
         };
         iGM_Emit();
         return;
@@ -1418,27 +1442,79 @@ export function iGM_LauncherV2_UsePeerLobby(): iGM_LauncherV2_PeerLobbySnapshot 
       iGM_PeerLobbySnapshot = {
         ...iGM_PeerLobbySnapshot,
         mode: "connecting",
-        status: "正在连接联机节点…",
+        statusKey: "peer.status.connectingNode",
         loaded: true,
-        message: "",
+        messageKey: "",
+        messageParams: {},
       };
       iGM_Emit();
     },
-    create: () => {
-      if (!iGM_LauncherV2_SendHost({ type: "peer:create" })) {
-        iGM_PeerLobbySnapshot = { ...iGM_PeerLobbySnapshot, message: "浏览器预览下无法创建房间" };
+    create: (horizonId) => {
+      if (!iGM_LauncherV2_SendHost({ type: "peer:create", horizonId })) {
+        iGM_PeerLobbySnapshot = {
+          ...iGM_PeerLobbySnapshot,
+          messageKey: "peer.notice.previewNoCreate",
+          messageParams: {},
+        };
+        iGM_Emit();
+        return;
+      }
+      // 本地即时进入「正在建立 P2P 网络…」，等待外壳回推房间码
+      iGM_PeerLobbySnapshot = {
+        ...iGM_PeerLobbySnapshot,
+        mode: "connecting",
+        statusKey: "peer.status.connectingP2P",
+        host: true,
+        horizonId,
+        ready: false,
+        boundPort: 0,
+        loaded: true,
+        messageKey: "",
+        messageParams: {},
+      };
+      iGM_Emit();
+    },
+    bindPort: (port) => {
+      if (!iGM_LauncherV2_SendHost({ type: "peer:bind-port", port })) {
+        iGM_PeerLobbySnapshot = {
+          ...iGM_PeerLobbySnapshot,
+          messageKey: "peer.notice.previewNoBind",
+          messageParams: {},
+        };
         iGM_Emit();
       }
     },
     join: (code) => {
       if (!iGM_LauncherV2_SendHost({ type: "peer:join", code })) {
-        iGM_PeerLobbySnapshot = { ...iGM_PeerLobbySnapshot, message: "浏览器预览下无法加入房间" };
+        iGM_PeerLobbySnapshot = {
+          ...iGM_PeerLobbySnapshot,
+          messageKey: "peer.notice.previewNoJoin",
+          messageParams: {},
+        };
         iGM_Emit();
+        return;
       }
+      // 本地即时进入「正在连接…」
+      iGM_PeerLobbySnapshot = {
+        ...iGM_PeerLobbySnapshot,
+        mode: "connecting",
+        statusKey: "peer.status.connectingRoom",
+        roomCode: code,
+        host: false,
+        ready: false,
+        loaded: true,
+        messageKey: "",
+        messageParams: {},
+      };
+      iGM_Emit();
     },
     leave: () => {
       if (!iGM_LauncherV2_SendHost({ type: "peer:leave" })) {
-        iGM_PeerLobbySnapshot = { ...iGM_PeerLobbySnapshot, message: "浏览器预览下无法退出房间" };
+        iGM_PeerLobbySnapshot = {
+          ...iGM_PeerLobbySnapshot,
+          messageKey: "peer.notice.previewNoLeave",
+          messageParams: {},
+        };
         iGM_Emit();
       }
     },

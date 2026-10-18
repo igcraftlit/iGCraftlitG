@@ -12,7 +12,8 @@
  *       卡片网格每页 15 项，换页与切换分类/标签先展示 300ms 骨架屏再渲染新页；
  *       卡片图片懒加载，加载失败退化为灰色小人占位；进入页面默认选中首张卡片；
  *       应用策略按账号类型区分：离线账号写入本地皮肤目录并提示需皮肤模组生效，
- *       已绑定正版账号禁用一键应用并改为跳转官网更换
+ *      已绑定正版账号禁用一键应用并改为跳转官网更换；
+ *      文案已接入多语言（skin 命名空间，含分类、页签、提示与映射表）
  * 说明：所有特权能力（文件落盘、Mineskin 上传、远程取图）均由外壳主进程执行，
  *       界面只负责选择、预览与投递指令；在线查询与内置数据的纹理统一经外壳转 data URL，
  *       外壳不可用时退回原始地址，保证浏览器预览下仍可渲染
@@ -22,6 +23,7 @@
 "use client";
 
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronLeft,
@@ -121,38 +123,38 @@ interface iGM_LauncherV2_SkinSelection {
 
 // 常量与文案 //
 
-/** 左侧三大分类 */
+/** 左侧三大分类（label / desc 为 i18n 键，渲染处经 useTranslations 解析） */
 const IGM_SKIN_CATEGORIES: iGM_LauncherV2_SkinCategoryMeta[] = [
   {
     id: "library",
-    label: "皮肤库",
-    desc: "内置 100 款合辑与 Mineskin 托管",
+    label: "skin.category.library.label",
+    desc: "skin.category.library.desc",
     icon: Library,
   },
   {
     id: "online",
-    label: "在线查询",
-    desc: "输入玩家名查询任意皮肤",
+    label: "skin.category.online.label",
+    desc: "skin.category.online.desc",
     icon: Globe,
   },
   {
     id: "mine",
-    label: "我的皮肤",
-    desc: "本地导入的皮肤列表",
+    label: "skin.category.mine.label",
+    desc: "skin.category.mine.desc",
     icon: Shirt,
   },
 ];
 
-/** 中部标签 */
+/** 中部标签（label 为 i18n 键） */
 const IGM_SKIN_TABS: iGM_LauncherV2_SkinTabMeta[] = [
-  { id: "all", label: "全部" },
-  { id: "featured", label: "精选" },
+  { id: "all", label: "skin.tab.all" },
+  { id: "featured", label: "skin.tab.featured" },
 ];
 
-/** 模型展示文案 */
+/** 模型展示文案（值为 i18n 键） */
 const IGM_SKIN_MODEL_LABEL: Record<"classic" | "slim", string> = {
-  classic: "Classic（粗手臂）",
-  slim: "Slim（细手臂）",
+  classic: "skin.model.classic",
+  slim: "skin.model.slim",
 };
 
 // 核心逻辑 //
@@ -182,6 +184,7 @@ function iGM_LauncherV2_MinotarSkin(name: string): string {
 
 /** 皮肤库页：分类、Tab、卡片网格与分页、右侧 3D 预览与应用操作 */
 export function iGM_LauncherV2_SkinLibrary() {
+  const t = useTranslations();
   const skin = IGM_LauncherV2_UseSkinLibrary();
   const offline = IGM_LauncherV2_UseOffline();
   const msa = IGM_LauncherV2_UseMsa();
@@ -234,7 +237,7 @@ export function iGM_LauncherV2_SkinLibrary() {
     datums.map((datum) => ({
       key: `datum:${datum.id}`,
       name: datum.name,
-      meta: `${datum.author} · 下载 ${datum.downloads}`,
+      meta: `${datum.author} · ${t("common.download")} ${datum.downloads}`,
       imageUrl: iGM_LauncherV2_MinotarHelm(datum.name, IGM_LAUNCHERV2_SKIN_LIST_THUMB_SIZE),
       datum,
     }));
@@ -244,7 +247,7 @@ export function iGM_LauncherV2_SkinLibrary() {
     entries.map((entry) => ({
       key: `entry:${entry.id}`,
       name: entry.name,
-      meta: `${entry.source === "mineskin" ? "Mineskin" : "本地"} · ${IGM_SKIN_MODEL_LABEL[entry.model]}`,
+      meta: `${entry.source === "mineskin" ? "Mineskin" : t("skin.source.local")} · ${t(IGM_SKIN_MODEL_LABEL[entry.model])}`,
       imageUrl: entry.remoteUrl,
       entry,
     }));
@@ -323,11 +326,11 @@ export function iGM_LauncherV2_SkinLibrary() {
     const token = ++tokenRef.current;
     const texture = await iGM_LauncherV2_SkinTextureOf(datum.skinUrl);
     if (token !== tokenRef.current) return;
-    setNotice(texture ? "" : "该皮肤的纹理读取失败，请稍后重试");
+    setNotice(texture ? "" : t("skin.notice.datumTextureFailed"));
     setSelected({
       skinUrl: texture,
       label: datum.name,
-      sourceLabel: "Minotar 内置皮肤库",
+      sourceLabel: t("skin.source.minotarBuiltin"),
       model: datum.type,
       datumId: datum.id,
       remoteSkinUrl: datum.skinUrl,
@@ -342,11 +345,11 @@ export function iGM_LauncherV2_SkinLibrary() {
     const textureUrl = entry.remoteUrl || `${IGM_LAUNCHERV2_SKIN_LOCAL_PREFIX}${entry.id}`;
     const texture = await iGM_LauncherV2_SkinTextureOf(textureUrl);
     if (token !== tokenRef.current) return;
-    setNotice(texture ? "" : "该皮肤的纹理读取失败，请重新导入");
+    setNotice(texture ? "" : t("skin.notice.entryTextureFailed"));
     setSelected({
       skinUrl: texture,
       label: entry.name,
-      sourceLabel: entry.source === "mineskin" ? "Mineskin 永久地址" : "本地导入",
+      sourceLabel: entry.source === "mineskin" ? t("skin.source.mineskin") : t("skin.source.localImport"),
       model: entry.model,
       entryId: entry.id,
     });
@@ -371,11 +374,11 @@ export function iGM_LauncherV2_SkinLibrary() {
     if (token !== tokenRef.current) return;
 
     setProbing(false);
-    setNotice(texture ? "" : "未取回该账号的皮肤，请核对正版用户名后重试");
+    setNotice(texture ? "" : t("skin.notice.probeFailed"));
     setSelected({
       skinUrl: texture,
       label: value,
-      sourceLabel: "Minotar 在线皮肤",
+      sourceLabel: t("skin.source.minotarOnline"),
       model: "classic",
       remoteSkinUrl: skinUrl,
     });
@@ -391,17 +394,17 @@ export function iGM_LauncherV2_SkinLibrary() {
     });
 
     if (!dataUrl || !dataUrl.includes(",")) {
-      setNotice("图片读取失败，请重新选择 PNG 文件");
+      setNotice(t("skin.notice.fileReadFailed"));
       return;
     }
 
-    const label = file.name.replace(/\.png$/i, "").trim() || "本地皮肤";
+    const label = file.name.replace(/\.png$/i, "").trim() || t("skin.localSkinName");
     tokenRef.current += 1;
     setNotice("");
     setSelected({
       skinUrl: dataUrl,
       label,
-      sourceLabel: "本地预览（正在上传 Mineskin）",
+      sourceLabel: t("skin.source.localPreviewUploading"),
       model: "classic",
     });
     skin.import(label, dataUrl.slice(dataUrl.indexOf(",") + 1));
@@ -437,15 +440,12 @@ export function iGM_LauncherV2_SkinLibrary() {
     <section className={styles.screen}>
       <header className={styles.head}>
         <div>
-          <h1 className={styles.title}>皮肤库</h1>
-          <p className={styles.desc}>
-            内置 100 款皮肤合辑，支持「全部」与「精选」两种浏览方式；
-            并可在线查询任意玩家皮肤、管理自己的本地皮肤。
-          </p>
+          <h1 className={styles.title}>{t("skin.library.title")}</h1>
+          <p className={styles.desc}>{t("skin.library.desc")}</p>
         </div>
         <button type="button" className={styles.actionButton} onClick={() => fileRef.current?.click()}>
           <ImagePlus size={14} strokeWidth={2.2} />
-          <span>选择本地图片</span>
+          <span>{t("skin.library.pickLocalImage")}</span>
         </button>
         <input
           ref={fileRef}
@@ -482,8 +482,8 @@ export function iGM_LauncherV2_SkinLibrary() {
                 >
                   <Icon size={15} strokeWidth={2.2} />
                   <span className={styles.categoryText}>
-                    <span className={styles.categoryLabel}>{item.label}</span>
-                    <span className={styles.categoryDesc}>{item.desc}</span>
+                    <span className={styles.categoryLabel}>{t(item.label)}</span>
+                    <span className={styles.categoryDesc}>{t(item.desc)}</span>
                   </span>
                 </button>
               );
@@ -506,7 +506,7 @@ export function iGM_LauncherV2_SkinLibrary() {
                     className={`${styles.tab} ${on ? styles.tabOn : ""}`}
                     onClick={() => switchTab(item.id)}
                   >
-                    {item.label}
+                    {t(item.label)}
                   </button>
                 );
               })}
@@ -516,19 +516,19 @@ export function iGM_LauncherV2_SkinLibrary() {
           <div className={styles.gridHead}>
             <span className={styles.gridTitle}>
               {category === "library"
-                ? `${activeCategoryLabel} · ${tab === "featured" ? "精选" : "全部"}`
-                : activeCategoryLabel}
+                ? `${t(activeCategoryLabel)} · ${t(tab === "featured" ? "skin.tab.featured" : "skin.tab.all")}`
+                : t(activeCategoryLabel)}
             </span>
             <span className={styles.gridCount}>
               {onlineCategory
-                ? "按正版用户名查询"
-                : `${cards.length} 款 · 第 ${safePage} / ${totalPages} 页`}
+                ? t("skin.gridCount.online")
+                : t("skin.gridCount.pages", { count: cards.length, page: safePage, totalPages })}
             </span>
           </div>
 
           {category === "mine" && !pending && cards.length === 0 ? (
             <p className={styles.empty}>
-              尚未导入本地皮肤，点击右上角「选择本地图片」导入 64x64 或 64x32 的 PNG 皮肤。
+              {t("skin.empty.mine")}
             </p>
           ) : null}
 
@@ -554,14 +554,14 @@ export function iGM_LauncherV2_SkinLibrary() {
                             <span className={styles.cardThumb}>
                               {failed ? (
                                 card.entry ? (
-                                  <Shirt size={20} strokeWidth={1.9} aria-label="仅有本地文件的皮肤" />
+                                  <Shirt size={20} strokeWidth={1.9} aria-label={t("skin.aria.localOnlySkin")} />
                                 ) : (
-                                  <User size={20} strokeWidth={1.9} aria-label="皮肤预览不可用" />
+                                  <User size={20} strokeWidth={1.9} aria-label={t("skin.aria.previewUnavailable")} />
                                 )
                               ) : (
                                 <Image
                                   src={card.imageUrl}
-                                  alt={`${card.name} 的皮肤预览`}
+                                  alt={t("skin.aria.cardPreview", { name: card.name })}
                                   width={IGM_LAUNCHERV2_SKIN_LIST_THUMB_SIZE}
                                   height={IGM_LAUNCHERV2_SKIN_LIST_THUMB_SIZE}
                                   unoptimized
@@ -580,7 +580,7 @@ export function iGM_LauncherV2_SkinLibrary() {
                             <button
                               type="button"
                               className={styles.cardRemove}
-                              aria-label={`从皮肤库移除 ${card.name}`}
+                              aria-label={t("skin.aria.removeSkin", { name: card.name })}
                               onClick={() => skin.remove(card.entry!.id)}
                             >
                               <Trash2 size={13} strokeWidth={2.2} />
@@ -600,7 +600,7 @@ export function iGM_LauncherV2_SkinLibrary() {
                     onClick={() => goPage(safePage - 1)}
                   >
                     <ChevronLeft size={14} strokeWidth={2.2} />
-                    <span>上一页</span>
+                    <span>{t("skin.pager.prev")}</span>
                   </button>
                   {pageNumbers.map((number) => (
                     <button
@@ -620,7 +620,7 @@ export function iGM_LauncherV2_SkinLibrary() {
                     disabled={pending || safePage >= totalPages}
                     onClick={() => goPage(safePage + 1)}
                   >
-                    <span>下一页</span>
+                    <span>{t("skin.pager.next")}</span>
                     <ChevronRight size={14} strokeWidth={2.2} />
                   </button>
                 </div>
@@ -634,7 +634,7 @@ export function iGM_LauncherV2_SkinLibrary() {
                 <input
                   className={styles.input}
                   value={query}
-                  placeholder="输入正版用户名，例如 Notch"
+                  placeholder={t("skin.probe.placeholder")}
                   onChange={(event) => setQuery(event.target.value)}
                   onKeyDown={(event) => {
                     if (event.key === "Enter") void runProbe();
@@ -651,12 +651,11 @@ export function iGM_LauncherV2_SkinLibrary() {
                   ) : (
                     <Search size={14} strokeWidth={2.2} />
                   )}
-                  <span>{probing ? "查询中" : "查询"}</span>
+                  <span>{probing ? t("skin.probe.loading") : t("skin.probe.action")}</span>
                 </button>
               </div>
               <p className={styles.probeHint}>
-                Minotar 按正版用户名取图（免密钥），输入后即可在右侧预览 3D 皮肤；
-                确认无误后可应用到当前离线账号。
+                {t("skin.probe.hint")}
               </p>
             </div>
           ) : null}
@@ -670,35 +669,35 @@ export function iGM_LauncherV2_SkinLibrary() {
               model={selected?.model ?? "classic"}
               autoRotate
               emptyHint={
-                onlineCategory ? "输入账号并查询后即可预览 3D 皮肤" : "从左侧选择皮肤以预览 3D 效果"
+                onlineCategory ? t("skin.viewerEmpty.online") : t("skin.viewerEmpty.library")
               }
             />
           </div>
 
           <div className={styles.detail}>
             <div className={styles.detailRow}>
-              <span className={styles.detailLabel}>名称</span>
+              <span className={styles.detailLabel}>{t("skin.detail.name")}</span>
               <span className={styles.detailValue}>{selected?.label ?? "-"}</span>
             </div>
             <div className={styles.detailRow}>
-              <span className={styles.detailLabel}>模型</span>
+              <span className={styles.detailLabel}>{t("skin.detail.model")}</span>
               <span className={styles.detailValue}>
-                {selected ? IGM_SKIN_MODEL_LABEL[selected.model] : "-"}
+                {selected ? t(IGM_SKIN_MODEL_LABEL[selected.model]) : "-"}
               </span>
             </div>
             <div className={styles.detailRow}>
-              <span className={styles.detailLabel}>来源</span>
+              <span className={styles.detailLabel}>{t("skin.detail.source")}</span>
               <span className={styles.detailValue}>{selected?.sourceLabel ?? "-"}</span>
             </div>
             {selected?.author ? (
               <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>作者</span>
+                <span className={styles.detailLabel}>{t("skin.detail.author")}</span>
                 <span className={styles.detailValue}>{selected.author}</span>
               </div>
             ) : null}
             {selected?.downloads !== undefined ? (
               <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>下载量</span>
+                <span className={styles.detailLabel}>{t("skin.detail.downloads")}</span>
                 <span className={styles.detailValue}>{selected.downloads}</span>
               </div>
             ) : null}
@@ -708,8 +707,7 @@ export function iGM_LauncherV2_SkinLibrary() {
             {premium ? (
               <>
                 <p className={styles.applyHint}>
-                  当前已绑定正版账号「{premium.name}」。正版皮肤由官方账号体系管理，
-                  不支持本地一键应用，请前往官网更换。
+                  {t("skin.apply.premiumHint", { name: premium.name })}
                 </p>
                 <button
                   type="button"
@@ -717,15 +715,15 @@ export function iGM_LauncherV2_SkinLibrary() {
                   onClick={() => msa.openOfficial()}
                 >
                   <ExternalLink size={14} strokeWidth={2.2} />
-                  <span>前往官网更换</span>
+                  <span>{t("skin.apply.openOfficial")}</span>
                 </button>
               </>
             ) : (
               <>
                 <p className={styles.applyHint}>
                   {currentOffline
-                    ? `应用后将皮肤写入本地皮肤目录，并记录到离线账号「${currentOffline.name}」；需配合 CustomSkinLoader 等皮肤模组在游戏中生效。`
-                    : "请先在账号中心添加离线账号，应用对象为当前离线账号。"}
+                    ? t("skin.apply.offlineHint", { name: currentOffline.name })
+                    : t("skin.apply.noOfflineHint")}
                 </p>
                 <button
                   type="button"
@@ -734,7 +732,7 @@ export function iGM_LauncherV2_SkinLibrary() {
                   onClick={handleApply}
                 >
                   <WandSparkles size={14} strokeWidth={2.2} />
-                  <span>应用到离线账号</span>
+                  <span>{t("skin.apply.action")}</span>
                 </button>
               </>
             )}

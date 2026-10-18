@@ -1,12 +1,12 @@
 {
   "channel": "stable",
-  "version": "26.5.0",
-  "versionLabel": "26.5.0 official version",
+  "version": "26.5.1",
+  "versionLabel": "26.5.1 official version",
   "platform": "Windows x64",
-  "fileName": "iGM-CraftCeon-Launcher-Setup-26.5.0.zip",
-  "fileSize": 40979808,
-  "fileSizeLabel": "39.08 MB",
-  "sha256": "a50e21e8368c0d4f0af8c5b2043620b14de878279f1eb19ee1ddd7269c2eb4ba",
+  "fileName": "iGM-CraftCeon-Launcher-Setup-26.5.1.zip",
+  "fileSize": 41004371,
+  "fileSizeLabel": "39.10 MB",
+  "sha256": "e20e111649e1ae4822ac684b29f09375b5d8e9d66545699e5cdef2d9bac7912f",
   "releasedAt": "2026-10-18",
   "archiveEntries": [
     "iGM CraftCeon Launcher-Setup.exe",
@@ -14,6 +14,6 @@
     "iGM CraftCeon Launcher-Setup.metadata.json"
   ],
   "installerEntry": "iGM CraftCeon Launcher-Setup.exe",
-  "downloadUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/download/v26.5.0/iGM-CraftCeon-Launcher-Setup-26.5.0.zip",
-  "releasePageUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/tag/v26.5.0"
+  "downloadUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/download/v26.5.1/iGM-CraftCeon-Launcher-Setup-26.5.1.zip",
+  "releasePageUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/tag/v26.5.1"
 }

@@ -6,8 +6,8 @@
  * 作用：联机大厅样式（连接状态区、房间操作区、双方案说明区块）
  * 内容：全部使用全局设计令牌（--igm-fill / --igm-surface / --igm-accent / --igm-text 等），
  *       令牌在浅色主题下自动翻转，避免出现刺眼白底与低对比文字；
- *       状态点为本页唯一使用字面量颜色的位置：绿 #22c55e（主站高速）/ 黄 #f59e0b（公共节点），
- *       连接中与未连接使用中性 / 静默令牌色，连接中额外叠加脉冲动画
+ *       字面量颜色仅用于状态标识：状态点绿 #22c55e（主站高速）/ 黄 #f59e0b（公共节点）与
+ *       成功图标 .iconOk 绿 #22c55e；连接中与未连接使用中性 / 静默令牌色，连接中额外叠加脉冲动画
  * 说明：不使用写死的纯白 / 纯黑底色，浅色背景下文字对比度仍可读
  */
 
@@ -316,4 +316,120 @@
   font-size: 12.5px;
   line-height: 1.7;
   color: var(--igm-text-dim);
+}
+
+/* ---- 状态区线路标记 ---- */
+
+.lineChip {
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+  font-size: 11px;
+  color: var(--igm-text-dim);
+  white-space: nowrap;
+}
+
+/* ---- 联机视界选择 ---- */
+
+.horizonCard {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.select {
+  width: 100%;
+  padding: 9px 13px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+  color: var(--igm-text);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--igm-dur) var(--igm-ease);
+}
+
+.select:focus {
+  border-color: var(--igm-border-strong);
+}
+
+.select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ---- 开服引导区块 ---- */
+
+.guideBox {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-accent-wash);
+}
+
+.guideTitle {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.guideText {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+}
+
+/* ---- 端口绑定行 ---- */
+
+.portRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.portInput {
+  flex: 1 1 120px;
+  min-width: 0;
+  padding: 9px 13px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+  color: var(--igm-text);
+  font: inherit;
+  font-size: 13px;
+  font-family: var(--igm-font-mono);
+  letter-spacing: 0.08em;
+  outline: none;
+  transition: border-color var(--igm-dur) var(--igm-ease);
+}
+
+.portInput:focus {
+  border-color: var(--igm-border-strong);
+}
+
+/* ---- 成功提示行（已加入 / 已绑定端口）---- */
+
+.successLine {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text);
+}
+
+/* 成功图标：与状态点同族的绿色，仅为图标着色 */
+.iconOk {
+  flex: 0 0 auto;
+  color: #22c55e;
 }
