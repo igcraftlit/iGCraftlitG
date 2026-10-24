@@ -120,21 +120,6 @@
     }
   },
   "appearance": {
-    "modes": {
-      "cloud": { "label": "Dynamic Cloud Background", "hint": "Slowly drifting fluid clouds; palette switchable" },
-      "solid": { "label": "Solid Color Background", "hint": "Minimal static backdrop, most efficient" }
-    },
-    "cloud": {
-      "purple": { "label": "Classic Deep Purple", "hint": "Deep blue blended with purple" },
-      "blue": { "label": "Dreamy Cool Blue", "hint": "Cool blue blended with cyan" },
-      "pink": { "label": "Aurora Pink", "hint": "Deep purple blended with pink" }
-    },
-    "solid": {
-      "dark": { "label": "Deep Dark", "hint": "Very dark gray, easy on the eyes" },
-      "light": { "label": "Bright Light", "hint": "Clean light gray-white; text flips to dark automatically" },
-      "coffee": { "label": "Classic Coffee", "hint": "Retro elegant deep coffee tone" },
-      "green": { "label": "Aurora Green", "hint": "Low-saturation deep ink green" }
-    },
     "themes": {
       "indigo": "Indigo",
       "aurora": "Aurora Green",
@@ -153,6 +138,9 @@
     }
   },
   "shell": {
+    "dev": {
+      "inProgress": "Under development"
+    },
     "tiles": {
       "community": { "title": "Community", "desc": "Browse the skin library and community appearances, then apply your own skin." },
       "resources": { "title": "Resource Library", "desc": "Multi-source version manifests and loader lists; choose any download channel." },
@@ -345,13 +333,7 @@
     },
     "appearance": {
       "title": "Appearance",
-      "desc": "Background mode, color scheme, frosted-glass blur and theme color; changes take effect across the whole launcher immediately.",
-      "modes": "Background Mode",
-      "cloud": "Dynamic Cloud Colors",
-      "solid": "Solid Color Background",
-      "blur": "Frosted-Glass Blur",
-      "blurHint": "Adjust the backdrop-filter blur radius for the nav bar, cards and other elements, previewed in real time.",
-      "theme": "Theme Color",
+      "desc": "The global background is a fixed dark solid color, keeping frosted-glass cards clearly outlined; here you can customize the nav bar base color.",
       "nav": "Nav Bar Color",
       "navHint": "Choose a base color for the nav bar while always keeping the frosted-glass look; pick a preset tint or use the system color picker.",
       "navCustomPlaceholder": "#1a2333"
@@ -867,8 +849,7 @@
   },
   "peer": {
     "connect": "Connect to relay",
-    "peers": "{count} in room",
-    "peersUnknown": "Player count unknown",
+    "peers": "{count} in the room",
     "status": {
       "idle": "Not connected to a relay",
       "connectingNode": "Connecting to relay…",
@@ -884,6 +865,13 @@
       "community": "Fast community relay",
       "public": "Public relay"
     },
+    "mode": {
+      "hostTitle": "Become the host",
+      "hostDesc": "Create a room and invite friends into your world",
+      "guestTitle": "Join a room",
+      "guestDesc": "Enter a friend's room code to join the LAN game",
+      "back": "Back"
+    },
     "notice": {
       "degraded": "Community relay unavailable; downgraded to a public relay ({relay}) with hole punching via {stun}. Latency may be higher.",
       "roomCreated": "Room created. Room code {code} — share it with your friends.",
@@ -892,7 +880,7 @@
       "joinedRoomPublic": "Joined room {code} via a public relay ({relay}); latency may be higher.",
       "portBound": "Port {port} bound with UDP LAN-broadcast forwarding; waiting for friends to join.",
       "portInvalid": "Invalid port. Enter an integer between 1 and 65535.",
-      "codeInvalid": "The room code must be {length} digits.",
+      "codeInvalid": "The room code must be 6 digits plus 1 letter.",
       "previewNoLobby": "Multiplayer is unavailable in browser preview; use the desktop launcher.",
       "previewNoConnect": "Cannot connect to a relay in browser preview.",
       "previewNoCreate": "Cannot create a room in browser preview.",
@@ -909,7 +897,7 @@
     },
     "host": {
       "title": "Host mode",
-      "desc": "Create a multiplayer room after selecting a Horizon, share the 6-digit room code, then open the game to LAN.",
+      "desc": "Create a multiplayer room after selecting a Horizon, share the 6-digits-plus-1-letter room code, then open the game to LAN.",
       "badge": "Host",
       "create": "Create multiplayer room",
       "inRoomDesc": "Room is ready. Share the room code below, then follow the guide to host.",
@@ -923,25 +911,26 @@
       "portHint": "Enter the port shown in the chat bar when you \"Open to LAN\" in game; friends can join once bound.",
       "bindPort": "Bind port & wait for joins",
       "bound": "Port {port} bound. Friends can now join.",
+      "waiting": "Waiting for friends to join…",
       "leave": "Leave room"
     },
     "guest": {
       "title": "Friend mode",
-      "desc": "Enter the 6-digit room code from the host; after joining, launch the game and the world appears under Multiplayer.",
-      "placeholder": "Enter 6-digit room code",
+      "desc": "Enter the room code from the host (6 digits + 1 letter); after joining, launch the game and the world appears under Multiplayer.",
+      "placeholder": "Room code, e.g. 123456A",
       "action": "Join room",
-      "hint": "The room code is 6 digits.",
+      "hint": "The room code is 6 digits plus 1 letter, case-insensitive.",
       "joined": "Joined the host's LAN successfully",
       "guide": "In-game, click Multiplayer and double-click the LAN world that appears.",
       "codeTag": "Room {code}",
       "launch": "Launch game",
       "leave": "Leave room"
     },
-    "info": {
-      "title": "Dual-transport multiplayer",
-      "community": "Fast community relay: while the community site is online, the launcher registers the room over its WebSocket and exchanges signaling for the lowest latency.",
-      "public": "Public relay fallback: when the community site is offline, it switches to EasyTier public relays and punches through via public STUN/TURN.",
-      "udp": "UDP broadcast forwarding: the tunnel forwards the game's UDP LAN-broadcast packets so friends can discover the room directly in the multiplayer list."
+    "members": {
+      "title": "Room members",
+      "host": "Host",
+      "avatarAlt": "{name}'s avatar",
+      "empty": "No member info yet, waiting for live sync…"
     }
   }
 }

@@ -6,14 +6,11 @@
  * 作用：设置页：分「通用 / 外观 / 关于」三个独立页签
  * 内容：已接入多语言，通用页签新增界面语言切换；
  *       通用——界面语言切换、专属总目录选择、标准结构展示、本地游戏目录自动检测与下载通道自选；
- *       外观——背景模式单选（动态云背景 / 纯色背景）、动态云配色三选（经典深紫 /
- *       梦幻冷蓝 / 极光幻粉）、纯色方案四选（深邃暗黑 / 明亮浅色 / 古典深咖 / 极光幽绿）、
- *       毛玻璃模糊度滑动条（0-30px，实时生效）、5 种预设主题色切换、
- *       导航栏颜色（跟随主题 / 深灰 / 幽蓝 / 暗紫预设透明色 + 系统取色器自定义色）；
+ *       外观——仅保留导航栏颜色（跟随主题 / 深灰 / 幽蓝 / 暗紫预设透明色 + 系统取色器自定义色）；
+ *       动态云配色与背景模式选项已随全局纯色背景一并移除；
  *       关于——展示当前版本与「检查更新」按钮，发现新版本时可后台下载并「立即重启并更新」
  * 说明：全部特权操作（目录选择、递归删除、结构创建）均由 Bun 主进程执行，
- *       界面只投递指令并展示外壳回推的结果；配色只改背景色调，不改界面主题色；
- *       界面文案统一经 next-intl 的 useTranslations 以 "settings" 命名空间解析
+ *       界面只投递指令并展示外壳回推的结果；界面文案统一经 next-intl 的 useTranslations 以 "settings" 命名空间解析
  */
 
 // 导入依赖 //
@@ -48,14 +45,8 @@ import {
   iGM_LauncherV2_UseUpdate as IGM_LauncherV2_UseUpdate,
 } from "@/components/iGM_LauncherV2_HostBridge/iGM_LauncherV2_HostBridge";
 import {
-  IGM_LAUNCHERV2_APPEARANCE_BLUR_MAX,
-  IGM_LAUNCHERV2_APPEARANCE_BLUR_MIN,
   IGM_LAUNCHERV2_APP_NAME,
-  IGM_LAUNCHERV2_BACKGROUND_MODES,
-  IGM_LAUNCHERV2_CLOUD_PALETTES,
   IGM_LAUNCHERV2_NAV_COLORS,
-  IGM_LAUNCHERV2_SOLID_PALETTES,
-  IGM_LAUNCHERV2_THEMES,
   IGM_LAUNCHERV2_VERSION,
 } from "@/lib/iGM_LauncherV2_Constants";
 import type {
@@ -396,17 +387,11 @@ function IGM_LauncherV2_ChannelPanel() {
   );
 }
 
-/** 外观面板：背景模式、配色方案、毛玻璃模糊度与主题色，改动即时生效 */
+/** 外观面板：仅保留导航栏颜色，改动即时生效 */
 function IGM_LauncherV2_AppearancePanel() {
   const t = useTranslations();
   const appearance = IGM_LauncherV2_UseAppearance();
   const view = appearance.appearance;
-  const blur = Math.min(
-    IGM_LAUNCHERV2_APPEARANCE_BLUR_MAX,
-    Math.max(IGM_LAUNCHERV2_APPEARANCE_BLUR_MIN, view.blur),
-  );
-  const cloudOn = view.background === "cloud";
-  const solidOn = view.background === "solid";
   /** 自定义导航栏色：当前值匹配 16 进制色值即视为自定义分支 */
   const customNavActive = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(view.navColor);
   /** 系统取色器回填值：自定义时用当前色，否则回落到占位默认色 */
@@ -420,127 +405,6 @@ function IGM_LauncherV2_AppearancePanel() {
         <div>
           <h2 className={styles.panelTitle}>{t("settings.appearance.title")}</h2>
           <p className={styles.panelDesc}>{t("settings.appearance.desc")}</p>
-        </div>
-      </div>
-
-      {/* 背景模式：动态云 / 纯色 二选一 */}
-      <div className={styles.section}>
-        <span className={styles.sectionTitle}>{t("settings.appearance.modes")}</span>
-        <div className={styles.optionRow}>
-          {IGM_LAUNCHERV2_BACKGROUND_MODES.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={`${styles.optionCard} ${
-                view.background === item.id ? styles.optionCardOn : ""
-              }`}
-              onClick={() => appearance.set({ background: item.id })}
-            >
-              <span className={styles.rowTitle}>{t(item.label)}</span>
-              <span className={styles.rowSub}>{t(item.hint)}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 动态云配色：只改背景色调，不改 UI 主题色 */}
-      <div className={styles.section}>
-        <span className={styles.sectionTitle}>{t("settings.appearance.cloud")}</span>
-        <div className={styles.swatchRow}>
-          {IGM_LAUNCHERV2_CLOUD_PALETTES.map((item) => {
-            const active = cloudOn && view.cloud === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                className={`${styles.swatch} ${active ? styles.swatchOn : ""}`}
-                aria-pressed={active}
-                // 点击配色即切到动态云模式，避免「选了配色但背景没变」的困惑
-                onClick={() => appearance.set({ background: "cloud", cloud: item.id })}
-              >
-                <span
-                  className={styles.swatchThumb}
-                  style={{ background: item.preview }}
-                  aria-hidden
-                />
-                <span className={styles.swatchText}>
-                  <span className={styles.rowTitle}>{t(item.label)}</span>
-                  <span className={styles.rowSub}>{t(item.hint)}</span>
-                </span>
-                {active ? <Check size={14} strokeWidth={2.6} aria-hidden /> : null}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 纯色背景方案：浅色方案会自动把界面文字切换为深色 */}
-      <div className={styles.section}>
-        <span className={styles.sectionTitle}>{t("settings.appearance.solid")}</span>
-        <div className={styles.swatchRow}>
-          {IGM_LAUNCHERV2_SOLID_PALETTES.map((item) => {
-            const active = solidOn && view.solid === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                className={`${styles.swatch} ${active ? styles.swatchOn : ""}`}
-                aria-pressed={active}
-                onClick={() => appearance.set({ background: "solid", solid: item.id })}
-              >
-                <span
-                  className={`${styles.swatchThumb} ${item.light ? styles.swatchThumbLight : ""}`}
-                  style={{ background: item.preview }}
-                  aria-hidden
-                />
-                <span className={styles.swatchText}>
-                  <span className={styles.rowTitle}>{t(item.label)}</span>
-                  <span className={styles.rowSub}>{t(item.hint)}</span>
-                </span>
-                {active ? <Check size={14} strokeWidth={2.6} aria-hidden /> : null}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className={styles.section}>
-        <span className={styles.sectionTitle}>{t("settings.appearance.blur")}</span>
-        <div className={styles.sliderRow}>
-          <input
-            type="range"
-            className={styles.slider}
-            min={IGM_LAUNCHERV2_APPEARANCE_BLUR_MIN}
-            max={IGM_LAUNCHERV2_APPEARANCE_BLUR_MAX}
-            step={1}
-            value={blur}
-            aria-label={t("settings.appearance.blur")}
-            onChange={(event) => appearance.set({ blur: Number(event.target.value) })}
-          />
-          <span className={styles.sliderValue}>{blur}px</span>
-        </div>
-        <span className={styles.rowSub}>{t("settings.appearance.blurHint")}</span>
-      </div>
-
-      <div className={styles.section}>
-        <span className={styles.sectionTitle}>{t("settings.appearance.theme")}</span>
-        <div className={styles.themeRow}>
-          {IGM_LAUNCHERV2_THEMES.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={`${styles.theme} ${view.theme === item.id ? styles.themeOn : ""}`}
-              onClick={() => appearance.set({ theme: item.id })}
-            >
-              <span
-                className={styles.themeSwatch}
-                style={{ background: `linear-gradient(135deg, ${item.accent}, ${item.accentSoft})` }}
-                aria-hidden
-              />
-              <span className={styles.themeLabel}>{t(item.label)}</span>
-              {view.theme === item.id ? <Check size={13} strokeWidth={2.6} /> : null}
-            </button>
-          ))}
         </div>
       </div>
 

@@ -12,7 +12,8 @@
  *       中间为极简卡片式新闻流，右侧纵向面板自上而下依次为账号列表
  *       （正版在上、离线在下，最多 5 个）与「账号管理」入口、错误控制台
  *       （固定高度且内部可滚动）、底部尺寸收小的「启动游戏」按钮；
- *       方块广场聚合 P2P 联机房间 / 第三方服务器列表能力，视界管理为独立「视界管理」页签；
+ *       方块广场页签挂载 Plaza（P2P 联机大厅）；地图站页签当前仅渲染「暂在开发中」占位；
+ *       视界管理为独立「视界管理」页签；
  *       账号中心包含 Java 环境管理、微软正版验证、离线账号管理三块能力，
  *       点击已绑定的正版账号进入 3D 正版档案详情页；
  *       设置页列出后续模块将接入的配置项占位；
@@ -34,6 +35,7 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
+  Construction,
   Copy,
   ExternalLink,
   FolderOpen,
@@ -77,9 +79,6 @@ import {
 import {
   iGM_LauncherV2_ResourceCenter as IGM_LauncherV2_ResourceCenter,
 } from "@/components/iGM_LauncherV2_ResourceCenter/iGM_LauncherV2_ResourceCenter";
-import {
-  iGM_LauncherV2_MapStation as IGM_LauncherV2_MapStation,
-} from "@/components/iGM_LauncherV2_MapStation/iGM_LauncherV2_MapStation";
 import {
   iGM_LauncherV2_DownloadCenter as IGM_LauncherV2_DownloadCenter,
 } from "@/components/iGM_LauncherV2_DownloadCenter/iGM_LauncherV2_DownloadCenter";
@@ -1396,7 +1395,11 @@ export function iGM_LauncherV2_MainShell() {
 
         {tab === "map" ? (
           <section className={`${styles.section} ${styles.sectionFull}`}>
-            <IGM_LauncherV2_MapStation />
+            <h1 className={styles.sectionTitle}>{t("nav.map")}</h1>
+            <IGM_LauncherV2_Card className={styles.devCard}>
+              <Construction className={styles.devIcon} aria-hidden />
+              <p className={styles.devText}>{t("shell.dev.inProgress")}</p>
+            </IGM_LauncherV2_Card>
           </section>
         ) : null}
 

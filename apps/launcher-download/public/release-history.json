@@ -1,19 +1,60 @@
 {
   "releases": [
     {
+      "id": "3f9c4d18-7a52-4b0e-9c6d-5e21b8a7d40c",
+      "version": "26.5.7",
+      "releasedAt": "2026-10-24",
+      "updateType": "minor",
+      "isLatest": true,
+      "channel": "stable",
+      "platform": "Windows x64",
+      "fileName": "iGM-CraftCeon-Launcher-Setup-26.5.7.zip",
+      "fileSize": 40994135,
+      "fileSizeLabel": "39.10 MB",
+      "sha256": "c80de9053fec0a61945ef2ffa2c909f94728b2fa73cd5de812ed10cb3aa3597a",
+      "downloadUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/download/v26.5.7/iGM-CraftCeon-Launcher-Setup-26.5.7.zip",
+      "releasePageUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/tag/v26.5.7",
+      "notes": {
+        "zh-CN": {
+          "added": [
+            "联机大厅实时人数与成员可视化：房间人数改为通过联机节点回推与本地轮询同步的真实连接数，不再使用静态人数；房主界面新增「房间成员」名单，实时展示已加入玩家的头像与昵称，并标注房主身份",
+            "房间码增强：房间码由纯 6 位数字改为「6 位数字 + 1 位随机大写字母」（如 123456A），输入校验同步支持数字与字母，自动转大写、不区分大小写"
+          ],
+          "improved": [
+            "全局移除动态云：彻底删除 WebGL / Canvas 动态流体云的渲染逻辑，首页、登录授权界面、资源中心、设置等所有页面统一改为深色纯色 / 极简静态线性渐变背景，磨砂玻璃卡片在纯色背景下依然保持清晰轮廓与质感",
+            "外观设置精简：删除「动态云配色」与「背景模式」相关选项，外观页仅保留【导航栏自定义颜色】",
+            "联机大厅文案清理：删除模式选择页底部的「双方案联机说明」区块，界面保持干净",
+            "版本号由 26.5.6 更新至 26.5.7（工程包、外壳、界面、Electrobun 配置与 Rust 核心同步），新增文案全部同时接入简体中文与英文语言包"
+          ]
+        },
+        "en": {
+          "added": [
+            "Live player count and member visualization in the Peer Lobby: the room population now reflects the real connection count synced from relay pushes and local polling instead of a static number, and the host view gained a Room Members list showing each joined player's avatar and nickname with the host marked",
+            "Stronger room codes: the code changed from six digits to six digits plus one random uppercase letter (for example 123456A), and input validation now accepts digits and letters, auto-uppercases and ignores case"
+          ],
+          "improved": [
+            "Removed the dynamic cloud entirely: all WebGL / Canvas fluid-cloud rendering is gone, and the home, sign-in authorization, resource center and settings pages now share a dark solid color or a minimal static linear-gradient background while frosted-glass cards keep crisp outlines and texture",
+            "Streamlined appearance settings: the Dynamic Cloud Colors and Background Mode options were removed, leaving only the nav bar custom color",
+            "Cleaned up Peer Lobby copy: the dual-transport explanation block at the bottom of the mode selection screen was removed to keep the interface clean",
+            "Version bumped from 26.5.6 to 26.5.7 (workspace, shell, UI, Electrobun config and Rust core kept in sync), and every new string ships in both Simplified Chinese and English"
+          ]
+        }
+      }
+    },
+    {
       "id": "b6c1f7a3-9e28-4d55-8f31-2a70c6e9d4bf",
       "version": "26.5.5",
       "releasedAt": "2026-10-18",
       "updateType": "minor",
-      "isLatest": true,
+      "isLatest": false,
       "channel": "stable",
       "platform": "Windows x64",
       "fileName": "iGM-CraftCeon-Launcher-Setup-26.5.5.zip",
       "fileSize": 41008130,
       "fileSizeLabel": "39.11 MB",
       "sha256": "92efff20df1ff9e0b3c9d60eb9e87898d9147876039047ef9bb38eb3cdad4392",
-      "downloadUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/download/v26.5.5/iGM-CraftCeon-Launcher-Setup-26.5.5.zip",
-      "releasePageUrl": "https://github.com/igcraftlit/iGCraftlitG/releases/tag/v26.5.5",
+      "downloadUrl": "",
+      "releasePageUrl": "",
       "notes": {
         "zh-CN": {
           "added": [

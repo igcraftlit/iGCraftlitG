@@ -1,6 +1,6 @@
 {
   "name": "igm-launcher-v2-workspace",
-  "version": "26.5.5",
+  "version": "26.5.7",
   "private": true,
   "description": "iGM CraftCeon Launcher v2 monorepo (Electrobun + Bun + Rust + Next.js static export)",
   "workspaces": [

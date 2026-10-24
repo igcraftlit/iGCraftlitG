@@ -3,11 +3,12 @@
  * 所属层：前端 / 页面组件样式层
  * 路由：G_Main·联机大厅（P2P）
  * 模块：iGM_LauncherV2_PeerLobby
- * 作用：联机大厅样式（连接状态区、房间操作区、双方案说明区块）
+ * 作用：联机大厅样式（状态条、模式选择大卡片、房主 / 好友操作区、房间成员名单）
  * 内容：全部使用全局设计令牌（--igm-fill / --igm-surface / --igm-accent / --igm-text 等），
  *       令牌在浅色主题下自动翻转，避免出现刺眼白底与低对比文字；
- *       字面量颜色仅用于状态标识：状态点绿 #22c55e（主站高速）/ 黄 #f59e0b（公共节点）与
- *       成功图标 .iconOk 绿 #22c55e；连接中与未连接使用中性 / 静默令牌色，连接中额外叠加脉冲动画
+ *       模式选择卡片采用 --igm-surface 令牌 + 背景模糊，保持磨砂玻璃质感与深色半透明底；
+ *       成员头像底衬、名单条目与房主标记同样走令牌，仅状态标识使用字面量颜色：
+ *       状态点绿 #22c55e（主站高速）/ 黄 #f59e0b（公共节点）与成功图标 .iconOk 绿 #22c55e
  * 说明：不使用写死的纯白 / 纯黑底色，浅色背景下文字对比度仍可读
  */
 
@@ -65,21 +66,115 @@
   background: var(--igm-accent-wash);
 }
 
-/* ---- 连接状态区 ---- */
+/* ---- 连接状态条（所有界面共用） ---- */
 
-.statusCard {
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.statusLine {
+.statusBar {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
   min-width: 0;
+  padding: 10px 14px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+}
+
+/* ---- 模式选择：两张磨砂玻璃大卡片 ---- */
+
+.modeScreen {
+  min-height: 360px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 0;
+}
+
+.modeGrid {
+  width: 100%;
+  max-width: 760px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 18px;
+}
+
+/* 卡片：深色半透明磨砂底 + 轻微描边，悬停时上浮并以主题色描边 */
+.modeCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 200px;
+  padding: 28px 24px;
+  border-radius: var(--igm-radius-lg);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-surface);
+  box-shadow: var(--igm-shadow-md);
+  backdrop-filter: blur(var(--igm-blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--igm-blur)) saturate(140%);
+  color: var(--igm-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform var(--igm-dur) var(--igm-ease),
+    border-color var(--igm-dur) var(--igm-ease),
+    background var(--igm-dur) var(--igm-ease),
+    box-shadow var(--igm-dur) var(--igm-ease);
+}
+
+.modeCard:hover {
+  transform: translateY(-3px);
+  border-color: var(--igm-accent);
+  background: var(--igm-accent-wash);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+}
+
+.modeIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  border: 1px solid var(--igm-accent);
+  background: var(--igm-accent-wash);
+  color: var(--igm-text);
+}
+
+.modeTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.modeDesc {
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text-dim);
+}
+
+.modeArrow {
+  margin-top: auto;
+  align-self: flex-end;
+  display: inline-flex;
+  color: var(--igm-accent);
+  opacity: 0.85;
+}
+
+/* ---- 模式界面头部（左上角返回按钮 + 模式标题） ---- */
+
+.screenHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.screenTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--igm-text);
 }
 
 /* 状态点基类：字面量颜色仅用于圆点本身 */
@@ -159,12 +254,6 @@
 }
 
 /* ---- 房间操作区 ---- */
-
-.panels {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 14px;
-}
 
 .panel {
   padding: 16px;
@@ -289,33 +378,117 @@
   color: var(--igm-text-mute);
 }
 
-/* ---- 双方案说明 ---- */
+/* ---- 房间成员名单（实时人数 + 头像 + 昵称 + 房主标记） ---- */
 
-.infoCard {
-  padding: 16px;
+.rosterBox {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-fill);
+}
+
+.rosterHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.rosterTitle {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--igm-text);
+}
+
+.rosterCount {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-border-strong);
+  background: var(--igm-surface);
+  font-size: 11.5px;
+  color: var(--igm-text-dim);
+  white-space: nowrap;
+}
+
+.rosterList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.infoHead {
+.rosterItem {
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: var(--igm-text-dim);
+  gap: 9px;
+  padding: 6px 8px;
+  border-radius: var(--igm-radius-sm);
+  border: 1px solid var(--igm-border);
+  background: var(--igm-surface);
 }
 
-.infoTitle {
-  font-size: 13.5px;
+/* 头像：固定尺寸圆形，图片缺失或加载失败时由首字母底衬补齐 */
+.avatar {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid var(--igm-border-strong);
+  background: var(--igm-fill-strong);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.avatarFallback {
+  font-size: 12px;
   font-weight: 700;
   color: var(--igm-text);
 }
 
-.infoText {
-  margin: 0;
+.rosterName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 12.5px;
+  color: var(--igm-text);
+}
+
+/* 房主标记：主题色描边 + 主题色淡底衬 */
+.rosterTag {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--igm-accent);
+  background: var(--igm-accent-wash);
+  font-size: 10.5px;
+  color: var(--igm-text);
+  white-space: nowrap;
+}
+
+.rosterEmpty {
+  margin: 0;
+  font-size: 12px;
   line-height: 1.7;
-  color: var(--igm-text-dim);
+  color: var(--igm-text-mute);
 }
 
 /* ---- 状态区线路标记 ---- */
@@ -450,4 +623,26 @@
 .iconOk {
   flex: 0 0 auto;
   color: #22c55e;
+}
+
+/* ---- 等待好友加入（房主绑定端口后） ---- */
+
+.waitingLine {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--igm-text);
+}
+
+/* 等待圆点：主题色 + 脉冲动画，提示处于监听状态 */
+.dotWaiting {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--igm-accent);
+  animation: igmDotPulse 1.4s var(--igm-ease) infinite;
 }

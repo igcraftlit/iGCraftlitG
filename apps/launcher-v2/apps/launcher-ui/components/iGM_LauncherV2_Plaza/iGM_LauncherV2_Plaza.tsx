@@ -3,12 +3,12 @@
  * 所属层：前端 / 页面组件层
  * 路由：G_Main·方块广场
  * 模块：iGM_LauncherV2_Plaza
- * 作用：方块广场页：把「P2P 联机房间」与「客户端同步大厅 / 开服中心」两块能力聚合到一个页签内
+ * 作用：方块广场页：把「P2P 联机房间」与「客户端同步大厅 / 开服中心」聚合成页签
  * 内容：顶部为标题与说明（plaza.title / plaza.desc），下方为一排带 lucide 图标的页签；
- *       页签切换使用本地 state，分别渲染既有的 PeerLobby 与 ServerLobby 组件；
- *       ServerLobby 内部区块顺序为：客户端同步大厅 → 开服中心（本地服务器列表）→ 客户端清单工作室；
+ *       页签切换使用本地 state，P2P 联机房间页签渲染重构后的 PeerLobby 状态机组件；
+ *       服务器大厅页签当前仅渲染「暂在开发中」占位（原 ServerLobby 组件文件保留但暂不挂载）；
  *       内容区采用卡片化布局与浅描边，与静态渐变背景形成柔和对比，保持工具软件的专注感；
- *       界面文案全部走多语言（next-intl，plaza 与 server 命名空间）
+ *       界面文案全部走多语言（next-intl，plaza / server / shell 命名空间）
  * 说明：v26.5.5 已将「视界管理」迁移为顶层导航页签（iGM_LauncherV2_MainShell 的 nav.horizon），
  *       故此处移除原「视界管理」页签（该能力未丢失，仅在导航层级上移）；
  *       组件为纯展示层，联机 / 服务器 / 清单的网络请求与本地落盘均由 Bun 主进程执行，
@@ -20,13 +20,10 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Server, Users } from "lucide-react";
+import { Construction, Server, Users } from "lucide-react";
 import {
   iGM_LauncherV2_PeerLobby as IGM_LauncherV2_PeerLobby,
 } from "@/components/iGM_LauncherV2_PeerLobby/iGM_LauncherV2_PeerLobby";
-import {
-  iGM_LauncherV2_ServerLobby as IGM_LauncherV2_ServerLobby,
-} from "@/components/iGM_LauncherV2_ServerLobby/iGM_LauncherV2_ServerLobby";
 import styles from "./iGM_LauncherV2_Plaza.module.css";
 
 // 类型定义 //
@@ -88,10 +85,15 @@ export function iGM_LauncherV2_Plaza({ className = "" }: { className?: string })
         })}
       </div>
 
-      {/* 内容区：按页签渲染既有组件；未激活的页签不挂载，避免重复订阅 */}
+      {/* 内容区：按页签渲染；未激活的页签不挂载，避免重复订阅 */}
       <div className={styles.panel}>
         {tab === "p2p" ? <IGM_LauncherV2_PeerLobby /> : null}
-        {tab === "servers" ? <IGM_LauncherV2_ServerLobby /> : null}
+        {tab === "servers" ? (
+          <div className={styles.devCard}>
+            <Construction className={styles.devIcon} aria-hidden />
+            <p className={styles.devText}>{t("shell.dev.inProgress")}</p>
+          </div>
+        ) : null}
       </div>
     </section>
   );

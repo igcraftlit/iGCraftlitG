@@ -508,18 +508,32 @@ export interface iGM_LauncherV2_ServerStatus {
 /** 联机大厅连接模式：未连接 / 连接中 / 主站高速节点 / 公共联机节点 */
 export type iGM_LauncherV2_PeerMode = "idle" | "connecting" | "community" | "public";
 
+/** 房间成员：来自节点回推的成员名单，含头像与昵称 */
+export interface iGM_LauncherV2_PeerPlayer {
+  /** 成员标识（社区 UID，未登录时回落到账号标识） */
+  id: string;
+  /** 展示昵称 */
+  name: string;
+  /** 头像地址；为空时界面回落到默认头像 */
+  avatar: string;
+  /** 是否为房主 */
+  host: boolean;
+}
+
 /** 联机大厅会话状态（由本地进程维护并回推界面） */
 export interface iGM_LauncherV2_PeerState {
   /** 当前连接模式 */
   mode: iGM_LauncherV2_PeerMode;
   /** 状态文案键（多语言键，界面端用 next-intl 解析，外壳不产生文案） */
   statusKey: string;
-  /** 当前所在房间的 6 位房间码；不在房间时为空串 */
+  /** 当前所在房间的房间码（6 位数字 + 1 位大写字母）；不在房间时为空串 */
   roomCode: string;
   /** 当前用户是否为房主 */
   host: boolean;
-  /** 房间内当前人数；未知为 0 */
+  /** 房间内当前人数（真实连接数，由节点回推与本地轮询同步）；不在房间为 0 */
   peers: number;
+  /** 房间成员名单（含本机账号），按节点回推顺序排列 */
+  players: iGM_LauncherV2_PeerPlayer[];
   /** 附加提示文案键；无提示为空串 */
   messageKey: string;
   /** 附加提示文案中的占位符参数 */

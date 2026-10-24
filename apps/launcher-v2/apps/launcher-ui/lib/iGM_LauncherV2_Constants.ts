@@ -450,18 +450,32 @@ export interface iGM_LauncherV2_NewsItem {
 /** 联机大厅连接模式：未连接 / 连接中 / 主站高速节点 / 公共联机节点 */
 export type iGM_LauncherV2_PeerMode = "idle" | "connecting" | "community" | "public";
 
+/** 房间成员：来自节点回推的成员名单，含头像与昵称 */
+export interface iGM_LauncherV2_PeerPlayer {
+  /** 成员标识（社区 UID，未登录时回落到账号标识） */
+  id: string;
+  /** 展示昵称 */
+  name: string;
+  /** 头像地址；为空时界面回落到默认头像 */
+  avatar: string;
+  /** 是否为房主 */
+  host: boolean;
+}
+
 /** 联机大厅会话状态（由本地进程维护并回推界面） */
 export interface iGM_LauncherV2_PeerState {
   /** 当前连接模式 */
   mode: iGM_LauncherV2_PeerMode;
   /** 状态文案键（多语言键，界面端用 next-intl 解析） */
   statusKey: string;
-  /** 当前所在房间的 6 位房间码；不在房间时为空串 */
+  /** 当前所在房间的房间码（6 位数字 + 1 位大写字母）；不在房间时为空串 */
   roomCode: string;
   /** 当前用户是否为房主 */
   host: boolean;
-  /** 房间内当前人数；未知为 0 */
+  /** 房间内当前人数（真实连接数）；不在房间为 0 */
   peers: number;
+  /** 房间成员名单（含本机账号），按节点回推顺序排列 */
+  players: iGM_LauncherV2_PeerPlayer[];
   /** 附加提示文案键；无提示为空串 */
   messageKey: string;
   /** 附加提示文案中的占位符参数 */
@@ -1134,7 +1148,7 @@ declare global {
 export const IGM_LAUNCHERV2_APP_NAME = "iGM CraftCeon Launcher";
 
 /** 启动器版本号 */
-export const IGM_LAUNCHERV2_VERSION = "26.5.5";
+export const IGM_LAUNCHERV2_VERSION = "26.5.7";
 
 /** 界面开发服务器地址（外壳开发模式加载） */
 export const IGM_LAUNCHERV2_DEV_URL = "http://localhost:3211";
@@ -1227,15 +1241,6 @@ export const IGM_LAUNCHERV2_MARKET_PAGE_SIZE = 20;
 
 /* ---- 外观与主题自定义 ---- */
 
-/** 背景模式：动态云背景 / 纯色背景 */
-export type iGM_LauncherV2_BackgroundMode = "cloud" | "solid";
-
-/** 动态云配色方案：经典深紫 / 梦幻冷蓝 / 极光幻粉 */
-export type iGM_LauncherV2_CloudPalette = "purple" | "blue" | "pink";
-
-/** 静态渐变背景方案：深邃暗黑 / 明亮浅色 / 古典深咖 / 极光幽绿 */
-export type iGM_LauncherV2_SolidPalette = "dark" | "light" | "coffee" | "green";
-
 /** 主题色预设标识 */
 export type iGM_LauncherV2_ThemeId = "indigo" | "aurora" | "sakura" | "geek" | "amber";
 
@@ -1245,13 +1250,8 @@ export type iGM_LauncherV2_ThemeId = "indigo" | "aurora" | "sakura" | "geek" | "
  */
 export type iGM_LauncherV2_NavColor = "default" | "slate" | "navy" | "violet" | (string & {});
 
-/** 外观下发视图 */
+/** 外观下发视图（全局背景固定为深色纯色，仅保留模糊度、主题色与导航栏底色） */
 export interface iGM_LauncherV2_AppearanceState {
-  background: iGM_LauncherV2_BackgroundMode;
-  /** 动态云配色（仅 cloud 模式生效），只改背景色调，不改 UI 主题色 */
-  cloud: iGM_LauncherV2_CloudPalette;
-  /** 静态渐变背景方案（仅 solid 模式生效） */
-  solid: iGM_LauncherV2_SolidPalette;
   /** 毛玻璃模糊度（px），取值区间 0-30 */
   blur: number;
   theme: string;
@@ -1261,91 +1261,10 @@ export interface iGM_LauncherV2_AppearanceState {
 
 /** 外观修改入参（浅合并，未提供字段保持不变） */
 export interface iGM_LauncherV2_AppearancePatch {
-  background?: iGM_LauncherV2_BackgroundMode;
-  cloud?: iGM_LauncherV2_CloudPalette;
-  solid?: iGM_LauncherV2_SolidPalette;
   blur?: number;
   theme?: string;
   navColor?: iGM_LauncherV2_NavColor;
 }
-
-/** 背景模式选项（仅两项：动态云 / 纯色；label / hint 为 i18n 键） */
-export const IGM_LAUNCHERV2_BACKGROUND_MODES: {
-  id: iGM_LauncherV2_BackgroundMode;
-  label: string;
-  hint: string;
-}[] = [
-  { id: "cloud", label: "appearance.modes.cloud.label", hint: "appearance.modes.cloud.hint" },
-  { id: "solid", label: "appearance.modes.solid.label", hint: "appearance.modes.solid.hint" },
-];
-
-/** 动态云配色方案选项（预览渐变与流体云配色保持一致；label / hint 为 i18n 键） */
-export const IGM_LAUNCHERV2_CLOUD_PALETTES: {
-  id: iGM_LauncherV2_CloudPalette;
-  label: string;
-  hint: string;
-  preview: string;
-}[] = [
-  {
-    id: "purple",
-    label: "appearance.cloud.purple.label",
-    hint: "appearance.cloud.purple.hint",
-    preview: "linear-gradient(135deg, #4d6bfe, #7e4dfe 55%, #0d1465)",
-  },
-  {
-    id: "blue",
-    label: "appearance.cloud.blue.label",
-    hint: "appearance.cloud.blue.hint",
-    preview: "linear-gradient(135deg, #3c8cff, #22d3ee 60%, #0a1f4d)",
-  },
-  {
-    id: "pink",
-    label: "appearance.cloud.pink.label",
-    hint: "appearance.cloud.pink.hint",
-    preview: "linear-gradient(135deg, #8c47eb, #fa73b8 60%, #2a0f57)",
-  },
-];
-
-/**
- * 静态渐变背景方案选项（preview 为极简静态线性渐变；light 为真时界面文字与面板自动转为深色）。
- * 说明：默认视觉风格改用干净专注的纯色 / 静态渐变，不再默认启用 WebGL 动态云。
- */
-export const IGM_LAUNCHERV2_SOLID_PALETTES: {
-  id: iGM_LauncherV2_SolidPalette;
-  label: string;
-  hint: string;
-  preview: string;
-  light: boolean;
-}[] = [
-  {
-    id: "dark",
-    label: "appearance.solid.dark.label",
-    hint: "appearance.solid.dark.hint",
-    preview: "linear-gradient(160deg, #0e1424 0%, #070a14 55%, #04060c 100%)",
-    light: false,
-  },
-  {
-    id: "light",
-    label: "appearance.solid.light.label",
-    hint: "appearance.solid.light.hint",
-    preview: "linear-gradient(160deg, #f6f8fc 0%, #e7ecf4 100%)",
-    light: true,
-  },
-  {
-    id: "coffee",
-    label: "appearance.solid.coffee.label",
-    hint: "appearance.solid.coffee.hint",
-    preview: "linear-gradient(160deg, #2c1e15 0%, #1a120c 100%)",
-    light: false,
-  },
-  {
-    id: "green",
-    label: "appearance.solid.green.label",
-    hint: "appearance.solid.green.hint",
-    preview: "linear-gradient(160deg, #102c23 0%, #081712 100%)",
-    light: false,
-  },
-];
 
 /**
  * 导航栏底色预设：三项透明色 + 默认（跟随玻璃面令牌）。

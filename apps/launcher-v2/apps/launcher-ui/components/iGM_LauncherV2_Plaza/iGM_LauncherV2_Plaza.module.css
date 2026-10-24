@@ -95,3 +95,29 @@
   border: 1px solid var(--igm-border);
   background: var(--igm-fill);
 }
+
+/* ---- 暂在开发中占位（服务器大厅页签） ---- */
+
+.devCard {
+  padding: 64px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.devIcon {
+  width: 34px;
+  height: 34px;
+  color: var(--igm-accent);
+  opacity: 0.9;
+}
+
+.devText {
+  margin: 0;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  color: var(--igm-text-dim);
+}

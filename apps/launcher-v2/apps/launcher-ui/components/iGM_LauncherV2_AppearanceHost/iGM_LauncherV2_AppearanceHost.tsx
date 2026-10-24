@@ -3,23 +3,20 @@
  * 所属层：前端 / 页面组件层
  * 路由：全局（各页面根容器内挂载）
  * 模块：iGM_LauncherV2_AppearanceHost
- * 作用：外观设置的运行时应用：背景模式、主题色与毛玻璃模糊度的实际生效点
- * 内容：订阅外壳下发的外观配置，把主题色与模糊度写入 :root 的 CSS 变量，
- *       并按背景模式渲染背景层——动态云背景（按配色方案传入流体云组件）、
- *       纯色背景（四种方案，浅色方案同时把根节点标记 data-bg-theme="light"，
- *       由全局样式把文字与面板令牌切换为深色，保证对比度）
- * 说明：所有页面共用同一实例语义，因此各页面根容器内挂载本组件即可全局生效；
- *       浏览器预览（无外壳）时使用默认外观，不影响界面预览
+ * 作用：外观设置的运行时应用：主题色、导航栏底色与毛玻璃模糊度的实际生效点
+ * 内容：订阅外壳下发的外观配置，把主题色、模糊度与导航栏底色写入 :root 的 CSS 变量，
+ *       并渲染固定的深色纯色 / 静态线性渐变背景层
+ * 说明：动态云（WebGL / Canvas 流体）渲染逻辑已彻底移除，全局背景固定为深色纯色，
+ *       保证所有磨砂玻璃卡片在纯色底上有清晰轮廓；所有页面共用同一实例语义，
+ *       因此各页面根容器内挂载本组件即可全局生效；浏览器预览（无外壳）时使用默认外观
  */
 
 // 导入依赖 //
 "use client";
 
 import { useEffect } from "react";
-import { iGM_LauncherV2_FluidBackground as IGM_LauncherV2_FluidBackground } from "@/components/iGM_LauncherV2_FluidBackground/iGM_LauncherV2_FluidBackground";
 import { iGM_LauncherV2_UseAppearance as IGM_LauncherV2_UseAppearance } from "@/components/iGM_LauncherV2_HostBridge/iGM_LauncherV2_HostBridge";
 import {
-  IGM_LAUNCHERV2_SOLID_PALETTES,
   IGM_LAUNCHERV2_THEMES,
   iGM_LauncherV2_ResolveNavColor,
 } from "@/lib/iGM_LauncherV2_Constants";
@@ -57,44 +54,19 @@ function iGM_AppearanceApplyTokens(theme: string, blur: number, navColor: string
   }
 }
 
-/**
- * 切换明暗令牌：浅色纯色背景时标记 data-bg-theme="light"，
- * 由 iGM_Globals.css 中的同名选择器把文字 / 面板 / 边框令牌整体翻转为深色系。
- * 逐组件写死颜色容易遗漏，因此统一在变量层切换。
- */
-function iGM_AppearanceApplyTheme(light: boolean): void {
-  if (typeof document === "undefined") return;
-  document.documentElement.dataset.bgTheme = light ? "light" : "dark";
-}
-
 export function iGM_LauncherV2_AppearanceHost({
   className = "",
 }: iGM_LauncherV2_AppearanceHostProps) {
   const { appearance } = IGM_LauncherV2_UseAppearance();
-  const solid = IGM_LAUNCHERV2_SOLID_PALETTES.find((item) => item.id === appearance.solid);
-  const light = appearance.background === "solid" && Boolean(solid?.light);
 
   // 主题色、模糊度与导航栏底色实时写入 CSS 变量：改动即生效，无需等待渲染
   useEffect(() => {
     iGM_AppearanceApplyTokens(appearance.theme, appearance.blur, appearance.navColor);
   }, [appearance.theme, appearance.blur, appearance.navColor]);
 
-  // 明暗令牌随背景方案切换：浅色纯色背景自动转深色文字
-  useEffect(() => {
-    iGM_AppearanceApplyTheme(light);
-  }, [light]);
-
   return (
     <div className={`${styles.host} ${className}`} aria-hidden="true">
-      {appearance.background === "cloud" ? (
-        <IGM_LauncherV2_FluidBackground palette={appearance.cloud} />
-      ) : null}
-      {appearance.background === "solid" ? (
-        <div
-          className={styles.solid}
-          style={{ background: solid?.preview ?? "#05070f" }}
-        />
-      ) : null}
+      <div className={styles.solid} />
     </div>
   );
 }

@@ -47,6 +47,7 @@ import type {
   iGM_LauncherV2_OfflineAccount,
   iGM_LauncherV2_OutboundMessage,
   iGM_LauncherV2_PathsSnapshot,
+  iGM_LauncherV2_PeerPlayer,
   iGM_LauncherV2_SettingsView,
   iGM_LauncherV2_ServerEntry,
   iGM_LauncherV2_ServerListSource,
@@ -383,12 +384,14 @@ export interface iGM_LauncherV2_PeerLobbySnapshot {
   mode: iGM_LauncherV2_PeerMode;
   /** 状态文案键（多语言键，界面端用 next-intl 解析） */
   statusKey: string;
-  /** 当前房间码；不在房间时为空串 */
+  /** 当前房间码（6 位数字 + 1 位大写字母）；不在房间时为空串 */
   roomCode: string;
   /** 是否为房主 */
   host: boolean;
-  /** 房间内人数 */
+  /** 房间内人数（真实连接数） */
   peers: number;
+  /** 房间成员名单（含头像、昵称与角色） */
+  players: iGM_LauncherV2_PeerPlayer[];
   /** 附加提示文案键；无提示为空串 */
   messageKey: string;
   /** 附加提示文案中的占位符参数 */
@@ -490,6 +493,7 @@ const IGM_PEER_LOBBY_INITIAL: iGM_LauncherV2_PeerLobbySnapshot = {
   roomCode: "",
   host: false,
   peers: 0,
+  players: [],
   messageKey: "",
   messageParams: {},
   horizonId: "",
@@ -573,10 +577,7 @@ const IGM_DOWNLOAD_INITIAL: iGM_LauncherV2_DownloadSnapshot = {
 
 const IGM_APPEARANCE_INITIAL: iGM_LauncherV2_AppearanceSnapshot = {
   appearance: {
-    // 默认静态渐变纯色背景（不再默认启用动态云），导航栏底色为「默认」玻璃面
-    background: "solid",
-    cloud: "purple",
-    solid: "dark",
+    // 全局背景固定为深色纯色 / 静态线性渐变，导航栏底色为「默认」玻璃面
     blur: 14,
     theme: "indigo",
     navColor: "default",
@@ -873,6 +874,7 @@ function iGM_HandleInbound(payload: unknown): void {
       roomCode: state.roomCode,
       host: state.host,
       peers: state.peers,
+      players: state.players,
       messageKey: state.messageKey,
       messageParams: state.messageParams,
       horizonId: state.horizonId,

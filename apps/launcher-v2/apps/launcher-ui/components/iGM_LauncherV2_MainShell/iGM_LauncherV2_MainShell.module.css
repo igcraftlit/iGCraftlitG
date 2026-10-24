@@ -822,6 +822,32 @@
   gap: 10px;
 }
 
+/* 暂在开发中占位：居中图标与提示，保持暗色磨砂风格 */
+.devCard {
+  margin-top: 18px;
+  padding: 64px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.devIcon {
+  width: 34px;
+  height: 34px;
+  color: var(--igm-accent);
+  opacity: 0.9;
+}
+
+.devText {
+  margin: 0;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  color: var(--igm-text-dim);
+}
+
 .field {
   display: flex;
   align-items: center;
